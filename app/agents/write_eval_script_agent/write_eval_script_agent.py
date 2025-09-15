@@ -13,6 +13,8 @@ from app.log import (
 )
 from os.path import join as pjoin
 from loguru import logger
+import requests
+from typing import List
 
 class WriteEvalScriptAgent(Agent):
     """
@@ -25,12 +27,21 @@ class WriteEvalScriptAgent(Agent):
         task: Task,
         output_dir: str,
         repo_basic_info: str,
+        disable_download_test_resources:bool = False,
     ):
         super().__init__(agent_id = "WriteEvalScriptAgent")
         self.task = task
         self.output_dir = os.path.abspath(output_dir)
         self.test_patch = self.task.test_patch
         self.test_files = self.get_test_files()
+        self.disable_download_test_resources = disable_download_test_resources
+        self.download_test_resources_commands = (
+            self.generate_binary_commands()
+            if not self.disable_download_test_resources
+            else []
+        )
+        if self.download_test_resources_commands != []:
+            self.test_patch = self.get_remove_binary_patch()
         self.initial_skeleton = self.get_initial_eval_script_skeleton()
         self.run_count = 0
         self.repo_basic_info = repo_basic_info
@@ -47,8 +58,13 @@ class WriteEvalScriptAgent(Agent):
         self.msg_thread = MessageThread()
         self.add_system_message(write_eval_script_utils.get_system_prompt_eval_script())
         self.add_user_message(self.repo_basic_info)
-        
-        
+        if self.download_test_resources_commands != []:
+            commands_str = "\n".join(self.download_test_resources_commands)
+
+            self.add_user_message(
+                "Please use the following commands to download or remove binary test resources in the repository:\n"
+                f"{commands_str}\n"
+            )
     def add_reference_message(self) -> None:
         if self.reference_setup:
             version = self.reference_setup.get('version', 'unknown')
@@ -87,8 +103,9 @@ class WriteEvalScriptAgent(Agent):
         ]
         eval_commands += [
             reset_tests_command,
+            *self.download_test_resources_commands,
             apply_test_patch_command,
-            reset_tests_command,  # Revert tests after done, leave the repo in the same state as before
+            reset_tests_command,  # Revert tests after done
         ]
         return "\n".join(["#!/bin/bash", "set -uxo pipefail"] + eval_commands) + "\n"
 
@@ -144,7 +161,10 @@ class WriteEvalScriptAgent(Agent):
             # initial: provide skeleton
             self.add_user_message(dockerfile_msg)
             self.add_reference_message()
-            self.add_user_message(write_eval_script_utils.get_user_prompt_init_eval_script(self.initial_skeleton))
+            if self.download_test_resources_commands == []:
+                self.add_user_message(write_eval_script_utils.get_user_prompt_init_eval_script(self.initial_skeleton))
+            else:
+                self.add_user_message(write_eval_script_utils.get_user_prompt_init_eval_script_download(self.initial_skeleton))
 
         task_output = write_eval_script_utils.write_eval_script_with_retries(
             self.msg_thread,
@@ -170,3 +190,78 @@ class WriteEvalScriptAgent(Agent):
         self.msg_thread.save_to_file(conversation_file)
         # self.init_msg_thread()
         return task_output, summary, ok
+
+
+
+    def generate_binary_commands(
+        self,
+        local_root: str = "/testbed"
+    ) -> List[str]:
+        """
+        Given:
+        - local_root:  the local root directory to install resources under
+
+        Returns:
+        A list of shell commands that either:
+            * create the directory and curl-download each existing binary file, or
+            * remove the file locally if it doesn’t exist on GitHub.
+
+        Why “/pull/{PR}/head”?
+        GitHub’s raw content server will follow the PR’s head commit
+        when you request:
+            https://raw.githubusercontent.com/{owner}/{repo}/pull/{PR}/head/{path}
+        You don’t need to spell out “refs/…” here—GitHub handles it.
+        """
+        repo = self.task.repo_name
+        test_patch  = self.test_patch
+        pull_number = self.task.task_info['pull_number']
+        commands: List[str] = []
+        # Build the base URL for raw files at the head of this PR
+        raw_base = f"https://raw.githubusercontent.com/{repo}/pull/{pull_number}/head"
+
+        # Split into diff chunks and extract any that are binary-file diffs
+        chunks = re.split(r'(?m)(?=^diff --git )', test_patch)
+        header_re = re.compile(r'^diff --git a/(?P<path>.+?) b/.*$')
+
+        for chunk in chunks:
+            if not chunk.startswith("diff --git ") or "Binary files " not in chunk:
+                continue
+
+            # Extract the file path from the diff header
+            first_line = chunk.splitlines()[0]
+            m = header_re.match(first_line)
+            if not m:
+                continue
+
+            rel_path = "/" + m.group("path")
+            url      = raw_base + rel_path
+            local_fp = os.path.join(local_root, rel_path.lstrip("/"))
+
+            # HEAD request to see if the file exists in the PR
+            exists = False
+            try:
+                resp = requests.head(url, allow_redirects=True, timeout=5)
+                if resp.status_code == 200:
+                    exists = True
+            except requests.RequestException:
+                pass
+
+            if exists:
+                commands.append(f"wget -O {local_fp} {url} || exit 1")
+                commands.append(f"chmod 755 {local_fp} || exit 1")
+            else:
+                # Remove local copy if the file is gone upstream
+                commands.append(f"rm -f {local_fp}")
+
+        return commands
+
+    def get_remove_binary_patch(self) -> str:
+     
+        chunks = re.split(r'(?m)(?=^diff --git )', self.test_patch)
+        kept: List[str] = []
+        for chunk in chunks:
+          
+            if chunk.startswith("diff --git ") and "Binary files " in chunk:
+                continue
+            kept.append(chunk)
+        return "".join(kept)

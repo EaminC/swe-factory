@@ -47,8 +47,6 @@ class TestAnalysisAgent(Agent):
         self.task_id = task.task_id.lower()
         self.client = client
         self.test_analysis_dir = os.path.join(self.output_dir, "test_analysis_agent") 
-        # self.build_image_dir = os.path.join(self.output_dir, "build_image") 
-        # self.run_test_dir = os.path.join(self.output_dir, "run_test") 
         self.eval_script_skeleton = None
         self.dockerfile = None
         self.eval_script = None

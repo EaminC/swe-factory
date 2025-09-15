@@ -73,7 +73,7 @@ class RepoBrowseManager:
         
         structure_result = self._get_structure(current_level, depth)
         structure = self._format_structure(structure_result)
-        result = f"You are browsing the path: {abs_path}. The browsing Depth is {depth}.\nStructure of this path:\n\n{self._format_structure(structure_result)}"
+        result = f"You are browsing the path: {abs_path}. The browsing Depth is {depth}.\nStructure of this directory:\n\n{self._format_structure(structure_result)}"
 
         return result, 'folder structure collected', True
 
@@ -138,34 +138,45 @@ class RepoBrowseManager:
         return result
 
     def browse_file(self, file_path: str) -> str:
-        """Browse and return the contents of a specific file.
-        
-        Args:
-            file_path: The path to the file to browse, relative to the project root
-            
-        Returns:
-            The contents of the file as a string
-            
-        Raises:
-            ValueError: If the file path is outside the project directory
-            FileNotFoundError: If the file does not exist
         """
-        # abs_path = os.path.abspath(file_path)
-        # if not abs_path.startswith(self.project_path):
-        #     raise ValueError(f"The file path {file_path} is not within the project path {self.project_path}.")
-            
-        # if not os.path.isfile(abs_path):
-        #     raise FileNotFoundError(f"File not found: {file_path}")
-            
-        with open(file_path, 'r') as file:
-            if file_path.endswith('package-lock.json'):
-              
-                lines = itertools.islice(file, 1000)
-                content = ''.join(lines)
-                content +='\nTruncated this file because it is too long.'
-            else:
-                content = file.read()
-        return content
+        Browse and return up to the first MAX_LINES lines of a file, wrapped in markers.
+
+        Args:
+            file_path: Path to the file relative to the project root.
+
+        Returns:
+            A string in the form:
+
+            === FILE START: <relative path> ===
+            [up to MAX_LINES lines of content]
+            --- CONTENT TRUNCATED ---
+            === FILE END: <relative path> ===
+
+        Raises:
+            ValueError: if the file is outside of project_path
+            FileNotFoundError: if the file does not exist
+        """
+        abs_path = os.path.abspath(file_path)
+        if not abs_path.startswith(self.project_path):
+            raise ValueError(f"Path '{file_path}' is outside of project directory.")
+        if not os.path.isfile(abs_path):
+            raise FileNotFoundError(f"File not found: '{file_path}'")
+
+        MAX_LINES = 1000
+        START_MARKER = f"=== FILE START: {file_path} ==="
+        END_MARKER   = f"=== FILE END:   {file_path} ==="
+        TRUNC_MARKER = "--- CONTENT TRUNCATED ---"
+
+        with open(abs_path, 'r', encoding='utf-8') as f:
+            # read up to MAX_LINES
+            lines = list(itertools.islice(f, MAX_LINES))
+            content = "".join(lines)
+            # check if there’s more
+            more = f.readline()
+            if more:
+                content += "\n" + TRUNC_MARKER
+
+        return "\n".join([START_MARKER, content, END_MARKER])
 
     def get_webpage_content(self, url: str, timeout: int = 60) -> str:
         """Fetch and return the content of a web page using Jina Reader API.
@@ -217,7 +228,8 @@ class RepoBrowseManager:
             # Step 1: Browse the file content
             file_content = self.browse_file(file_path)
             logger.info(f"{file_content}")
-            file_content = f"The content of {file_path} is:\n"+file_content 
+            file_content = f"[File Content: {file_path}]\n{file_content}\n[/File Content]"
+
             # Step 2: Use LLM to extract environment information
             extracted_info = browse_file_run_with_retries(file_content, custom_query)
 
@@ -431,43 +443,50 @@ def extract_json_from_response(res_text: str):
 
 
 BROWSE_CONTENT_PROMPT = """
-You are an autonomous file-browsing and analysis agent. Now the user gives you a file, your overall mission is:
+You are an autonomous file-browsing and analysis agent. Now the user gives you a file. Your overall mission is:
 1. To review the given file content.
 2. To extract any details necessary for setting up the project's environment and running its test suite.
-3. To pay special attention to contents realted to custom query of user.
+3. To pay special attention to contents related to custom user queries.
 
 Primary objectives:
-- Identify libraries, packages, and their versions.
+- **Identify libraries, packages, and their exact versions.**
 - List any environment variables or configuration files.
-- Extract the exact commands or scripts used to run tests, including flags/options.
+- Extract the exact commands or scripts used to run tests, including all relevant flags/options.
+- **Pay special attention to commands for running individual or specific test files, not just commands for running all tests.**
 - Note any prerequisites (e.g., required OS packages, language runtimes).
 
 Formatting rules:
 - Return your answer enclosed within `<analysis></analysis>` tags.
+- Always wrap your structured key information in `[Key Information from <filename>] ... [/Key Information]` tags, making clear where the information was sourced (Do not use abstract path).
 - Use bullet lists for clarity.
 - Keep it concise and human-readable.
 - Preserve original value formats (e.g., version strings, paths, flags).
+- Keep the final answer concise. Do not include irrelevant information. If no relevant content is found, simply state "No relevant information found."
 
 Example format:
 <analysis>
-List of libraries:
-- flask==2.0.3
-- gunicorn
-- pytest==7.1.2
-
-Key environment variables:
-- DEBUG=true
-- SECRET_KEY=this-is-a-secret
-
-Runtime Requirements:
-- Python >=3.8
-- Node.js 16.x
-
-Testing:
-- Test framework: pytest
-- Test command: pytest tests/ --disable-warnings --maxfail=5
+[Key Information from README.md]
+- setup command:
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt (**For development dependencies**)
+  - pip install -r requirements-test.txt (**For test dependencies**)
+- Libraries:
+  - flask==2.0.3 (**Exact version**)
+  - gunicorn==20.1.0 (**Exact version**)
+  - pytest==7.1.2 (**Exact version**)
+- Runtime Requirements:
+  - Python >=3.8 (**Exact version**)
+  - Node.js >=14.0 (**Exact version**)
+  - Java >=8.0 (**Exact version**)
+- Testing:
+  - Test framework: pytest
+  - **Test command (single test file): pytest tests/test_api.py**
+- Key environment variables:
+  - DEBUG=true
+[/Key Information]
 </analysis>
 """
+
 
 def browse_file_run_with_retries(content: str, custom_query: str, retries: int=3) -> str | None:
     """Run file content analysis with retries and return the parsed <analysis> content."""
@@ -518,44 +537,53 @@ def parse_analysis_tags(data: str) -> str | None:
 
 
 
+SYSTEM_PROMPT = """You are a context_retrieval_agent responsible for gathering **precise and necessary information** from the local repository to support environment setup and test execution. After gathering the information, you will **generate a concise report** summarizing the key findings related to the setup and test execution.
 
-SYSTEM_PROMPT = """You are a repository maintainer responsible for ensuring that new pull requests can be properly tested.  
-A developer has submitted a pull request containing a **test patch**, which introduces or modifies test cases.  
-Before running the tests, we need to ensure that the environment is correctly set up.  
+Sometimes, another agent (such as a test analysis agent) may explicitly request specific information to help fix issues like Dockerfile errors or evaluation script failures.
 
-Your role is to **gather all necessary information** about the repository's environment and testing setup.  
-This information will be used to generate:
-- A **Dockerfile** that correctly configures the environment.
-- An **evaluation script** that executes the provided test files.
+Your primary goal is to:
 
-### What you need to do:
-1. **Understand the environment setup**  
-   - Identify required dependencies (e.g., `pip`, `conda`, `npm`, `apt`, `yum`).  
-   - Find out language versions (e.g., Python 3.9, Node.js 18, Java 17).  
-   - Look for configuration files (`.env`, environment variables, setup scripts).  
-   - Review existing setup files (`pow.xml`, `setup.py`, CI/CD config, etc.).  
-   - Check OS requirements (We use Linux here, pay more attention to ).  
+- **If a specific request is provided by a calling agent, focus your retrieval narrowly on that request, extracting only the explicitly required files or data.**
+- **If no explicit request is given by another agent, or if the request is incomplete or unclear, perform a basic and limited exploration of the repository to collect general environment and test execution information. Avoid exhaustive or in-depth searches.**
+- **Pay special attention to the following information when collecting and summarizing:**
+  - **Exact versions** of dependencies, libraries, and programming languages (e.g., `flask==2.0.3`, `python3.9`, `node 18`)
+  - **Commands** for setting up the environment and executing tests (e.g., `pip install -r requirements.txt`, `pytest tests/test_api.py`)
+  - Any environment configuration details (e.g., `.env` files, specific OS package dependencies, etc.)
+  - Specific test commands for individual or specific test files, not just generic test execution commands.
 
-2. **Determine how to execute the tests**  
-   - You will be provided with a list of test files that need to be run.  
-   - Find out the correct way to execute these tests (e.g., `pytest tests/test_x.py`, `npm test`, `make test`).  
-   - Identify any required setup steps before running the tests (e.g., database migrations, service startups).  
+### Suggested Retrieval Areas
 
-3. **Provide structured information**  
-   - Organize your findings so that other agents can use them to generate the Dockerfile and evaluation script.  
+Only investigate the following areas **if explicitly requested** by the calling agent. Focus your retrieval on the minimal set of files or configurations needed to resolve the issue efficiently and accurately.
+
+1. **Environment Setup Information**
+   - **Exact dependencies and their versions**: This includes dependencies listed in files like `requirements.txt`, `package.json`, `pom.xml`, `build.gradle`, etc. Ensure that the exact version for each dependency is captured.
+   - **Programming language versions**: Ensure to capture version information like Python (e.g., `python3.9`), Node.js (e.g., `node 18`), Java (e.g., `java 17`), and others as specified in relevant configuration files (`.nvmrc`, `.python-version`, etc.)
+   - **Environment configuration files**: Collect details from `.env`, `.bashrc`, or `.zshrc` if applicable, focusing on version-dependent environment variables and paths.
+   - **OS-specific requirements**: Note any OS-dependent configurations (e.g., specific Linux package dependencies in `apt` or `yum`).
+
+2. **Test Execution Information**
+   - **Precise test commands**: Focus on specific commands or instructions for running individual tests or specific test files, not just commands for running all tests. Look for test commands in documentation like `README.md`, `CONTRIBUTING.md`, `tests/README.md`, etc.
+   - **CI/CD configurations**: Look into files like `.github/workflows/`, `.ci.yml`, `travis.yml`, or other pipeline configuration files that might include commands for running tests or specific test environments.
+   - **Test execution in context**: Extract any specific instructions about running tests, such as flags for specific test cases, test suites, or environments. Also, pay attention to dependencies relevant to testing like test frameworks (e.g., `pytest`, `JUnit`, `Mocha`) and their versions.
+
+3. **Organize Results for other agents**
+   - Present findings in a structured way so they can be used to generate the Dockerfile and evaluation script accurately. The **final report** should:
+     - Highlight the **specific versions** of dependencies, libraries, and testing tools.
+     - Include **commands** for setup and testing (e.g., `pip install`, `npm install`, `pytest`).
+     - Note any environment variables or configuration details relevant to the environment setup and test execution.
+     - Provide clear, concise, and actionable information, making it easier for other agents to proceed with resolving any setup or test execution issues.
 
 ### Important Notes:
 - The repository has already been **cloned locally**; you are working within the local repository directory.  
-- **The pull request has NOT been applied yet**, so you should analyze the repository in its current state.  
-- **Focus on what is needed to set up the environment and run the tests successfully.**  
+- You are **not expected to search broadly**; retrieve only the files and information explicitly requested by the calling agent.  
+- Avoid redundant or speculative searches—**be goal-driven and cost-efficient**.  
+"""
 
-Start by checking the repository structure, configuration files, and dependency manifests.  
-Your objective is to ensure that the necessary environment is in place and that the test files can be executed reliably in an isolated container."""
 
 USER_PROMPT = (
         "Your task is to gather sufficient context from the repository and external sources to understand how to set up the project's environment. To achieve this, you can use the following APIs to browse and extract relevant information:"
         "\n- browse_folder(path: str, depth: str): Browse and return the folder structure for a given path in the repository.  The depth is a string representing a number of folder levels to include in the output such as ``1''. "
-        "\n- browse_file_for_environment_info(file_path: str, custom_query: str): Call an agent to browse a file such as README or CONTRIBUTING.md and extract environment setup and running tests information. Use the `custom_query` parameter to tell the agent any extra details it should pay special attention to (for example, 'pom.xml dependency versions')."
+        "\n- browse_file_for_environment_info(file_path: str, custom_query: str): Call an agent to browse a file such as README or CONTRIBUTING.md and extract environment setup and running tests information. Use the `custom_query` parameter to tell the agent any extra details it should pay special attention to (for example, 'what java version do we need?')."
         "\n- search_files_by_keyword(keyword: str): Search for files in the repository whose names contain the given keyword."
         "\n\nYou may invoke multiple APIs in one round as needed to gather the required information."
         "\n\nNow analyze the repository and use the necessary APIs to gather the information required to understand and set up the environment. Ensure each API call has concrete arguments as inputs."

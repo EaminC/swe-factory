@@ -105,6 +105,10 @@ def main(args, subparser_dest_attr_name: str = "command"):
     globals.disable_run_test = args.disable_run_test
     
     globals.disable_context_retrieval= args.disable_context_retrieval
+
+    globals.disable_download_test_resources= args.disable_download_test_resources
+
+    globals.using_ubuntu_only = args.using_ubuntu_only
     
     subcommand = getattr(args, subparser_dest_attr_name)
     if subcommand == "swe-bench":
@@ -116,7 +120,7 @@ def main(args, subparser_dest_attr_name: str = "command"):
             client = None
             # try:
             tasks = make_swe_tasks(
-                args.task, args.task_list_file,args.tasks_map, args.setup_dir,client
+                args.task, args.task_list_file,args.task_batch, args.batch_index,args.tasks_map,  args.setup_dir,client
             )
        
             groups = group_swe_tasks_by_env(tasks)
@@ -349,7 +353,32 @@ def add_task_related_args(parser: ArgumentParser) -> None:
         default=False,
         help="Enable layered code search.",
     )
-
+    parser.add_argument(
+        "--disable-download-test-resources",
+        action="store_true",
+        default=False,
+        help="Enable layered code search.",
+    )
+    parser.add_argument(
+        "--using-ubuntu-only",
+        action="store_true",
+        default=False,
+        help="Enable layered code search.",
+    )
+    parser.add_argument(
+        "--task-batch",
+        type=int,
+        required=False,
+        default=-1,
+        help="Limit output of content retrieval rounds",
+    )
+    parser.add_argument(
+        "--batch-index",
+        type=int,
+        required=False,
+        default=-1,
+        help="Limit output of content retrieval rounds",
+    )
 
 def load_tasks_map(tasks_map_file: str):
     """
@@ -376,6 +405,8 @@ def load_tasks_map(tasks_map_file: str):
 def make_swe_tasks(
     task_id: str | None,
     task_list_file: str | None,
+    task_batch: int,
+    batch_index: int,
     # setup_map_file: str,
     tasks_map_file: str,
     setup_dir: str,
@@ -392,11 +423,23 @@ def make_swe_tasks(
     #     setup_map = json.load(f)
     tasks_map = load_tasks_map(tasks_map_file)
     all_task_ids = []
+    tasks_map_key_list = list(tasks_map.keys())
     if task_list_file is not None:
         all_task_ids = parse_task_list_file(task_list_file)
-    if task_id is not None:
+    elif task_id is not None:
         all_task_ids = [task_id]
-    if task_list_file is  None:
+    elif batch_index > 0 and task_batch>0:
+        total = len(tasks_map_key_list)
+        num_batches = (total + task_batch - 1) // task_batch
+
+        # batch_index: 1 ~ num_batches
+        if batch_index < 1 or batch_index > num_batches:
+            raise ValueError(f"batch_index {batch_index} out of range (should be 1 ~ {num_batches})")
+
+        start = (batch_index - 1) * task_batch
+        end = min(batch_index * task_batch, total)
+        all_task_ids = tasks_map_key_list[start:end]
+    else:
         all_task_ids = list(tasks_map.keys())
     if len(all_task_ids) == 0:
         raise ValueError("No task ids to run.")
@@ -704,7 +747,9 @@ def do_inference(
                                         globals.results_path,
                                         disable_memory_pool = globals.disable_memory_pool,
                                         disable_context_retrieval= globals.disable_context_retrieval,
-                                        disable_run_test= globals.disable_run_test
+                                        disable_run_test= globals.disable_run_test,
+                                        disable_download_test_resources = globals.disable_download_test_resources,
+                                        using_ubuntu_only = globals.using_ubuntu_only,
                                         )
         agents_manager.run_workflow()
         run_ok = True

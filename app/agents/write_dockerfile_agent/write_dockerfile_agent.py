@@ -20,7 +20,7 @@ class WriteDockerfileAgent(Agent):
     Manages its own create/modify logic, output directories, and retry behavior.
     """
     api_functions: list[str] = []
-    def __init__(self,  task: Task, output_dir: str, repo_basic_info: str):
+    def __init__(self,  task: Task, output_dir: str, repo_basic_info: str, using_ubuntu_only: bool = False):
         super().__init__(agent_id="WriteDockerfileAgent")
         self.msg_thread  = MessageThread()
         self.task = task
@@ -29,6 +29,7 @@ class WriteDockerfileAgent(Agent):
         self.reference_setup = None
         self.repo_basic_info = repo_basic_info
         self.init_msg_thread()
+        self.using_ubuntu_only = using_ubuntu_only
 
 
     def init_msg_thread(self) -> None:
@@ -70,7 +71,10 @@ class WriteDockerfileAgent(Agent):
             self.add_user_message(f"Previous dockerfile:\n{prev_content}\n")
             self.add_user_message(modify_prompt)
         else:
-            self.add_user_message(write_dockerfile_utils.get_user_prompt_init_dockerfile())
+            if self.using_ubuntu_only:
+                self.add_user_message(write_dockerfile_utils.get_user_prompt_init_dockerfile_using_ubuntu_only())
+            else:
+                self.add_user_message(write_dockerfile_utils.get_user_prompt_init_dockerfile())
 
         # 3. Delegate to the retryable writer
         task_output = write_dockerfile_utils.write_dockerfile_with_retries(

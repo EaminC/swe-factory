@@ -195,7 +195,7 @@ def run_instance_setup(
     container = None
     try:
         # Build + start instance container (instance image should already be built)
-        container = build_setup_container(test_spec, client, run_id, logger, rm_image, log_dir, force_rebuild)
+        container = build_setup_container(test_spec, client, run_id, logger, rm_image, log_dir, force_rebuild,mode)
         container.start()
      
         logger.info(f"Container for {instance_id} started: {container.id}")

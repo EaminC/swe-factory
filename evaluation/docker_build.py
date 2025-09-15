@@ -622,6 +622,7 @@ def build_setup_container(
         nocache: bool,
         output_path: Path,
         force_rebuild: bool = False,
+        mode:str = "",
         
         # setup_predictions: dict = None,
     ):
@@ -653,7 +654,7 @@ def build_setup_container(
         logger.info(f"Creating container for {test_spec.instance_id}...")
         container = client.containers.create(
             image=test_spec.instance_image_key,
-            name=test_spec.get_instance_container_name(run_id),
+            name=f"{test_spec.get_instance_container_name(run_id)}-{mode}",
             user=user,
             detach=True,
             command="tail -f /dev/null",

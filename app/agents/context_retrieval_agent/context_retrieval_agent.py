@@ -28,6 +28,7 @@ class ContextRetrievalAgent(Agent):
         self.run_count = 0
         self.repo_browse_manager = context_retrieval_utils.RepoBrowseManager(self.task.project_path)
         self.root_structure = self.browse_folder('/',1)[0]
+        self.root_structure_info = f' Root directory structure of target repository: {self.root_structure}\n\n'
         self.repo_basic_info = repo_basic_info
         self.reference_setup = None
         
@@ -39,7 +40,7 @@ class ContextRetrievalAgent(Agent):
         self.msg_thread = MessageThread()
         self.add_system_message(context_retrieval_utils.SYSTEM_PROMPT)
         self.add_user_message(self.repo_basic_info)
-        self.add_user_message(f'Structure of root directory: {self.root_structure}\n\n')
+        self.add_user_message(self.root_structure_info)
         user_prompt = context_retrieval_utils.USER_PROMPT
         if 'flash' in common.SELECTED_MODEL.name:
             user_prompt+='Now tell me your summary and APIs you plan to invoke:'
@@ -178,7 +179,8 @@ class ContextRetrievalAgent(Agent):
             summary_of_collected_information = selected_apis_json.get("collected_information", None)
             if is_termination:
                 msg_summary_of_collected_information = f'Collected information from context retrieval agent:\n{summary_of_collected_information}\n\n'
-              
+                
+                # msg_summary_of_collected_information = self.root_structure_info+'\n\n' + msg_summary_of_collected_information
                 task_output = msg_summary_of_collected_information
                 summary = "Collect context information successfully."
                 success = True
@@ -230,25 +232,36 @@ class ContextRetrievalAgent(Agent):
                 f"context retrieval {context_retrieval_round}",
                 print_callback=print_callback,
             )
-            # thought
-            msg = "Let's analyze collected context first"
-            self.add_user_message(msg)
-            print_acr(
-                msg, f"context retrieval {context_retrieval_round}", print_callback=print_callback
-            )
-            #thought
-            res_text, *_ = common.SELECTED_MODEL.call(self.msg_thread.to_msg())
-            self.add_model_message(res_text, tools=[])
-            print_retrieval(res_text, f"context retrieval {context_retrieval_round}", print_callback=print_callback)
+            # # thought
+            # msg = "Let's analyze collected context first"
+            # self.add_user_message(msg)
+            # print_acr(
+            #     msg, f"context retrieval {context_retrieval_round}", print_callback=print_callback
+            # )
+            # #thought
+            # res_text, *_ = common.SELECTED_MODEL.call(self.msg_thread.to_msg())
+            # self.add_model_message(res_text, tools=[])
+            # print_retrieval(res_text, f"context retrieval {context_retrieval_round}", print_callback=print_callback)
 
 
             # thought -> action
             if context_retrieval_round < self.max_context_retrieval_round:
-                msg = (
-                    "Based on your analysis, answer below questions:"
-                    "\n- Do you think we collect enough information to write a  dockerfile to setup the environment and write a eval script to run given tests? If yes, please give a summary of the collected information.(leave it empty if you don't collect enough information)"
-                    "\n- If we do not collect enough information, what repo browsing API calls we use to get more information. (leave it empty if you don't need more context)"
-                )
+                msg = """
+                Let's analyze the collected information and answer these questions:
+
+                1. If there is no specific requirement from the test_analysis_agent, or it has already been satisfied, then determine whether the current information about environment setup and test execution is sufficient. If not, identify what files, contexts, or details are missing, and propose the next appropriate actions based on the basic information from the repository. A good place to start would be inspecting the repository structure and reviewing key documents like `README.md`, `CONTRIBUTING.md`, and basic CI configurations. Avoid aggressive actions like performing deep repository browsing if not explicitly required.
+
+                2. If there are specific requirements from the test_analysis_agent, have these been fully satisfied by the collected information? If yes, you can stop here and provide a detailed summary of all collected information that meets those requirements. The summary must strictly preserve the original content and clearly indicate each section’s source using the format: [Section Title from filename]...[/Section Title from filename].
+
+                [Environment Setup from README.md]
+                To install test dependencies, run:
+                pip install -r requirements-test.txt
+                [/Environment Setup from README.md]
+
+                3. If the information is sufficient, stop and provide the detailed summary as described above.
+                """
+
+
                 # if isinstance(common.SELECTED_MODEL, ollama.OllamaModel):
                 #     # llama models tend to always output search APIs and buggy locations.
                 #     msg += "\n\nNOTE: If you have already identified the bug locations, do not make any search API calls."

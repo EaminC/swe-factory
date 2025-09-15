@@ -18,6 +18,7 @@ from filelock import FileLock
 from copy import deepcopy
 
 DIFF_MODIFIED_FILE_REGEX = r"--- a/(.*)"
+DIFF_DEVNULL_REGEX = r"--- /dev/null\n\+\+\+ b/(.*)"
 def normalize_version(ver_str):
     match = re.search(r"(\d+(?:\.\d+){0,2})", ver_str)
     return match.group(1) if match else ver_str
@@ -53,6 +54,8 @@ class AgentsManager:
                 disable_memory_pool:bool,
                 disable_context_retrieval:bool,
                 disable_run_test:bool,
+                disable_download_test_resources:bool,
+                using_ubuntu_only:bool,
                 ):
         self.task = task
         self.output_dir = os.path.abspath(output_dir)
@@ -66,8 +69,8 @@ class AgentsManager:
         self.workflow_finish_status  = False
         # Initialize agents
         self.agents_dict = {
-            "write_docker_agent": WriteDockerfileAgent(task, output_dir, self.repo_basic_info),
-            "write_eval_script_agent": WriteEvalScriptAgent(task, output_dir, self.repo_basic_info),
+            "write_docker_agent": WriteDockerfileAgent(task, output_dir, self.repo_basic_info,using_ubuntu_only),
+            "write_eval_script_agent": WriteEvalScriptAgent(task, output_dir, self.repo_basic_info,disable_download_test_resources),
             "test_analysis_agent": TestAnalysisAgent(task, output_dir, self.repo_basic_info, client),
             "context_retrieval_agent": ContextRetrievalAgent(task, output_dir, self.repo_basic_info),
         }
@@ -75,6 +78,7 @@ class AgentsManager:
         self.disable_memory_pool = disable_memory_pool
         self.disable_context_retrieval = disable_context_retrieval
         self.disable_run_test = disable_run_test
+        self.disable_download_test_resources = disable_download_test_resources
         if disable_context_retrieval:
             self.set_agent_status("context_retrieval_agent",True)
         self.agents_dict['test_analysis_agent'].disable_context_retrieval= disable_context_retrieval
@@ -114,8 +118,18 @@ class AgentsManager:
             agent_value.iteration_num = iteration_num 
             
     def get_test_files(self) -> list[str]:
-        test_files = re.findall(DIFF_MODIFIED_FILE_REGEX, self.task.test_patch)
-        return test_files
+        """
+        1) Extract modified/deleted files via '--- a/...'
+        2) Extract newly added files via the '/dev/null' pattern
+        3) Return combined list in patch order (no dedup)
+        """
+        patch = self.task.test_patch
+
+        old_paths = re.findall(DIFF_MODIFIED_FILE_REGEX, patch)
+        new_paths = re.findall(DIFF_DEVNULL_REGEX,   patch)
+
+        # simply concatenate; if duplicates truly don't happen, this is fine
+        return old_paths + new_paths
     
     def get_repository_basic_info(self) -> str:
         return (
@@ -242,18 +256,30 @@ class AgentsManager:
                 # scheduler
                 guidance_for_context_retrieval_agent = analysis.get("guidance_for_context_retrieval_agent", None)
                 if guidance_for_context_retrieval_agent:
+                    if self.disable_run_test ==False:
+                        prefix_prompt = "After setting up dockerfile and running tests, the test log analysis agent find that there is other context information need to collect. Here is his analysis:\n"
+                    else:
+                        prefix_prompt = "After analysis, you need collect more information. Here is the analysis:\n"
                     self.set_agent_status("context_retrieval_agent",False)
-                    self.agents_dict['context_retrieval_agent'].add_user_message(f'After setting up dockerfile and running tests, the test log analysis agent find that there is other context information need to collect. Here is his analysis:\n{guidance_for_context_retrieval_agent}\n\n')
+                    self.agents_dict['context_retrieval_agent'].add_user_message(f'{prefix_prompt}{guidance_for_context_retrieval_agent}\n\n')
 
                 guidance_for_write_dockerfile_agent = analysis.get("guidance_for_write_dockerfile_agent", None)
                 if guidance_for_write_dockerfile_agent:
+                    if self.disable_run_test ==False:
+                        prefix_prompt = 'After setting up dockerfile and running tests, the test log analysis agent find that there is a problem with dockefile. Here is his analysis:\n'
+                    else:
+                        prefix_prompt = "After analysis, you need modify the dockerfile. Here is the analysis:\n"
                     self.set_agent_status("write_docker_agent",False)
-                    self.agents_dict['write_docker_agent'].add_user_message(f'After setting up dockerfile and running tests, the test log analysis agent find that there is a problem with dockefile. Here is his analysis:\n{guidance_for_write_dockerfile_agent}\n\n')
+                    self.agents_dict['write_docker_agent'].add_user_message(f'{prefix_prompt}{guidance_for_write_dockerfile_agent}\n\n')
 
                 guidance_for_write_eval_script_agent = analysis.get("guidance_for_write_eval_script_agent", None)
                 if guidance_for_write_eval_script_agent:
+                    if self.disable_run_test ==False:
+                        prefix_prompt = 'After setting up dockerfile and running tests, the test log analysis agent find that there is a problem with eval script. Here is his analysis:\n'
+                    else:
+                        prefix_prompt = "After analysis, you need modify the eval script. Here is the analysis:\n"
                     self.set_agent_status("write_eval_script_agent",False)
-                    self.agents_dict['write_eval_script_agent'].add_user_message(f'After setting up dockerfile and running tests, the test log analysis agent find that there is a problem with eval script. Here is his analysis:\n{guidance_for_write_eval_script_agent}\n\n')
+                    self.agents_dict['write_eval_script_agent'].add_user_message(f'{prefix_prompt}{guidance_for_write_eval_script_agent}\n\n')
 
         else:
             log_msg = "Exceed largest number of tries.."

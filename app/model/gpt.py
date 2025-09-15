@@ -394,14 +394,26 @@ class Gpt4_1_mini(OpenaiModel):
     def __init__(self):
         super().__init__("gpt-4.1-mini", 8192, 0.0000004, 0.0000016)
 
+class Gpt5_mini(OpenaiModel):
+    def __init__(self):
+        super().__init__("gpt-5-mini", 8192, 0.00000025, 0.000002)
+
 class Gpt4_1(OpenaiModel):
     def __init__(self):
         super().__init__("gpt-4.1", 8192, 0.000002, 0.000008)
         
 class Gemini_2_5_flash_preview(OpenaiModel):
     def __init__(self):
-        super().__init__("google/gemini-2.5-flash-preview", 8192, 0.00000015, 0.0000006)
+        super().__init__("google/gemini-2.5-flash-preview", 16384, 0.00000015, 0.0000006)
 
+class Gemini_2_5_flash_lite_preview(OpenaiModel):
+    def __init__(self):
+        super().__init__("google/gemini-2.5-flash-lite-preview-06-17", 8192, 0.00000010, 0.0000004)
+        
+class Kimi_k2(OpenaiModel):
+    def __init__(self):
+        super().__init__("moonshotai/kimi-k2", 8192, 0.00000014, 0.00000249)     
+        
 class Qwen25_72B(OpenaiModel):
     def __init__(self):
         super().__init__("Qwen/Qwen2.5-72B-Instruct-128K", 4096,0.00000057,  0.00000057)
@@ -414,7 +426,7 @@ class DeepSeekV25(OpenaiModel):
 
 class DeepSeekV3(OpenaiModel):
     def __init__(self):
-        super().__init__("deepseek/deepseek-chat-v3-0324", 8192,0.00000027,  0.0000011)
+        super().__init__("deepseek/deepseek-chat-v3-0324", 8192,0.00000028,  0.00000088)
         # self.note = "Qwen2.5-72B."
 
 class DeepSeek(OpenaiModel):
