@@ -29,13 +29,24 @@ dataset produced by the SWE-Builder stage (the output of `app/main.py` under the
 
 Input is simply the SWE-Builder output dataset (use it as-is).
 
+Stage 1 uses direct OpenAI-compatible chat completions (not LiteLLM). Configure
+the LLM before running:
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+export OPENAI_BASE_URL="https://api.openai.com/v1"  # optional override
+```
+
+Set the model name via `--model_name <model_name>` (or `OPENAI_MODEL` if already set).
+
 ```bash
 python inference/build_image/main.py \
   --input /path/to/instances.json \
   --output /path/to/run_dir \
   --max-iterations 5 \
   --eval-timeout 300 \
-  --max-workers 2
+  --max-workers 2 \
+  --model_name <model_name>
 ```
 
 `--eval-timeout` defaults to 300 seconds if omitted. Tune it for your needs; instances
@@ -51,6 +62,7 @@ Parameter reference (Stage 1):
 | `--eval-timeout` | Eval script timeout (seconds) | `300` |
 | `--max-workers` | Parallel workers | `2` |
 | `--skip-existing` | Skip instances with existing `summary.json` | flag |
+| `--model_name` | LLM model name | `<model_name>` |
 
 Outputs in `--output`:
 - `summary.json` / `summary_main.json`

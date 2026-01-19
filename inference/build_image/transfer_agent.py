@@ -70,6 +70,7 @@ class TransferAgent:
         max_iteration_num: int,
         output_path: str,
         eval_timeout: int = 300,
+        model_name: str | None = None,
     ) -> None:
         self.task_dict = task_dict
         self.max_iteration_num = max_iteration_num
@@ -98,6 +99,7 @@ class TransferAgent:
         self.responses = ResponseTracker(self.output_dir)
         self.iter_recorder = IterationRecorder(self.output_dir)
         self.self_check_max_revisions = int(os.environ.get("SELF_CHECK_MAX_REVISIONS", "2"))
+        self.model_name = model_name or os.getenv("OPENAI_MODEL")
 
         self.manual_dockerfile_path = None
         self.execution_mode = "auto"
@@ -225,9 +227,9 @@ class TransferAgent:
 
     def _call_model_messages(self) -> Tuple[str, Dict[str, Any], float]:
         max_attempts = 3
-        model_name = os.getenv("OPENAI_MODEL")
+        model_name = self.model_name
         if not model_name:
-            raise ParsingError("Missing OPENAI_MODEL for LLM calls")
+            raise ParsingError("Missing model name (set --model_name or OPENAI_MODEL)")
         for attempt in range(1, max_attempts + 1):
             payload = {"model": model_name, "messages": self.agent_context}
             data = self._call_model(payload)

@@ -7,7 +7,6 @@ import argparse
 import concurrent.futures
 import json
 import logging
-import os
 import shutil
 from pathlib import Path
 from typing import Any
@@ -95,6 +94,7 @@ def run_instance(
     output_dir: Path,
     max_iterations: int,
     eval_timeout: int,
+    model_name: str | None,
 ) -> dict[str, Any]:
     inst_id = instance.get("instance_id")
     if not inst_id:
@@ -117,6 +117,7 @@ def run_instance(
             max_iteration_num=max_iterations,
             output_path=str(inst_output),
             eval_timeout=eval_timeout,
+            model_name=model_name,
         )
         logger.info("starting instance %s", inst_id)
         ok = agent.run_task()
@@ -141,13 +142,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eval-timeout", type=int, default=300, help="eval script timeout (seconds)")
     parser.add_argument("--max-workers", type=int, default=2, help="parallel workers")
     parser.add_argument("--skip-existing", action="store_true", help="skip instances with summary.json already present")
+    parser.add_argument(
+        "--model_name",
+        help="LLM model name for OpenAI-compatible calls",
+    )
     return parser
 
 
 def main() -> None:
     args = build_arg_parser().parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-
     input_path = Path(args.input)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -173,6 +177,7 @@ def main() -> None:
                     output_dir,
                     args.max_iterations,
                     args.eval_timeout,
+                    args.model_name,
                 ): inst["instance_id"]
                 for inst in pending
             }
