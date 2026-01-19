@@ -14,6 +14,8 @@ pip install -r requirements-inference.txt
 
 ## Stage 1: Build SWE Env Images Locally
 
+### Motivation
+
 After data collection, we typically have Dockerfiles for each instance. To run
 experiments, we build these images locally first. This stage also normalizes
 the environment so downstream evaluation is stable and less noisy. Common
@@ -22,12 +24,18 @@ issues we handle here include:
 - Repositories not mounted at `/testbed` (e.g., code lives under `/testbed/mypy`).
 - Extra environment files under `/testbed` causing noisy diffs/patches (e.g., `/testbed/.venv`).
 
+### Input
+
 Use the transfer agent runner (LLM-driven) to normalize the environment and build images,
 then embed artifacts (Dockerfile + eval script) into a new dataset file. Use the
 dataset produced by the SWE-Builder stage (the output of `app/main.py` under the
 `results` directory) as-is.
 
 Input is simply the SWE-Builder output dataset (use it as-is).
+
+### LLM Configuration (Stage 1)
+
+Before running, **set the Stage 1 env vars below**.
 
 Stage 1 uses direct OpenAI-compatible chat completions (not LiteLLM). Configure
 the LLM before running:
@@ -39,6 +47,8 @@ export OPENAI_BASE_URL="YOUR_URL"  # optional override
 
 Set the model name via `--model_name <model_name>` (or `OPENAI_MODEL` if already set).
 
+### Command
+
 ```bash
 python inference/build_image/main.py \
   --input /path/to/instances.json \
@@ -49,10 +59,12 @@ python inference/build_image/main.py \
   --model_name <model_name>
 ```
 
-`--eval-timeout` defaults to 300 seconds if omitted. Tune it for your needs; instances
-that exceed the timeout are marked as failures and filtered out of the transferred dataset.
+### Notes
 
-Parameter reference (Stage 1):
+- `--eval-timeout` defaults to 300 seconds if omitted. Instances that exceed the timeout are marked
+  as failures and filtered out of the transferred dataset.
+
+### Parameters (Stage 1)
 
 | Parameter | Meaning | Allowed / Example |
 | --- | --- | --- |
@@ -64,6 +76,8 @@ Parameter reference (Stage 1):
 | `--skip-existing` | Skip instances with existing `summary.json` | flag |
 | `--model_name` | LLM model name | `<model_name>` |
 
+### Outputs
+
 Outputs in `--output`:
 - `summary.json` / `summary_main.json`
 - `<input_stem>_transferred.json` (successful entries with `docker_image`, `dockerfile`, `eval_script`).
@@ -72,6 +86,8 @@ Outputs in `--output`:
 
 ## Stage 2: Run a Coding Agent on the Built SWE Environment
 
+### Supported Agents
+
 Run against the transferred dataset produced in Stage 1. We currently support
 mini_swe_agent, the DeepSWE editing agent (r2egym scaffold), and OpenHands (last).
 OpenHands is unofficial here and diverges significantly from the original
@@ -79,18 +95,28 @@ implementation, so please use it with caution. We aim for a closer reproduction
 over time and welcome PRs. At the moment, only non-function calling mode is
 supported.
 
+### Dataset Requirements
+
 The dataset should be the Stage 1 transferred output (for example,
 `/path/to/run_dir/<input_stem>_transferred.json`). Each entry should include:
 `instance_id`, `docker_image`, `dockerfile`, and `eval_script`.
 
 Model calls go through LiteLLM. Set your base URL and provider API key before
 running (examples below).
+If you skipped the quickstart section above, set the Stage 2 env vars now.
+
+### LLM Configuration (Stage 2)
 
 ```bash
 export LLM_BASE_URL="YOUR_URL"
 export OPENAI_API_KEY="YOUR_API_KEY"
 export OPENROUTER_API_KEY="YOUR_OPENROUTER_KEY"
 ```
+
+### Examples
+
+**Run these commands from the repo root.** If you run from another directory,
+set `PYTHONPATH` to the repo path first.
 
 DeepSWE editing agent (r2egym scaffold):
 ```bash
@@ -145,11 +171,10 @@ Notes:
 - If you already have local images, you can skip Stage 1 and provide a dataset that
   includes `instance_id`, `docker_image`, `dockerfile`, and `eval_script`.
 - `--backend` currently supports `docker` only.
-- If running scripts from outside the repo root, set `PYTHONPATH` to the repo path.
 - If you use a non-OpenAI provider, set the matching API key env var (for example, `ANTHROPIC_API_KEY`).
 - This codebase is built on top of R2E-Gym; thanks to the original authors.
 
-Parameter reference (common):
+### Parameters (Stage 2)
 
 | Parameter | Meaning | Allowed / Example |
 | --- | --- | --- |
