@@ -26,6 +26,8 @@ from inference.agenthub.tools import (
     str_replace_editor_tool,
     execute_bash_tool,
     submit_tool,
+    think_tool,
+    task_tracker_tool,
 )
 import traceback
 try:
@@ -85,6 +87,7 @@ class Agent:
         self.instance_prompt_template = args.instance_prompt
         self.command_files = args.command_files
         self.other_args = args.other_args or {}
+        self.args.other_args = self.other_args
         self.logger.info(f"Initialized Agent: {name} with LLM: {args.llm_name}")
         self.max_retries = self.other_args.get("max_retries", 5)
         self.llm_timeout = self.other_args.get("timeout", 3000)
@@ -95,6 +98,20 @@ class Agent:
         self._mini_templates_loaded = False
         self._mini_templates = None
         self._mini_jinja_env = None
+        self._task_tracker_state = []
+        self._task_tracker_content = ""
+        self._task_tracker_initialized = False
+        self._task_tracker_virtual_path = "session/TASKS.md"
+        self._thought_log = []
+
+    def _has_command_tool(self, name: str) -> bool:
+        for cmd_file in self.command_files or []:
+            try:
+                if Path(cmd_file).stem == name:
+                    return True
+            except Exception:
+                continue
+        return False
 
     @staticmethod
     def _normalize_task_placeholder(template: str) -> str:
@@ -284,6 +301,11 @@ class Agent:
         """Reset the agent's trajectory."""
         self.trajectory_steps = []
         self.history = []
+        self._task_tracker_state = []
+        self._task_tracker_content = ""
+        self._task_tracker_initialized = False
+        self._task_tracker_virtual_path = "session/TASKS.md"
+        self._thought_log = []
 
     def _count_tokens(self, messages: List[Dict[str, str]]) -> int:
         """
@@ -304,8 +326,18 @@ class Agent:
         if self.use_fn_calling:
             if self.scaffold == "r2egym":
                 tools = [search_tool, file_editor, r2egym_bash_execute_tool, finish_tool]
-            elif self.scaffold == "openhands" or self.scaffold == "sweagent":
+            elif self.scaffold == "openhands":
                 tools = [str_replace_editor_tool, execute_bash_tool, submit_tool]
+            elif self.scaffold == "sweagent":
+                tools = [str_replace_editor_tool, execute_bash_tool, submit_tool]
+            if tools:
+                existing_names = {
+                    t.get("function", {}).get("name") for t in tools if isinstance(t, dict)
+                }
+                if self._has_command_tool("think") and think_tool["function"]["name"] not in existing_names:
+                    tools.append(think_tool)
+                if self._has_command_tool("task_tracker") and task_tracker_tool["function"]["name"] not in existing_names:
+                    tools.append(task_tracker_tool)
             if "vertex" not in self.llm_name.lower():
                 self.logger.warning(f"using prompt caching for {self.llm_name}")
                 # vertex is not supported yet: https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude-prompt-caching
@@ -320,6 +352,8 @@ class Agent:
                             breakpoints_remaining -= 1
                         else:
                             break
+            if tools:
+                self.other_args["tools_schema"] = copy.deepcopy(tools)
 
         # Start timer
         start_time = time.time()
@@ -421,6 +455,89 @@ class Agent:
         fmt_error = self._render_mini_template(template, actions=actions)
         return response_text.strip(), Action(function_name="", parameters={}), fmt_error
 
+    def _render_task_tracker_content(self) -> str:
+        content = "# Task List\n\n"
+        for i, task in enumerate(self._task_tracker_state, 1):
+            status = task.get("status", "todo")
+            status_label = {
+                "todo": "⏳",
+                "in_progress": "🔄",
+                "done": "✅",
+            }.get(status, "⏳")
+            title = task.get("title", "")
+            notes = task.get("notes", "")
+            content += f"{i}. {status_label} {title}\n"
+            content += f"{notes}\n"
+        return content
+
+    def _run_meta_tool(self, action: Action) -> Tuple[str, float, bool, Dict[str, Any]]:
+        start_time = time.time()
+        tool_name = action.function_name
+
+        if tool_name == "think":
+            thought = action.parameters.get("thought", "")
+            if not isinstance(thought, str):
+                thought = json.dumps(thought, ensure_ascii=True)
+            if thought:
+                self._thought_log.append(thought)
+            obs = "Your thought has been logged."
+            return obs, 0, False, {"total_time": time.time() - start_time}
+
+        if tool_name == "task_tracker":
+            command = action.parameters.get("command")
+            if command == "view":
+                if not self._task_tracker_initialized:
+                    obs = 'No task list found. Use the "plan" command to create one.'
+                else:
+                    if not self._task_tracker_content:
+                        self._task_tracker_content = self._render_task_tracker_content()
+                    obs = self._task_tracker_content
+                return obs, 0, False, {"total_time": time.time() - start_time}
+
+            if command != "plan":
+                obs = f"Unknown command: {command}"
+                return obs, 0, False, {"total_time": time.time() - start_time}
+
+            raw_task_list = action.parameters.get("task_list", [])
+            if not isinstance(raw_task_list, list):
+                obs = (
+                    'Invalid format for "task_list". Expected a list but got '
+                    f"{type(raw_task_list)}."
+                )
+                return obs, 0, False, {"total_time": time.time() - start_time}
+
+            normalized_task_list = []
+            for i, task in enumerate(raw_task_list):
+                if not isinstance(task, dict):
+                    obs = (
+                        "Unexpected task format in task_list: "
+                        f"{type(task)}. Each task should be a dictionary."
+                    )
+                    return obs, 0, False, {"total_time": time.time() - start_time}
+                normalized_task_list.append(
+                    {
+                        "id": task.get("id", f"task-{i + 1}"),
+                        "title": task.get("title", "Untitled task"),
+                        "status": task.get("status", "todo"),
+                        "notes": task.get("notes", ""),
+                    }
+                )
+
+            self._task_tracker_state = normalized_task_list
+            self._task_tracker_initialized = True
+            self._task_tracker_content = self._render_task_tracker_content()
+
+            obs = (
+                "Task list has been updated with "
+                f"{len(self._task_tracker_state)} items. "
+                "Stored in session directory: "
+                f"{self._task_tracker_virtual_path}"
+            )
+            return obs, 0, False, {"total_time": time.time() - start_time}
+
+        obs = f"Tool not supported: {tool_name}"
+        return obs, 0, False, {"total_time": time.time() - start_time}
+
     def parse_response_v2(self, response_text: str) -> Tuple[str, Action]:
         """
         Extracts:
@@ -494,15 +611,8 @@ class Agent:
         start_time = time.time()
         self.llm_timeout = max_llm_time
 
-        # if self.llm_name is not gpt or sonnet, disable fn calling
-        support_fn_calling = (
-            "gpt" in self.llm_name
-            or "sonnet" in self.llm_name
-            or "o3" in self.llm_name
-            or "o4" in self.llm_name
-            and "qwen" not in self.llm_name
-        )
-        self.use_fn_calling = use_fn_calling and support_fn_calling
+        # Respect the caller's choice; do not auto-disable fn calling.
+        self.use_fn_calling = use_fn_calling
         self.logger.warning(f"Using fn calling: {self.use_fn_calling}")
 
         # Log the environment and agent
@@ -633,7 +743,10 @@ class Agent:
             else:
                 # Send the action to the environment
                 try:
-                    obs, reward, done, info = env.step(action, timeout=max_exec_time)
+                    if action.function_name in ["think", "task_tracker"] and self._has_command_tool(action.function_name):
+                        obs, reward, done, info = self._run_meta_tool(action)
+                    else:
+                        obs, reward, done, info = env.step(action, timeout=max_exec_time)
                     # env.runtime.commit_after_step(step_count)
                 except Exception as e:
                     obs = str(e)
@@ -676,26 +789,33 @@ class Agent:
                     ]  # only keep the first tool call
                 self.history.append(assistant_response)
                 # add tool response / user response to history
-                try:
-                    function_name = (
-                        response.choices[0].message.tool_calls[0].function.name
-                    )
-                    function_id = response.choices[0].message.tool_calls[0].id
-                    self.history.append(
-                        {
-                            "role": "tool",
-                            "content": str(obs),
-                            "name": function_name,
-                            "tool_call_id": function_id,
-                        }
-                    )
-                    self.logger.warning("logging fn response as a tool call")
+                tool_calls = getattr(response.choices[0].message, "tool_calls", None)
+                if tool_calls:
+                    try:
+                        function_name = tool_calls[0].function.name
+                        function_id = tool_calls[0].id
+                        self.history.append(
+                            {
+                                "role": "tool",
+                                "content": str(obs),
+                                "name": function_name,
+                                "tool_call_id": function_id,
+                            }
+                        )
+                        self.logger.warning("logging fn response as a tool call")
+                        self.logger.warning(
+                            f"number of fn calls: {len(tool_calls)}"
+                        )
+                    except Exception as e:
+                        self.logger.error(f"Error logging tool response: {e}")
+                        self.logger.warning(
+                            "fallback: logging fn response as a user message"
+                        )
+                        self.history.append({"role": "user", "content": obs_content})
+                else:
                     self.logger.warning(
-                        f"number of fn calls: {len(response.choices[0].message.tool_calls)}"
+                        "No tool_calls in assistant message; logging observation as user message."
                     )
-                except Exception as e:
-                    self.logger.error(f"Error logging tool response: {e}")
-                    self.logger.warning("fallback: logging fn response as a tool call")
                     self.history.append({"role": "user", "content": obs_content})
             else:
                 self.logger.warning("logging fn response as a user message")

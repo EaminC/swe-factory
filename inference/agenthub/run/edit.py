@@ -208,6 +208,9 @@ def postprocess_trajectories_history_only(exp_name: str, traj_dir_path: Path, ru
     - trajectories.jsonl: all histories
     - trajectories_rejection_sampling.jsonl: reward == 1 histories
     - reward_summary.json: counts and instance_id lists for reward 1/0
+
+    If a tools schema is present (fn-calling), wrap each line as:
+    {"messages": [...], "tools": [...]}
     """
     src = traj_dir_path / f"{exp_name}.jsonl"
     if not src.exists():
@@ -227,9 +230,13 @@ def postprocess_trajectories_history_only(exp_name: str, traj_dir_path: Path, ru
             if history is None:
                 run_logger.warning("postprocess: missing history; skip line")
                 continue
+            agent_args = obj.get("agent_args") or {}
+            other_args = agent_args.get("other_args") or {}
+            tools = other_args.get("tools_schema")
             records.append(
                 {
                     "history": history,
+                    "tools": tools,
                     "reward": obj.get("reward"),
                     "inst_id": (obj.get("ds") or {}).get("instance_id") or (obj.get("ds") or {}).get("docker_image"),
                 }
@@ -249,7 +256,11 @@ def postprocess_trajectories_history_only(exp_name: str, traj_dir_path: Path, ru
 
     with traj_path.open("w", encoding="utf-8") as f_all, traj_r1_path.open("w", encoding="utf-8") as f_r1:
         for rec in records:
-            h_line = json.dumps(rec["history"])
+            if rec["tools"] is not None:
+                payload = {"messages": rec["history"], "tools": rec["tools"]}
+            else:
+                payload = rec["history"]
+            h_line = json.dumps(payload)
             f_all.write(h_line + "\n")
             if rec["reward"] == 1:
                 f_r1.write(h_line + "\n")
