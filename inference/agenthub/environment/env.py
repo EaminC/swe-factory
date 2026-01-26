@@ -11,6 +11,7 @@ from inference.agenthub.action import Action
 from inference.agenthub.utils.log import get_logger
 from inference.agenthub.observation import Observation
 from inference.agenthub.runtime.docker import DockerRuntime
+from inference.agenthub.runtime.remote import RemoteRuntime
 from inference.agenthub.agent.commands import ParseCommandBash
 
 cmd_parser = ParseCommandBash()
@@ -54,15 +55,23 @@ class RepoEnv(gym.Env):
             tool_repo_path if tool_repo_path is not None else args.tool_repo_path
         )
         self.scaffold = scaffold
-        self.runtime = DockerRuntime(
-            ds=args.ds,
-            command=["/bin/bash", "-l"],
-            logger=self.logger,
-            backend=backend,
-            root_mode=self.root_mode,
-            tool_repo_path=self.tool_repo_path,
-            scaffold=self.scaffold,
-        )
+        if backend == "remote":
+            self.runtime = RemoteRuntime(
+                ds=args.ds,
+                docker_image=args.ds.get("docker_image"),
+                repo_name=args.ds.get("repo") or args.ds.get("repo_name"),
+                swefactory=True,
+            )
+        else:
+            self.runtime = DockerRuntime(
+                ds=args.ds,
+                command=["/bin/bash", "-l"],
+                logger=self.logger,
+                backend=backend,
+                root_mode=self.root_mode,
+                tool_repo_path=self.tool_repo_path,
+                scaffold=self.scaffold,
+            )
 
         self.args = args
         self.done = False
@@ -87,15 +96,23 @@ class RepoEnv(gym.Env):
         self.state = None
         self.done = False
         # also just recreate env again with the same args
-        self.runtime = DockerRuntime(
-            ds=self.args.ds,
-            command=["/bin/bash", "-l"],
-            logger=self.logger,
-            backend=self.backend,
-            root_mode=self.root_mode,
-            tool_repo_path=self.tool_repo_path,
-            scaffold=self.scaffold,
-        )
+        if self.backend == "remote":
+            self.runtime = RemoteRuntime(
+                ds=self.args.ds,
+                docker_image=self.args.ds.get("docker_image"),
+                repo_name=self.args.ds.get("repo") or self.args.ds.get("repo_name"),
+                swefactory=True,
+            )
+        else:
+            self.runtime = DockerRuntime(
+                ds=self.args.ds,
+                command=["/bin/bash", "-l"],
+                logger=self.logger,
+                backend=self.backend,
+                root_mode=self.root_mode,
+                tool_repo_path=self.tool_repo_path,
+                scaffold=self.scaffold,
+            )
         return self.observation  # self.get_observation()
 
     def add_commands(self, cmd_files: list[str]):

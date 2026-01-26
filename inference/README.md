@@ -88,12 +88,12 @@ Outputs in `--output`:
 
 Run against the transferred dataset produced in Stage 1.
 
-| Agent | Scaffold | Tools | Recommended Use |
-| --- | --- | --- | --- |
-| mini_swe_agent | `mini_swe_agent` | bash-only | multi-language / non-Python repos |
-| live_swe_agent | `live_swe_agent` | bash-only | multi-language / non-Python repos |
-| DeepSWE (r2egym) | `r2egym` | Python tools | Python repos |
-| OpenHands (experimental, unofficial) | `openhands` | Python tools | Python repos |
+| Agent | Scaffold | Tools | Notes | Recommended Use |
+| --- | --- | --- | --- | --- |
+| mini_swe_agent | `mini_swe_agent` | bash-only | non-fn only | multi-language / non-Python repos |
+| live_swe_agent | `live_swe_agent` | bash-only | non-fn only | multi-language / non-Python repos |
+| DeepSWE (r2egym) | `r2egym` | Python tools | fn + non-fn supported | Python repos |
+| OpenHands (experimental, unofficial) | `openhands` | Python tools | fn + non-fn supported | Python repos |
 
 OpenHands diverges significantly from the original implementation, so please use it with caution.
 
@@ -147,7 +147,7 @@ python -m inference.agenthub.run.edit runagent_multiple \
   --traj_dir ./run_logs/deepswe_run \
   --exp_name deepswe_run \
   --llm_name openai/gpt-4o-mini \
-  --use_fn_calling False \
+  --use_fn_calling True \
   --backend docker \
   --scaffold r2egym
 ```
@@ -179,7 +179,7 @@ python -m inference.agenthub.run.edit runagent_multiple \
   --traj_dir ./run_logs/openhands_run \
   --exp_name openhands_run \
   --llm_name openai/gpt-4o-mini \
-  --use_fn_calling False \
+  --use_fn_calling True \
   --backend docker \
   --scaffold openhands
 ```
@@ -188,6 +188,8 @@ Notes:
 - `--split` is only a label for the local JSON loader; keep it consistent (e.g., `dev`).
 - If you already have local images, you can skip Stage 1 and provide a dataset that
   includes `instance_id`, `docker_image`, `dockerfile`, and `eval_script`.
+- For `r2egym` and `openhands`, you can use either `--use_fn_calling True` or `False`.
+  Use `True` only if your model/provider returns tool calls; there is no auto fallback.
 - `--backend` currently supports `docker` only.
 - If you use a non-OpenAI provider, set the matching API key env var (for example, `ANTHROPIC_API_KEY`).
 - This codebase is built on top of R2E-Gym; thanks to the original authors.
@@ -211,6 +213,11 @@ run_logs/<exp_name>/
     metadata.json
 ```
 
+History-only files:
+- `trajectories.jsonl` and `trajectories_rejection_sampling.jsonl`
+  - non-fn-calling: each line is a raw `messages` list
+  - fn-calling: each line is `{"messages": [...], "tools": [...]}` (tools schema matches the model call)
+
 ### Parameters (Stage 2)
 
 | Parameter | Meaning | Allowed / Example |
@@ -223,7 +230,7 @@ run_logs/<exp_name>/
 | `--traj_dir` | Output directory for logs/artifacts | `./run_logs/my_run` |
 | `--exp_name` | Experiment name | `my_run` |
 | `--llm_name` | LiteLLM model name | `openai/gpt-4o-mini` |
-| `--use_fn_calling` | Function-calling mode | `False` (only supported) |
+| `--use_fn_calling` | Function-calling mode | `True` or `False` (depends on scaffold + model support) |
 | `--backend` | Runtime backend | `docker` |
 | `--scaffold` | Agent scaffold | `mini_swe_agent` / `r2egym` / `live_swe_agent` / `openhands` |
 
