@@ -116,15 +116,14 @@ The validated instances can be filtered using the generated `fail2pass_status.js
 
 **Note:** Although our automated validation demonstrates high precision, manual checks are recommended to ensure dataset quality, particularly to identify and filter out error-to-pass cases.
 
-### 🧪 Stage IV: Agent Inference
-
-You can run coding agents on the SWE environments collected by SWE-Factory. We
-plan to add more agent scaffolds and improve the module; PRs are welcome. See
-[inference/README.md](./inference/README.md) for usage.
-
 ## 📌 Using Your Own Dataset
 
-After building your dataset for evaluation and training, check the [evaluation](./evaluation) directory for detailed instructions on how to run tests and obtain test exection feedback.
+🎯 Use case 1 (Benchmarking): submit patches and compute resolve rate via
+[evaluation](./evaluation).
+
+🤖 Use case 2 (Agent Inference): You can run coding agents on the SWE environments
+collected by SWE-Factory. We plan to add more agent scaffolds and improve the
+module; PRs are welcome. See [inference/README.md](./inference/README.md) for usage.
 
 ## 📖 Citation
 
