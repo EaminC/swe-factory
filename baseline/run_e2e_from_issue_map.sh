@@ -67,7 +67,7 @@ python data_collection/collect/get_version.py \
 # 4. SWE-Builder
 echo "[4/6] SWE-Builder (app.main swe-bench) ..."
 python -m app.main swe-bench \
-  --model gpt-4.1-mini \
+  --model tensorblock/gpt-4.1-mini \
   --tasks-map "$INSTANCES_VERSIONS" \
   --num-processes 10 \
   --model-temperature 0.2 \
