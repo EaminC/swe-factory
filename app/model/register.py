@@ -34,6 +34,8 @@ def register_all_models() -> None:
     common.register_model(gpt.DeepSeek())
     common.register_model(gpt.Gpt4_1())
     common.register_model(gpt.Gpt4_1_mini())
+    for model_id in gpt.TENSORBLOCK_MODEL_IDS:
+        common.register_model(gpt.create_tensorblock_model(model_id))
     common.register_model(gpt.Gpt5_mini())
     common.register_model(gpt.Gemini_2_5_flash_preview())
     common.register_model(gpt.Gemini_2_5_flash_lite_preview())
