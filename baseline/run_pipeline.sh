@@ -131,8 +131,8 @@ echo "=============================================="
       echo "Directory not found: $GOLD_DIR, skipping judge_fail2pass"
     fi
 
-    echo -e "\n[7/6] F2P checking..."
-    python scripts/f2p_from_swegent_bundle.py 
+    #echo -e "\n[7/6] F2P checking..."
+    #python scripts/f2p_from_swegent_bundle.py 
     # How do we do f2p checking?
 
     # ==============================================================================
