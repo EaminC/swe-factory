@@ -94,6 +94,11 @@ See **`sf`** in this folder for the same pipeline as individual commands (with f
 
 ---
 
+## One click to run script
+```bash
+./run_pipeline.sh baseline/issue_pr_map.json
+```
+
 ## Files in this folder
 
 | File | Purpose |
