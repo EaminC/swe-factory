@@ -1,0 +1,53 @@
+diff --git a/gpt_engineer/applications/cli/learning.py b/gpt_engineer/applications/cli/learning.py
+--- a/gpt_engineer/applications/cli/learning.py
++++ b/gpt_engineer/applications/cli/learning.py
+@@ -79,7 +79,7 @@ class Learning:
+     Attributes
+     ----------
+     prompt : str
+-        The initial prompt provided to the GPT Engineer.
++        A JSON string representing the prompt provided to GPT Engineer.
+     model : str
+         The name of the model used during the session.
+     temperature : float
+@@ -98,7 +98,7 @@ class Learning:
+         The version of the learning data schema.
+     """
+ 
+-    prompt: Prompt
++    prompt: str
+     model: str
+     temperature: float
+     config: str
+@@ -266,7 +266,7 @@ def extract_learning(
+         An instance of Learning containing all the session details and user feedback.
+     """
+     return Learning(
+-        prompt=prompt,
++        prompt=prompt.to_json(),
+         model=model,
+         temperature=temperature,
+         config=json.dumps(config),
+diff --git a/gpt_engineer/core/prompt.py b/gpt_engineer/core/prompt.py
+--- a/gpt_engineer/core/prompt.py
++++ b/gpt_engineer/core/prompt.py
+@@ -1,3 +1,5 @@
++import json
++
+ from typing import Dict, Optional
+ 
+ 
+@@ -30,3 +32,13 @@ def to_langchain_content(self):
+                 content.append(image_content)
+ 
+         return content
++
++    def to_dict(self):
++        return {
++            "text": self.text,
++            "image_urls": self.image_urls,
++            "entrypoint_prompt": self.entrypoint_prompt,
++        }
++
++    def to_json(self):
++        return json.dumps(self.to_dict())

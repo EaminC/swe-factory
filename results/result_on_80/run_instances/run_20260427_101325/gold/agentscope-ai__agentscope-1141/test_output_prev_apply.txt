@@ -1,0 +1,129 @@
++ cd /testbed
++ git checkout c29bdded396eff9a47aa36643ce1169b2ebf5318 tests/formatter_dashscope_test.py
+Updated 1 path from aec965c4
++ git apply -v -
+Checking patch tests/formatter_dashscope_test.py...
+Applied patch tests/formatter_dashscope_test.py cleanly.
++ source /testbed/testbed/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/testbed
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/testbed/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ pytest --tb=short -q -rA tests/formatter_dashscope_test.py
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+__________________ TestDashScopeFormatter.test_chat_formatter __________________
+tests/formatter_dashscope_test.py:519: in test_chat_formatter
+    self.assertListEqual(self.ground_truth_chat, res)
+E   AssertionError: Lists differ: [{'ro[525 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[516 chars]o.'}] != [{'ro[525 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[530 chars]o.'}]
+E   
+E   First differing element 6:
+E   {'rol[24 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[79 chars]'}}]}
+E   {'rol[24 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[93 chars]'}}]}
+E   
+E   Diff is 1380 characters long. Set self.maxDiff to None to see it.
+_____ TestDashScopeFormatter.test_chat_formatter_with_extract_media_blocks _____
+tests/formatter_dashscope_test.py:677: in test_chat_formatter_with_extract_media_blocks
+    self.assertListEqual(expected_result, res)
+E   AssertionError: Lists differ: [{'ro[525 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[1125 chars]o.'}] != [{'ro[525 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[1139 chars]o.'}]
+E   
+E   First differing element 6:
+E   {'rol[24 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[79 chars]'}}]}
+E   {'rol[24 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[93 chars]'}}]}
+E   
+E   Diff is 2248 characters long. Set self.maxDiff to None to see it.
+_______________ TestDashScopeFormatter.test_multiagent_formater ________________
+tests/formatter_dashscope_test.py:700: in test_multiagent_formater
+    self.assertListEqual(res, self.ground_truth_multiagent_2)
+E   AssertionError: Lists differ: [{'ro[571 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[1156 chars]y>'}] != [{'ro[571 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[1128 chars]y>'}]
+E   
+E   First differing element 2:
+E   {'rol[24 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[93 chars]'}}]}
+E   {'rol[24 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[79 chars]'}}]}
+E   
+E   Diff is 2537 characters long. Set self.maxDiff to None to see it.
+_ TestDashScopeFormatter.test_multiagent_formatter_with_promote_media_tool_result _
+tests/formatter_dashscope_test.py:903: in test_multiagent_formatter_with_promote_media_tool_result
+    self.assertListEqual(expected_result, res)
+E   AssertionError: Lists differ: [{'ro[571 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[1154 chars]y>'}] != [{'ro[571 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[1168 chars]y>'}]
+E   
+E   First differing element 2:
+E   {'rol[24 chars]t': [], 'tool_calls': [{'id': '1', 'type': 'fu[79 chars]'}}]}
+E   {'rol[24 chars]t': [{'text': None}], 'tool_calls': [{'id': '1[93 chars]'}}]}
+E   
+E     [{'content': "You're a helpful assistant.", 'role': 'system'},
+E      {'content': [{'text': '# Conversation History\n'
+E                            'The content between <history></history> tags contains '
+E                            'your conversation history\n'
+E                            '<history>\n'
+E                            'user: What is the capital of France?'},
+E                   {'image': 'file:///testbed/image.png'},
+E                   {'text': 'assistant: The capital of France is Paris.\n'
+E                            'user: What is the capital of Germany?'},
+E                   {'audio': 'https://example.com/audio1.mp3'},
+E                   {'text': 'assistant: The capital of Germany is Berlin.\n'
+E                            'user: What is the capital of Japan?\n'
+E                            '</history>'}],
+E       'role': 'user'},
+E   -  {'content': [],
+E   +  {'content': [{'text': None}],
+E       'role': 'assistant',
+E       'tool_calls': [{'function': {'arguments': '{"country": "Japan"}',
+E                                    'name': 'get_capital'},
+E                       'id': '1',
+E                       'type': 'function'}]},
+E      {'content': '- The capital of Japan is Tokyo.\n'
+E                  '- The returned image can be found at: ./image.png\n'
+E                  '- The returned audio can be found at: '
+E                  '/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.wav\n'
+E                  '- The returned video can be found at: '
+E                  '/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.mp4',
+E       'name': 'get_capital',
+E       'role': 'tool',
+E       'tool_call_id': '1'},
+E      {'content': [{'text': '<system-info>The following are the media contents from '
+E                            "the tool result of 'get_capital':"},
+E                   {'text': "\n- The image from './image.png': "},
+E                   {'image': 'file:///testbed/image.png'},
+E                   {'text': '\n'
+E                            '- The audio from '
+E                            "'/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.wav': "},
+E                   {'audio': '/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.wav'},
+E                   {'text': '\n'
+E                            '- The video from '
+E                            "'/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.mp4': "},
+E                   {'video': '/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.mp4'},
+E                   {'text': '</system-info>'}],
+E       'role': 'user'},
+E      {'content': '<history>\nassistant: The capital of Japan is Tokyo.\n</history>',
+E       'role': 'user'}]
+=========================== short test summary info ============================
+FAILED tests/formatter_dashscope_test.py::TestDashScopeFormatter::test_chat_formatter
+FAILED tests/formatter_dashscope_test.py::TestDashScopeFormatter::test_chat_formatter_with_extract_media_blocks
+FAILED tests/formatter_dashscope_test.py::TestDashScopeFormatter::test_multiagent_formater
+FAILED tests/formatter_dashscope_test.py::TestDashScopeFormatter::test_multiagent_formatter_with_promote_media_tool_result
+4 failed in 1.13s
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout c29bdded396eff9a47aa36643ce1169b2ebf5318 tests/formatter_dashscope_test.py
+OMNIGRIL_EXIT_CODE=1
+Updated 1 path from aec965c4

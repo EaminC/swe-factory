@@ -1,0 +1,87 @@
++ cd /testbed
++ git checkout 18887e9f86a6d8675a2b4aed03a1c190ef6e1581 libs/langgraph/tests/test_deprecation.py
+Updated 1 path from 968047d1
++ git apply -v -
+Checking patch libs/langgraph/tests/test_deprecation.py...
+Applied patch libs/langgraph/tests/test_deprecation.py cleanly.
++ git checkout 18887e9f86a6d8675a2b4aed03a1c190ef6e1581 libs/langgraph/tests/test_deprecation.py
+Updated 1 path from 968047d1
++ source /testbed/.venv/bin/activate
+++ '[' -z '' ']'
+++ '[' -n x ']'
+++ SCRIPT_PATH=/testbed/.venv/bin/activate
+++ '[' /testbed/.venv/bin/activate = /eval.sh ']'
+++ deactivate nondestructive
+++ unset -f pydoc
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ hash -r
+++ '[' -z '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ '[' linux-gnu = cygwin ']'
+++ '[' linux-gnu = msys ']'
+++ export VIRTUAL_ENV
+++ '[' -z '' ']'
+++ unset SCRIPT_PATH
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' xtestbed '!=' x ']'
+++ VIRTUAL_ENV_PROMPT=testbed
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ alias pydoc
+++ true
+++ hash -r
++ '[' '!' -f libs/langgraph/tests/test_deprecation.py ']'
++ make -C libs/langgraph test TEST=tests/test_deprecation.py
+make: Entering directory '/testbed/libs/langgraph'
+if [ "" = "false" ]; then \
+	make start-postgres &&\
+	make start-dev-server &&\
+	uv run pytest tests/test_deprecation.py; \
+	EXIT_CODE=$?; \
+	make stop-postgres; \
+	make stop-dev-server; \
+	exit $EXIT_CODE; \
+else \
+	NO_DOCKER=true uv run pytest tests/test_deprecation.py ; \
+	EXIT_CODE=$?; \
+	exit $EXIT_CODE; \
+fi
+warning: `VIRTUAL_ENV=/testbed/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-8.4.1, pluggy-1.6.0
+rootdir: /testbed/libs/langgraph
+configfile: pyproject.toml
+plugins: repeat-0.9.4, dotenv-0.5.2, anyio-4.9.0, langsmith-0.4.6, mock-3.14.1, syrupy-4.9.1, cov-6.2.1, xdist-3.8.0
+collected 14 items
+
+tests/test_deprecation.py ..............                                 [100%]
+
+=============================== warnings summary ===============================
+tests/test_deprecation.py::test_entrypoint_retry_arg
+tests/test_deprecation.py::test_config_schema_deprecation_on_entrypoint
+  /testbed/libs/langgraph/langgraph/func/__init__.py:517: LangGraphDeprecatedSinceV10: `config_type` is deprecated and will be removed. Please use `context_schema` instead. Deprecated in LangGraph V1.0 to be removed in V2.0.
+    return Pregel(
+
+tests/test_deprecation.py::test_config_schema_deprecation
+  /testbed/libs/langgraph/langgraph/graph/state.py:911: LangGraphDeprecatedSinceV10: `config_type` is deprecated and will be removed. Please use `context_schema` instead. Deprecated in LangGraph V1.0 to be removed in V2.0.
+    super().__init__(**kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations ==============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+======================== 14 passed, 3 warnings in 0.23s ========================
+make: Leaving directory '/testbed/libs/langgraph'
++ rc=0
++ echo OMNIGRIL_EXIT_CODE=0
+OMNIGRIL_EXIT_CODE=0

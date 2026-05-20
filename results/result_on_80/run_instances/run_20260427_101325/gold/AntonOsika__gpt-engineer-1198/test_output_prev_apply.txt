@@ -1,0 +1,73 @@
++ cd /testbed
++ git checkout c1f4a9da5dd0abed15b91f6d1c60464cad84ce6c tests/core/test_chat_to_files.py tests/core/test_salvage_correct_hunks.py
+Updated 2 paths from 5ea8da4
++ git apply -v -
+Checking patch tests/core/improve_function_test_cases/zbf_yml_missing_chat...
+Checking patch tests/core/improve_function_test_cases/zbf_yml_missing_code...
+Checking patch tests/core/test_chat_to_files.py...
+Checking patch tests/core/test_salvage_correct_hunks.py...
+Applied patch tests/core/improve_function_test_cases/zbf_yml_missing_chat cleanly.
+Applied patch tests/core/improve_function_test_cases/zbf_yml_missing_code cleanly.
+Applied patch tests/core/test_chat_to_files.py cleanly.
+Applied patch tests/core/test_salvage_correct_hunks.py cleanly.
++ pytest -v --tb=short --disable-warnings tests/core/test_chat_to_files.py tests/core/test_salvage_correct_hunks.py
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.1.2, pluggy-1.5.0 -- /usr/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: cov-4.1.0, anyio-4.3.0
+collecting ... collected 29 items
+
+tests/core/test_chat_to_files.py::test_basic_similarity PASSED           [  3%]
+tests/core/test_chat_to_files.py::test_case_insensitivity_and_whitespace PASSED [  6%]
+tests/core/test_chat_to_files.py::test_length_and_character_frequency PASSED [ 10%]
+tests/core/test_chat_to_files.py::test_edge_cases PASSED                 [ 13%]
+tests/core/test_chat_to_files.py::test_diff_changing_one_file PASSED     [ 17%]
+tests/core/test_chat_to_files.py::test_diff_adding_one_file PASSED       [ 20%]
+tests/core/test_chat_to_files.py::test_diff_changing_two_files PASSED    [ 24%]
+tests/core/test_chat_to_files.py::test_validate_diff_correct PASSED      [ 27%]
+tests/core/test_chat_to_files.py::test_correct_distorted_numbers PASSED  [ 31%]
+tests/core/test_chat_to_files.py::test_correct_skipped_lines PASSED      [ 34%]
+tests/core/test_chat_to_files.py::test_correct_skipped_lines_and_number_correction PASSED [ 37%]
+tests/core/test_chat_to_files.py::test_diff_regex PASSED                 [ 41%]
+tests/core/test_chat_to_files.py::test_single_diff PASSED                [ 44%]
+tests/core/test_chat_to_files.py::test_multi_diff_discard FAILED         [ 48%]
+tests/core/test_chat_to_files.py::test_controller_diff PASSED            [ 51%]
+tests/core/test_chat_to_files.py::test_simple_calculator_diff PASSED     [ 55%]
+tests/core/test_chat_to_files.py::test_complex_temperature_converter_diff PASSED [ 58%]
+tests/core/test_chat_to_files.py::test_complex_task_master_diff PASSED   [ 62%]
+tests/core/test_chat_to_files.py::test_long_file_diff PASSED             [ 65%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_complex_diff PASSED [ 68%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_long_diff PASSED [ 72%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_wrong_diff PASSED [ 75%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_non_change_diff PASSED [ 79%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_diff_on_apps_benchmark_6 PASSED [ 82%]
+tests/core/test_salvage_correct_hunks.py::test_validation_and_apply_diff_on_apps_benchmark_6_v2 PASSED [ 86%]
+tests/core/test_salvage_correct_hunks.py::test_create_two_new_files PASSED [ 89%]
+tests/core/test_salvage_correct_hunks.py::test_theo_case PASSED          [ 93%]
+tests/core/test_salvage_correct_hunks.py::test_zbf_yml_missing FAILED    [ 96%]
+tests/core/test_salvage_correct_hunks.py::test_clean_up_folder PASSED    [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_multi_diff_discard ____________________________
+tests/core/test_chat_to_files.py:341: in test_multi_diff_discard
+    assert (
+E   AssertionError: assert 'Multiple diffs found for a/file1.txt. Only the first one is kept.' in ''
+E    +  where '' = <built-in method getvalue of _io.StringIO object at 0x7f7bdd4bb760>()
+E    +    where <built-in method getvalue of _io.StringIO object at 0x7f7bdd4bb760> = <_io.StringIO object at 0x7f7bdd4bb760>.getvalue
+_____________________________ test_zbf_yml_missing _____________________________
+tests/core/test_salvage_correct_hunks.py:96: in test_zbf_yml_missing
+    updated_files, _ = salvage_correct_hunks(
+gpt_engineer/core/default/steps.py:351: in salvage_correct_hunks
+    file_to_lines_dict(files_dict[diff.filename_pre])
+E   KeyError: 'src/main/resources/application-local.yml'
+=========================== short test summary info ============================
+FAILED tests/core/test_chat_to_files.py::test_multi_diff_discard - AssertionE...
+FAILED tests/core/test_salvage_correct_hunks.py::test_zbf_yml_missing - KeyEr...
+========================= 2 failed, 27 passed in 2.39s =========================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout c1f4a9da5dd0abed15b91f6d1c60464cad84ce6c tests/core/test_chat_to_files.py tests/core/test_salvage_correct_hunks.py
+OMNIGRIL_EXIT_CODE=1
+Updated 2 paths from 5ea8da4

@@ -82,6 +82,8 @@ echo "=============================================="
 # 2. PIPELINE EXECUTION (Wrapped to capture all logs)
 # ==============================================================================
 {
+  # Track start time (epoch seconds)
+  PIPELINE_START_TIME=$(date +%s)
     echo "Starting cost tracker..."
     python stats/entry.py start || echo "Warning: Failed to start stats tracker"
 
@@ -140,8 +142,16 @@ echo "=============================================="
     # ==============================================================================
     echo "Waiting 5 seconds for API metrics to sync..."
     sleep 5
+
     echo "\nEnding cost tracker..."
     python stats/entry.py end || echo "Warning: Failed to end stats tracker"
+
+    # Calculate and print total duration
+    PIPELINE_END_TIME=$(date +%s)
+    PIPELINE_DURATION=$((PIPELINE_END_TIME - PIPELINE_START_TIME))
+    DURATION_HR=$((PIPELINE_DURATION / 3600))
+    DURATION_MIN=$(((PIPELINE_DURATION % 3600) / 60))
+    DURATION_SEC=$((PIPELINE_DURATION % 60))
 
     echo -e "\n=============================================="
     echo "          PIPELINE FUNNEL REPORT              "
@@ -151,10 +161,12 @@ echo "=============================================="
     echo "3. Built Instances         : $COUNT_INSTANCES"
     echo "4. Versioned Instances     : $COUNT_VERSIONS"
     echo "5. Agent Results Generated : $COUNT_RESULTS"
+
     echo "=============================================="
     echo "Master Log File   : $LOG_FILE"
     echo "SWE-Builder output: $OUTPUT_BASE"
     echo "Fail2Pass logs    : ${RUN_INSTANCES_DIR}/${RUN_ID}"
     echo "=============================================="
+    echo "Total pipeline duration: ${DURATION_HR}h ${DURATION_MIN}m ${DURATION_SEC}s"
 
 } 2>&1 | tee -a "$LOG_FILE"

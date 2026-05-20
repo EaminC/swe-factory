@@ -1,0 +1,90 @@
++ cd /testbed
++ git checkout 6c823a955c7be783a2a34c64d13b74aee8c552bf tests/format_test.py
+Updated 1 path from 8f2f16e0
++ git apply -v -
+Checking patch tests/format_test.py...
+Applied patch tests/format_test.py cleanly.
++ pytest -q -rA --tb=short tests/format_test.py
+......F......                                                            [100%]
+=================================== FAILURES ===================================
+_________________________ FormatTest.test_ollama_chat __________________________
+tests/format_test.py:297: in test_ollama_chat
+    self.assertEqual(prompt, ground_truth)
+E   AssertionError: Lists differ: [{'role': 'system', 'content': 'You are a helpful as[96 chars]ay'}] != [{'role': 'user', 'content': 'You are a helpful assi[94 chars]ay'}]
+E   
+E   First differing element 0:
+E   {'role': 'system', 'content': 'You are a helpful as[95 chars]day'}
+E   {'role': 'user', 'content': 'You are a helpful assi[93 chars]day'}
+E   
+E     [{'content': 'You are a helpful assistant\n'
+E                  '\n'
+E                  '## Conversation History\n'
+E                  'user: What is the weather today?\n'
+E                  'assistant: It is sunny today',
+E   -   'role': 'system'}]
+E   ?             --- ^
+E   
+E   +   'role': 'user'}]
+E   ?            +  ^
+----------------------------- Captured stdout call -----------------------------
+2026-04-27 12:05:35.620 | INFO     | agentscope.models.model:__init__:203 - Initialize model by configuration []
+=============================== warnings summary ===============================
+src/agentscope/manager/_monitor.py:20
+  /testbed/src/agentscope/manager/_monitor.py:20: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    _Base: DeclarativeMeta = declarative_base()
+
+../opt/testbed/lib/python3.10/site-packages/google/api_core/_python_version_support.py:275
+  /opt/testbed/lib/python3.10/site-packages/google/api_core/_python_version_support.py:275: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+    warnings.warn(message, FutureWarning)
+
+src/agentscope/models/gemini_model.py:15
+  /testbed/src/agentscope/models/gemini_model.py:15: FutureWarning: 
+  
+  All support for the `google.generativeai` package has ended. It will no longer be receiving 
+  updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+  See README for more details:
+  
+  https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  
+    import google.generativeai as genai
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+__________________ FormatTest.test_dashscope_multimodal_audio __________________
+----------------------------- Captured stdout call -----------------------------
+2026-04-27 12:05:35.612 | INFO     | agentscope.models.model:__init__:203 - Initialize model by configuration []
+______________________ FormatTest.test_ollama_generation _______________________
+----------------------------- Captured stdout call -----------------------------
+2026-04-27 12:05:35.856 | INFO     | agentscope.models.model:__init__:203 - Initialize model by configuration []
+--------------------------- Captured stdout teardown ---------------------------
+2026-04-27 12:05:36.195 | WARNING  | agentscope.models.openai_model:_format_msg_with_url:375 - The url /Users/xxx/def.mp3 is not a valid image url for OpenAI Chat API, skipped.
+--------------------------- Captured stdout teardown ---------------------------
+2026-04-27 12:05:36.198 | WARNING  | agentscope.models.openai_model:_format_msg_with_url:356 - The model gpt-4 is not a vision model. Skip the url in the message.
+________________ FormatTest.test_openai_chat_with_other_models _________________
+----------------------------- Captured stdout call -----------------------------
+[{'role': 'user', 'content': 'You are a helpful assistant\n\n## Conversation History\nuser: What is the weather today?\nassistant: It is sunny today'}]2026-04-27 12:05:36.201 | INFO     | agentscope.models.model:__init__:203 - Initialize model by configuration []
+2026-04-27 12:05:36.201 | WARNING  | agentscope.models.openai_model:__init__:118 - fail to get max_length for glm-4: 'Model [glm-4] not found in OPENAI_MAX_LENGTH. The last updated date is 20231212'
+
+_________________________ FormatTest.test_zhipuai_chat _________________________
+----------------------------- Captured stdout call -----------------------------
+2026-04-27 12:05:36.204 | INFO     | agentscope.models.model:__init__:203 - Initialize model by configuration []
+=========================== short test summary info ============================
+PASSED tests/format_test.py::FormatTest::test_dashscope_chat
+PASSED tests/format_test.py::FormatTest::test_dashscope_multimodal_audio
+PASSED tests/format_test.py::FormatTest::test_dashscope_multimodal_image
+PASSED tests/format_test.py::FormatTest::test_format_for_common_models
+PASSED tests/format_test.py::FormatTest::test_gemini_chat
+PASSED tests/format_test.py::FormatTest::test_litellm_chat
+PASSED tests/format_test.py::FormatTest::test_ollama_generation
+PASSED tests/format_test.py::FormatTest::test_openai_chat
+PASSED tests/format_test.py::FormatTest::test_openai_chat_vision
+PASSED tests/format_test.py::FormatTest::test_openai_chat_vision_with_wrong_model
+PASSED tests/format_test.py::FormatTest::test_openai_chat_with_other_models
+PASSED tests/format_test.py::FormatTest::test_zhipuai_chat
+FAILED tests/format_test.py::FormatTest::test_ollama_chat - AssertionError: L...
+1 failed, 12 passed, 3 warnings in 4.10s
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 6c823a955c7be783a2a34c64d13b74aee8c552bf tests/format_test.py
+Updated 1 path from 8f2f16e0

@@ -1,0 +1,170 @@
++ cd /testbed
++ git checkout e43c7debbd444486df77c83fc604641e18f1cd8a lib/crewai/tests/test_task.py
+Updated 1 path from aa3819739
++ git apply -v -
+Checking patch lib/crewai/tests/test_task.py...
+Applied patch lib/crewai/tests/test_task.py cleanly.
++ source /testbed/venv/bin/activate
+/eval.sh: line 42: /testbed/venv/bin/activate: No such file or directory
++ uv run pytest lib/crewai/tests/test_task.py -rA --tb=short -p no:cacheprovider
+warning: `VIRTUAL_ENV=venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+   Building crewai @ file:///testbed/lib/crewai
+   Building crewai-devtools @ file:///testbed/lib/devtools
+   Building crewai-tools @ file:///testbed/lib/crewai-tools
+      Built crewai-devtools @ file:///testbed/lib/devtools
+      Built crewai-tools @ file:///testbed/lib/crewai-tools
+      Built crewai @ file:///testbed/lib/crewai
+Uninstalled 3 packages in 3ms
+Installed 3 packages in 3ms
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0
+Using --randomly-seed=2854370064
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: split-0.10.0, Faker-38.2.0, langsmith-0.4.53, anyio-4.12.0, timeout-2.4.0, subprocess-1.5.3, recording-0.13.4, asyncio-1.3.0, singlestoredb-1.12.4, randomly-4.0.1, xdist-3.8.0
+timeout: 60.0s
+timeout method: signal
+timeout func_only: False
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+created: 48/48 workers
+48 workers [67 items]
+
+.......................F...........................................      [100%]
+=================================== FAILURES ===================================
+__________________________ test_async_execution_fails __________________________
+[gw1] linux -- Python 3.10.12 /testbed/.venv/bin/python
+lib/crewai/tests/test_task.py:1750: in test_async_execution_fails
+    execution.result()
+/usr/lib/python3.10/concurrent/futures/_base.py:453: in result
+    self._condition.wait(timeout)
+/usr/lib/python3.10/threading.py:320: in wait
+    waiter.acquire()
+E   Failed: Timeout (>60.0s) from pytest-timeout.
+----------------------------- Captured stdout call -----------------------------
++++++++++++++++++++++++++++++++++++ Timeout ++++++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~ Stack of CrewAIEventsLoop (140013032105536) ~~~~~~~~~~~~~~~~~~
+  File "/usr/lib/python3.10/threading.py", line 973, in _bootstrap
+    self._bootstrap_inner()
+  File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/testbed/lib/crewai/src/crewai/events/event_bus.py", line 117, in _run_loop
+    self._loop.run_forever()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 603, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1871, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/usr/lib/python3.10/selectors.py", line 469, in select
+    fd_event_list = self._selector.poll(timeout, max_ev)
+~~~~~~~~~~~~~~~~~~~~~ Stack of <unknown> (140016127616576) ~~~~~~~~~~~~~~~~~~~~~
+  File "/testbed/.venv/lib/python3.10/site-packages/execnet/gateway_base.py", line 411, in _perform_spawn
+    reply.run()
+  File "/testbed/.venv/lib/python3.10/site-packages/execnet/gateway_base.py", line 341, in run
+    self._result = func(*args, **kwargs)
+  File "/testbed/.venv/lib/python3.10/site-packages/execnet/gateway_base.py", line 1160, in _thread_receiver
+    msg = Message.from_io(io)
+  File "/testbed/.venv/lib/python3.10/site-packages/execnet/gateway_base.py", line 567, in from_io
+    header = io.read(9)  # type 1, channel 4, payload 4
+  File "/testbed/.venv/lib/python3.10/site-packages/execnet/gateway_base.py", line 534, in read
+    data = self._read(numbytes - len(buf))
++++++++++++++++++++++++++++++++++++ Timeout ++++++++++++++++++++++++++++++++++++
+=============================== warnings summary ===============================
+lib/crewai/tests/test_task.py::test_async_execution_fails
+  /testbed/.venv/lib/python3.10/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-1 (_execute_task_async)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+      self.run()
+    File "/usr/lib/python3.10/threading.py", line 953, in run
+      self._target(*self._args, **self._kwargs)
+    File "/testbed/lib/crewai/src/crewai/task.py", line 497, in _execute_task_async
+      result = self._execute_core(agent, context, tools)
+    File "/usr/lib/python3.10/unittest/mock.py", line 1114, in __call__
+      return self._mock_call(*args, **kwargs)
+    File "/usr/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+      return self._execute_mock_call(*args, **kwargs)
+    File "/usr/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+      raise effect
+  RuntimeError: boom!
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED lib/crewai/tests/test_task.py::test_interpolate_valid_complex_types
+PASSED lib/crewai/tests/test_task.py::test_increment_tool_errors
+PASSED lib/crewai/tests/test_task.py::test_task_prompt_includes_expected_output
+PASSED lib/crewai/tests/test_task.py::test_multiple_output_type_error
+PASSED lib/crewai/tests/test_task.py::test_task_with_no_max_execution_time
+PASSED lib/crewai/tests/test_task.py::test_task_callback
+PASSED lib/crewai/tests/test_task.py::test_task_tool_takes_precedence_over_agent_tools
+PASSED lib/crewai/tests/test_task.py::test_task_callback_returns_task_output
+PASSED lib/crewai/tests/test_task.py::test_task_output_str_with_none
+PASSED lib/crewai/tests/test_task.py::test_inject_date
+PASSED lib/crewai/tests/test_task.py::test_task_execution_times
+PASSED lib/crewai/tests/test_task.py::test_interpolate_complex_combination
+PASSED lib/crewai/tests/test_task.py::test_interpolate_mixed_types
+PASSED lib/crewai/tests/test_task.py::test_custom_converter_cls
+PASSED lib/crewai/tests/test_task.py::test_output_json_hierarchical
+PASSED lib/crewai/tests/test_task.py::test_interpolate_with_list_of_dicts
+PASSED lib/crewai/tests/test_task.py::test_increment_delegations_for_hierarchical_process
+PASSED lib/crewai/tests/test_task.py::test_task_output_includes_messages
+PASSED lib/crewai/tests/test_task.py::test_github_issue_3149_reproduction
+PASSED lib/crewai/tests/test_task.py::test_output_json_sequential
+PASSED lib/crewai/tests/test_task.py::test_save_task_output
+PASSED lib/crewai/tests/test_task.py::test_create_directory_default
+PASSED lib/crewai/tests/test_task.py::test_inject_date_custom_format
+PASSED lib/crewai/tests/test_task.py::test_task_with_max_execution_time_exceeded
+PASSED lib/crewai/tests/test_task.py::test_task_with_max_execution_time
+PASSED lib/crewai/tests/test_task.py::test_task_output_str_with_json_dict
+PASSED lib/crewai/tests/test_task.py::test_output_pydantic_to_another_task
+PASSED lib/crewai/tests/test_task.py::test_json_property_without_output_json
+PASSED lib/crewai/tests/test_task.py::test_interpolate_valid_types
+PASSED lib/crewai/tests/test_task.py::test_output_json_dict_hierarchical
+PASSED lib/crewai/tests/test_task.py::test_key
+PASSED lib/crewai/tests/test_task.py::test_output_json_dict_sequential
+PASSED lib/crewai/tests/test_task.py::test_task_output_str_with_pydantic_and_json_dict
+PASSED lib/crewai/tests/test_task.py::test_task_copy_with_list_context
+PASSED lib/crewai/tests/test_task.py::test_save_task_pydantic_output
+PASSED lib/crewai/tests/test_task.py::test_output_pydantic_hierarchical
+PASSED lib/crewai/tests/test_task.py::test_execute_with_agent
+PASSED lib/crewai/tests/test_task.py::test_interpolate_custom_object_validation
+PASSED lib/crewai/tests/test_task.py::test_save_task_json_output
+PASSED lib/crewai/tests/test_task.py::test_interpolate_with_nested_structures
+PASSED lib/crewai/tests/test_task.py::test_guardrail_type_error
+PASSED lib/crewai/tests/test_task.py::test_output_file_validation
+PASSED lib/crewai/tests/test_task.py::test_interpolate_inputs
+PASSED lib/crewai/tests/test_task.py::test_task_output_str_with_pydantic
+PASSED lib/crewai/tests/test_task.py::test_task_tool_reflect_agent_tools
+PASSED lib/crewai/tests/test_task.py::test_no_inject_date
+PASSED lib/crewai/tests/test_task.py::test_create_directory_with_existing_directory
+PASSED lib/crewai/tests/test_task.py::test_interpolate_only
+PASSED lib/crewai/tests/test_task.py::test_output_pydantic_sequential
+PASSED lib/crewai/tests/test_task.py::test_increment_delegations_for_sequential_process
+PASSED lib/crewai/tests/test_task.py::test_interpolate_only_with_dict_inside_expected_output
+PASSED lib/crewai/tests/test_task.py::test_task_output_str_with_raw
+PASSED lib/crewai/tests/test_task.py::test_task_interpolation_with_hyphens
+PASSED lib/crewai/tests/test_task.py::test_conditional_task_definition_based_on_dict
+PASSED lib/crewai/tests/test_task.py::test_interpolate_with_special_characters
+PASSED lib/crewai/tests/test_task.py::test_output_json_to_another_task
+PASSED lib/crewai/tests/test_task.py::test_create_directory_false
+PASSED lib/crewai/tests/test_task.py::test_conditional_task_copy_preserves_type
+PASSED lib/crewai/tests/test_task.py::test_interpolate_edge_cases
+PASSED lib/crewai/tests/test_task.py::test_task_definition_based_on_dict
+PASSED lib/crewai/tests/test_task.py::test_task_copy_with_not_specified_context
+PASSED lib/crewai/tests/test_task.py::test_task_copy_with_none_context
+PASSED lib/crewai/tests/test_task.py::test_create_directory_true
+PASSED lib/crewai/tests/test_task.py::test_interpolate_with_list_of_strings
+PASSED lib/crewai/tests/test_task.py::test_interpolate_invalid_type_validation
+PASSED lib/crewai/tests/test_task.py::test_async_execution
+FAILED lib/crewai/tests/test_task.py::test_async_execution_fails - Failed: Ti...
+============== 1 failed, 66 passed, 1 warning in 87.56s (0:01:27) ==============
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout e43c7debbd444486df77c83fc604641e18f1cd8a lib/crewai/tests/test_task.py
+Updated 1 path from aa3819739
