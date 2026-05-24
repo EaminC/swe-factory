@@ -1,0 +1,127 @@
++ cd /testbed
++ git checkout be8db4cc484b77d0d3bc60a012e9035c4395bee3 tests/memory_test.py tests/msghub_test.py
+Updated 2 paths from 63f22e3d
++ git apply -v -
+Checking patch tests/memory_test.py...
+Checking patch tests/msghub_test.py...
+Applied patch tests/memory_test.py cleanly.
+Applied patch tests/msghub_test.py cleanly.
++ coverage run -m pytest -q --tb=short --disable-warnings tests/memory_test.py tests/msghub_test.py
+..FFF..                                                                  [100%]
+=================================== FAILURES ===================================
+_______________________ TemporaryMemoryTest.test_invalid _______________________
+tests/memory_test.py:80: in test_invalid
+    with self.assertRaises(Exception) as context:
+E   AssertionError: Exception not raised
+_____________________ TemporaryMemoryTest.test_load_export _____________________
+tests/memory_test.py:109: in test_load_export
+    memory.load(self.file_name_1)
+src/agentscope/memory/temporary_memory.py:155: in load
+    self.add(load_memories)
+E   UnboundLocalError: local variable 'load_memories' referenced before assignment
+----------------------------- Captured stderr call -----------------------------
+2026-05-22 10:32:32.172 | WARNING  | agentscope.message:__init__:125 - A new field `role` is newly added to the message. Please specify the role of the message. Currently we use a default "assistant" value.
+2026-05-22 10:32:32.173 | WARNING  | agentscope.message:__init__:125 - A new field `role` is newly added to the message. Please specify the role of the message. Currently we use a default "assistant" value.
+_____________________ TemporaryMemoryTest.test_tht_memory ______________________
+tests/memory_test.py:135: in test_tht_memory
+    memory.load(self.file_name_2)
+src/agentscope/memory/temporary_memory.py:155: in load
+    self.add(load_memories)
+E   UnboundLocalError: local variable 'load_memories' referenced before assignment
+=========================== short test summary info ============================
+FAILED tests/memory_test.py::TemporaryMemoryTest::test_invalid - AssertionErr...
+FAILED tests/memory_test.py::TemporaryMemoryTest::test_load_export - UnboundL...
+FAILED tests/memory_test.py::TemporaryMemoryTest::test_tht_memory - UnboundLo...
+3 failed, 4 passed, 3 warnings in 2.71s
++ rc=1
++ coverage report -m
+Name                                                      Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------------------
+src/agentscope/__init__.py                                   14      0   100%
+src/agentscope/_init.py                                      58     42    28%   69-118, 158-177
+src/agentscope/_runtime.py                                   31      2    94%   61, 70
+src/agentscope/_version.py                                    1      0   100%
+src/agentscope/agents/__init__.py                             9      0   100%
+src/agentscope/agents/agent.py                              109     40    63%   30-35, 41, 43-46, 120-125, 191, 195, 200, 210, 235-237, 246-252, 268, 286, 307, 343-350, 367, 403-413
+src/agentscope/agents/dialog_agent.py                        20     12    40%   45-54, 76-98
+src/agentscope/agents/dict_dialog_agent.py                   40     27    32%   17-31, 36, 102-116, 145-192
+src/agentscope/agents/operator.py                             6      0   100%
+src/agentscope/agents/react_agent.py                         77     65    16%   71-132, 145-257
+src/agentscope/agents/rpc_agent.py                          264    210    20%   21-25, 50-58, 106-137, 141-148, 151-153, 161-163, 186-211, 215-216, 219, 260, 315-363, 370-372, 387-401, 443-457, 464-467, 480-502, 514-517, 521-522, 526-536, 564-574, 578-580, 591, 616-625, 635-638, 646-657, 674-686, 708-716, 728-733, 741-749, 762-773, 781-782, 791-807
+src/agentscope/agents/text_to_image_agent.py                 19     13    32%   37, 46-69
+src/agentscope/agents/user_agent.py                          33     22    33%   28-31, 65-101, 108
+src/agentscope/constants.py                                  29      0   100%
+src/agentscope/exception.py                                  29      8    72%   16-17, 20, 62-65, 75, 78
+src/agentscope/file_manager.py                               73     34    53%   48-50, 54, 59, 64, 70, 75, 80, 85, 89-96, 100-111, 119-127, 144-163, 172
+src/agentscope/memory/__init__.py                             3      0   100%
+src/agentscope/memory/memory.py                              26      2    92%   37, 89
+src/agentscope/memory/temporary_memory.py                    94     31    67%   37, 47, 63-70, 75-79, 98, 115, 131-143, 153, 197-217, 236-243, 264-272, 276
+src/agentscope/message.py                                   122     70    43%   54, 61, 70-71, 77-80, 84, 88, 140, 144, 147, 205, 208, 274-296, 299, 311-313, 323-325, 328, 332-347, 350-361, 364-384, 396-404, 409-412
+src/agentscope/models/__init__.py                            55     37    33%   79-86, 91-113, 118, 138-176
+src/agentscope/models/config.py                              16      8    50%   31-38, 57-59
+src/agentscope/models/dashscope_model.py                    168    134    20%   14-15, 46-65, 71, 90-102, 156-209, 268-316, 329-333, 377-418, 429-433, 473-514, 532-544, 609-657, 757-817, 832-855
+src/agentscope/models/gemini_model.py                        90     57    37%   16-17, 43-58, 62, 68-73, 81, 104-112, 136-176, 183-195, 240-293, 334-358, 365
+src/agentscope/models/model.py                              104     47    55%   101, 110-140, 198-201, 206-218, 222, 234, 245-255, 262, 282-285, 294-305
+src/agentscope/models/ollama_model.py                       110     77    30%   14-15, 64-70, 107-145, 152-164, 188-220, 256-288, 295, 304, 345-382, 389-401, 419-459
+src/agentscope/models/openai_model.py                       105     76    28%   15-16, 59-90, 96, 113-125, 175-210, 234-254, 273-278, 321-365, 376-384, 424-454
+src/agentscope/models/post_model.py                          71     45    37%   79-89, 93, 121-158, 170, 193-213, 224-232, 238
+src/agentscope/models/response.py                            30     16    47%   46-50, 54-60, 64-70, 73-85
+src/agentscope/models/zhipu_model.py                         75     55    27%   14-15, 51-70, 76, 91-103, 147-182, 213-261, 304-327, 335-347
+src/agentscope/msghub.py                                     44      4    91%   47-48, 74, 97
+src/agentscope/parsers/__init__.py                            5      0   100%
+src/agentscope/parsers/code_block_parser.py                  21      6    71%   30-32, 41-47
+src/agentscope/parsers/json_object_parser.py                 76     38    50%   51-55, 65-107, 119, 169-171, 179-204
+src/agentscope/parsers/parser_base.py                        21     14    33%   37-67
+src/agentscope/parsers/tagged_content_parser.py              51     27    47%   52-56, 60, 90-110, 121-148
+src/agentscope/pipelines/__init__.py                          3      0   100%
+src/agentscope/pipelines/functional.py                       37     27    27%   23, 41-47, 53-56, 82-85, 114-118, 144-150, 173-179
+src/agentscope/pipelines/pipeline.py                         50     23    54%   31, 76-79, 82, 123-126, 131, 175-178, 181, 217-219, 222, 247-248, 251
+src/agentscope/prompt.py                                     57     43    25%   90-107, 129-136, 140-154, 158-179
+src/agentscope/rpc/__init__.py                               15      6    60%   8-9, 14-17
+src/agentscope/rpc/rpc_agent_client.py                       66     45    32%   13-16, 21-23, 39-41, 58-68, 72-80, 88-92, 101-102, 106-108, 112-115, 133-148
+src/agentscope/rpc/rpc_agent_pb2.py                          15      5    67%   24-28
+src/agentscope/rpc/rpc_agent_pb2_grpc.py                     21     10    52%   6-7, 21, 33-35, 39-50, 70
+src/agentscope/service/__init__.py                           24      2    92%   37-38
+src/agentscope/service/execute_code/__init__.py               0      0   100%
+src/agentscope/service/execute_code/exec_python.py          139    110    21%   23-24, 27-28, 95-120, 147-169, 187-216, 236-356, 372-447
+src/agentscope/service/execute_code/exec_shell.py            12      8    33%   29-54
+src/agentscope/service/file/__init__.py                       0      0   100%
+src/agentscope/service/file/common.py                        75     61    19%   27-32, 47-55, 76-94, 113-126, 145-158, 182-201, 219-237, 251-259
+src/agentscope/service/file/json.py                          22     15    32%   24-32, 58-72
+src/agentscope/service/file/text.py                          15      9    40%   23-31, 57-62
+src/agentscope/service/retrieval/__init__.py                  0      0   100%
+src/agentscope/service/retrieval/retrieval_from_list.py      18     12    33%   46-77
+src/agentscope/service/retrieval/similarity.py               12      6    50%   7-8, 30-36
+src/agentscope/service/service_response.py                    8      2    75%   30-31
+src/agentscope/service/service_status.py                      4      0   100%
+src/agentscope/service/service_toolkit.py                   217    168    23%   30-31, 36-60, 92-97, 144, 196-209, 219, 224, 229-256, 264-345, 360-406, 412-418, 474-565, 625-722
+src/agentscope/service/sql_query/__init__.py                  0      0   100%
+src/agentscope/service/sql_query/mongodb.py                  19     13    32%   10-11, 50-77
+src/agentscope/service/sql_query/mysql.py                    27     19    30%   12-13, 56-96
+src/agentscope/service/sql_query/sqlite.py                   27     19    30%   12-13, 42-72
+src/agentscope/service/text_processing/__init__.py            0      0   100%
+src/agentscope/service/text_processing/summarization.py      19     11    42%   72-88
+src/agentscope/service/web/__init__.py                        0      0   100%
+src/agentscope/service/web/arxiv.py                         128     80    38%   15-16, 90-101, 104-108, 111, 116-119, 124-125, 130-177, 183-212, 244-290
+src/agentscope/service/web/download.py                       26     21    19%   35-72
+src/agentscope/service/web/search.py                         25     19    24%   81-102, 165-186
+src/agentscope/service/web/web_digest.py                     79     65    18%   31-37, 90-150, 171-211, 235-250
+src/agentscope/utils/__init__.py                              5      0   100%
+src/agentscope/utils/common.py                               65     45    31%   31-50, 61-63, 74-84, 109-118, 150-162, 168-180
+src/agentscope/utils/logging_utils.py                        82     66    20%   55-66, 86-124, 138-174, 185-188, 211-245
+src/agentscope/utils/monitor.py                             227    145    36%   71-72, 223-226, 241-243, 257-268, 282-288, 300, 303, 306, 309, 312, 315, 318, 321, 324, 327, 330, 333, 341, 362-366, 372-397, 407-421, 429-439, 442-446, 449-460, 463-472, 475-490, 493-497, 500-504, 507-518, 521-525, 528-531, 534-549, 556-563, 566-567, 570-572, 587-588, 609-642, 652, 699-708, 716
+src/agentscope/utils/token_utils.py                          58     50    14%   8-9, 47-50, 58-92, 99-155
+src/agentscope/utils/tools.py                               106     75    29%   29-46, 51-60, 67-118, 132-159, 173-185, 207-211, 241-246, 251-282, 289-296
+src/agentscope/web/__init__.py                                2      0   100%
+src/agentscope/web/_app.py                                   57     37    35%   21-34, 45, 51-88, 94, 100, 112-116
+src/agentscope/web/studio/__init__.py                         0      0   100%
+src/agentscope/web/studio/utils.py                           98     73    26%   22, 43-57, 74-79, 85-86, 95-107, 112-116, 122-127, 136-142, 147-172, 178-187, 192-196, 204-220
+tests/__init__.py                                             0      0   100%
+tests/memory_test.py                                         59      4    93%   82, 110, 136, 143
+tests/msghub_test.py                                         41      2    95%   20, 102
+---------------------------------------------------------------------------------------
+TOTAL                                                      4059   2515    38%
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout be8db4cc484b77d0d3bc60a012e9035c4395bee3 tests/memory_test.py tests/msghub_test.py
+OMNIGRIL_EXIT_CODE=1
+Updated 2 paths from 63f22e3d
