@@ -1,0 +1,103 @@
++ cd /testbed
++ source /testbed/testbed_venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/testbed_venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/testbed/testbed_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/testbed_venv/bin:/testbed/testbed_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed_venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed_venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ python --version
+Python 3.10.12
++ pytest --version
+pytest 7.3.1
++ git checkout 0596b07a39c2c99c46509c17660f5c8aef4b2114 tests/test_collect.py tests/test_db.py tests/steps/test_archive.py
++ true
++ git apply -v -
+Checking patch tests/steps/__init__.py...
+Checking patch tests/steps/test_archive.py...
+Checking patch tests/test_collect.py...
+Checking patch tests/test_db.py...
+Applied patch tests/steps/__init__.py cleanly.
+Applied patch tests/steps/test_archive.py cleanly.
+Applied patch tests/test_collect.py cleanly.
+Applied patch tests/test_db.py cleanly.
++ echo 'Checking for target test files...'
++ test_files_to_run=
+Checking for target test files...
++ '[' -f tests/test_collect.py ']'
++ echo '✓ Found tests/test_collect.py'
++ test_files_to_run=' tests/test_collect.py'
+✓ Found tests/test_collect.py
++ '[' -f tests/test_db.py ']'
++ echo '✓ Found tests/test_db.py'
+✓ Found tests/test_db.py
++ test_files_to_run=' tests/test_collect.py tests/test_db.py'
++ '[' -f tests/steps/test_archive.py ']'
++ echo '✓ Found tests/steps/test_archive.py'
++ test_files_to_run=' tests/test_collect.py tests/test_db.py tests/steps/test_archive.py'
++ echo 'Creating non-root user for test execution...'
++ useradd -m -s /bin/bash testuser
+✓ Found tests/steps/test_archive.py
+Creating non-root user for test execution...
++ cp -r /testbed /home/testuser/testbed_copy
++ chown -R testuser:testuser /home/testuser/testbed_copy
+========================================
+Running target test files as non-root user...
++ echo ========================================
++ echo 'Running target test files as non-root user...'
++ echo ========================================
+========================================
++ su - testuser -c '
+    cd /home/testuser/testbed_copy
+    source /testbed/testbed_venv/bin/activate
+    pytest -xvs  tests/test_collect.py tests/test_db.py tests/steps/test_archive.py 2>&1
+'
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-7.3.1, pluggy-1.6.0 -- /testbed/testbed_venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/testuser/testbed_copy
+plugins: cov-7.1.0
+collecting ... collected 10 items
+
+tests/test_collect.py::test_collect_learnings PASSED
+tests/test_db.py::test_DB_operations PASSED
+tests/test_db.py::test_DBs_initialization PASSED
+tests/test_db.py::test_invalid_path PASSED
+tests/test_db.py::test_large_files PASSED
+tests/test_db.py::test_concurrent_access PASSED
+tests/test_db.py::test_error_messages PASSED
+tests/test_db.py::test_DBs_instantiation_with_wrong_number_of_arguments PASSED
+tests/test_db.py::test_DBs_dataclass_attributes PASSED
+tests/steps/test_archive.py::test_archive PASSED
+
+============================== 10 passed in 2.85s ==============================
+========================================
+Test execution completed with exit code: 0
+========================================
++ rc=0
++ echo ========================================
++ echo 'Test execution completed with exit code: 0'
++ echo ========================================
++ git checkout 0596b07a39c2c99c46509c17660f5c8aef4b2114 tests/test_collect.py tests/test_db.py tests/steps/test_archive.py
++ true
++ rm -rf /home/testuser/testbed_copy
++ userdel -r testuser
++ echo OMNIGRIL_EXIT_CODE=0
+OMNIGRIL_EXIT_CODE=0

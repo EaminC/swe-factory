@@ -1,0 +1,191 @@
++ cd /testbed
++ source /testbed/.venv/bin/activate
+++ '[' -z '' ']'
+++ '[' -n x ']'
+++ SCRIPT_PATH=/testbed/.venv/bin/activate
+++ '[' /testbed/.venv/bin/activate = /eval.sh ']'
+++ deactivate nondestructive
+++ unset -f pydoc
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ hash -r
+++ '[' -z '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ '[' linux-gnu = cygwin ']'
+++ '[' linux-gnu = msys ']'
+++ export VIRTUAL_ENV
+++ '[' -z '' ']'
+++ unset SCRIPT_PATH
+++ _OLD_VIRTUAL_PATH=/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' x '!=' x ']'
++++ basename /testbed/.venv
+++ VIRTUAL_ENV_PROMPT=.venv
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(.venv) '
+++ export PS1
+++ alias pydoc
+++ true
+++ hash -r
++ python --version
+Python 3.11.0rc1
++ pytest --version
+pytest 9.0.3
++ echo '=== Setting up PostgreSQL ==='
++ '[' '!' -d /var/lib/postgresql/data/base ']'
+=== Setting up PostgreSQL ===
+Initializing PostgreSQL cluster...
++ echo 'Initializing PostgreSQL cluster...'
+++ ls /etc/postgresql/
+++ head -1
++ PG_VERSION=14
++ sudo -u postgres /usr/lib/postgresql/14/bin/initdb -D /var/lib/postgresql/data -A trust --no-locale
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C".
+The default database encoding has accordingly been set to "SQL_ASCII".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... Etc/UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    /usr/lib/postgresql/14/bin/pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+Starting PostgreSQL service...
++ echo 'Starting PostgreSQL service...'
++ sudo service postgresql start
+ * Starting PostgreSQL 14 database server
+   ...done.
++ echo 'Waiting for PostgreSQL to be ready on port 5441...'
++ max_attempts=30
++ attempt=0
++ '[' 0 -lt 30 ']'
++ sudo -u postgres psql -p 5441 -c 'SELECT 1'
+Waiting for PostgreSQL to be ready on port 5441...
+PostgreSQL is ready on port 5441
+=== Verifying PostgreSQL connection ===
++ echo 'PostgreSQL is ready on port 5441'
++ break
++ '[' 0 -eq 30 ']'
++ echo '=== Verifying PostgreSQL connection ==='
++ sudo -u postgres psql -p 5441 -c 'SELECT version();'
+                                                                 version                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 14.23 (Ubuntu 14.23-0ubuntu0.22.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, 64-bit
+(1 row)
+
++ git checkout b0958115c1887d93bfd25229b307406920038cc4 libs/checkpoint-postgres/tests/test_async.py libs/checkpoint-postgres/tests/test_sync.py
+Updated 2 paths from c960db024
++ git apply -v -
+Checking patch libs/checkpoint-postgres/tests/test_async.py...
+Checking patch libs/checkpoint-postgres/tests/test_sync.py...
+Applied patch libs/checkpoint-postgres/tests/test_async.py cleanly.
+Applied patch libs/checkpoint-postgres/tests/test_sync.py cleanly.
++ export POSTGRES_HOST=localhost
++ POSTGRES_HOST=localhost
++ export POSTGRES_PORT=5441
++ POSTGRES_PORT=5441
++ export POSTGRES_USER=postgres
++ POSTGRES_USER=postgres
++ export POSTGRES_PASSWORD=
++ POSTGRES_PASSWORD=
++ export POSTGRES_DB=postgres
++ POSTGRES_DB=postgres
++ echo '=== Running target tests ==='
+=== Running target tests ===
++ pytest libs/checkpoint-postgres/tests/test_async.py libs/checkpoint-postgres/tests/test_sync.py -v --tb=short --strict-markers -p no:cacheprovider
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-9.0.3, pluggy-1.6.0 -- /testbed/.venv/bin/python3
+rootdir: /testbed/libs/checkpoint-postgres
+configfile: pyproject.toml
+plugins: mock-3.15.1, repeat-0.9.4, dotenv-0.5.2, cov-7.1.0, langsmith-0.8.5, asyncio-1.3.0, xdist-3.8.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 37 items
+
+libs/checkpoint-postgres/tests/test_async.py::test_combined_metadata[base] PASSED [  2%]
+libs/checkpoint-postgres/tests/test_async.py::test_combined_metadata[pool] PASSED [  5%]
+libs/checkpoint-postgres/tests/test_async.py::test_combined_metadata[pipe] PASSED [  8%]
+libs/checkpoint-postgres/tests/test_async.py::test_combined_metadata[shallow] PASSED [ 10%]
+libs/checkpoint-postgres/tests/test_async.py::test_asearch[base] PASSED  [ 13%]
+libs/checkpoint-postgres/tests/test_async.py::test_asearch[pool] PASSED  [ 16%]
+libs/checkpoint-postgres/tests/test_async.py::test_asearch[pipe] PASSED  [ 18%]
+libs/checkpoint-postgres/tests/test_async.py::test_asearch[shallow] PASSED [ 21%]
+libs/checkpoint-postgres/tests/test_async.py::test_null_chars[base] PASSED [ 24%]
+libs/checkpoint-postgres/tests/test_async.py::test_null_chars[pool] PASSED [ 27%]
+libs/checkpoint-postgres/tests/test_async.py::test_null_chars[pipe] PASSED [ 29%]
+libs/checkpoint-postgres/tests/test_async.py::test_null_chars[shallow] PASSED [ 32%]
+libs/checkpoint-postgres/tests/test_async.py::test_pending_sends_migration[base] PASSED [ 35%]
+libs/checkpoint-postgres/tests/test_async.py::test_pending_sends_migration[pool] PASSED [ 37%]
+libs/checkpoint-postgres/tests/test_async.py::test_pending_sends_migration[pipe] PASSED [ 40%]
+libs/checkpoint-postgres/tests/test_async.py::test_get_checkpoint_no_channel_values[base] PASSED [ 43%]
+libs/checkpoint-postgres/tests/test_async.py::test_get_checkpoint_no_channel_values[pool] PASSED [ 45%]
+libs/checkpoint-postgres/tests/test_async.py::test_get_checkpoint_no_channel_values[pipe] PASSED [ 48%]
+libs/checkpoint-postgres/tests/test_sync.py::test_combined_metadata[base] PASSED [ 51%]
+libs/checkpoint-postgres/tests/test_sync.py::test_combined_metadata[pool] PASSED [ 54%]
+libs/checkpoint-postgres/tests/test_sync.py::test_combined_metadata[pipe] PASSED [ 56%]
+libs/checkpoint-postgres/tests/test_sync.py::test_combined_metadata[shallow] PASSED [ 59%]
+libs/checkpoint-postgres/tests/test_sync.py::test_search[base] PASSED    [ 62%]
+libs/checkpoint-postgres/tests/test_sync.py::test_search[pool] PASSED    [ 64%]
+libs/checkpoint-postgres/tests/test_sync.py::test_search[pipe] PASSED    [ 67%]
+libs/checkpoint-postgres/tests/test_sync.py::test_search[shallow] PASSED [ 70%]
+libs/checkpoint-postgres/tests/test_sync.py::test_null_chars[base] PASSED [ 72%]
+libs/checkpoint-postgres/tests/test_sync.py::test_null_chars[pool] PASSED [ 75%]
+libs/checkpoint-postgres/tests/test_sync.py::test_null_chars[pipe] PASSED [ 78%]
+libs/checkpoint-postgres/tests/test_sync.py::test_null_chars[shallow] PASSED [ 81%]
+libs/checkpoint-postgres/tests/test_sync.py::test_nonnull_migrations PASSED [ 83%]
+libs/checkpoint-postgres/tests/test_sync.py::test_pending_sends_migration[base] PASSED [ 86%]
+libs/checkpoint-postgres/tests/test_sync.py::test_pending_sends_migration[pool] PASSED [ 89%]
+libs/checkpoint-postgres/tests/test_sync.py::test_pending_sends_migration[pipe] PASSED [ 91%]
+libs/checkpoint-postgres/tests/test_sync.py::test_get_checkpoint_no_channel_values[base] PASSED [ 94%]
+libs/checkpoint-postgres/tests/test_sync.py::test_get_checkpoint_no_channel_values[pool] PASSED [ 97%]
+libs/checkpoint-postgres/tests/test_sync.py::test_get_checkpoint_no_channel_values[pipe] PASSED [100%]
+
+=============================== warnings summary ===============================
+libs/checkpoint/langgraph/checkpoint/base/__init__.py:18
+  /testbed/libs/checkpoint/langgraph/checkpoint/base/__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+tests/test_async.py::test_combined_metadata[shallow]
+tests/test_async.py::test_asearch[shallow]
+tests/test_async.py::test_null_chars[shallow]
+  /testbed/libs/checkpoint-postgres/tests/test_async.py:131: DeprecationWarning: AsyncShallowPostgresSaver is deprecated as of version 2.0.20 and will be removed in 3.0.0. Use AsyncPostgresSaver instead, and invoke the graph with `await graph.ainvoke(..., durability='exit')`.
+    checkpointer = AsyncShallowPostgresSaver(conn)
+
+tests/test_sync.py::test_combined_metadata[shallow]
+tests/test_sync.py::test_search[shallow]
+tests/test_sync.py::test_null_chars[shallow]
+  /testbed/libs/checkpoint-postgres/tests/test_sync.py:115: DeprecationWarning: ShallowPostgresSaver is deprecated as of version 2.0.20 and will be removed in 3.0.0. Use PostgresSaver instead, and invoke the graph with `graph.invoke(..., durability='exit')`.
+    checkpointer = ShallowPostgresSaver(conn)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations ==============================
+0.32s call     tests/test_sync.py::test_combined_metadata[pool]
+0.31s call     tests/test_async.py::test_pending_sends_migration[base]
+0.27s call     tests/test_sync.py::test_get_checkpoint_no_channel_values[pool]
+0.26s call     tests/test_sync.py::test_search[base]
+0.26s call     tests/test_async.py::test_pending_sends_migration[pool]
+======================== 37 passed, 7 warnings in 9.24s ========================
+OMNIGRIL_EXIT_CODE=0
++ rc=0
++ echo OMNIGRIL_EXIT_CODE=0
++ exit 0
