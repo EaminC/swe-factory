@@ -1,0 +1,209 @@
++ cd /testbed
++ git checkout a2bf80ec96e29cb760ac6d4018680d6af68c9416 tests/toolkit_test.py
+Updated 1 path from 288e247f
++ git apply -v -
+Checking patch tests/toolkit_test.py => tests/toolkit_basic_test.py...
+Checking patch tests/toolkit_meta_tool_test.py...
+Applied patch tests/toolkit_test.py => tests/toolkit_basic_test.py cleanly.
+Applied patch tests/toolkit_meta_tool_test.py cleanly.
++ source /testbed/testbed/bin/activate
+/eval.sh: line 469: /testbed/testbed/bin/activate: No such file or directory
++ pytest -q -rA tests/toolkit_basic_test.py
+..FFFF.......                                                            [100%]
+=================================== FAILURES ===================================
+_________________ ToolkitBasicTest.test_basic_functionalities __________________
+
+self = <toolkit_basic_test.ToolkitBasicTest testMethod=test_basic_functionalities>
+
+    async def test_basic_functionalities(self) -> None:
+        """Test sync function:
+        1. register tool function
+        2. set/cancel extended model
+        3. get JSON schemas
+        4. call tool function
+        """
+        self.toolkit.register_tool_function(
+            tool_func=sync_func,
+            preset_kwargs={"arg1": 55},
+        )
+        sync_func_schema = deepcopy(self.sync_func_schema)
+        sync_func_schema["function"]["parameters"]["properties"].pop("arg1")
+        sync_func_schema["function"]["parameters"].pop("required")
+>       self.assertListEqual(
+            [sync_func_schema],
+            self.toolkit.get_json_schemas(),
+        )
+E       AssertionError: Lists differ: [{'ty[280 chars]iption': 'A sync function for testing.\nLong description.'}}] != [{'ty[280 chars]iption': 'A sync function for testing.\n\nLong description.'}}]
+E       
+E       First differing element 0:
+E       {'typ[278 chars]ription': 'A sync function for testing.\nLong description.'}}
+E       {'typ[278 chars]ription': 'A sync function for testing.\n\nLong description.'}}
+E       
+E       Diff is 1138 characters long. Set self.maxDiff to None to see it.
+
+tests/toolkit_basic_test.py:348: AssertionError
+___________________ ToolkitBasicTest.test_create_tool_group ____________________
+
+self = <toolkit_basic_test.ToolkitBasicTest testMethod=test_create_tool_group>
+
+    async def test_create_tool_group(self) -> None:
+        """Test tool group functionalities."""
+    
+        with self.assertRaises(ValueError):
+            self.toolkit.register_tool_function(
+                sync_func,
+                group_name="my_group",
+            )
+    
+        self.toolkit.create_tool_group(
+            "my_group",
+            "Browser use related tools.",
+            active=False,
+        )
+    
+        self.toolkit.register_tool_function(
+            sync_func,
+            group_name="my_group",
+        )
+    
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            [],
+        )
+    
+        # Activate the tool group
+        self.toolkit.update_tool_groups(["my_group"], True)
+>       self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            [self.sync_func_schema],
+        )
+E       AssertionError: Lists differ: [{'ty[366 chars]iption': 'A sync function for testing.\n\nLong description.'}}] != [{'ty[366 chars]iption': 'A sync function for testing.\nLong description.'}}]
+E       
+E       First differing element 0:
+E       {'typ[364 chars]ription': 'A sync function for testing.\n\nLong description.'}}
+E       {'typ[364 chars]ription': 'A sync function for testing.\nLong description.'}}
+E       
+E       Diff is 1507 characters long. Set self.maxDiff to None to see it.
+
+tests/toolkit_basic_test.py:814: AssertionError
+___________________ ToolkitBasicTest.test_detailed_arguments ___________________
+
+self = <toolkit_basic_test.ToolkitBasicTest testMethod=test_detailed_arguments>
+
+    async def test_detailed_arguments(self) -> None:
+        """Verify the arguments in `register_tool_function`."""
+    
+        def func(
+            *args: Any,  # pylint: disable=unused-argument
+            **kwargs: Any,
+        ) -> ToolResponse:
+            """A test function.
+    
+            Note this function is test.
+            """
+            return ToolResponse(content=[])
+    
+        # Test positional and keyword arguments
+        self.toolkit.register_tool_function(
+            func,
+            include_var_positional=False,
+            include_var_keyword=False,
+        )
+    
+>       self.assertListEqual(
+            [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "func",
+                        "parameters": {
+                            "properties": {},
+                            "type": "object",
+                        },
+                        "description": "A test function.\n"
+                        "Note this function is test.",
+                    },
+                },
+            ],
+            self.toolkit.get_json_schemas(),
+        )
+E       AssertionError: Lists differ: [{'ty[102 chars]cription': 'A test function.\nNote this function is test.'}}] != [{'ty[102 chars]cription': 'A test function.\n\nNote this function is test.'}}]
+E       
+E       First differing element 0:
+E       {'typ[100 chars]scription': 'A test function.\nNote this function is test.'}}
+E       {'typ[100 chars]scription': 'A test function.\n\nNote this function is test.'}}
+E       
+E       - [{'function': {'description': 'A test function.\nNote this function is test.',
+E       + [{'function': {'description': 'A test function.\n\nNote this function is test.',
+E       ?                                                  ++
+E       
+E                        'name': 'func',
+E                        'parameters': {'properties': {}, 'type': 'object'}},
+E           'type': 'function'}]
+
+tests/toolkit_basic_test.py:542: AssertionError
+______________ ToolkitBasicTest.test_duplicate_tool_registration _______________
+
+self = <toolkit_basic_test.ToolkitBasicTest testMethod=test_duplicate_tool_registration>
+
+    async def test_duplicate_tool_registration(self) -> None:
+        """Test duplicate tool function registration."""
+        tool_call = ToolUseBlock(
+            type="tool_use",
+            id="123",
+            name="sync_func",
+            input={
+                "arg1": 55,
+            },
+        )
+    
+        # Add a function
+        self.toolkit.register_tool_function(
+            sync_func,
+        )
+>       self.assertListEqual(
+            [self.sync_func_schema],
+            self.toolkit.get_json_schemas(),
+        )
+E       AssertionError: Lists differ: [{'ty[366 chars]iption': 'A sync function for testing.\nLong description.'}}] != [{'ty[366 chars]iption': 'A sync function for testing.\n\nLong description.'}}]
+E       
+E       First differing element 0:
+E       {'typ[364 chars]ription': 'A sync function for testing.\nLong description.'}}
+E       {'typ[364 chars]ription': 'A sync function for testing.\n\nLong description.'}}
+E       
+E       Diff is 1507 characters long. Set self.maxDiff to None to see it.
+
+tests/toolkit_basic_test.py:206: AssertionError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.10/dist-packages/opentelemetry/util/_importlib_metadata.py:32
+  /usr/local/lib/python3.10/dist-packages/opentelemetry/util/_importlib_metadata.py:32: DeprecationWarning: SelectableGroups dict interface is deprecated. Use select.
+    return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+_________________ ToolkitBasicTest.test_async_postprocess_func _________________
+------------------------------ Captured log call -------------------------------
+WARNING  asyncio:base_events.py:1904 Executing <Task pending name='Task-4' coro=<IsolatedAsyncioTestCase._asyncioLoopRunner() running at /usr/lib/python3.10/unittest/async_case.py:95> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/lib/python3.10/asyncio/base_events.py:429> created at /usr/lib/python3.10/unittest/async_case.py:117> took 1.007 seconds
+____________________ ToolkitBasicTest.test_postprocess_func ____________________
+------------------------------ Captured log call -------------------------------
+WARNING  asyncio:base_events.py:1904 Executing <Task pending name='Task-25' coro=<IsolatedAsyncioTestCase._asyncioLoopRunner() running at /usr/lib/python3.10/unittest/async_case.py:95> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/lib/python3.10/asyncio/base_events.py:429> created at /usr/lib/python3.10/unittest/async_case.py:117> took 1.004 seconds
+=========================== short test summary info ============================
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_async_func
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_async_postprocess_func
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_extended_model_reusing_same_base_model
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_partial_function
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_postprocess_func
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_register_async_func_return_async_generator
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_register_async_func_return_sync_generator
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_register_async_generator_func
+PASSED tests/toolkit_basic_test.py::ToolkitBasicTest::test_register_sync_generator_func
+FAILED tests/toolkit_basic_test.py::ToolkitBasicTest::test_basic_functionalities
+FAILED tests/toolkit_basic_test.py::ToolkitBasicTest::test_create_tool_group
+FAILED tests/toolkit_basic_test.py::ToolkitBasicTest::test_detailed_arguments
+FAILED tests/toolkit_basic_test.py::ToolkitBasicTest::test_duplicate_tool_registration
+4 failed, 9 passed, 1 warning in 6.49s
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout a2bf80ec96e29cb760ac6d4018680d6af68c9416 tests/toolkit_test.py
+OMNIGRIL_EXIT_CODE=1
+Updated 1 path from 288e247f

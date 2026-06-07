@@ -1,0 +1,93 @@
++ cd /testbed
++ git checkout f44b10fcf8d88b2be1cb4474598bf5875242d21d tests/model_dashscope_test.py tests/model_gemini_test.py tests/model_ollama_test.py
+Updated 3 paths from 106f0715
++ git apply -v -
+Checking patch tests/model_dashscope_test.py...
+Checking patch tests/model_gemini_test.py...
+Checking patch tests/model_ollama_test.py...
+Applied patch tests/model_dashscope_test.py cleanly.
+Applied patch tests/model_gemini_test.py cleanly.
+Applied patch tests/model_ollama_test.py cleanly.
++ source /testbed/.venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(.venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(.venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ pytest -q --tb=short --disable-warnings tests/model_dashscope_test.py tests/model_gemini_test.py tests/model_ollama_test.py
+........F....F........F....                                              [100%]
+=================================== FAILURES ===================================
+__________ TestDashScopeChatModel.test_streaming_response_processing ___________
+tests/model_dashscope_test.py:341: in test_streaming_response_processing
+    self.assertEqual(final_response.content, expected_content)
+E   AssertionError: Lists differ: [{'ty[96 chars]}, {'type': 'tool_use', 'id': 'call_123', 'nam[35 chars]r'}}] != [{'ty[96 chars]}, {'id': 'call_123', 'name': 'greet', 'input'[68 chars]"}'}]
+E   
+E   First differing element 2:
+E   {'type': 'tool_use', 'id': 'call_123', 'nam[34 chars]er'}}
+E   {'id': 'call_123', 'name': 'greet', 'input'[67 chars]r"}'}
+E   
+E     [{'thinking': 'I should greet the user', 'type': 'thinking'},
+E      {'text': 'Hello there!', 'type': 'text'},
+E      {'id': 'call_123',
+E       'input': {'name': 'user'},
+E       'name': 'greet',
+E   +   'raw_input': '{"name": "user"}',
+E       'type': 'tool_use'}]
+_____________ TestGeminiChatModel.test_call_with_tools_integration _____________
+tests/model_gemini_test.py:208: in test_call_with_tools_integration
+    self.assertEqual(result.content, expected_content)
+E   AssertionError: Lists differ: [{'ty[130 chars]location': 'Beijing'}}] != [{'ty[130 chars]location': 'Beijing'}, 'raw_input': '{"location": "Beijing"}'}]
+E   
+E   First differing element 1:
+E   {'typ[67 chars]'location': 'Beijing'}}
+E   {'typ[67 chars]'location': 'Beijing'}, 'raw_input': '{"location": "Beijing"}'}
+E   
+E     [{'text': "I'll check the weather for you.", 'type': 'text'},
+E      {'id': 'call_123',
+E       'input': {'location': 'Beijing'},
+E       'name': 'get_weather',
+E   +   'raw_input': '{"location": "Beijing"}',
+E       'type': 'tool_use'}]
+_____________ TestOllamaChatModel.test_call_with_tools_integration _____________
+tests/model_ollama_test.py:194: in test_call_with_tools_integration
+    self.assertEqual(result.content, expected_content)
+E   AssertionError: Lists differ: [{'ty[135 chars]location': 'Beijing'}}] != [{'ty[135 chars]location': 'Beijing'}, 'raw_input': '{"location": "Beijing"}'}]
+E   
+E   First differing element 1:
+E   {'typ[72 chars]'location': 'Beijing'}}
+E   {'typ[72 chars]'location': 'Beijing'}, 'raw_input': '{"location": "Beijing"}'}
+E   
+E     [{'text': "I'll check the weather for you.", 'type': 'text'},
+E      {'id': '0_get_weather',
+E       'input': {'location': 'Beijing'},
+E       'name': 'get_weather',
+E   +   'raw_input': '{"location": "Beijing"}',
+E       'type': 'tool_use'}]
+=========================== short test summary info ============================
+FAILED tests/model_dashscope_test.py::TestDashScopeChatModel::test_streaming_response_processing
+FAILED tests/model_gemini_test.py::TestGeminiChatModel::test_call_with_tools_integration
+FAILED tests/model_ollama_test.py::TestOllamaChatModel::test_call_with_tools_integration
+3 failed, 24 passed, 1 warning in 3.02s
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
+OMNIGRIL_EXIT_CODE=1
++ git checkout f44b10fcf8d88b2be1cb4474598bf5875242d21d tests/model_dashscope_test.py tests/model_gemini_test.py tests/model_ollama_test.py
+Updated 3 paths from 106f0715

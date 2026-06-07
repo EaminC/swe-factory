@@ -1,0 +1,1489 @@
+2026-06-07 14:38:37,521 - INFO - Building image setup.crewaiinc__crewai-2552:latest
+Using dockerfile:
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip, setuptools, and wheel for better dependency management
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv tool for dependency management globally (used by the project)
+RUN python3 -m pip install uv
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout specific commit SHA (build argument)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=9dffd42e6d3b81973e6b4e76fdb906dae649e04a
+
+RUN git clone "$REPO" /testbed/ \
+    && cd /testbed/ \
+    && git reset --hard "$COMMIT_SHA" \
+    && git remote remove origin
+
+# Use uv tool to manage lock files, sync dependencies, and create virtual environment
+# Then activate the virtual environment and install creai with tools extras and editable local package installation
+RUN UV_VENV_CLEAR=1 uv lock && \
+    UV_VENV_CLEAR=1 uv sync && \
+    UV_VENV_CLEAR=1 uv venv && \
+    source .venv/bin/activate && \
+    pip install 'crewai[tools]' && \
+    pip install -e .
+
+# Install pre-commit hooks as recommended within the created virtual environment (install failure is not fatal)
+RUN source .venv/bin/activate && pre-commit install || true
+
+# Environment variables placeholders for required API keys
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Disable telemetry as recommended
+ENV OTEL_SDK_DISABLED=true
+
+# Add environment activation to bashrc for convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Set working directory (reaffirm)
+WORKDIR /testbed/
+Adding (0) setup scripts to image build repo
+2026-06-07 14:38:37,521 - INFO - Building docker image setup.crewaiinc__crewai-2552:latest in run_instances/run_20260607_104654/gold/crewAIInc__crewAI-2552 with platform linux/x86_64
+2026-06-07 14:38:37,532 - INFO - Step 1/19 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-07 14:38:37,532 - INFO - 
+2026-06-07 14:38:37,533 - INFO - ---> 86f1a8d7b38e
+2026-06-07 14:38:37,533 - INFO - Step 2/19 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-07 14:38:37,533 - INFO - 
+2026-06-07 14:38:37,533 - INFO - ---> Using cache
+2026-06-07 14:38:37,533 - INFO - ---> c3f3ab5051e6
+2026-06-07 14:38:37,533 - INFO - Step 3/19 : ENV TZ=Etc/UTC
+2026-06-07 14:38:37,533 - INFO - 
+2026-06-07 14:38:37,534 - INFO - ---> Using cache
+2026-06-07 14:38:37,534 - INFO - ---> 9eb451ea79d8
+2026-06-07 14:38:37,534 - INFO - Step 4/19 : SHELL ["/bin/bash", "-c"]
+2026-06-07 14:38:37,534 - INFO - 
+2026-06-07 14:38:37,534 - INFO - ---> Using cache
+2026-06-07 14:38:37,534 - INFO - ---> f6a0ac224775
+2026-06-07 14:38:37,534 - INFO - Step 5/19 : RUN apt-get update && apt-get install -y     git     wget     build-essential     curl     ca-certificates     locales     locales-all     tzdata     python3.11     python3.11-venv     python3.11-distutils     python3-pip     python3.11-dev     pkg-config     rustc     cargo     && rm -rf /var/lib/apt/lists/*
+2026-06-07 14:38:37,535 - INFO - 
+2026-06-07 14:38:37,535 - INFO - ---> Using cache
+2026-06-07 14:38:37,535 - INFO - ---> c4386ea42594
+2026-06-07 14:38:37,535 - INFO - Step 6/19 : RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+2026-06-07 14:38:37,535 - INFO - 
+2026-06-07 14:38:37,535 - INFO - ---> Using cache
+2026-06-07 14:38:37,536 - INFO - ---> bdc15601f418
+2026-06-07 14:38:37,536 - INFO - Step 7/19 : RUN python3 -m pip install --upgrade pip setuptools wheel
+2026-06-07 14:38:37,536 - INFO - 
+2026-06-07 14:38:37,536 - INFO - ---> Using cache
+2026-06-07 14:38:37,536 - INFO - ---> 4012557ad074
+2026-06-07 14:38:37,536 - INFO - Step 8/19 : RUN python3 -m pip install uv
+2026-06-07 14:38:37,536 - INFO - 
+2026-06-07 14:38:37,536 - INFO - ---> Using cache
+2026-06-07 14:38:37,537 - INFO - ---> e76cab0d876a
+2026-06-07 14:38:37,537 - INFO - Step 9/19 : WORKDIR /testbed/
+2026-06-07 14:38:37,537 - INFO - 
+2026-06-07 14:38:37,537 - INFO - ---> Using cache
+2026-06-07 14:38:37,537 - INFO - ---> f57b00eea395
+2026-06-07 14:38:37,537 - INFO - Step 10/19 : ARG REPO=https://github.com/crewAIInc/crewAI.git
+2026-06-07 14:38:37,537 - INFO - 
+2026-06-07 14:38:37,538 - INFO - ---> Using cache
+2026-06-07 14:38:37,538 - INFO - ---> cf126e51799d
+2026-06-07 14:38:37,538 - INFO - Step 11/19 : ARG COMMIT_SHA=9dffd42e6d3b81973e6b4e76fdb906dae649e04a
+2026-06-07 14:38:37,538 - INFO - 
+2026-06-07 14:38:38,325 - INFO - ---> Running in 55c7129faf43
+2026-06-07 14:38:38,358 - INFO - ---> Removed intermediate container 55c7129faf43
+2026-06-07 14:38:38,358 - INFO - ---> 050d48ec4cf6
+2026-06-07 14:38:38,358 - INFO - Step 12/19 : RUN git clone "$REPO" /testbed/     && cd /testbed/     && git reset --hard "$COMMIT_SHA"     && git remote remove origin
+2026-06-07 14:38:38,359 - INFO - 
+2026-06-07 14:38:38,380 - INFO - ---> Running in 8e514e6fc834
+2026-06-07 14:38:38,657 - INFO - Cloning into '/testbed'...
+2026-06-07 14:38:48,213 - INFO - Updating files:  23% (773/3280)
+2026-06-07 14:38:48,311 - INFO - Updating files:  24% (788/3280)
+2026-06-07 14:38:48,315 - INFO - Updating files:  25% (820/3280)
+2026-06-07 14:38:48,317 - INFO - Updating files:  26% (853/3280)
+2026-06-07 14:38:48,320 - INFO - Updating files:  27% (886/3280)
+2026-06-07 14:38:48,323 - INFO - Updating files:  28% (919/3280)
+2026-06-07 14:38:48,326 - INFO - Updating files:  29% (952/3280)
+2026-06-07 14:38:48,330 - INFO - Updating files:  30% (984/3280)
+2026-06-07 14:38:48,339 - INFO - Updating files:  31% (1017/3280)
+2026-06-07 14:38:48,342 - INFO - Updating files:  32% (1050/3280)
+2026-06-07 14:38:48,349 - INFO - Updating files:  33% (1083/3280)
+2026-06-07 14:38:48,354 - INFO - Updating files:  34% (1116/3280)
+2026-06-07 14:38:48,357 - INFO - Updating files:  35% (1148/3280)
+2026-06-07 14:38:48,361 - INFO - Updating files:  36% (1181/3280)
+2026-06-07 14:38:48,364 - INFO - Updating files:  37% (1214/3280)
+2026-06-07 14:38:48,366 - INFO - Updating files:  38% (1247/3280)
+2026-06-07 14:38:48,368 - INFO - Updating files:  39% (1280/3280)
+2026-06-07 14:38:48,370 - INFO - Updating files:  40% (1312/3280)
+2026-06-07 14:38:48,372 - INFO - Updating files:  41% (1345/3280)
+2026-06-07 14:38:48,374 - INFO - Updating files:  42% (1378/3280)
+2026-06-07 14:38:48,376 - INFO - Updating files:  43% (1411/3280)
+2026-06-07 14:38:48,378 - INFO - Updating files:  44% (1444/3280)
+2026-06-07 14:38:48,380 - INFO - Updating files:  45% (1476/3280)
+2026-06-07 14:38:48,386 - INFO - Updating files:  46% (1509/3280)
+2026-06-07 14:38:48,389 - INFO - Updating files:  47% (1542/3280)
+2026-06-07 14:38:48,390 - INFO - Updating files:  48% (1575/3280)
+2026-06-07 14:38:48,392 - INFO - Updating files:  49% (1608/3280)
+2026-06-07 14:38:48,394 - INFO - Updating files:  50% (1640/3280)
+2026-06-07 14:38:48,396 - INFO - Updating files:  51% (1673/3280)
+2026-06-07 14:38:48,398 - INFO - Updating files:  52% (1706/3280)
+2026-06-07 14:38:48,400 - INFO - Updating files:  53% (1739/3280)
+2026-06-07 14:38:48,404 - INFO - Updating files:  54% (1772/3280)
+2026-06-07 14:38:48,405 - INFO - Updating files:  55% (1804/3280)
+2026-06-07 14:38:48,408 - INFO - Updating files:  56% (1837/3280)
+2026-06-07 14:38:48,410 - INFO - Updating files:  57% (1870/3280)
+2026-06-07 14:38:48,413 - INFO - Updating files:  58% (1903/3280)
+2026-06-07 14:38:48,418 - INFO - Updating files:  59% (1936/3280)
+2026-06-07 14:38:48,420 - INFO - Updating files:  60% (1968/3280)
+2026-06-07 14:38:48,424 - INFO - Updating files:  61% (2001/3280)
+2026-06-07 14:38:48,426 - INFO - Updating files:  62% (2034/3280)
+2026-06-07 14:38:48,429 - INFO - Updating files:  63% (2067/3280)
+2026-06-07 14:38:48,431 - INFO - Updating files:  64% (2100/3280)
+2026-06-07 14:38:48,434 - INFO - Updating files:  65% (2132/3280)
+2026-06-07 14:38:48,437 - INFO - Updating files:  66% (2165/3280)
+2026-06-07 14:38:48,441 - INFO - Updating files:  67% (2198/3280)
+2026-06-07 14:38:48,443 - INFO - Updating files:  68% (2231/3280)
+2026-06-07 14:38:48,445 - INFO - Updating files:  69% (2264/3280)
+2026-06-07 14:38:48,447 - INFO - Updating files:  70% (2296/3280)
+2026-06-07 14:38:48,449 - INFO - Updating files:  71% (2329/3280)
+2026-06-07 14:38:48,451 - INFO - Updating files:  72% (2362/3280)
+2026-06-07 14:38:48,453 - INFO - Updating files:  73% (2395/3280)
+2026-06-07 14:38:48,456 - INFO - Updating files:  74% (2428/3280)
+2026-06-07 14:38:48,460 - INFO - Updating files:  75% (2460/3280)
+2026-06-07 14:38:48,466 - INFO - Updating files:  76% (2493/3280)
+2026-06-07 14:38:48,475 - INFO - Updating files:  77% (2526/3280)
+2026-06-07 14:38:48,482 - INFO - Updating files:  78% (2559/3280)
+2026-06-07 14:38:48,488 - INFO - Updating files:  79% (2592/3280)
+2026-06-07 14:38:48,493 - INFO - Updating files:  80% (2624/3280)
+2026-06-07 14:38:48,497 - INFO - Updating files:  81% (2657/3280)
+2026-06-07 14:38:48,506 - INFO - Updating files:  82% (2690/3280)
+2026-06-07 14:38:48,509 - INFO - Updating files:  83% (2723/3280)
+2026-06-07 14:38:48,512 - INFO - Updating files:  84% (2756/3280)
+2026-06-07 14:38:48,514 - INFO - Updating files:  85% (2788/3280)
+2026-06-07 14:38:48,516 - INFO - Updating files:  86% (2821/3280)
+2026-06-07 14:38:48,535 - INFO - Updating files:  87% (2854/3280)
+2026-06-07 14:38:48,541 - INFO - Updating files:  88% (2887/3280)
+2026-06-07 14:38:48,549 - INFO - Updating files:  89% (2920/3280)
+2026-06-07 14:38:48,556 - INFO - Updating files:  90% (2952/3280)
+2026-06-07 14:38:48,560 - INFO - Updating files:  91% (2985/3280)
+2026-06-07 14:38:48,580 - INFO - Updating files:  92% (3018/3280)
+2026-06-07 14:38:48,584 - INFO - Updating files:  93% (3051/3280)
+2026-06-07 14:38:48,586 - INFO - Updating files:  94% (3084/3280)
+2026-06-07 14:38:48,594 - INFO - Updating files:  95% (3116/3280)
+2026-06-07 14:38:48,597 - INFO - Updating files:  96% (3149/3280)
+2026-06-07 14:38:48,599 - INFO - Updating files:  97% (3182/3280)
+2026-06-07 14:38:48,603 - INFO - Updating files:  98% (3215/3280)
+2026-06-07 14:38:48,606 - INFO - Updating files:  99% (3248/3280)
+2026-06-07 14:38:48,619 - INFO - Updating files: 100% (3280/3280)Updating files: 100% (3280/3280), done.
+2026-06-07 14:38:49,151 - INFO - HEAD is now at 9dffd42e6 feat: Enhance memory system with isolated memory configuration (#2597)
+2026-06-07 14:39:06,615 - INFO - ---> Removed intermediate container 8e514e6fc834
+2026-06-07 14:39:06,616 - INFO - ---> b7ca29465af4
+2026-06-07 14:39:06,616 - INFO - Step 13/19 : RUN UV_VENV_CLEAR=1 uv lock &&     UV_VENV_CLEAR=1 uv sync &&     UV_VENV_CLEAR=1 uv venv &&     source .venv/bin/activate &&     pip install 'crewai[tools]' &&     pip install -e .
+2026-06-07 14:39:06,616 - INFO - 
+2026-06-07 14:39:07,898 - INFO - ---> Running in c58b6eb2879a
+2026-06-07 14:39:08,191 - INFO - warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+2026-06-07 14:39:08,265 - INFO - Using CPython 3.11.0rc1 interpreter at: /usr/bin/python3
+2026-06-07 14:39:08,299 - INFO - Resolved 312 packages in 1ms
+2026-06-07 14:39:08,315 - INFO - warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+2026-06-07 14:39:08,327 - INFO - Using CPython 3.11.0rc1 interpreter at: /usr/bin/python3
+Creating virtual environment at: .venv
+2026-06-07 14:39:08,355 - INFO - Resolved 312 packages in 1ms
+2026-06-07 14:39:08,436 - INFO - Building crewai @ file:///testbed
+2026-06-07 14:39:08,458 - INFO - Downloading numpy (17.4MiB)
+2026-06-07 14:39:08,467 - INFO - Downloading pygments (1.1MiB)
+2026-06-07 14:39:08,468 - INFO - Downloading babel (9.1MiB)
+2026-06-07 14:39:08,468 - INFO - Downloading mkdocs-material (8.3MiB)
+2026-06-07 14:39:08,468 - INFO - Downloading networkx (1.6MiB)
+2026-06-07 14:39:08,468 - INFO - Downloading mkdocs (3.7MiB)
+2026-06-07 14:39:08,469 - INFO - Downloading kubernetes (1.8MiB)
+2026-06-07 14:39:08,469 - INFO - Downloading mypy (11.9MiB)
+2026-06-07 14:39:08,469 - INFO - Downloading pillow (4.3MiB)
+2026-06-07 14:39:08,469 - INFO - Downloading virtualenv (3.0MiB)
+2026-06-07 14:39:08,469 - INFO - Downloading pypdfium2 (2.7MiB)
+2026-06-07 14:39:08,470 - INFO - Downloading pydantic-core (2.0MiB)
+2026-06-07 14:39:08,470 - INFO - Downloading uvloop (3.8MiB)
+2026-06-07 14:39:08,470 - INFO - Downloading uv (13.1MiB)
+2026-06-07 14:39:08,473 - INFO - Downloading chroma-hnswlib (2.3MiB)
+2026-06-07 14:39:08,473 - INFO - Downloading aiohttp (1.2MiB)
+2026-06-07 14:39:08,473 - INFO - Downloading litellm (6.4MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading cryptography (3.8MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading onnxruntime (12.6MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading ruff (10.7MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading sympy (5.9MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading grpcio (5.6MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading pdfminer-six (5.4MiB)
+2026-06-07 14:39:08,474 - INFO - Downloading tiktoken (1.0MiB)
+2026-06-07 14:39:08,475 - INFO - Downloading jedi (1.5MiB)
+2026-06-07 14:39:08,475 - INFO - Downloading tokenizers (2.8MiB)
+2026-06-07 14:39:09,235 - INFO - Downloaded tiktoken
+2026-06-07 14:39:09,502 - INFO - Downloaded aiohttp
+2026-06-07 14:39:09,640 - INFO - Downloaded pygments
+2026-06-07 14:39:09,726 - INFO - Building pypika==0.48.9
+2026-06-07 14:39:09,913 - INFO - Downloaded pydantic-core
+2026-06-07 14:39:10,097 - INFO - Downloaded chroma-hnswlib
+2026-06-07 14:39:10,207 - INFO - Downloaded networkx
+2026-06-07 14:39:10,243 - INFO - Downloaded pypdfium2
+2026-06-07 14:39:10,298 - INFO - Downloaded tokenizers
+2026-06-07 14:39:10,332 - INFO - Downloaded virtualenv
+2026-06-07 14:39:10,352 - INFO - Built crewai @ file:///testbed
+2026-06-07 14:39:10,577 - INFO - Downloaded kubernetes
+2026-06-07 14:39:10,607 - INFO - Downloaded mkdocs
+2026-06-07 14:39:10,608 - INFO - Downloaded uvloop
+2026-06-07 14:39:10,617 - INFO - Downloaded cryptography
+2026-06-07 14:39:10,667 - INFO - Downloaded pillow
+2026-06-07 14:39:10,892 - INFO - Downloaded pdfminer-six
+2026-06-07 14:39:10,936 - INFO - Downloaded grpcio
+2026-06-07 14:39:11,157 - INFO - Downloaded litellm
+2026-06-07 14:39:11,247 - INFO - Built pypika==0.48.9
+2026-06-07 14:39:11,491 - INFO - Downloaded ruff
+2026-06-07 14:39:11,515 - INFO - Downloaded babel
+2026-06-07 14:39:11,602 - INFO - Downloaded sympy
+2026-06-07 14:39:11,636 - INFO - Downloaded uv
+2026-06-07 14:39:11,698 - INFO - Downloaded numpy
+2026-06-07 14:39:11,700 - INFO - Downloaded onnxruntime
+2026-06-07 14:39:11,751 - INFO - Downloaded jedi
+2026-06-07 14:39:12,011 - INFO - Downloaded mypy
+2026-06-07 14:39:15,005 - INFO - Downloaded mkdocs-material
+2026-06-07 14:39:15,017 - INFO - Prepared 188 packages in 6.65s
+2026-06-07 14:39:16,069 - INFO - Installed 188 packages in 1.05s
+2026-06-07 14:39:16,070 - INFO - + aiohappyeyeballs==2.4.3
+ + aiohttp==3
+2026-06-07 14:39:16,070 - INFO - .10.10
+2026-06-07 14:39:16,070 - INFO - +
+2026-06-07 14:39:16,070 - INFO - aiosignal
+2026-06-07 14:39:16,070 - INFO - ==1.
+2026-06-07 14:39:16,071 - INFO - 3
+2026-06-07 14:39:16,071 - INFO - .
+2026-06-07 14:39:16,071 - INFO - 1
+2026-06-07 14:39:16,071 - INFO - + annotated-types==
+2026-06-07 14:39:16,071 - INFO - 0.7.0
+2026-06-07 14:39:16,071 - INFO - + anyio==
+2026-06-07 14:39:16,072 - INFO - 4.6
+2026-06-07 14:39:16,072 - INFO - .
+2026-06-07 14:39:16,072 - INFO - 2.post
+2026-06-07 14:39:16,072 - INFO - 1
+2026-06-07 14:39:16,072 - INFO - + appdirs==1.4.
+2026-06-07 14:39:16,072 - INFO - 4
+ +
+2026-06-07 14:39:16,072 - INFO - asgiref
+2026-06-07 14:39:16,072 - INFO - ==3.
+2026-06-07 14:39:16,073 - INFO - 8
+2026-06-07 14:39:16,073 - INFO - .
+2026-06-07 14:39:16,073 - INFO - 1
+2026-06-07 14:39:16,073 - INFO - 
+2026-06-07 14:39:16,073 - INFO - +
+2026-06-07 14:39:16,073 - INFO - asttokens==2.
+2026-06-07 14:39:16,074 - INFO - 4.1
+ +
+2026-06-07 14:39:16,074 - INFO - attrs
+2026-06-07 14:39:16,074 - INFO - ==24.
+2026-06-07 14:39:16,074 - INFO - 2.
+2026-06-07 14:39:16,074 - INFO - 0
+2026-06-07 14:39:16,074 - INFO - 
+2026-06-07 14:39:16,074 - INFO - 
+2026-06-07 14:39:16,075 - INFO - + auth0-python==
+2026-06-07 14:39:16,093 - INFO - 4.7.2
+2026-06-07 14:39:16,094 - INFO - + babel==
+2026-06-07 14:39:16,094 - INFO - 2.16.0
+2026-06-07 14:39:16,094 - INFO - +
+2026-06-07 14:39:16,094 - INFO - backoff
+2026-06-07 14:39:16,094 - INFO - ==
+2026-06-07 14:39:16,094 - INFO - 2.
+2026-06-07 14:39:16,095 - INFO - 2.1
+2026-06-07 14:39:16,095 - INFO - +
+2026-06-07 14:39:16,095 - INFO - bcrypt
+2026-06-07 14:39:16,095 - INFO - ==
+2026-06-07 14:39:16,095 - INFO - 4.2.0
+2026-06-07 14:39:16,095 - INFO - +
+2026-06-07 14:39:16,095 - INFO - blinker==1
+2026-06-07 14:39:16,096 - INFO - .
+2026-06-07 14:39:16,096 - INFO - 9.0
+2026-06-07 14:39:16,096 - INFO - 
+2026-06-07 14:39:16,096 - INFO - +
+2026-06-07 14:39:16,096 - INFO - build==
+2026-06-07 14:39:16,096 - INFO - 1.2.2
+2026-06-07 14:39:16,096 - INFO - .post1
+2026-06-07 14:39:16,097 - INFO - +
+2026-06-07 14:39:16,097 - INFO - cachetools==
+2026-06-07 14:39:16,097 - INFO - 5.5
+2026-06-07 14:39:16,097 - INFO - .
+2026-06-07 14:39:16,097 - INFO - 0
+2026-06-07 14:39:16,097 - INFO - 
+2026-06-07 14:39:16,097 - INFO - + cairocffi==1.7.
+2026-06-07 14:39:16,098 - INFO - 1
+2026-06-07 14:39:16,098 - INFO - +
+2026-06-07 14:39:16,098 - INFO - 
+2026-06-07 14:39:16,098 - INFO - cairosvg
+2026-06-07 14:39:16,098 - INFO - ==2.7.1
+2026-06-07 14:39:16,098 - INFO - + certifi==2024.
+2026-06-07 14:39:16,099 - INFO - 8.30
+2026-06-07 14:39:16,099 - INFO - +
+2026-06-07 14:39:16,099 - INFO - 
+2026-06-07 14:39:16,099 - INFO - cffi
+2026-06-07 14:39:16,099 - INFO - ==
+2026-06-07 14:39:16,099 - INFO - 1
+2026-06-07 14:39:16,099 - INFO - .17
+2026-06-07 14:39:16,100 - INFO - .1
+ +
+2026-06-07 14:39:16,100 - INFO - cfgv==3.4
+2026-06-07 14:39:16,100 - INFO - .0
+2026-06-07 14:39:16,100 - INFO - +
+2026-06-07 14:39:16,100 - INFO - charset-normalizer
+2026-06-07 14:39:16,100 - INFO - ==
+2026-06-07 14:39:16,100 - INFO - 3.
+2026-06-07 14:39:16,101 - INFO - 4.0
+2026-06-07 14:39:16,101 - INFO - 
+2026-06-07 14:39:16,101 - INFO - +
+2026-06-07 14:39:16,101 - INFO - 
+2026-06-07 14:39:16,101 - INFO - chroma-hnswlib
+2026-06-07 14:39:16,101 - INFO - ==
+2026-06-07 14:39:16,101 - INFO - 0.7.6
+2026-06-07 14:39:16,102 - INFO - +
+2026-06-07 14:39:16,102 - INFO - 
+2026-06-07 14:39:16,102 - INFO - chromadb
+2026-06-07 14:39:16,102 - INFO - ==
+2026-06-07 14:39:16,102 - INFO - 0.
+2026-06-07 14:39:16,102 - INFO - 5.
+2026-06-07 14:39:16,102 - INFO - 23
+ + click
+2026-06-07 14:39:16,102 - INFO - ==8.
+2026-06-07 14:39:16,103 - INFO - 1.8
+2026-06-07 14:39:16,103 - INFO - + colorama==0.4
+2026-06-07 14:39:16,103 - INFO - .6
+2026-06-07 14:39:16,103 - INFO - +
+2026-06-07 14:39:16,103 - INFO - coloredlogs
+2026-06-07 14:39:16,103 - INFO - ==
+2026-06-07 14:39:16,103 - INFO - 15
+2026-06-07 14:39:16,104 - INFO - .0
+2026-06-07 14:39:16,104 - INFO - .
+2026-06-07 14:39:16,104 - INFO - 1
+2026-06-07 14:39:16,104 - INFO - +
+2026-06-07 14:39:16,104 - INFO - 
+2026-06-07 14:39:16,104 - INFO - crewai
+2026-06-07 14:39:16,104 - INFO - ==0.114.0 (from
+2026-06-07 14:39:16,104 - INFO - file
+2026-06-07 14:39:16,104 - INFO - :///testbed)
+2026-06-07 14:39:16,104 - INFO - 
+2026-06-07 14:39:16,104 - INFO - 
+2026-06-07 14:39:16,105 - INFO - +
+2026-06-07 14:39:16,105 - INFO - cryptography==43.
+2026-06-07 14:39:16,105 - INFO - 0.
+2026-06-07 14:39:16,105 - INFO - 3
+2026-06-07 14:39:16,105 - INFO - 
+2026-06-07 14:39:16,105 - INFO - 
+2026-06-07 14:39:16,105 - INFO - + cssselect2
+2026-06-07 14:39:16,105 - INFO - ==0.7.0
+2026-06-07 14:39:16,105 - INFO - +
+2026-06-07 14:39:16,105 - INFO - 
+2026-06-07 14:39:16,105 - INFO - decorator
+2026-06-07 14:39:16,106 - INFO - ==5.1.
+2026-06-07 14:39:16,106 - INFO - 1
+2026-06-07 14:39:16,106 - INFO - 
+2026-06-07 14:39:16,106 - INFO - + defusedxml==0
+2026-06-07 14:39:16,106 - INFO - .7.
+2026-06-07 14:39:16,106 - INFO - 1
+2026-06-07 14:39:16,106 - INFO - 
+2026-06-07 14:39:16,106 - INFO - +
+2026-06-07 14:39:16,106 - INFO - deprecated
+2026-06-07 14:39:16,106 - INFO - ==
+2026-06-07 14:39:16,107 - INFO - 1.
+2026-06-07 14:39:16,107 - INFO - 2
+2026-06-07 14:39:16,107 - INFO - .14
+ +
+2026-06-07 14:39:16,107 - INFO - distlib
+2026-06-07 14:39:16,107 - INFO - ==0.3
+2026-06-07 14:39:16,107 - INFO - .9
+2026-06-07 14:39:16,107 - INFO - + distro
+2026-06-07 14:39:16,107 - INFO - ==1.
+2026-06-07 14:39:16,107 - INFO - 9
+2026-06-07 14:39:16,107 - INFO - .0
+ +
+2026-06-07 14:39:16,107 - INFO - docstring-parser==
+2026-06-07 14:39:16,108 - INFO - 0.16
+ +
+2026-06-07 14:39:16,108 - INFO - durationpy==0
+2026-06-07 14:39:16,108 - INFO - .9
+2026-06-07 14:39:16,108 - INFO - +
+2026-06-07 14:39:16,108 - INFO - et-xmlfile
+2026-06-07 14:39:16,108 - INFO - ==2.0.0
+2026-06-07 14:39:16,108 - INFO - + executing
+2026-06-07 14:39:16,108 - INFO - ==2.1.
+2026-06-07 14:39:16,108 - INFO - 0
+ +
+2026-06-07 14:39:16,108 - INFO - fastapi==
+2026-06-07 14:39:16,108 - INFO - 0
+2026-06-07 14:39:16,109 - INFO - .115
+2026-06-07 14:39:16,109 - INFO - .
+2026-06-07 14:39:16,109 - INFO - 3
+2026-06-07 14:39:16,109 - INFO - +
+2026-06-07 14:39:16,109 - INFO - filelock
+2026-06-07 14:39:16,109 - INFO - ==
+2026-06-07 14:39:16,109 - INFO - 3.16
+2026-06-07 14:39:16,109 - INFO - .1
+2026-06-07 14:39:16,109 - INFO - + flatbuffers
+2026-06-07 14:39:16,109 - INFO - ==24.3.
+2026-06-07 14:39:16,109 - INFO - 25
+2026-06-07 14:39:16,110 - INFO - +
+2026-06-07 14:39:16,110 - INFO - frozenlist==1.
+2026-06-07 14:39:16,110 - INFO - 5.0
+2026-06-07 14:39:16,110 - INFO - +
+2026-06-07 14:39:16,110 - INFO - 
+2026-06-07 14:39:16,110 - INFO - fsspec
+2026-06-07 14:39:16,110 - INFO - ==2024.10.0
+2026-06-07 14:39:16,110 - INFO - 
+2026-06-07 14:39:16,110 - INFO - +
+2026-06-07 14:39:16,110 - INFO - ghp-import
+2026-06-07 14:39:16,110 - INFO - ==2.1.0
+2026-06-07 14:39:16,111 - INFO - +
+2026-06-07 14:39:16,111 - INFO - google-auth==
+2026-06-07 14:39:16,111 - INFO - 2.35
+2026-06-07 14:39:16,111 - INFO - .
+2026-06-07 14:39:16,111 - INFO - 0
+2026-06-07 14:39:16,111 - INFO - +
+2026-06-07 14:39:16,111 - INFO - googleapis-common-protos
+2026-06-07 14:39:16,111 - INFO - ==1
+2026-06-07 14:39:16,111 - INFO - .
+2026-06-07 14:39:16,111 - INFO - 65.
+2026-06-07 14:39:16,111 - INFO - 0
+2026-06-07 14:39:16,112 - INFO - 
+2026-06-07 14:39:16,112 - INFO - +
+2026-06-07 14:39:16,112 - INFO - griffe==1.
+2026-06-07 14:39:16,112 - INFO - 5.1
+ +
+2026-06-07 14:39:16,112 - INFO - 
+2026-06-07 14:39:16,112 - INFO - grpcio
+2026-06-07 14:39:16,112 - INFO - ==1.67
+2026-06-07 14:39:16,112 - INFO - .0
+2026-06-07 14:39:16,112 - INFO - +
+2026-06-07 14:39:16,112 - INFO - h11
+2026-06-07 14:39:16,112 - INFO - ==0.14.
+2026-06-07 14:39:16,113 - INFO - 0
+ +
+2026-06-07 14:39:16,113 - INFO - httpcore
+2026-06-07 14:39:16,113 - INFO - ==1.
+2026-06-07 14:39:16,113 - INFO - 0.
+2026-06-07 14:39:16,113 - INFO - 6
+2026-06-07 14:39:16,113 - INFO - 
+2026-06-07 14:39:16,113 - INFO - 
+2026-06-07 14:39:16,113 - INFO - +
+2026-06-07 14:39:16,113 - INFO - httptools==0.6.
+2026-06-07 14:39:16,113 - INFO - 4
+2026-06-07 14:39:16,114 - INFO - 
+2026-06-07 14:39:16,114 - INFO - +
+2026-06-07 14:39:16,114 - INFO - httpx
+2026-06-07 14:39:16,114 - INFO - ==0.27.
+2026-06-07 14:39:16,114 - INFO - 2
+ +
+2026-06-07 14:39:16,114 - INFO - huggingface-hub
+2026-06-07 14:39:16,114 - INFO - ==
+2026-06-07 14:39:16,114 - INFO - 0
+2026-06-07 14:39:16,114 - INFO - .26.1
+ +
+2026-06-07 14:39:16,114 - INFO - humanfriendly==
+2026-06-07 14:39:16,114 - INFO - 10.0
+2026-06-07 14:39:16,114 - INFO - 
+2026-06-07 14:39:16,114 - INFO - + identify
+2026-06-07 14:39:16,114 - INFO - ==2.
+2026-06-07 14:39:16,114 - INFO - 6
+2026-06-07 14:39:16,114 - INFO - .1
+2026-06-07 14:39:16,115 - INFO - 
+2026-06-07 14:39:16,115 - INFO - +
+2026-06-07 14:39:16,115 - INFO - idna==
+2026-06-07 14:39:16,115 - INFO - 3.
+2026-06-07 14:39:16,115 - INFO - 10
+2026-06-07 14:39:16,115 - INFO - 
+2026-06-07 14:39:16,115 - INFO - +
+2026-06-07 14:39:16,115 - INFO - 
+2026-06-07 14:39:16,115 - INFO - importlib-metadata
+2026-06-07 14:39:16,115 - INFO - ==8.
+2026-06-07 14:39:16,115 - INFO - 4.
+2026-06-07 14:39:16,115 - INFO - 0
+ +
+2026-06-07 14:39:16,115 - INFO - importlib-resources==6
+2026-06-07 14:39:16,115 - INFO - .
+2026-06-07 14:39:16,115 - INFO - 4.
+2026-06-07 14:39:16,115 - INFO - 5
+2026-06-07 14:39:16,115 - INFO - +
+2026-06-07 14:39:16,116 - INFO - 
+2026-06-07 14:39:16,116 - INFO - iniconfig==2.0
+2026-06-07 14:39:16,116 - INFO - .0
+2026-06-07 14:39:16,116 - INFO - +
+2026-06-07 14:39:16,116 - INFO - instructor
+2026-06-07 14:39:16,116 - INFO - ==1.
+2026-06-07 14:39:16,116 - INFO - 6.3
+2026-06-07 14:39:16,116 - INFO - +
+2026-06-07 14:39:16,116 - INFO - ipython==8
+2026-06-07 14:39:16,116 - INFO - .28.
+2026-06-07 14:39:16,116 - INFO - 0
+2026-06-07 14:39:16,116 - INFO - 
+2026-06-07 14:39:16,116 - INFO - +
+2026-06-07 14:39:16,116 - INFO - 
+2026-06-07 14:39:16,116 - INFO - jedi
+2026-06-07 14:39:16,117 - INFO - ==0.19.1
+2026-06-07 14:39:16,117 - INFO - +
+2026-06-07 14:39:16,117 - INFO - jinja2==3
+2026-06-07 14:39:16,117 - INFO - .1.4
+2026-06-07 14:39:16,117 - INFO - +
+2026-06-07 14:39:16,117 - INFO - jiter
+2026-06-07 14:39:16,117 - INFO - ==
+2026-06-07 14:39:16,117 - INFO - 0.5.0
+2026-06-07 14:39:16,117 - INFO - 
+2026-06-07 14:39:16,117 - INFO - +
+2026-06-07 14:39:16,117 - INFO - json-repair
+2026-06-07 14:39:16,117 - INFO - ==0
+2026-06-07 14:39:16,117 - INFO - .30.
+2026-06-07 14:39:16,117 - INFO - 0
+2026-06-07 14:39:16,117 - INFO - 
+2026-06-07 14:39:16,117 - INFO - 
+2026-06-07 14:39:16,118 - INFO - +
+2026-06-07 14:39:16,118 - INFO - 
+2026-06-07 14:39:16,118 - INFO - json5
+2026-06-07 14:39:16,118 - INFO - ==0.10.0
+2026-06-07 14:39:16,118 - INFO - +
+2026-06-07 14:39:16,118 - INFO - jsonpickle==3.3.0
+2026-06-07 14:39:16,118 - INFO - + jsonref
+2026-06-07 14:39:16,118 - INFO - ==1.
+2026-06-07 14:39:16,118 - INFO - 1.0
+2026-06-07 14:39:16,118 - INFO - 
+2026-06-07 14:39:16,118 - INFO - +
+2026-06-07 14:39:16,118 - INFO - jsonschema
+2026-06-07 14:39:16,118 - INFO - ==
+2026-06-07 14:39:16,118 - INFO - 4
+2026-06-07 14:39:16,118 - INFO - .23.0
+2026-06-07 14:39:16,118 - INFO - +
+2026-06-07 14:39:16,118 - INFO - jsonschema-specifications
+2026-06-07 14:39:16,119 - INFO - ==2024.10.1
+2026-06-07 14:39:16,119 - INFO - +
+2026-06-07 14:39:16,119 - INFO - kubernetes
+2026-06-07 14:39:16,119 - INFO - ==
+2026-06-07 14:39:16,119 - INFO - 31.0
+2026-06-07 14:39:16,119 - INFO - .0
+2026-06-07 14:39:16,119 - INFO - +
+2026-06-07 14:39:16,119 - INFO - 
+2026-06-07 14:39:16,119 - INFO - litellm
+2026-06-07 14:39:16,119 - INFO - ==
+2026-06-07 14:39:16,119 - INFO - 1.60.2
+2026-06-07 14:39:16,119 - INFO - +
+2026-06-07 14:39:16,119 - INFO - markdown==3.7
+2026-06-07 14:39:16,119 - INFO - +
+2026-06-07 14:39:16,119 - INFO - markdown-it-py
+2026-06-07 14:39:16,119 - INFO - ==3.0.
+2026-06-07 14:39:16,119 - INFO - 0
+ + markupsafe
+2026-06-07 14:39:16,120 - INFO - ==
+2026-06-07 14:39:16,120 - INFO - 3.
+2026-06-07 14:39:16,120 - INFO - 0
+2026-06-07 14:39:16,120 - INFO - .2
+2026-06-07 14:39:16,120 - INFO - + matplotlib-inline
+2026-06-07 14:39:16,120 - INFO - ==0.1
+2026-06-07 14:39:16,120 - INFO - .7
+2026-06-07 14:39:16,120 - INFO - +
+2026-06-07 14:39:16,120 - INFO - 
+2026-06-07 14:39:16,120 - INFO - mdurl
+2026-06-07 14:39:16,120 - INFO - ==
+2026-06-07 14:39:16,120 - INFO - 0.
+2026-06-07 14:39:16,120 - INFO - 1.
+2026-06-07 14:39:16,120 - INFO - 2
+2026-06-07 14:39:16,120 - INFO - +
+2026-06-07 14:39:16,120 - INFO - 
+2026-06-07 14:39:16,121 - INFO - mergedeep
+2026-06-07 14:39:16,121 - INFO - ==1.
+2026-06-07 14:39:16,121 - INFO - 3.4
+2026-06-07 14:39:16,121 - INFO - + mkdocs
+2026-06-07 14:39:16,121 - INFO - ==1
+2026-06-07 14:39:16,121 - INFO - .6
+2026-06-07 14:39:16,121 - INFO - .1
+2026-06-07 14:39:16,121 - INFO - +
+2026-06-07 14:39:16,121 - INFO - mkdocs-autorefs
+2026-06-07 14:39:16,121 - INFO - ==1.2.0
+2026-06-07 14:39:16,121 - INFO - + mkdocs-get-deps
+2026-06-07 14:39:16,121 - INFO - ==
+2026-06-07 14:39:16,121 - INFO - 0
+2026-06-07 14:39:16,121 - INFO - .2.0
+2026-06-07 14:39:16,121 - INFO - 
+2026-06-07 14:39:16,121 - INFO - +
+2026-06-07 14:39:16,121 - INFO - mkdocs-material
+2026-06-07 14:39:16,122 - INFO - ==9
+2026-06-07 14:39:16,122 - INFO - .5.42
+2026-06-07 14:39:16,122 - INFO - +
+2026-06-07 14:39:16,122 - INFO - mkdocs-material-extensions==1.3.1
+ + mkdocstrings==0.26.2
+ + mkdocstrings-python==1.12.2
+ + mmh3==4.1.0
+ + monotonic==1.6
+ + mpmath==1.3.0
+ + multidict==6.1.0
+ + mypy==1.13.0
+ + mypy-extensions==1.0.0
+ + networkx==3.4.2
+ + nodeenv==1.9.1
+ + numpy==1.26.4
+ + oauthlib==3.2.2
+ + onnxruntime==1.19.2
+ + openai==1.68.2
+ + openpyxl==3.1.5
+ + opentelemetry-api==1.31.1
+ + opentelemetry-exporter-otlp-proto-common==1.31.1
+ + opentelemetry-exporter-otlp-proto-grpc==1.31.1
+ + opentelemetry-exporter-otlp-proto-http==1.31.1
+ + opentelemetry-instrumentation==0.52b1
+ + opentelemetry-instrumentation-asgi==0.52b1
+ + opentelemetry-instrumentation-fastapi==0.52b1
+ + opentelemetry-proto==1.31.1
+ + opentelemetry-sdk==1.31.1
+ + opentelemetry-semantic-conventions==0.52b1
+ + opentelemetry-util-http==0.52b1
+ + orjson==3.10.10
+ + overrides==7.7.0
+ + packaging==23.2
+ + paginate==0.5.7
+ + parso==0.8.4
+ + pathspec==0.12.1
+ + pdfminer-six==20231228
+ + pdfplumber==0.11.4
+ + pexpect==4.9.0
+ + pillow==10.4.0
+ + platformdirs==4.3.6
+ + pluggy==1.5.0
+ + posthog==3.7.0
+ + pre-commit==4.0.1
+ + prompt-toolkit==3.0.48
+ + propcache==0.2.0
+ + protobuf==5.29.4
+ + ptyprocess==0.7.0
+ + pure-eval==0.2.3
+ + pyasn1==0.6.1
+ + pyasn1-modules==0.4.1
+ + pycparser==2.22
+ + pydantic==2.9.2
+ + pydantic-core==2.23.4
+ + pygments==2.18.0
+ + pyjwt==2.9.0
+ + pymdown-extensions==10.11.2
+ + pypdfium2==4.30.0
+ + pypika==0.48.9
+ + pyproject-hooks==1.2.0
+ + pytest==8.3.3
+ + pytest-asyncio==0.24.0
+ + pytest-subprocess==1.5.2
+ + pytest-vcr==1.0.2
+ + python-dateutil==2.9.0.post0
+ + python-dotenv==1.0.1
+ + pyvis==0.3.2
+ + pyyaml==6.0.2
+ + pyyaml-env-tag==0.1
+ + referencing==0.35.1
+ + regex==2024.9.11
+ + requests==2.32.3
+ + requests-oauthlib==2.0.0
+ + rich==13.9.3
+ + rpds-py==0.20.0
+ + rsa==4.9
+ + ruff==0.8.2
+ + shellingham==1.5.4
+ + six==1.16.0
+ + sniffio==1.3.1
+ + stack-data==0.6.3
+ + starlette==0.41.0
+ + sympy==1.13.3
+ + tenacity==9.0.0
+ + tiktoken==0.7.0
+ + tinycss2==1.3.0
+ + tokenizers==0.20.1
+ + tomli==2.0.2
+ + tomli-w==1.1.0
+ + tqdm==4.66.5
+ + traitlets==5.14.3
+ + typer==0.12.5
+ + typing-extensions==4.12.2
+ + urllib3==2.2.3
+ + uv==0.4.26
+ + uvicorn==0.32.0
+ + uvloop==0.21.0
+ + vcrpy==5.1.0
+ + virtualenv==20.27.0
+ + watchdog==5.0.3
+ + watchfiles==0.24.0
+ + wcwidth==0.2.13
+ + webencodings==0.5.1
+ + websocket-client==1.8.0
+ + websockets==13.1
+ + wrapt==1.16.0
+ + yarl==1.16.0
+ + zipp==3.20.2
+2026-06-07 14:39:16,190 - INFO - warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+2026-06-07 14:39:16,202 - INFO - Using CPython 3.11.0rc1 interpreter at: /usr/bin/python3
+Creating virtual environment at: .venv
+2026-06-07 14:39:18,588 - INFO - Activate with: source .venv/bin/activate
+2026-06-07 14:39:19,185 - INFO - Collecting crewai[tools]
+2026-06-07 14:39:19,510 - INFO - Downloading crewai-1.14.6-py3-none-any.whl.metadata (36 kB)
+2026-06-07 14:39:19,943 - INFO - Collecting aiofiles~=24.1.0 (from crewai[tools])
+2026-06-07 14:39:19,973 - INFO - Downloading aiofiles-24.1.0-py3-none-any.whl.metadata (10 kB)
+2026-06-07 14:39:20,054 - INFO - Collecting aiosqlite~=0.21.0 (from crewai[tools])
+2026-06-07 14:39:20,060 - INFO - Downloading aiosqlite-0.21.0-py3-none-any.whl.metadata (4.3 kB)
+2026-06-07 14:39:20,122 - INFO - Collecting appdirs~=1.4.4 (from crewai[tools])
+2026-06-07 14:39:20,137 - INFO - Downloading appdirs-1.4.4-py2.py3-none-any.whl.metadata (9.0 kB)
+2026-06-07 14:39:20,266 - INFO - Collecting chromadb~=1.1.0 (from crewai[tools])
+2026-06-07 14:39:20,285 - INFO - Downloading chromadb-1.1.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.2 kB)
+2026-06-07 14:39:20,374 - INFO - Collecting click~=8.1.7 (from crewai[tools])
+2026-06-07 14:39:20,412 - INFO - Downloading click-8.1.8-py3-none-any.whl.metadata (2.3 kB)
+2026-06-07 14:39:20,542 - INFO - Collecting crewai-cli==1.14.6 (from crewai[tools])
+2026-06-07 14:39:20,587 - INFO - Downloading crewai_cli-1.14.6-py3-none-any.whl.metadata (1.7 kB)
+2026-06-07 14:39:20,638 - INFO - Collecting crewai-core==1.14.6 (from crewai[tools])
+2026-06-07 14:39:20,646 - INFO - Downloading crewai_core-1.14.6-py3-none-any.whl.metadata (1.2 kB)
+2026-06-07 14:39:20,717 - INFO - Collecting httpx~=0.28.1 (from crewai[tools])
+2026-06-07 14:39:20,724 - INFO - Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-06-07 14:39:20,799 - INFO - Collecting instructor>=1.3.3 (from crewai[tools])
+2026-06-07 14:39:20,805 - INFO - Downloading instructor-1.15.1-py3-none-any.whl.metadata (12 kB)
+2026-06-07 14:39:20,881 - INFO - Collecting json-repair~=0.25.2 (from crewai[tools])
+2026-06-07 14:39:20,893 - INFO - Downloading json_repair-0.25.3-py3-none-any.whl.metadata (7.9 kB)
+2026-06-07 14:39:20,950 - INFO - Collecting json5~=0.10.0 (from crewai[tools])
+2026-06-07 14:39:20,956 - INFO - Downloading json5-0.10.0-py3-none-any.whl.metadata (34 kB)
+2026-06-07 14:39:21,110 - INFO - Collecting jsonref~=1.1.0 (from crewai[tools])
+2026-06-07 14:39:21,121 - INFO - Downloading jsonref-1.1.0-py3-none-any.whl.metadata (2.7 kB)
+2026-06-07 14:39:21,182 - INFO - Collecting lancedb<0.30.1,>=0.29.2 (from crewai[tools])
+2026-06-07 14:39:21,220 - INFO - Downloading lancedb-0.30.0-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (5.0 kB)
+2026-06-07 14:39:21,367 - INFO - Collecting mcp~=1.26.0 (from crewai[tools])
+2026-06-07 14:39:21,383 - INFO - Downloading mcp-1.26.0-py3-none-any.whl.metadata (89 kB)
+2026-06-07 14:39:21,485 - INFO - Collecting openai<3,>=2.30.0 (from crewai[tools])
+2026-06-07 14:39:21,497 - INFO - Downloading openai-2.41.0-py3-none-any.whl.metadata (32 kB)
+2026-06-07 14:39:21,614 - INFO - Collecting openpyxl~=3.1.5 (from crewai[tools])
+2026-06-07 14:39:21,630 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:21,796 - INFO - Collecting opentelemetry-api~=1.34.0 (from crewai[tools])
+2026-06-07 14:39:21,802 - INFO - Downloading opentelemetry_api-1.34.1-py3-none-any.whl.metadata (1.5 kB)
+2026-06-07 14:39:21,932 - INFO - Collecting opentelemetry-exporter-otlp-proto-http~=1.34.0 (from crewai[tools])
+2026-06-07 14:39:21,944 - INFO - Downloading opentelemetry_exporter_otlp_proto_http-1.34.1-py3-none-any.whl.metadata (2.3 kB)
+2026-06-07 14:39:22,120 - INFO - Collecting opentelemetry-sdk~=1.34.0 (from crewai[tools])
+2026-06-07 14:39:22,129 - INFO - Downloading opentelemetry_sdk-1.34.1-py3-none-any.whl.metadata (1.6 kB)
+2026-06-07 14:39:22,377 - INFO - Collecting pdfplumber~=0.11.4 (from crewai[tools])
+2026-06-07 14:39:22,435 - INFO - Downloading pdfplumber-0.11.9-py3-none-any.whl.metadata (43 kB)
+2026-06-07 14:39:22,540 - INFO - Collecting portalocker~=2.7.0 (from crewai[tools])
+2026-06-07 14:39:22,553 - INFO - Downloading portalocker-2.7.0-py2.py3-none-any.whl.metadata (6.8 kB)
+2026-06-07 14:39:22,700 - INFO - Collecting pydantic-settings~=2.10.1 (from crewai[tools])
+2026-06-07 14:39:22,715 - INFO - Downloading pydantic_settings-2.10.1-py3-none-any.whl.metadata (3.4 kB)
+2026-06-07 14:39:23,147 - INFO - Collecting pydantic<2.13,>=2.11.9 (from crewai[tools])
+2026-06-07 14:39:23,153 - INFO - Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+2026-06-07 14:39:23,409 - INFO - Collecting pyjwt<3,>=2.9.0 (from crewai[tools])
+2026-06-07 14:39:23,415 - INFO - Downloading pyjwt-2.13.0-py3-none-any.whl.metadata (3.4 kB)
+2026-06-07 14:39:23,703 - INFO - Collecting python-dotenv<2,>=1.2.2 (from crewai[tools])
+2026-06-07 14:39:23,710 - INFO - Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+2026-06-07 14:39:23,873 - INFO - Collecting pyyaml~=6.0 (from crewai[tools])
+2026-06-07 14:39:23,878 - INFO - Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-06-07 14:39:24,813 - INFO - Collecting regex~=2026.1.15 (from crewai[tools])
+2026-06-07 14:39:24,819 - INFO - Downloading regex-2026.1.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-07 14:39:25,381 - INFO - Collecting tokenizers<1,>=0.21 (from crewai[tools])
+2026-06-07 14:39:25,386 - INFO - Downloading tokenizers-0.23.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.8 kB)
+2026-06-07 14:39:25,651 - INFO - Collecting tomli-w~=1.1.0 (from crewai[tools])
+2026-06-07 14:39:25,661 - INFO - Downloading tomli_w-1.1.0-py3-none-any.whl.metadata (5.7 kB)
+2026-06-07 14:39:25,779 - INFO - Collecting tomli~=2.0.2 (from crewai[tools])
+2026-06-07 14:39:25,894 - INFO - Downloading tomli-2.0.2-py3-none-any.whl.metadata (10.0 kB)
+2026-06-07 14:39:26,609 - INFO - Collecting crewai-tools==1.14.6 (from crewai[tools])
+2026-06-07 14:39:26,671 - INFO - Downloading crewai_tools-1.14.6-py3-none-any.whl.metadata (11 kB)
+2026-06-07 14:39:27,044 - INFO - Collecting certifi (from crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:27,073 - INFO - Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:27,397 - INFO - Collecting cryptography>=42.0 (from crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:27,427 - INFO - Downloading cryptography-48.0.0-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+2026-06-07 14:39:27,518 - INFO - Requirement already satisfied: packaging>=23.0 in /usr/local/lib/python3.11/dist-packages (from crewai-cli==1.14.6->crewai[tools]) (26.2)
+2026-06-07 14:39:27,628 - INFO - Collecting rich>=13.7.1 (from crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:27,636 - INFO - Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+2026-06-07 14:39:27,674 - INFO - Collecting textual>=7.5.0 (from crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:27,680 - INFO - Downloading textual-8.2.7-py3-none-any.whl.metadata (9.1 kB)
+2026-06-07 14:39:27,714 - INFO - Requirement already satisfied: uv~=0.11.6 in /usr/local/lib/python3.11/dist-packages (from crewai-cli==1.14.6->crewai[tools]) (0.11.19)
+2026-06-07 14:39:27,747 - INFO - Collecting beautifulsoup4~=4.13.4 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:27,758 - INFO - Downloading beautifulsoup4-4.13.5-py3-none-any.whl.metadata (3.8 kB)
+2026-06-07 14:39:27,981 - INFO - Collecting pymupdf~=1.26.6 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:27,987 - INFO - Downloading pymupdf-1.26.7-cp310-abi3-manylinux_2_28_x86_64.whl.metadata (3.4 kB)
+2026-06-07 14:39:28,005 - INFO - Collecting python-docx~=1.2.0 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,013 - INFO - Downloading python_docx-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+2026-06-07 14:39:28,059 - INFO - Collecting pytube~=15.0.0 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,066 - INFO - Downloading pytube-15.0.0-py3-none-any.whl.metadata (5.0 kB)
+2026-06-07 14:39:28,123 - INFO - Collecting requests<3,>=2.33.0 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,127 - INFO - Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+2026-06-07 14:39:28,182 - INFO - Collecting tiktoken<0.13,>=0.8.0 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,189 - INFO - Downloading tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.7 kB)
+2026-06-07 14:39:28,227 - INFO - Collecting youtube-transcript-api~=1.2.2 (from crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,245 - INFO - Downloading youtube_transcript_api-1.2.4-py3-none-any.whl.metadata (24 kB)
+2026-06-07 14:39:28,297 - INFO - Collecting typing_extensions>=4.0 (from aiosqlite~=0.21.0->crewai[tools])
+2026-06-07 14:39:28,303 - INFO - Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2026-06-07 14:39:28,364 - INFO - Collecting soupsieve>1.2 (from beautifulsoup4~=4.13.4->crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:28,370 - INFO - Downloading soupsieve-2.8.4-py3-none-any.whl.metadata (4.6 kB)
+2026-06-07 14:39:28,417 - INFO - Collecting build>=1.0.3 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:28,424 - INFO - Downloading build-1.5.0-py3-none-any.whl.metadata (5.7 kB)
+2026-06-07 14:39:28,604 - INFO - Collecting pybase64>=1.4.1 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:28,610 - INFO - Downloading pybase64-1.4.3-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl.metadata (8.7 kB)
+2026-06-07 14:39:28,674 - INFO - Collecting uvicorn>=0.18.3 (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:28,678 - INFO - Downloading uvicorn-0.49.0-py3-none-any.whl.metadata (6.7 kB)
+2026-06-07 14:39:28,943 - INFO - Collecting numpy>=1.22.5 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:28,949 - INFO - Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-06-07 14:39:29,080 - INFO - Collecting posthog<6.0.0,>=2.4.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:29,085 - INFO - Downloading posthog-5.4.0-py3-none-any.whl.metadata (5.7 kB)
+2026-06-07 14:39:29,361 - INFO - Collecting onnxruntime>=1.14.1 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:29,384 - INFO - Downloading onnxruntime-1.26.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2026-06-07 14:39:29,455 - INFO - Collecting opentelemetry-exporter-otlp-proto-grpc>=1.2.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:29,459 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.42.1-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:29,727 - INFO - Collecting pypika>=0.48.9 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:29,762 - INFO - Downloading pypika-0.51.1-py2.py3-none-any.whl.metadata (51 kB)
+2026-06-07 14:39:29,904 - INFO - Collecting tqdm>=4.65.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:29,939 - INFO - Downloading tqdm-4.68.1-py3-none-any.whl.metadata (57 kB)
+2026-06-07 14:39:30,227 - INFO - Collecting overrides>=7.3.1 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:30,233 - INFO - Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)
+2026-06-07 14:39:30,277 - INFO - Collecting importlib-resources (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:30,281 - INFO - Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+2026-06-07 14:39:30,746 - INFO - Collecting grpcio>=1.58.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:30,751 - INFO - Downloading grpcio-1.81.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+2026-06-07 14:39:30,799 - INFO - Collecting bcrypt>=4.0.1 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:30,804 - INFO - Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+2026-06-07 14:39:30,950 - INFO - Collecting typer>=0.9.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:30,961 - INFO - Downloading typer-0.26.7-py3-none-any.whl.metadata (16 kB)
+2026-06-07 14:39:31,063 - INFO - Collecting kubernetes>=28.1.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:31,069 - INFO - Downloading kubernetes-36.0.2-py2.py3-none-any.whl.metadata (1.8 kB)
+2026-06-07 14:39:31,089 - INFO - Collecting tenacity>=8.2.3 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:31,095 - INFO - Downloading tenacity-9.1.4-py3-none-any.whl.metadata (1.2 kB)
+2026-06-07 14:39:31,149 - INFO - Collecting mmh3>=4.0.1 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:31,154 - INFO - Downloading mmh3-5.2.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (14 kB)
+2026-06-07 14:39:31,416 - INFO - Collecting orjson>=3.9.12 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:31,421 - INFO - Downloading orjson-3.11.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+2026-06-07 14:39:31,446 - INFO - Collecting jsonschema>=4.19.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:31,451 - INFO - Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+2026-06-07 14:39:31,473 - INFO - Collecting anyio (from httpx~=0.28.1->crewai[tools])
+2026-06-07 14:39:31,479 - INFO - Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+2026-06-07 14:39:31,502 - INFO - Collecting httpcore==1.* (from httpx~=0.28.1->crewai[tools])
+2026-06-07 14:39:31,508 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-06-07 14:39:31,531 - INFO - Collecting idna (from httpx~=0.28.1->crewai[tools])
+2026-06-07 14:39:31,537 - INFO - Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+2026-06-07 14:39:31,553 - INFO - Collecting h11>=0.16 (from httpcore==1.*->httpx~=0.28.1->crewai[tools])
+2026-06-07 14:39:31,559 - INFO - Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-07 14:39:31,576 - INFO - Collecting deprecation>=2.1.0 (from lancedb<0.30.1,>=0.29.2->crewai[tools])
+2026-06-07 14:39:31,581 - INFO - Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+2026-06-07 14:39:31,657 - INFO - Collecting pyarrow>=16 (from lancedb<0.30.1,>=0.29.2->crewai[tools])
+2026-06-07 14:39:31,662 - INFO - Downloading pyarrow-24.0.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+2026-06-07 14:39:31,684 - INFO - Collecting lance-namespace>=0.3.2 (from lancedb<0.30.1,>=0.29.2->crewai[tools])
+2026-06-07 14:39:31,689 - INFO - Downloading lance_namespace-0.8.2-py3-none-any.whl.metadata (1.6 kB)
+2026-06-07 14:39:31,703 - INFO - Collecting httpx-sse>=0.4 (from mcp~=1.26.0->crewai[tools])
+2026-06-07 14:39:31,708 - INFO - Downloading httpx_sse-0.4.3-py3-none-any.whl.metadata (9.7 kB)
+2026-06-07 14:39:31,735 - INFO - Collecting python-multipart>=0.0.9 (from mcp~=1.26.0->crewai[tools])
+2026-06-07 14:39:31,739 - INFO - Downloading python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+2026-06-07 14:39:31,758 - INFO - Collecting sse-starlette>=1.6.1 (from mcp~=1.26.0->crewai[tools])
+2026-06-07 14:39:31,763 - INFO - Downloading sse_starlette-3.4.4-py3-none-any.whl.metadata (15 kB)
+2026-06-07 14:39:31,789 - INFO - Collecting starlette>=0.27 (from mcp~=1.26.0->crewai[tools])
+2026-06-07 14:39:31,794 - INFO - Downloading starlette-1.2.1-py3-none-any.whl.metadata (6.3 kB)
+2026-06-07 14:39:31,805 - INFO - Collecting typing-inspection>=0.4.1 (from mcp~=1.26.0->crewai[tools])
+2026-06-07 14:39:31,810 - INFO - Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:31,827 - INFO - Collecting distro<2,>=1.7.0 (from openai<3,>=2.30.0->crewai[tools])
+2026-06-07 14:39:31,832 - INFO - Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+2026-06-07 14:39:31,900 - INFO - Collecting jiter<1,>=0.10.0 (from openai<3,>=2.30.0->crewai[tools])
+2026-06-07 14:39:31,906 - INFO - Downloading jiter-0.15.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-06-07 14:39:31,917 - INFO - Collecting sniffio (from openai<3,>=2.30.0->crewai[tools])
+2026-06-07 14:39:31,923 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-07 14:39:31,951 - INFO - Collecting et-xmlfile (from openpyxl~=3.1.5->crewai[tools])
+2026-06-07 14:39:31,956 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2026-06-07 14:39:31,976 - INFO - Collecting importlib-metadata<8.8.0,>=6.0 (from opentelemetry-api~=1.34.0->crewai[tools])
+2026-06-07 14:39:31,981 - INFO - Downloading importlib_metadata-8.7.1-py3-none-any.whl.metadata (4.7 kB)
+2026-06-07 14:39:31,998 - INFO - Collecting zipp>=3.20 (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,002 - INFO - Downloading zipp-4.1.0-py3-none-any.whl.metadata (3.6 kB)
+2026-06-07 14:39:32,022 - INFO - Collecting googleapis-common-protos~=1.52 (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,027 - INFO - Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+2026-06-07 14:39:32,043 - INFO - Collecting opentelemetry-exporter-otlp-proto-common==1.34.1 (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,048 - INFO - Downloading opentelemetry_exporter_otlp_proto_common-1.34.1-py3-none-any.whl.metadata (1.9 kB)
+2026-06-07 14:39:32,070 - INFO - Collecting opentelemetry-proto==1.34.1 (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,075 - INFO - Downloading opentelemetry_proto-1.34.1-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:32,263 - INFO - Collecting protobuf<6.0,>=5.0 (from opentelemetry-proto==1.34.1->opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,268 - INFO - Downloading protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl.metadata (592 bytes)
+2026-06-07 14:39:32,293 - INFO - Collecting opentelemetry-semantic-conventions==0.55b1 (from opentelemetry-sdk~=1.34.0->crewai[tools])
+2026-06-07 14:39:32,297 - INFO - Downloading opentelemetry_semantic_conventions-0.55b1-py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:32,313 - INFO - Collecting pdfminer.six==20251230 (from pdfplumber~=0.11.4->crewai[tools])
+2026-06-07 14:39:32,318 - INFO - Downloading pdfminer_six-20251230-py3-none-any.whl.metadata (4.3 kB)
+2026-06-07 14:39:32,461 - INFO - Collecting Pillow>=9.1 (from pdfplumber~=0.11.4->crewai[tools])
+2026-06-07 14:39:32,466 - INFO - Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+2026-06-07 14:39:32,540 - INFO - Collecting pypdfium2>=4.18.0 (from pdfplumber~=0.11.4->crewai[tools])
+2026-06-07 14:39:32,545 - INFO - Downloading pypdfium2-5.9.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (68 kB)
+2026-06-07 14:39:32,638 - INFO - Collecting charset-normalizer>=2.0.0 (from pdfminer.six==20251230->pdfplumber~=0.11.4->crewai[tools])
+2026-06-07 14:39:32,643 - INFO - Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-07 14:39:32,673 - INFO - Collecting six>=1.5 (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:32,678 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-06-07 14:39:32,692 - INFO - Collecting python-dateutil>=2.2 (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:32,697 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2026-06-07 14:39:32,714 - INFO - Collecting backoff>=1.10.0 (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:32,719 - INFO - Downloading backoff-2.2.1-py3-none-any.whl.metadata (14 kB)
+2026-06-07 14:39:32,796 - INFO - Collecting annotated-types>=0.6.0 (from pydantic<2.13,>=2.11.9->crewai[tools])
+2026-06-07 14:39:32,803 - INFO - Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2026-06-07 14:39:33,693 - INFO - Collecting pydantic-core==2.41.5 (from pydantic<2.13,>=2.11.9->crewai[tools])
+2026-06-07 14:39:33,700 - INFO - Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-06-07 14:39:34,250 - INFO - Collecting lxml>=3.1.0 (from python-docx~=1.2.0->crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:34,255 - INFO - Downloading lxml-6.1.1-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+2026-06-07 14:39:34,606 - INFO - Collecting urllib3<3,>=1.26 (from requests<3,>=2.33.0->crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:34,612 - INFO - Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+2026-06-07 14:39:34,861 - INFO - Collecting huggingface-hub<2.0,>=0.16.4 (from tokenizers<1,>=0.21->crewai[tools])
+2026-06-07 14:39:34,866 - INFO - Downloading huggingface_hub-1.18.0-py3-none-any.whl.metadata (14 kB)
+2026-06-07 14:39:34,884 - INFO - INFO: pip is looking at multiple versions of huggingface-hub to determine which version is compatible with other requirements. This could take a while.
+2026-06-07 14:39:34,889 - INFO - Downloading huggingface_hub-1.17.0-py3-none-any.whl.metadata (14 kB)
+2026-06-07 14:39:34,910 - INFO - Downloading huggingface_hub-1.16.4-py3-none-any.whl.metadata (14 kB)
+2026-06-07 14:39:34,930 - INFO - Downloading huggingface_hub-1.16.1-py3-none-any.whl.metadata (14 kB)
+2026-06-07 14:39:34,961 - INFO - Collecting filelock>=3.10.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-06-07 14:39:34,968 - INFO - Downloading filelock-3.29.1-py3-none-any.whl.metadata (2.0 kB)
+2026-06-07 14:39:34,989 - INFO - Collecting fsspec>=2023.5.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-06-07 14:39:34,993 - INFO - Downloading fsspec-2026.4.0-py3-none-any.whl.metadata (10 kB)
+2026-06-07 14:39:35,041 - INFO - Collecting hf-xet<2.0.0,>=1.4.3 (from huggingface-hub<2.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-06-07 14:39:35,046 - INFO - Downloading hf_xet-1.5.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-06-07 14:39:35,070 - INFO - Collecting defusedxml<0.8.0,>=0.7.1 (from youtube-transcript-api~=1.2.2->crewai-tools==1.14.6->crewai[tools])
+2026-06-07 14:39:35,074 - INFO - Downloading defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+2026-06-07 14:39:35,094 - INFO - Collecting pyproject_hooks (from build>=1.0.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:35,101 - INFO - Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+2026-06-07 14:39:35,193 - INFO - Collecting cffi>=2.0.0 (from cryptography>=42.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:35,198 - INFO - Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2026-06-07 14:39:35,397 - INFO - Collecting pycparser (from cffi>=2.0.0->cryptography>=42.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:35,403 - INFO - Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+2026-06-07 14:39:36,158 - INFO - Collecting aiohttp<4.0.0,>=3.9.1 (from instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,163 - INFO - Downloading aiohttp-3.14.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+2026-06-07 14:39:36,177 - INFO - Collecting docstring-parser<1.0,>=0.16 (from instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,182 - INFO - Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+2026-06-07 14:39:36,198 - INFO - Collecting jinja2<4.0.0,>=3.1.4 (from instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,204 - INFO - Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+2026-06-07 14:39:36,207 - INFO - Collecting jiter<1,>=0.10.0 (from openai<3,>=2.30.0->crewai[tools])
+2026-06-07 14:39:36,212 - INFO - Downloading jiter-0.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-06-07 14:39:36,230 - INFO - Collecting rich>=13.7.1 (from crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:36,236 - INFO - Downloading rich-14.3.4-py3-none-any.whl.metadata (18 kB)
+2026-06-07 14:39:36,254 - INFO - Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,258 - INFO - Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl.metadata (5.9 kB)
+2026-06-07 14:39:36,270 - INFO - Collecting aiosignal>=1.4.0 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,275 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-06-07 14:39:36,293 - INFO - Collecting attrs>=17.3.0 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,298 - INFO - Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-06-07 14:39:36,364 - INFO - Collecting frozenlist>=1.1.1 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,368 - INFO - Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-06-07 14:39:36,562 - INFO - Collecting multidict<7.0,>=4.5 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,567 - INFO - Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2026-06-07 14:39:36,621 - INFO - Collecting propcache>=0.2.0 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,626 - INFO - Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+2026-06-07 14:39:36,938 - INFO - Collecting yarl<2.0,>=1.17.0 (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:36,943 - INFO - Downloading yarl-1.24.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (94 kB)
+2026-06-07 14:39:37,001 - INFO - Collecting MarkupSafe>=2.0 (from jinja2<4.0.0,>=3.1.4->instructor>=1.3.3->crewai[tools])
+2026-06-07 14:39:37,005 - INFO - Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-06-07 14:39:37,023 - INFO - Collecting markdown-it-py>=2.2.0 (from rich>=13.7.1->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,027 - INFO - Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+2026-06-07 14:39:37,057 - INFO - Collecting pygments<3.0.0,>=2.13.0 (from rich>=13.7.1->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,062 - INFO - Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:37,080 - INFO - Collecting shellingham>=1.3.0 (from typer>=0.9.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,084 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+2026-06-07 14:39:37,099 - INFO - Collecting annotated-doc>=0.0.2 (from typer>=0.9.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,103 - INFO - Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+2026-06-07 14:39:37,134 - INFO - Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,139 - INFO - Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-07 14:39:37,161 - INFO - Collecting referencing>=0.28.4 (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,165 - INFO - Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+2026-06-07 14:39:37,382 - INFO - Collecting rpds-py>=0.25.0 (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,387 - INFO - Downloading rpds_py-2026.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+2026-06-07 14:39:37,415 - INFO - Collecting websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,419 - INFO - Downloading websocket_client-1.9.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-07 14:39:37,432 - INFO - Collecting requests-oauthlib (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,437 - INFO - Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+2026-06-07 14:39:37,454 - INFO - Collecting durationpy>=0.7 (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,459 - INFO - Downloading durationpy-0.10-py3-none-any.whl.metadata (340 bytes)
+2026-06-07 14:39:37,485 - INFO - Collecting lance-namespace-urllib3-client==0.8.2 (from lance-namespace>=0.3.2->lancedb<0.30.1,>=0.29.2->crewai[tools])
+2026-06-07 14:39:37,492 - INFO - Downloading lance_namespace_urllib3_client-0.8.2-py3-none-any.whl.metadata (31 kB)
+2026-06-07 14:39:37,518 - INFO - Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.7.1->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,523 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+2026-06-07 14:39:37,541 - INFO - Collecting flatbuffers (from onnxruntime>=1.14.1->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,546 - INFO - Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+2026-06-07 14:39:37,564 - INFO - INFO: pip is looking at multiple versions of opentelemetry-exporter-otlp-proto-grpc to determine which version is compatible with other requirements. This could take a while.
+2026-06-07 14:39:37,564 - INFO - Collecting opentelemetry-exporter-otlp-proto-grpc>=1.2.0 (from chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,569 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.42.0-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:37,579 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.41.1-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:37,589 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.41.0-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:37,600 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.40.0-py3-none-any.whl.metadata (2.6 kB)
+2026-06-07 14:39:37,611 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.39.1-py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:37,621 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.39.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:39:37,632 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.38.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:37,637 - INFO - INFO: pip is still looking at multiple versions of opentelemetry-exporter-otlp-proto-grpc to determine which version is compatible with other requirements. This could take a while.
+2026-06-07 14:39:37,642 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.37.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:37,653 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.36.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:37,663 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.35.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:37,674 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.34.1-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:39:37,732 - INFO - Collecting mdit-py-plugins (from textual>=7.5.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,736 - INFO - Downloading mdit_py_plugins-0.6.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-07 14:39:37,754 - INFO - Collecting platformdirs<5,>=3.6.0 (from textual>=7.5.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,758 - INFO - Downloading platformdirs-4.10.0-py3-none-any.whl.metadata (5.5 kB)
+2026-06-07 14:39:37,781 - INFO - Collecting linkify-it-py<3,>=1 (from markdown-it-py[linkify]>=2.1.0->textual>=7.5.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,786 - INFO - Downloading linkify_it_py-2.1.0-py3-none-any.whl.metadata (8.5 kB)
+2026-06-07 14:39:37,800 - INFO - Collecting uc-micro-py (from linkify-it-py<3,>=1->markdown-it-py[linkify]>=2.1.0->textual>=7.5.0->crewai-cli==1.14.6->crewai[tools])
+2026-06-07 14:39:37,805 - INFO - Downloading uc_micro_py-2.0.0-py3-none-any.whl.metadata (2.2 kB)
+2026-06-07 14:39:37,848 - INFO - Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,853 - INFO - Downloading httptools-0.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-06-07 14:39:37,893 - INFO - Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,897 - INFO - Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+2026-06-07 14:39:37,964 - INFO - Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:37,968 - INFO - Downloading watchfiles-1.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-06-07 14:39:38,146 - INFO - Collecting websockets>=10.4 (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:38,151 - INFO - Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+2026-06-07 14:39:38,179 - INFO - Collecting oauthlib>=3.0.0 (from requests-oauthlib->kubernetes>=28.1.0->chromadb~=1.1.0->crewai[tools])
+2026-06-07 14:39:38,184 - INFO - Downloading oauthlib-3.3.1-py3-none-any.whl.metadata (7.9 kB)
+2026-06-07 14:39:38,202 - INFO - Downloading crewai-1.14.6-py3-none-any.whl (976 kB)
+2026-06-07 14:39:38,247 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 976.4/976.4 kB 22.4 MB/s  0:00:00
+2026-06-07 14:39:38,247 - INFO - 
+2026-06-07 14:39:38,254 - INFO - Downloading crewai_cli-1.14.6-py3-none-any.whl (111 kB)
+2026-06-07 14:39:38,263 - INFO - Downloading crewai_core-1.14.6-py3-none-any.whl (28 kB)
+2026-06-07 14:39:38,273 - INFO - Downloading crewai_tools-1.14.6-py3-none-any.whl (809 kB)
+2026-06-07 14:39:38,302 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 809.6/809.6 kB 29.7 MB/s  0:00:00
+2026-06-07 14:39:38,307 - INFO - Downloading aiofiles-24.1.0-py3-none-any.whl (15 kB)
+2026-06-07 14:39:38,314 - INFO - Downloading aiosqlite-0.21.0-py3-none-any.whl (15 kB)
+2026-06-07 14:39:38,321 - INFO - Downloading appdirs-1.4.4-py2.py3-none-any.whl (9.6 kB)
+2026-06-07 14:39:38,332 - INFO - Downloading beautifulsoup4-4.13.5-py3-none-any.whl (105 kB)
+2026-06-07 14:39:38,344 - INFO - Downloading chromadb-1.1.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (19.9 MB)
+2026-06-07 14:39:38,681 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 19.9/19.9 MB 59.5 MB/s  0:00:00
+2026-06-07 14:39:38,682 - INFO - 
+2026-06-07 14:39:38,688 - INFO - Downloading click-8.1.8-py3-none-any.whl (98 kB)
+2026-06-07 14:39:38,697 - INFO - Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-06-07 14:39:38,705 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-06-07 14:39:38,714 - INFO - Downloading json_repair-0.25.3-py3-none-any.whl (12 kB)
+2026-06-07 14:39:38,721 - INFO - Downloading json5-0.10.0-py3-none-any.whl (34 kB)
+2026-06-07 14:39:38,728 - INFO - Downloading jsonref-1.1.0-py3-none-any.whl (9.4 kB)
+2026-06-07 14:39:38,737 - INFO - Downloading lancedb-0.30.0-cp39-abi3-manylinux_2_28_x86_64.whl (46.9 MB)
+2026-06-07 14:39:39,326 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.9/46.9 MB 79.8 MB/s  0:00:00
+2026-06-07 14:39:39,334 - INFO - Downloading mcp-1.26.0-py3-none-any.whl (233 kB)
+2026-06-07 14:39:39,344 - INFO - Downloading openai-2.41.0-py3-none-any.whl (1.4 MB)
+2026-06-07 14:39:39,366 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 64.5 MB/s  0:00:00
+2026-06-07 14:39:39,371 - INFO - Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+2026-06-07 14:39:39,380 - INFO - Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+2026-06-07 14:39:39,390 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2026-06-07 14:39:39,401 - INFO - Downloading opentelemetry_api-1.34.1-py3-none-any.whl (65 kB)
+2026-06-07 14:39:39,408 - INFO - Downloading importlib_metadata-8.7.1-py3-none-any.whl (27 kB)
+2026-06-07 14:39:39,418 - INFO - Downloading opentelemetry_exporter_otlp_proto_http-1.34.1-py3-none-any.whl (17 kB)
+2026-06-07 14:39:39,430 - INFO - Downloading opentelemetry_exporter_otlp_proto_common-1.34.1-py3-none-any.whl (18 kB)
+2026-06-07 14:39:39,438 - INFO - Downloading opentelemetry_proto-1.34.1-py3-none-any.whl (55 kB)
+2026-06-07 14:39:39,446 - INFO - Downloading googleapis_common_protos-1.75.0-py3-none-any.whl (300 kB)
+2026-06-07 14:39:39,457 - INFO - Downloading opentelemetry_sdk-1.34.1-py3-none-any.whl (118 kB)
+2026-06-07 14:39:39,467 - INFO - Downloading opentelemetry_semantic_conventions-0.55b1-py3-none-any.whl (196 kB)
+2026-06-07 14:39:39,481 - INFO - Downloading pdfplumber-0.11.9-py3-none-any.whl (60 kB)
+2026-06-07 14:39:39,517 - INFO - Downloading pdfminer_six-20251230-py3-none-any.whl (6.6 MB)
+2026-06-07 14:39:39,628 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 60.2 MB/s  0:00:00
+2026-06-07 14:39:39,633 - INFO - Downloading portalocker-2.7.0-py2.py3-none-any.whl (15 kB)
+2026-06-07 14:39:39,686 - INFO - Downloading posthog-5.4.0-py3-none-any.whl (105 kB)
+2026-06-07 14:39:39,699 - INFO - Downloading protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl (320 kB)
+2026-06-07 14:39:39,721 - INFO - Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+2026-06-07 14:39:39,749 - INFO - Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-06-07 14:39:39,794 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 45.1 MB/s  0:00:00
+2026-06-07 14:39:39,795 - INFO - 
+2026-06-07 14:39:39,802 - INFO - Downloading pydantic_settings-2.10.1-py3-none-any.whl (45 kB)
+2026-06-07 14:39:39,842 - INFO - Downloading pyjwt-2.13.0-py3-none-any.whl (31 kB)
+2026-06-07 14:39:39,890 - INFO - Downloading pymupdf-1.26.7-cp310-abi3-manylinux_2_28_x86_64.whl (24.1 MB)
+2026-06-07 14:39:40,262 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.1/24.1 MB 65.2 MB/s  0:00:00
+2026-06-07 14:39:40,263 - INFO - 
+2026-06-07 14:39:40,269 - INFO - Downloading python_docx-1.2.0-py3-none-any.whl (252 kB)
+2026-06-07 14:39:40,336 - INFO - Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+2026-06-07 14:39:40,408 - INFO - Downloading pytube-15.0.0-py3-none-any.whl (57 kB)
+2026-06-07 14:39:40,460 - INFO - Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+2026-06-07 14:39:40,536 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 7.7 MB/s  0:00:00
+2026-06-07 14:39:40,536 - INFO - 
+2026-06-07 14:39:40,544 - INFO - Downloading regex-2026.1.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (800 kB)
+2026-06-07 14:39:40,578 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 800.5/800.5 kB 18.6 MB/s  0:00:00
+2026-06-07 14:39:40,578 - INFO - 
+2026-06-07 14:39:40,585 - INFO - Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+2026-06-07 14:39:40,660 - INFO - Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
+2026-06-07 14:39:40,712 - INFO - Downloading idna-3.18-py3-none-any.whl (65 kB)
+2026-06-07 14:39:40,766 - INFO - Downloading tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.2 MB)
+2026-06-07 14:39:40,795 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 35.8 MB/s  0:00:00
+2026-06-07 14:39:40,800 - INFO - Downloading tokenizers-0.23.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-06-07 14:39:40,853 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 63.0 MB/s  0:00:00
+2026-06-07 14:39:40,853 - INFO - 
+2026-06-07 14:39:40,861 - INFO - Downloading huggingface_hub-1.16.1-py3-none-any.whl (668 kB)
+2026-06-07 14:39:40,894 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 668.2/668.2 kB 14.1 MB/s  0:00:00
+2026-06-07 14:39:40,894 - INFO - 
+2026-06-07 14:39:40,901 - INFO - Downloading hf_xet-1.5.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+2026-06-07 14:39:41,039 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 31.7 MB/s  0:00:00
+2026-06-07 14:39:41,039 - INFO - 
+2026-06-07 14:39:41,047 - INFO - Downloading tomli-2.0.2-py3-none-any.whl (13 kB)
+2026-06-07 14:39:41,131 - INFO - Downloading tomli_w-1.1.0-py3-none-any.whl (6.4 kB)
+2026-06-07 14:39:41,165 - INFO - Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-06-07 14:39:41,261 - INFO - Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+2026-06-07 14:39:41,322 - INFO - Downloading youtube_transcript_api-1.2.4-py3-none-any.whl (485 kB)
+2026-06-07 14:39:41,381 - INFO - Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+2026-06-07 14:39:41,391 - INFO - Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2026-06-07 14:39:41,402 - INFO - Downloading backoff-2.2.1-py3-none-any.whl (15 kB)
+2026-06-07 14:39:41,410 - INFO - Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+2026-06-07 14:39:41,422 - INFO - Downloading build-1.5.0-py3-none-any.whl (26 kB)
+2026-06-07 14:39:41,428 - INFO - Downloading certifi-2026.5.20-py3-none-any.whl (134 kB)
+2026-06-07 14:39:41,436 - INFO - Downloading cryptography-48.0.0-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+2026-06-07 14:39:41,500 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 74.6 MB/s  0:00:00
+2026-06-07 14:39:41,506 - INFO - Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+2026-06-07 14:39:41,517 - INFO - Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+2026-06-07 14:39:41,525 - INFO - Downloading filelock-3.29.1-py3-none-any.whl (40 kB)
+2026-06-07 14:39:41,531 - INFO - Downloading fsspec-2026.4.0-py3-none-any.whl (203 kB)
+2026-06-07 14:39:41,540 - INFO - Downloading grpcio-1.81.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.8 MB)
+2026-06-07 14:39:41,619 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 87.0 MB/s  0:00:00
+2026-06-07 14:39:41,620 - INFO - 
+2026-06-07 14:39:41,626 - INFO - Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-06-07 14:39:41,636 - INFO - Downloading httpx_sse-0.4.3-py3-none-any.whl (9.0 kB)
+2026-06-07 14:39:41,646 - INFO - Downloading instructor-1.15.1-py3-none-any.whl (178 kB)
+2026-06-07 14:39:41,658 - INFO - Downloading aiohttp-3.14.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+2026-06-07 14:39:41,681 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 78.1 MB/s  0:00:00
+2026-06-07 14:39:41,681 - INFO - 
+2026-06-07 14:39:41,686 - INFO - Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+2026-06-07 14:39:41,694 - INFO - Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+2026-06-07 14:39:41,705 - INFO - Downloading jiter-0.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (362 kB)
+2026-06-07 14:39:41,719 - INFO - Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+2026-06-07 14:39:41,728 - INFO - Downloading rich-14.3.4-py3-none-any.whl (310 kB)
+2026-06-07 14:39:41,740 - INFO - Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+2026-06-07 14:39:41,759 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 67.1 MB/s  0:00:00
+2026-06-07 14:39:41,764 - INFO - Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
+2026-06-07 14:39:41,772 - INFO - Downloading typer-0.26.7-py3-none-any.whl (122 kB)
+2026-06-07 14:39:41,780 - INFO - Downloading yarl-1.24.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (106 kB)
+2026-06-07 14:39:41,787 - INFO - Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl (15 kB)
+2026-06-07 14:39:41,794 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-06-07 14:39:41,801 - INFO - Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+2026-06-07 14:39:41,808 - INFO - Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-06-07 14:39:41,816 - INFO - Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+2026-06-07 14:39:41,823 - INFO - Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+2026-06-07 14:39:41,830 - INFO - Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+2026-06-07 14:39:41,838 - INFO - Downloading kubernetes-36.0.2-py2.py3-none-any.whl (4.6 MB)
+2026-06-07 14:39:41,892 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 88.6 MB/s  0:00:00
+2026-06-07 14:39:41,897 - INFO - Downloading durationpy-0.10-py3-none-any.whl (3.9 kB)
+2026-06-07 14:39:41,905 - INFO - Downloading lance_namespace-0.8.2-py3-none-any.whl (13 kB)
+2026-06-07 14:39:41,915 - INFO - Downloading lance_namespace_urllib3_client-0.8.2-py3-none-any.whl (364 kB)
+2026-06-07 14:39:41,928 - INFO - Downloading lxml-6.1.1-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+2026-06-07 14:39:41,980 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 98.9 MB/s  0:00:00
+2026-06-07 14:39:41,980 - INFO - 
+2026-06-07 14:39:41,985 - INFO - Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+2026-06-07 14:39:41,993 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+2026-06-07 14:39:42,000 - INFO - Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-06-07 14:39:42,008 - INFO - Downloading mmh3-5.2.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (103 kB)
+2026-06-07 14:39:42,015 - INFO - Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+2026-06-07 14:39:42,220 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 82.6 MB/s  0:00:00
+2026-06-07 14:39:42,221 - INFO - 
+2026-06-07 14:39:42,230 - INFO - Downloading onnxruntime-1.26.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (18.2 MB)
+2026-06-07 14:39:42,523 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.2/18.2 MB 62.5 MB/s  0:00:00
+2026-06-07 14:39:42,523 - INFO - 
+2026-06-07 14:39:42,529 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.34.1-py3-none-any.whl (18 kB)
+2026-06-07 14:39:42,556 - INFO - Downloading orjson-3.11.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (133 kB)
+2026-06-07 14:39:42,586 - INFO - Downloading overrides-7.7.0-py3-none-any.whl (17 kB)
+2026-06-07 14:39:42,612 - INFO - Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-06-07 14:39:42,753 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 50.8 MB/s  0:00:00
+2026-06-07 14:39:42,754 - INFO - 
+2026-06-07 14:39:42,761 - INFO - Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (58 kB)
+2026-06-07 14:39:42,830 - INFO - Downloading pyarrow-24.0.0-cp311-cp311-manylinux_2_28_x86_64.whl (48.8 MB)
+2026-06-07 14:39:43,685 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.8/48.8 MB 57.2 MB/s  0:00:00
+2026-06-07 14:39:43,692 - INFO - Downloading pybase64-1.4.3-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (71 kB)
+2026-06-07 14:39:43,814 - INFO - Downloading pypdfium2-5.9.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.7 MB)
+2026-06-07 14:39:43,972 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.7/3.7 MB 23.0 MB/s  0:00:00
+2026-06-07 14:39:43,972 - INFO - 
+2026-06-07 14:39:43,981 - INFO - Downloading pypika-0.51.1-py2.py3-none-any.whl (60 kB)
+2026-06-07 14:39:43,996 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2026-06-07 14:39:44,013 - INFO - Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+2026-06-07 14:39:44,027 - INFO - Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+2026-06-07 14:39:44,112 - INFO - Downloading rpds_py-2026.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (378 kB)
+2026-06-07 14:39:44,168 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+2026-06-07 14:39:44,231 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-06-07 14:39:44,262 - INFO - Downloading soupsieve-2.8.4-py3-none-any.whl (37 kB)
+2026-06-07 14:39:44,327 - INFO - Downloading sse_starlette-3.4.4-py3-none-any.whl (16 kB)
+2026-06-07 14:39:44,384 - INFO - Downloading starlette-1.2.1-py3-none-any.whl (73 kB)
+2026-06-07 14:39:44,420 - INFO - Downloading textual-8.2.7-py3-none-any.whl (731 kB)
+2026-06-07 14:39:44,467 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 731.1/731.1 kB 11.4 MB/s  0:00:00
+2026-06-07 14:39:44,467 - INFO - 
+2026-06-07 14:39:44,474 - INFO - Downloading platformdirs-4.10.0-py3-none-any.whl (22 kB)
+2026-06-07 14:39:44,528 - INFO - Downloading linkify_it_py-2.1.0-py3-none-any.whl (19 kB)
+2026-06-07 14:39:44,595 - INFO - Downloading tqdm-4.68.1-py3-none-any.whl (78 kB)
+2026-06-07 14:39:44,639 - INFO - Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+2026-06-07 14:39:44,649 - INFO - Downloading uvicorn-0.49.0-py3-none-any.whl (71 kB)
+2026-06-07 14:39:44,657 - INFO - Downloading httptools-0.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (464 kB)
+2026-06-07 14:39:44,675 - INFO - Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.8 MB)
+2026-06-07 14:39:44,771 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.8/3.8 MB 38.0 MB/s  0:00:00
+2026-06-07 14:39:44,776 - INFO - Downloading watchfiles-1.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+2026-06-07 14:39:44,808 - INFO - Downloading websocket_client-1.9.0-py3-none-any.whl (82 kB)
+2026-06-07 14:39:44,818 - INFO - Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB)
+2026-06-07 14:39:44,829 - INFO - Downloading zipp-4.1.0-py3-none-any.whl (10 kB)
+2026-06-07 14:39:44,838 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2026-06-07 14:39:44,847 - INFO - Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+2026-06-07 14:39:44,856 - INFO - Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+2026-06-07 14:39:44,864 - INFO - Downloading mdit_py_plugins-0.6.1-py3-none-any.whl (66 kB)
+2026-06-07 14:39:44,872 - INFO - Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+2026-06-07 14:39:44,880 - INFO - Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+2026-06-07 14:39:44,888 - INFO - Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+2026-06-07 14:39:44,896 - INFO - Downloading oauthlib-3.3.1-py3-none-any.whl (160 kB)
+2026-06-07 14:39:44,905 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2026-06-07 14:39:44,912 - INFO - Downloading uc_micro_py-2.0.0-py3-none-any.whl (6.4 kB)
+2026-06-07 14:39:45,898 - INFO - Installing collected packages: pypika, flatbuffers, durationpy, appdirs, zipp, websockets, websocket-client, uvloop, urllib3, uc-micro-py, typing_extensions, tqdm, tomli-w, tomli, tenacity, soupsieve, sniffio, six, shellingham, rpds-py, regex, pyyaml, pytube, python-multipart, python-dotenv, pyproject_hooks, pypdfium2, pymupdf, pyjwt, pygments, pycparser, pybase64, pyarrow, protobuf, propcache, portalocker, platformdirs, Pillow, overrides, orjson, oauthlib, numpy, multidict, mmh3, mdurl, MarkupSafe, lxml, jsonref, json5, json-repair, jiter, importlib-resources, idna, httpx-sse, httptools, hf-xet, h11, fsspec, frozenlist, filelock, et-xmlfile, docstring-parser, distro, deprecation, defusedxml, click, charset-normalizer, certifi, bcrypt, backoff, attrs, annotated-types, annotated-doc, aiohappyeyeballs, aiofiles, yarl, uvicorn, typing-inspection, requests, referencing, python-docx, python-dateutil, pydantic-core, opentelemetry-proto, openpyxl, onnxruntime, markdown-it-py, linkify-it-py, jinja2, importlib-metadata, httpcore, grpcio, googleapis-common-protos, cffi, build, beautifulsoup4, anyio, aiosqlite, aiosignal, youtube-transcript-api, watchfiles, tiktoken, starlette, rich, requests-oauthlib, pydantic, posthog, opentelemetry-exporter-otlp-proto-common, opentelemetry-api, mdit-py-plugins, jsonschema-specifications, httpx, cryptography, aiohttp, typer, textual, sse-starlette, pydantic-settings, pdfminer.six, opentelemetry-semantic-conventions, openai, lance-namespace-urllib3-client, kubernetes, jsonschema, pdfplumber, opentelemetry-sdk, mcp, lance-namespace, instructor, huggingface-hub, tokenizers, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, lancedb, crewai-core, chromadb, crewai-cli, crewai, crewai-tools
+2026-06-07 14:40:11,672 - INFO - 
+2026-06-07 14:40:11,691 - INFO - Successfully installed MarkupSafe-3.0.3 Pillow-12.2.0 aiofiles-24.1.0 aiohappyeyeballs-2.6.2 aiohttp-3.14.0 aiosignal-1.4.0 aiosqlite-0.21.0 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.13.0 appdirs-1.4.4 attrs-26.1.0 backoff-2.2.1 bcrypt-5.0.0 beautifulsoup4-4.13.5 build-1.5.0 certifi-2026.5.20 cffi-2.0.0 charset-normalizer-3.4.7 chromadb-1.1.1 click-8.1.8 crewai-1.14.6 crewai-cli-1.14.6 crewai-core-1.14.6 crewai-tools-1.14.6 cryptography-48.0.0 defusedxml-0.7.1 deprecation-2.1.0 distro-1.9.0 docstring-parser-0.18.0 durationpy-0.10 et-xmlfile-2.0.0 filelock-3.29.1 flatbuffers-25.12.19 frozenlist-1.8.0 fsspec-2026.4.0 googleapis-common-protos-1.75.0 grpcio-1.81.0 h11-0.16.0 hf-xet-1.5.0 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 httpx-sse-0.4.3 huggingface-hub-1.16.1 idna-3.18 importlib-metadata-8.7.1 importlib-resources-7.1.0 instructor-1.15.1 jinja2-3.1.6 jiter-0.13.0 json-repair-0.25.3 json5-0.10.0 jsonref-1.1.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 kubernetes-36.0.2 lance-namespace-0.8.2 lance-namespace-urllib3-client-0.8.2 lancedb-0.30.0 linkify-it-py-2.1.0 lxml-6.1.1 markdown-it-py-4.2.0 mcp-1.26.0 mdit-py-plugins-0.6.1 mdurl-0.1.2 mmh3-5.2.1 multidict-6.7.1 numpy-2.4.6 oauthlib-3.3.1 onnxruntime-1.26.0 openai-2.41.0 openpyxl-3.1.5 opentelemetry-api-1.34.1 opentelemetry-exporter-otlp-proto-common-1.34.1 opentelemetry-exporter-otlp-proto-grpc-1.34.1 opentelemetry-exporter-otlp-proto-http-1.34.1 opentelemetry-proto-1.34.1 opentelemetry-sdk-1.34.1 opentelemetry-semantic-conventions-0.55b1 orjson-3.11.9 overrides-7.7.0 pdfminer.six-20251230 pdfplumber-0.11.9 platformdirs-4.10.0 portalocker-2.7.0 posthog-5.4.0 propcache-0.5.2 protobuf-5.29.6 pyarrow-24.0.0 pybase64-1.4.3 pycparser-3.0 pydantic-2.12.5 pydantic-core-2.41.5 pydantic-settings-2.10.1 pygments-2.20.0 pyjwt-2.13.0 pymupdf-1.26.7 pypdfium2-5.9.0 pypika-0.51.1 pyproject_hooks-1.2.0 python-dateutil-2.9.0.post0 python-docx-1.2.0 python-dotenv-1.2.2 python-multipart-0.0.32 pytube-15.0.0 pyyaml-6.0.3 referencing-0.37.0 regex-2026.1.15 requests-2.34.2 requests-oauthlib-2.0.0 rich-14.3.4 rpds-py-2026.5.1 shellingham-1.5.4 six-1.17.0 sniffio-1.3.1 soupsieve-2.8.4 sse-starlette-3.4.4 starlette-1.2.1 tenacity-9.1.4 textual-8.2.7 tiktoken-0.12.0 tokenizers-0.23.1 tomli-2.0.2 tomli-w-1.1.0 tqdm-4.68.1 typer-0.26.7 typing-inspection-0.4.2 typing_extensions-4.15.0 uc-micro-py-2.0.0 urllib3-2.7.0 uvicorn-0.49.0 uvloop-0.22.1 watchfiles-1.2.0 websocket-client-1.9.0 websockets-16.0 yarl-1.24.2 youtube-transcript-api-1.2.4 zipp-4.1.0
+2026-06-07 14:40:11,691 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-07 14:40:12,679 - INFO - Obtaining file:///testbed
+2026-06-07 14:40:12,680 - INFO - Installing build dependencies: started
+2026-06-07 14:40:13,736 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-07 14:40:13,737 - INFO - Checking if build backend supports build_editable: started
+2026-06-07 14:40:13,793 - INFO - Checking if build backend supports build_editable: finished with status 'done'
+2026-06-07 14:40:13,795 - INFO - Getting requirements to build editable: started
+2026-06-07 14:40:13,930 - INFO - Getting requirements to build editable: finished with status 'done'
+2026-06-07 14:40:13,935 - INFO - Installing backend dependencies: started
+2026-06-07 14:40:14,727 - INFO - Installing backend dependencies: finished with status 'done'
+2026-06-07 14:40:14,729 - INFO - Preparing editable metadata (pyproject.toml): started
+2026-06-07 14:40:14,894 - INFO - Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-06-07 14:40:14,913 - INFO - Requirement already satisfied: appdirs>=1.4.4 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.4.4)
+2026-06-07 14:40:15,006 - INFO - Collecting auth0-python>=4.7.1 (from crewai==0.114.0)
+2026-06-07 14:40:15,099 - INFO - Downloading auth0_python-5.6.0-py3-none-any.whl.metadata (12 kB)
+2026-06-07 14:40:15,115 - INFO - Collecting blinker>=1.9.0 (from crewai==0.114.0)
+2026-06-07 14:40:15,121 - INFO - Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+2026-06-07 14:40:15,123 - INFO - Requirement already satisfied: chromadb>=0.5.23 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.1.1)
+2026-06-07 14:40:15,124 - INFO - Requirement already satisfied: click>=8.1.7 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (8.1.8)
+2026-06-07 14:40:15,124 - INFO - Requirement already satisfied: instructor>=1.3.3 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.15.1)
+2026-06-07 14:40:15,124 - INFO - Requirement already satisfied: json-repair>=0.25.2 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (0.25.3)
+2026-06-07 14:40:15,125 - INFO - Requirement already satisfied: json5>=0.10.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (0.10.0)
+2026-06-07 14:40:15,125 - INFO - Requirement already satisfied: jsonref>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.1.0)
+2026-06-07 14:40:15,266 - INFO - Collecting litellm==1.60.2 (from crewai==0.114.0)
+2026-06-07 14:40:15,272 - INFO - Downloading litellm-1.60.2-py3-none-any.whl.metadata (36 kB)
+2026-06-07 14:40:15,867 - INFO - Requirement already satisfied: openai>=1.13.3 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (2.41.0)
+2026-06-07 14:40:15,868 - INFO - Requirement already satisfied: openpyxl>=3.1.5 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (3.1.5)
+2026-06-07 14:40:15,869 - INFO - Requirement already satisfied: opentelemetry-api>=1.30.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:15,871 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-http>=1.30.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:15,871 - INFO - Requirement already satisfied: opentelemetry-sdk>=1.30.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:15,872 - INFO - Requirement already satisfied: pdfplumber>=0.11.4 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (0.11.9)
+2026-06-07 14:40:15,872 - INFO - Requirement already satisfied: pydantic>=2.4.2 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (2.12.5)
+2026-06-07 14:40:15,873 - INFO - Requirement already satisfied: python-dotenv>=1.0.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.2.2)
+2026-06-07 14:40:16,155 - INFO - Collecting pyvis>=0.3.2 (from crewai==0.114.0)
+2026-06-07 14:40:16,164 - INFO - Downloading pyvis-0.3.2-py3-none-any.whl.metadata (1.7 kB)
+2026-06-07 14:40:16,520 - INFO - Requirement already satisfied: regex>=2024.9.11 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (2026.1.15)
+2026-06-07 14:40:16,522 - INFO - Requirement already satisfied: tomli-w>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (1.1.0)
+2026-06-07 14:40:16,523 - INFO - Requirement already satisfied: tomli>=2.0.2 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (2.0.2)
+2026-06-07 14:40:16,525 - INFO - Requirement already satisfied: uv>=0.4.25 in /usr/local/lib/python3.11/dist-packages (from crewai==0.114.0) (0.11.19)
+2026-06-07 14:40:16,528 - INFO - Requirement already satisfied: aiohttp in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (3.14.0)
+2026-06-07 14:40:16,759 - INFO - Collecting httpx<0.28.0,>=0.23.0 (from litellm==1.60.2->crewai==0.114.0)
+2026-06-07 14:40:16,852 - INFO - Downloading httpx-0.27.2-py3-none-any.whl.metadata (7.1 kB)
+2026-06-07 14:40:17,011 - INFO - Requirement already satisfied: importlib-metadata>=6.8.0 in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (8.7.1)
+2026-06-07 14:40:17,012 - INFO - Requirement already satisfied: jinja2<4.0.0,>=3.1.2 in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (3.1.6)
+2026-06-07 14:40:17,013 - INFO - Requirement already satisfied: jsonschema<5.0.0,>=4.22.0 in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (4.26.0)
+2026-06-07 14:40:17,015 - INFO - Requirement already satisfied: tiktoken>=0.7.0 in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (0.12.0)
+2026-06-07 14:40:17,016 - INFO - Requirement already satisfied: tokenizers in /usr/local/lib/python3.11/dist-packages (from litellm==1.60.2->crewai==0.114.0) (0.23.1)
+2026-06-07 14:40:17,018 - INFO - Requirement already satisfied: anyio in /usr/local/lib/python3.11/dist-packages (from httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (4.13.0)
+2026-06-07 14:40:17,019 - INFO - Requirement already satisfied: certifi in /usr/local/lib/python3.11/dist-packages (from httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (2026.5.20)
+2026-06-07 14:40:17,020 - INFO - Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.11/dist-packages (from httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (1.0.9)
+2026-06-07 14:40:17,021 - INFO - Requirement already satisfied: idna in /usr/local/lib/python3.11/dist-packages (from httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (3.18)
+2026-06-07 14:40:17,021 - INFO - Requirement already satisfied: sniffio in /usr/local/lib/python3.11/dist-packages (from httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (1.3.1)
+2026-06-07 14:40:17,025 - INFO - Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.11/dist-packages (from httpcore==1.*->httpx<0.28.0,>=0.23.0->litellm==1.60.2->crewai==0.114.0) (0.16.0)
+2026-06-07 14:40:17,027 - INFO - Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2<4.0.0,>=3.1.2->litellm==1.60.2->crewai==0.114.0) (3.0.3)
+2026-06-07 14:40:17,031 - INFO - Requirement already satisfied: attrs>=22.2.0 in /usr/local/lib/python3.11/dist-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.60.2->crewai==0.114.0) (26.1.0)
+2026-06-07 14:40:17,031 - INFO - Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /usr/local/lib/python3.11/dist-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.60.2->crewai==0.114.0) (2025.9.1)
+2026-06-07 14:40:17,032 - INFO - Requirement already satisfied: referencing>=0.28.4 in /usr/local/lib/python3.11/dist-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.60.2->crewai==0.114.0) (0.37.0)
+2026-06-07 14:40:17,032 - INFO - Requirement already satisfied: rpds-py>=0.25.0 in /usr/local/lib/python3.11/dist-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.60.2->crewai==0.114.0) (2026.5.1)
+2026-06-07 14:40:17,035 - INFO - Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.11/dist-packages (from pydantic>=2.4.2->crewai==0.114.0) (0.7.0)
+2026-06-07 14:40:17,035 - INFO - Requirement already satisfied: pydantic-core==2.41.5 in /usr/local/lib/python3.11/dist-packages (from pydantic>=2.4.2->crewai==0.114.0) (2.41.5)
+2026-06-07 14:40:17,036 - INFO - Requirement already satisfied: typing-extensions>=4.14.1 in /usr/local/lib/python3.11/dist-packages (from pydantic>=2.4.2->crewai==0.114.0) (4.15.0)
+2026-06-07 14:40:17,036 - INFO - Requirement already satisfied: typing-inspection>=0.4.2 in /usr/local/lib/python3.11/dist-packages (from pydantic>=2.4.2->crewai==0.114.0) (0.4.2)
+2026-06-07 14:40:17,042 - INFO - Requirement already satisfied: cryptography>=44.0.0 in /usr/local/lib/python3.11/dist-packages (from auth0-python>=4.7.1->crewai==0.114.0) (48.0.0)
+2026-06-07 14:40:17,044 - INFO - Requirement already satisfied: pyjwt>=2.8.0 in /usr/local/lib/python3.11/dist-packages (from auth0-python>=4.7.1->crewai==0.114.0) (2.13.0)
+2026-06-07 14:40:17,044 - INFO - Requirement already satisfied: requests>=2.32.3 in /usr/local/lib/python3.11/dist-packages (from auth0-python>=4.7.1->crewai==0.114.0) (2.34.2)
+2026-06-07 14:40:17,045 - INFO - Requirement already satisfied: urllib3>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from auth0-python>=4.7.1->crewai==0.114.0) (2.7.0)
+2026-06-07 14:40:17,047 - INFO - Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (2.6.2)
+2026-06-07 14:40:17,047 - INFO - Requirement already satisfied: aiosignal>=1.4.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (1.4.0)
+2026-06-07 14:40:17,048 - INFO - Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (1.8.0)
+2026-06-07 14:40:17,048 - INFO - Requirement already satisfied: multidict<7.0,>=4.5 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (6.7.1)
+2026-06-07 14:40:17,048 - INFO - Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (0.5.2)
+2026-06-07 14:40:17,049 - INFO - Requirement already satisfied: yarl<2.0,>=1.17.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp->litellm==1.60.2->crewai==0.114.0) (1.24.2)
+2026-06-07 14:40:17,057 - INFO - Requirement already satisfied: build>=1.0.3 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (1.5.0)
+2026-06-07 14:40:17,058 - INFO - Requirement already satisfied: pybase64>=1.4.1 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (1.4.3)
+2026-06-07 14:40:17,058 - INFO - Requirement already satisfied: uvicorn>=0.18.3 in /usr/local/lib/python3.11/dist-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.114.0) (0.49.0)
+2026-06-07 14:40:17,059 - INFO - Requirement already satisfied: numpy>=1.22.5 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (2.4.6)
+2026-06-07 14:40:17,059 - INFO - Requirement already satisfied: posthog<6.0.0,>=2.4.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (5.4.0)
+2026-06-07 14:40:17,060 - INFO - Requirement already satisfied: onnxruntime>=1.14.1 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (1.26.0)
+2026-06-07 14:40:17,060 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-grpc>=1.2.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:17,061 - INFO - Requirement already satisfied: pypika>=0.48.9 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (0.51.1)
+2026-06-07 14:40:17,061 - INFO - Requirement already satisfied: tqdm>=4.65.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (4.68.1)
+2026-06-07 14:40:17,061 - INFO - Requirement already satisfied: overrides>=7.3.1 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (7.7.0)
+2026-06-07 14:40:17,062 - INFO - Requirement already satisfied: importlib-resources in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (7.1.0)
+2026-06-07 14:40:17,062 - INFO - Requirement already satisfied: grpcio>=1.58.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (1.81.0)
+2026-06-07 14:40:17,062 - INFO - Requirement already satisfied: bcrypt>=4.0.1 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (5.0.0)
+2026-06-07 14:40:17,063 - INFO - Requirement already satisfied: typer>=0.9.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (0.26.7)
+2026-06-07 14:40:17,063 - INFO - Requirement already satisfied: kubernetes>=28.1.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (36.0.2)
+2026-06-07 14:40:17,063 - INFO - Requirement already satisfied: tenacity>=8.2.3 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (9.1.4)
+2026-06-07 14:40:17,064 - INFO - Requirement already satisfied: pyyaml>=6.0.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (6.0.3)
+2026-06-07 14:40:17,064 - INFO - Requirement already satisfied: mmh3>=4.0.1 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (5.2.1)
+2026-06-07 14:40:17,064 - INFO - Requirement already satisfied: orjson>=3.9.12 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (3.11.9)
+2026-06-07 14:40:17,066 - INFO - Requirement already satisfied: rich>=10.11.0 in /usr/local/lib/python3.11/dist-packages (from chromadb>=0.5.23->crewai==0.114.0) (14.3.4)
+2026-06-07 14:40:17,070 - INFO - Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from posthog<6.0.0,>=2.4.0->chromadb>=0.5.23->crewai==0.114.0) (1.17.0)
+2026-06-07 14:40:17,070 - INFO - Requirement already satisfied: python-dateutil>=2.2 in /usr/local/lib/python3.11/dist-packages (from posthog<6.0.0,>=2.4.0->chromadb>=0.5.23->crewai==0.114.0) (2.9.0.post0)
+2026-06-07 14:40:17,071 - INFO - Requirement already satisfied: backoff>=1.10.0 in /usr/local/lib/python3.11/dist-packages (from posthog<6.0.0,>=2.4.0->chromadb>=0.5.23->crewai==0.114.0) (2.2.1)
+2026-06-07 14:40:17,071 - INFO - Requirement already satisfied: distro>=1.5.0 in /usr/local/lib/python3.11/dist-packages (from posthog<6.0.0,>=2.4.0->chromadb>=0.5.23->crewai==0.114.0) (1.9.0)
+2026-06-07 14:40:17,073 - INFO - Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests>=2.32.3->auth0-python>=4.7.1->crewai==0.114.0) (3.4.7)
+2026-06-07 14:40:17,082 - INFO - Requirement already satisfied: packaging>=24.0 in /usr/local/lib/python3.11/dist-packages (from build>=1.0.3->chromadb>=0.5.23->crewai==0.114.0) (26.2)
+2026-06-07 14:40:17,082 - INFO - Requirement already satisfied: pyproject_hooks in /usr/local/lib/python3.11/dist-packages (from build>=1.0.3->chromadb>=0.5.23->crewai==0.114.0) (1.2.0)
+2026-06-07 14:40:17,085 - INFO - Requirement already satisfied: cffi>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from cryptography>=44.0.0->auth0-python>=4.7.1->crewai==0.114.0) (2.0.0)
+2026-06-07 14:40:17,086 - INFO - Requirement already satisfied: pycparser in /usr/local/lib/python3.11/dist-packages (from cffi>=2.0.0->cryptography>=44.0.0->auth0-python>=4.7.1->crewai==0.114.0) (3.0)
+2026-06-07 14:40:17,095 - INFO - Requirement already satisfied: zipp>=3.20 in /usr/local/lib/python3.11/dist-packages (from importlib-metadata>=6.8.0->litellm==1.60.2->crewai==0.114.0) (4.1.0)
+2026-06-07 14:40:17,107 - INFO - Requirement already satisfied: docstring-parser<1.0,>=0.16 in /usr/local/lib/python3.11/dist-packages (from instructor>=1.3.3->crewai==0.114.0) (0.18.0)
+2026-06-07 14:40:17,107 - INFO - Requirement already satisfied: jiter<0.14,>=0.6.1 in /usr/local/lib/python3.11/dist-packages (from instructor>=1.3.3->crewai==0.114.0) (0.13.0)
+2026-06-07 14:40:17,118 - INFO - Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.11/dist-packages (from rich>=10.11.0->chromadb>=0.5.23->crewai==0.114.0) (4.2.0)
+2026-06-07 14:40:17,119 - INFO - Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.11/dist-packages (from rich>=10.11.0->chromadb>=0.5.23->crewai==0.114.0) (2.20.0)
+2026-06-07 14:40:17,123 - INFO - Requirement already satisfied: shellingham>=1.3.0 in /usr/local/lib/python3.11/dist-packages (from typer>=0.9.0->chromadb>=0.5.23->crewai==0.114.0) (1.5.4)
+Requirement already satisfied: annotated-doc>=0.0.2 in /usr/local/lib/python3.11/dist-packages (from typer>=0.9.0->chromadb>=0.5.23->crewai==0.114.0) (0.0.4)
+2026-06-07 14:40:17,133 - INFO - Requirement already satisfied: websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 in /usr/local/lib/python3.11/dist-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.114.0) (1.9.0)
+2026-06-07 14:40:17,134 - INFO - Requirement already satisfied: requests-oauthlib in /usr/local/lib/python3.11/dist-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.114.0) (2.0.0)
+2026-06-07 14:40:17,134 - INFO - Requirement already satisfied: durationpy>=0.7 in /usr/local/lib/python3.11/dist-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.114.0) (0.10)
+2026-06-07 14:40:17,139 - INFO - Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.11/dist-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->chromadb>=0.5.23->crewai==0.114.0) (0.1.2)
+2026-06-07 14:40:17,146 - INFO - Requirement already satisfied: flatbuffers in /usr/local/lib/python3.11/dist-packages (from onnxruntime>=1.14.1->chromadb>=0.5.23->crewai==0.114.0) (25.12.19)
+2026-06-07 14:40:17,146 - INFO - Requirement already satisfied: protobuf in /usr/local/lib/python3.11/dist-packages (from onnxruntime>=1.14.1->chromadb>=0.5.23->crewai==0.114.0) (5.29.6)
+2026-06-07 14:40:17,148 - INFO - Requirement already satisfied: et-xmlfile in /usr/local/lib/python3.11/dist-packages (from openpyxl>=3.1.5->crewai==0.114.0) (2.0.0)
+2026-06-07 14:40:17,151 - INFO - Requirement already satisfied: googleapis-common-protos~=1.52 in /usr/local/lib/python3.11/dist-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.114.0) (1.75.0)
+2026-06-07 14:40:17,151 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-common==1.34.1 in /usr/local/lib/python3.11/dist-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:17,152 - INFO - Requirement already satisfied: opentelemetry-proto==1.34.1 in /usr/local/lib/python3.11/dist-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.114.0) (1.34.1)
+2026-06-07 14:40:17,157 - INFO - Requirement already satisfied: opentelemetry-semantic-conventions==0.55b1 in /usr/local/lib/python3.11/dist-packages (from opentelemetry-sdk>=1.30.0->crewai==0.114.0) (0.55b1)
+2026-06-07 14:40:17,167 - INFO - Requirement already satisfied: pdfminer.six==20251230 in /usr/local/lib/python3.11/dist-packages (from pdfplumber>=0.11.4->crewai==0.114.0) (20251230)
+2026-06-07 14:40:17,167 - INFO - Requirement already satisfied: Pillow>=9.1 in /usr/local/lib/python3.11/dist-packages (from pdfplumber>=0.11.4->crewai==0.114.0) (12.2.0)
+2026-06-07 14:40:17,168 - INFO - Requirement already satisfied: pypdfium2>=4.18.0 in /usr/local/lib/python3.11/dist-packages (from pdfplumber>=0.11.4->crewai==0.114.0) (5.9.0)
+2026-06-07 14:40:17,231 - INFO - Collecting ipython>=5.3.0 (from pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,237 - INFO - Downloading ipython-9.14.1-py3-none-any.whl.metadata (4.7 kB)
+2026-06-07 14:40:17,256 - INFO - Collecting jsonpickle>=1.4.1 (from pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,261 - INFO - Downloading jsonpickle-4.1.2-py3-none-any.whl.metadata (8.1 kB)
+2026-06-07 14:40:17,305 - INFO - Collecting networkx>=1.11 (from pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,311 - INFO - Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+2026-06-07 14:40:17,332 - INFO - Collecting decorator>=5.1.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,337 - INFO - Downloading decorator-5.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-07 14:40:17,348 - INFO - Collecting ipython-pygments-lexers>=1.0.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,353 - INFO - Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-07 14:40:17,366 - INFO - Collecting jedi>=0.18.2 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,372 - INFO - Downloading jedi-0.20.0-py2.py3-none-any.whl.metadata (23 kB)
+2026-06-07 14:40:17,388 - INFO - Collecting matplotlib-inline>=0.1.6 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,393 - INFO - Downloading matplotlib_inline-0.2.2-py3-none-any.whl.metadata (2.4 kB)
+2026-06-07 14:40:17,405 - INFO - Collecting pexpect>4.6 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,410 - INFO - Downloading pexpect-4.9.0-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-06-07 14:40:17,439 - INFO - Collecting prompt_toolkit<3.1.0,>=3.0.41 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,443 - INFO - Downloading prompt_toolkit-3.0.52-py3-none-any.whl.metadata (6.4 kB)
+2026-06-07 14:40:17,519 - INFO - Collecting psutil>=7 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,524 - INFO - Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-06-07 14:40:17,540 - INFO - Collecting stack_data>=0.6.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,545 - INFO - Downloading stack_data-0.6.3-py3-none-any.whl.metadata (18 kB)
+2026-06-07 14:40:17,560 - INFO - Collecting traitlets>=5.13.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,565 - INFO - Downloading traitlets-5.15.1-py3-none-any.whl.metadata (10 kB)
+2026-06-07 14:40:17,583 - INFO - Collecting wcwidth (from prompt_toolkit<3.1.0,>=3.0.41->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,589 - INFO - Downloading wcwidth-0.8.0-py3-none-any.whl.metadata (42 kB)
+2026-06-07 14:40:17,613 - INFO - Collecting parso<0.9.0,>=0.8.6 (from jedi>=0.18.2->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,619 - INFO - Downloading parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+2026-06-07 14:40:17,641 - INFO - Collecting ptyprocess>=0.5 (from pexpect>4.6->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,646 - INFO - Downloading ptyprocess-0.7.0-py2.py3-none-any.whl.metadata (1.3 kB)
+2026-06-07 14:40:17,672 - INFO - Collecting executing>=1.2.0 (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,677 - INFO - Downloading executing-2.2.1-py2.py3-none-any.whl.metadata (8.9 kB)
+2026-06-07 14:40:17,737 - INFO - Collecting asttokens>=2.1.0 (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,744 - INFO - Downloading asttokens-3.0.1-py3-none-any.whl.metadata (4.9 kB)
+2026-06-07 14:40:17,758 - INFO - Collecting pure-eval (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.114.0)
+2026-06-07 14:40:17,763 - INFO - Downloading pure_eval-0.2.3-py3-none-any.whl.metadata (6.3 kB)
+2026-06-07 14:40:17,774 - INFO - Requirement already satisfied: huggingface-hub<2.0,>=0.16.4 in /usr/local/lib/python3.11/dist-packages (from tokenizers->litellm==1.60.2->crewai==0.114.0) (1.16.1)
+2026-06-07 14:40:17,788 - INFO - Requirement already satisfied: filelock>=3.10.0 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers->litellm==1.60.2->crewai==0.114.0) (3.29.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers->litellm==1.60.2->crewai==0.114.0) (2026.4.0)
+2026-06-07 14:40:17,788 - INFO - Requirement already satisfied: hf-xet<2.0.0,>=1.4.3 in /usr/local/lib/python3.11/dist-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers->litellm==1.60.2->crewai==0.114.0) (1.5.0)
+2026-06-07 14:40:17,823 - INFO - Requirement already satisfied: httptools>=0.8.0 in /usr/local/lib/python3.11/dist-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.114.0) (0.8.0)
+2026-06-07 14:40:17,824 - INFO - Requirement already satisfied: uvloop>=0.15.1 in /usr/local/lib/python3.11/dist-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.114.0) (0.22.1)
+2026-06-07 14:40:17,824 - INFO - Requirement already satisfied: watchfiles>=0.20 in /usr/local/lib/python3.11/dist-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.114.0) (1.2.0)
+2026-06-07 14:40:17,825 - INFO - Requirement already satisfied: websockets>=10.4 in /usr/local/lib/python3.11/dist-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.114.0) (16.0)
+2026-06-07 14:40:17,844 - INFO - Requirement already satisfied: oauthlib>=3.0.0 in /usr/local/lib/python3.11/dist-packages (from requests-oauthlib->kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.114.0) (3.3.1)
+2026-06-07 14:40:17,885 - INFO - Downloading litellm-1.60.2-py3-none-any.whl (6.7 MB)
+2026-06-07 14:40:18,032 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.7/6.7 MB 45.6 MB/s  0:00:00
+2026-06-07 14:40:18,032 - INFO - 
+2026-06-07 14:40:18,039 - INFO - Downloading httpx-0.27.2-py3-none-any.whl (76 kB)
+2026-06-07 14:40:18,052 - INFO - Downloading auth0_python-5.6.0-py3-none-any.whl (2.4 MB)
+2026-06-07 14:40:18,101 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 49.4 MB/s  0:00:00
+2026-06-07 14:40:18,101 - INFO - 
+2026-06-07 14:40:18,108 - INFO - Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+2026-06-07 14:40:18,121 - INFO - Downloading pyvis-0.3.2-py3-none-any.whl (756 kB)
+2026-06-07 14:40:18,139 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 756.0/756.0 kB 34.7 MB/s  0:00:00
+2026-06-07 14:40:18,139 - INFO - 
+2026-06-07 14:40:18,144 - INFO - Downloading ipython-9.14.1-py3-none-any.whl (627 kB)
+2026-06-07 14:40:18,158 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 627.8/627.8 kB 32.7 MB/s  0:00:00
+2026-06-07 14:40:18,159 - INFO - 
+2026-06-07 14:40:18,163 - INFO - Downloading prompt_toolkit-3.0.52-py3-none-any.whl (391 kB)
+2026-06-07 14:40:18,180 - INFO - Downloading decorator-5.3.1-py3-none-any.whl (10 kB)
+2026-06-07 14:40:18,188 - INFO - Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
+2026-06-07 14:40:18,206 - INFO - Downloading jedi-0.20.0-py2.py3-none-any.whl (4.9 MB)
+2026-06-07 14:40:18,323 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 41.6 MB/s  0:00:00
+2026-06-07 14:40:18,323 - INFO - 
+2026-06-07 14:40:18,331 - INFO - Downloading parso-0.8.7-py2.py3-none-any.whl (107 kB)
+2026-06-07 14:40:18,347 - INFO - Downloading jsonpickle-4.1.2-py3-none-any.whl (47 kB)
+2026-06-07 14:40:18,355 - INFO - Downloading matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+2026-06-07 14:40:18,364 - INFO - Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+2026-06-07 14:40:18,400 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 55.1 MB/s  0:00:00
+2026-06-07 14:40:18,406 - INFO - Downloading pexpect-4.9.0-py2.py3-none-any.whl (63 kB)
+2026-06-07 14:40:18,427 - INFO - Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-06-07 14:40:18,439 - INFO - Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
+2026-06-07 14:40:18,448 - INFO - Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
+2026-06-07 14:40:18,455 - INFO - Downloading asttokens-3.0.1-py3-none-any.whl (27 kB)
+2026-06-07 14:40:18,462 - INFO - Downloading executing-2.2.1-py2.py3-none-any.whl (28 kB)
+2026-06-07 14:40:18,471 - INFO - Downloading traitlets-5.15.1-py3-none-any.whl (85 kB)
+2026-06-07 14:40:18,481 - INFO - Downloading pure_eval-0.2.3-py3-none-any.whl (11 kB)
+2026-06-07 14:40:18,489 - INFO - Downloading wcwidth-0.8.0-py3-none-any.whl (324 kB)
+2026-06-07 14:40:18,606 - INFO - Building wheels for collected packages: crewai
+2026-06-07 14:40:18,606 - INFO - Building editable for crewai (pyproject.toml): started
+2026-06-07 14:40:18,660 - INFO - Building editable for crewai (pyproject.toml): finished with status 'done'
+2026-06-07 14:40:18,661 - INFO - Created wheel for crewai: filename=crewai-0.114.0-py3-none-any.whl size=13655 sha256=f292515f0ab3fdae42189267829b702fe7c6676098bb2368fca94521d09dc8b3
+2026-06-07 14:40:18,661 - INFO - Stored in directory: /tmp/pip-ephem-wheel-cache-k4v57938/wheels/49/5f/4f/01b7d31ea6ddac9643da788242d33e5fd3467d95d17b032c6b
+2026-06-07 14:40:18,667 - INFO - Successfully built crewai
+2026-06-07 14:40:18,813 - INFO - Installing collected packages: pure-eval, ptyprocess, wcwidth, traitlets, psutil, pexpect, parso, networkx, jsonpickle, ipython-pygments-lexers, executing, decorator, blinker, asttokens, stack_data, prompt_toolkit, matplotlib-inline, jedi, httpx, ipython, auth0-python, pyvis, litellm, crewai
+2026-06-07 14:40:24,170 - INFO - Attempting uninstall: httpx
+2026-06-07 14:40:24,171 - INFO - Found existing installation: httpx 0.28.1
+2026-06-07 14:40:24,174 - INFO - Uninstalling httpx-0.28.1:
+2026-06-07 14:40:24,175 - INFO - Successfully uninstalled httpx-0.28.1
+2026-06-07 14:40:27,445 - INFO - Attempting uninstall: crewai
+2026-06-07 14:40:27,447 - INFO - Found existing installation: crewai 1.14.6
+2026-06-07 14:40:27,498 - INFO - Uninstalling crewai-1.14.6:
+2026-06-07 14:40:27,513 - INFO - Successfully uninstalled crewai-1.14.6
+2026-06-07 14:40:27,572 - INFO - 
+2026-06-07 14:40:27,588 - INFO - ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+crewai-cli 1.14.6 requires httpx~=0.28.1, but you have httpx 0.27.2 which is incompatible.
+crewai-core 1.14.6 requires httpx~=0.28.1, but you have httpx 0.27.2 which is incompatible.
+crewai-tools 1.14.6 requires crewai==1.14.6, but you have crewai 0.114.0 which is incompatible.
+2026-06-07 14:40:27,589 - INFO - Successfully installed asttokens-3.0.1 auth0-python-5.6.0 blinker-1.9.0 crewai-0.114.0 decorator-5.3.1 executing-2.2.1 httpx-0.27.2 ipython-9.14.1 ipython-pygments-lexers-1.1.1 jedi-0.20.0 jsonpickle-4.1.2 litellm-1.60.2 matplotlib-inline-0.2.2 networkx-3.6.1 parso-0.8.7 pexpect-4.9.0 prompt_toolkit-3.0.52 psutil-7.2.2 ptyprocess-0.7.0 pure-eval-0.2.3 pyvis-0.3.2 stack_data-0.6.3 traitlets-5.15.1 wcwidth-0.8.0
+2026-06-07 14:40:27,589 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-07 14:41:38,759 - INFO - ---> Removed intermediate container c58b6eb2879a
+2026-06-07 14:41:38,759 - INFO - ---> 6a1b1dd3c02b
+2026-06-07 14:41:38,759 - INFO - Step 14/19 : RUN source .venv/bin/activate && pre-commit install || true
+2026-06-07 14:41:38,760 - INFO - 
+2026-06-07 14:41:39,413 - INFO - ---> Running in 645d336ee47c
+2026-06-07 14:41:39,684 - INFO - /bin/bash: line 1: pre-commit: command not found
+2026-06-07 14:41:40,605 - INFO - ---> Removed intermediate container 645d336ee47c
+2026-06-07 14:41:40,605 - INFO - ---> 04eaffd9395a
+2026-06-07 14:41:40,605 - INFO - Step 15/19 : ENV OPENAI_API_KEY=""
+2026-06-07 14:41:40,606 - INFO - 
+2026-06-07 14:41:40,620 - INFO - ---> Running in e8fb9c29267e
+2026-06-07 14:41:40,656 - INFO - ---> Removed intermediate container e8fb9c29267e
+2026-06-07 14:41:40,657 - INFO - ---> 949e09077b13
+2026-06-07 14:41:40,657 - INFO - Step 16/19 : ENV SERPER_API_KEY=""
+2026-06-07 14:41:40,657 - INFO - 
+2026-06-07 14:41:40,673 - INFO - ---> Running in d950b2799ddb
+2026-06-07 14:41:40,695 - INFO - ---> Removed intermediate container d950b2799ddb
+2026-06-07 14:41:40,695 - INFO - ---> d505fe41aff4
+2026-06-07 14:41:40,695 - INFO - Step 17/19 : ENV OTEL_SDK_DISABLED=true
+2026-06-07 14:41:40,695 - INFO - 
+2026-06-07 14:41:40,711 - INFO - ---> Running in 5ead43fb5b6b
+2026-06-07 14:41:40,732 - INFO - ---> Removed intermediate container 5ead43fb5b6b
+2026-06-07 14:41:40,732 - INFO - ---> 55885c9791a9
+2026-06-07 14:41:40,733 - INFO - Step 18/19 : RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+2026-06-07 14:41:40,733 - INFO - 
+2026-06-07 14:41:40,746 - INFO - ---> Running in 3830de7f8b62
+2026-06-07 14:41:41,793 - INFO - ---> Removed intermediate container 3830de7f8b62
+2026-06-07 14:41:41,794 - INFO - ---> 62899f47c3b5
+2026-06-07 14:41:41,794 - INFO - Step 19/19 : WORKDIR /testbed/
+2026-06-07 14:41:41,794 - INFO - 
+2026-06-07 14:41:41,900 - INFO - ---> Running in 7badf2dbdf24
+2026-06-07 14:41:41,984 - INFO - ---> Removed intermediate container 7badf2dbdf24
+2026-06-07 14:41:41,985 - INFO - ---> 4053bd043d8a
+2026-06-07 14:41:41,986 - INFO - Successfully built 4053bd043d8a
+2026-06-07 14:41:41,987 - INFO - Successfully tagged setup.crewaiinc__crewai-2552:latest
+2026-06-07 14:41:41,988 - INFO - Image built successfully!

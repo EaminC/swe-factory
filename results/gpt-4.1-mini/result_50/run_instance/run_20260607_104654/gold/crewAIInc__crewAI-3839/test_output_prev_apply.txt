@@ -1,0 +1,369 @@
++ cd /testbed
++ git checkout 7e6171d5bc35da485e119fef9442faa02fcd0984 lib/crewai/tests/test_flow.py
+Updated 1 path from 5c3d71fb3
++ git apply -v -
+Checking patch lib/crewai/tests/test_flow.py...
+Applied patch lib/crewai/tests/test_flow.py cleanly.
++ source /testbed/.venv/bin/activate
+++ '[' -z '' ']'
+++ '[' -n x ']'
+++ SCRIPT_PATH=/testbed/.venv/bin/activate
+++ '[' /testbed/.venv/bin/activate = /eval.sh ']'
+++ deactivate nondestructive
+++ unset -f pydoc
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ hash -r
+++ '[' -z '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ '[' linux-gnu = cygwin ']'
+++ '[' linux-gnu = msys ']'
+++ export VIRTUAL_ENV
+++ '[' -z '' ']'
+++ unset SCRIPT_PATH
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' xtestbed '!=' x ']'
+++ VIRTUAL_ENV_PROMPT=testbed
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ alias pydoc
+++ true
+++ hash -r
++ uv run pytest -rA --tb=short --disable-warnings lib/crewai/tests/test_flow.py
+Installed 185 packages in 7.74s
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-8.4.2, pluggy-1.6.0
+Using --randomly-seed=2136849964
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: asyncio-1.2.0, split-0.10.0, anyio-4.11.0, timeout-2.4.0, subprocess-1.5.3, recording-0.13.4, randomly-4.0.1, xdist-3.8.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 37 items
+
+lib/crewai/tests/test_flow.py ...........F......F..................      [100%]
+
+=================================== FAILURES ===================================
+________________ test_flow_copy_state_with_unpickleable_objects ________________
+lib/crewai/tests/test_flow.py:1413: in test_flow_copy_state_with_unpickleable_objects
+    copied_state = flow._copy_state()
+                   ^^^^^^^^^^^^^^^^^^
+lib/crewai/src/crewai/flow/flow.py:604: in _copy_state
+    return copy.deepcopy(self._state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:153: in deepcopy
+    y = copier(memo)
+        ^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/pydantic/main.py:978: in __deepcopy__
+    _object_setattr(m, '__dict__', deepcopy(self.__dict__, memo=memo))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:146: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:231: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:161: in deepcopy
+    rv = reductor(4)
+         ^^^^^^^^^^^
+E   TypeError: cannot pickle '_thread.RLock' object
+____________ test_flow_copy_state_with_nested_unpickleable_objects _____________
+lib/crewai/tests/test_flow.py:1441: in test_flow_copy_state_with_nested_unpickleable_objects
+    flow.kickoff()
+lib/crewai/src/crewai/flow/flow.py:816: in kickoff
+    return asyncio.run(_run_flow())
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/asyncio/runners.py:188: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/asyncio/runners.py:120: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/asyncio/base_events.py:650: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+lib/crewai/src/crewai/flow/flow.py:814: in _run_flow
+    return await self.kickoff_async(inputs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/crewai/src/crewai/flow/flow.py:897: in kickoff_async
+    await asyncio.gather(*tasks)
+lib/crewai/src/crewai/flow/flow.py:966: in _execute_start_method
+    result = await self._execute_method(start_method_name, enhanced_method)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/crewai/src/crewai/flow/flow.py:1067: in _execute_method
+    raise e
+lib/crewai/src/crewai/flow/flow.py:1047: in _execute_method
+    state=self._copy_state(),
+          ^^^^^^^^^^^^^^^^^^
+lib/crewai/src/crewai/flow/flow.py:604: in _copy_state
+    return copy.deepcopy(self._state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:153: in deepcopy
+    y = copier(memo)
+        ^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/pydantic/main.py:978: in __deepcopy__
+    _object_setattr(m, '__dict__', deepcopy(self.__dict__, memo=memo))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:146: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:231: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:146: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:231: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/copy.py:161: in deepcopy
+    rv = reductor(4)
+         ^^^^^^^^^^^
+E   TypeError: cannot pickle '_thread.RLock' object
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 4c337abb-1c05-4ddc-8ea3-7c84dd1f8d07[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 4c337abb-1c05-4ddc-8ea3-7c84dd1f8d07
+==================================== PASSES ====================================
+_________________________ test_flow_with_and_condition _________________________
+----------------------------- Captured stdout call -----------------------------
+╭─────────────────────────────── Flow Execution ───────────────────────────────╮
+│                                                                              │
+│  Starting Flow Execution                                                     │
+│  Name: AndConditionFlow                                                      │
+│  ID: 3f90ff65-5cb8-4059-99b0-e88ed3c86340                                    │
+│  Tool Args:                                                                  │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+[1m[35mFlow started with ID: 3f90ff65-5cb8-4059-99b0-e88ed3c86340[0m
+
+✅ Flow Finished: AndConditionFlow
+├── ✨ Created
+├── ✅ Initialization Complete
+├── ✅ Completed: step_1
+├── ✅ Completed: step_2
+└── ✅ Completed: step_3╭────────────────────────────── Flow Completion ───────────────────────────────╮
+│                                                                              │
+│  Flow Execution Completed                                                    │
+│  Name: AndConditionFlow                                                      │
+│  ID: 3f90ff65-5cb8-4059-99b0-e88ed3c86340                                    │
+│  Tool Args:                                                                  │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 3f90ff65-5cb8-4059-99b0-e88ed3c86340
+______________________________ test_flow_plotting ______________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: af453fa0-f3f3-4d65-a180-bb2bd876908b[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: af453fa0-f3f3-4d65-a180-bb2bd876908b
+____________________ test_unstructured_flow_event_emission _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 7302d7ac-9553-4a2f-9fc8-95716f493976[0m
+received_events[2] timestamp=datetime.datetime(2026, 6, 7, 14, 57, 26, 187005, tzinfo=datetime.timezone.utc) type='method_execution_started' source_fingerprint=None source_type=None fingerprint_metadata=None task_id=None task_name=None agent_id=None agent_role=None flow_name='PoemFlow' method_name='prepare_color' state={'id': '7302d7ac-9553-4a2f-9fc8-95716f493976', 'separator': ', ', 'flower': 'roses'} params={}
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 7302d7ac-9553-4a2f-9fc8-95716f493976
+___________________ test_multiple_routers_from_same_trigger ____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 73608178-b3a1-4a82-b0bc-69e3309fdf00[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 73608178-b3a1-4a82-b0bc-69e3309fdf00
+_______________________ test_diamond_dependency_pattern ________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: c60e3e3b-47bc-429a-944a-d75723d93646[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: c60e3e3b-47bc-429a-944a-d75723d93646
+_________________________ test_flow_uuid_unstructured __________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 1effd31a-d8fd-4fb1-bfe6-9ac84d1b8758[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 1effd31a-d8fd-4fb1-bfe6-9ac84d1b8758
+________________________ test_complex_and_or_branching _________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 89052b91-bfa9-47a4-9423-60f40b7c7ca0[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 89052b91-bfa9-47a4-9423-60f40b7c7ca0
+________________________ test_deeply_nested_conditions _________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 0c16f9b4-1a79-480b-828d-40ed24f30975[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 0c16f9b4-1a79-480b-828d-40ed24f30975
+________________________ test_nested_and_or_conditions _________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: cfa91c1d-3d07-4782-a9fd-938cbb58e444[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: cfa91c1d-3d07-4782-a9fd-938cbb58e444
+______________________________ test_flow_restart _______________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: dff512ae-a998-48d3-9443-879aa11aa3d5[0m
+[1m[35mFlow started with ID: dff512ae-a998-48d3-9443-879aa11aa3d5[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: dff512ae-a998-48d3-9443-879aa11aa3d5
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: dff512ae-a998-48d3-9443-879aa11aa3d5
+__________________________ test_flow_uuid_structured ___________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: fc58fde2-838d-40e8-8cc5-6f2b48cac98c[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: fc58fde2-838d-40e8-8cc5-6f2b48cac98c
+_____________________ test_structured_flow_event_emission ______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: bebe8579-c29d-473d-9925-84bee26595c1[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: bebe8579-c29d-473d-9925-84bee26595c1
+_________________________ test_flow_with_or_condition __________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: cfc9cd29-afce-4b4a-acbd-f73c9d646fb6[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: cfc9cd29-afce-4b4a-acbd-f73c9d646fb6
+_____________________ test_router_with_multiple_conditions _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: b84fea58-2928-4ccf-b65e-8efa527e67f1[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: b84fea58-2928-4ccf-b65e-8efa527e67f1
+_______________________________ test_cyclic_flow _______________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 9e40a9a3-e170-4b8d-9b98-d4198dffd6e0[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 9e40a9a3-e170-4b8d-9b98-d4198dffd6e0
+_____________ test_flow_trigger_payload_injection_multiple_starts ______________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 07504521-2ddb-407f-9a87-75606de47e0c[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 07504521-2ddb-407f-9a87-75606de47e0c
+_________________________ test_simple_sequential_flow __________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: fe84c61c-777f-4be5-b011-c945f100bfab[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: fe84c61c-777f-4be5-b011-c945f100bfab
+_______________ test_state_consistency_across_parallel_branches ________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 5bdb48c0-f441-4605-b1ab-74e29c5b9bd3[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 5bdb48c0-f441-4605-b1ab-74e29c5b9bd3
+_______________ test_flow_trigger_payload_with_structured_state ________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: test[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: test
+_____________________ test_async_flow_with_trigger_payload _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 73b84d4a-15c8-43e6-8707-5cdf1ec9e79e[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 73b84d4a-15c8-43e6-8707-5cdf1ec9e79e
+____________________________ test_flow_with_router _____________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 62503834-8ee7-483d-91a2-03aedae56ab1[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 62503834-8ee7-483d-91a2-03aedae56ab1
+______________________ test_flow_without_trigger_payload _______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 8548bfa9-6b9c-4ebf-a77e-15d75f743e63[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 8548bfa9-6b9c-4ebf-a77e-15d75f743e63
+______________________ test_stateless_flow_event_emission ______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 81578d11-bdb1-48e7-b7f0-25da04949c4c[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 81578d11-bdb1-48e7-b7f0-25da04949c4c
+_________________________ test_flow_with_custom_state __________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 2ee04f86-f63f-4a97-9671-71ffcd17eeb0[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 2ee04f86-f63f-4a97-9671-71ffcd17eeb0
+__________________________ test_flow_with_exceptions ___________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 0ea7f47e-c3e5-444f-a1f9-6a5a188e8a0d[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 0ea7f47e-c3e5-444f-a1f9-6a5a188e8a0d
+__________________ test_conditional_router_paths_exclusivity ___________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 720006b2-a2ae-4580-8f91-b20c51136cfd[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 720006b2-a2ae-4580-8f91-b20c51136cfd
+_____________________ test_flow_trigger_payload_injection ______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 90f55cc4-bfe1-41bc-8b90-56e36d4b0378[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 90f55cc4-bfe1-41bc-8b90-56e36d4b0378
+________________________ test_flow_with_multiple_starts ________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: c783d7c2-96ca-4241-a4e8-ca5bd31ec1d9[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: c783d7c2-96ca-4241-a4e8-ca5bd31ec1d9
+____________________ test_mixed_sync_async_execution_order _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 9ba04c0a-1cf7-4824-a18c-c96ffc8d95a8[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 9ba04c0a-1cf7-4824-a18c-c96ffc8d95a8
+__________________________ test_router_cascade_chain ___________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 148e5c0c-286a-4a73-b8c1-ae6253b9fb71[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 148e5c0c-286a-4a73-b8c1-ae6253b9fb71
+_______________ test_flow_start_method_without_trigger_parameter _______________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 55f27fe8-94e3-4261-acea-468c418b271d[0m
+[93mTrigger payload available but start_without_param doesn't accept crewai_trigger_payload parameter[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 55f27fe8-94e3-4261-acea-468c418b271d
+WARNING  crewai.flow.flow:flow.py:1345 Trigger payload available but start_without_param doesn't accept crewai_trigger_payload parameter
+_______________________________ test_async_flow ________________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[35mFlow started with ID: 4dae9be8-39d4-4d91-b8f3-1a8401e2d646[0m
+------------------------------ Captured log call -------------------------------
+WARNING  crewai.flow.flow:flow.py:1345 Flow started with ID: 4dae9be8-39d4-4d91-b8f3-1a8401e2d646
+=========================== short test summary info ============================
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_and_condition
+PASSED lib/crewai/tests/test_flow.py::test_flow_plotting
+PASSED lib/crewai/tests/test_flow.py::test_unstructured_flow_event_emission
+PASSED lib/crewai/tests/test_flow.py::test_multiple_routers_from_same_trigger
+PASSED lib/crewai/tests/test_flow.py::test_diamond_dependency_pattern
+PASSED lib/crewai/tests/test_flow.py::test_flow_name
+PASSED lib/crewai/tests/test_flow.py::test_flow_uuid_unstructured
+PASSED lib/crewai/tests/test_flow.py::test_complex_and_or_branching
+PASSED lib/crewai/tests/test_flow.py::test_deeply_nested_conditions
+PASSED lib/crewai/tests/test_flow.py::test_nested_and_or_conditions
+PASSED lib/crewai/tests/test_flow.py::test_flow_restart
+PASSED lib/crewai/tests/test_flow.py::test_flow_uuid_structured
+PASSED lib/crewai/tests/test_flow.py::test_structured_flow_event_emission
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_or_condition
+PASSED lib/crewai/tests/test_flow.py::test_router_with_multiple_conditions
+PASSED lib/crewai/tests/test_flow.py::test_cyclic_flow
+PASSED lib/crewai/tests/test_flow.py::test_flow_trigger_payload_injection_multiple_starts
+PASSED lib/crewai/tests/test_flow.py::test_simple_sequential_flow
+PASSED lib/crewai/tests/test_flow.py::test_state_consistency_across_parallel_branches
+PASSED lib/crewai/tests/test_flow.py::test_flow_trigger_payload_with_structured_state
+PASSED lib/crewai/tests/test_flow.py::test_async_flow_with_trigger_payload
+PASSED lib/crewai/tests/test_flow.py::test_flow_copy_state_without_unpickleable_objects
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_router
+PASSED lib/crewai/tests/test_flow.py::test_flow_without_trigger_payload
+PASSED lib/crewai/tests/test_flow.py::test_stateless_flow_event_emission
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_custom_state
+PASSED lib/crewai/tests/test_flow.py::test_flow_copy_state_with_dict_state
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_exceptions
+PASSED lib/crewai/tests/test_flow.py::test_conditional_router_paths_exclusivity
+PASSED lib/crewai/tests/test_flow.py::test_flow_trigger_payload_injection
+PASSED lib/crewai/tests/test_flow.py::test_flow_with_multiple_starts
+PASSED lib/crewai/tests/test_flow.py::test_mixed_sync_async_execution_order
+PASSED lib/crewai/tests/test_flow.py::test_router_cascade_chain
+PASSED lib/crewai/tests/test_flow.py::test_flow_start_method_without_trigger_parameter
+PASSED lib/crewai/tests/test_flow.py::test_async_flow
+FAILED lib/crewai/tests/test_flow.py::test_flow_copy_state_with_unpickleable_objects
+FAILED lib/crewai/tests/test_flow.py::test_flow_copy_state_with_nested_unpickleable_objects
+========================= 2 failed, 35 passed in 3.77s =========================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 7e6171d5bc35da485e119fef9442faa02fcd0984 lib/crewai/tests/test_flow.py
+Updated 1 path from 5c3d71fb3
