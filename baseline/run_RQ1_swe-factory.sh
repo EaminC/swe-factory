@@ -103,27 +103,37 @@ echo "=============================================="
     echo " -> Remaining after Step 3: $COUNT_VERSIONS versioned instances"
 
     echo -e "\n[4/6] Running SWE-Builder (Agent Inference)..."
-    python -m app.main swe-bench \
-      --model "$MODEL" \
-      --tasks-map "$INSTANCES_VERSIONS" \
-      --num-processes 10 \
-      --model-temperature 0.2 \
-      --conv-round-limit 10 \
-      --output-dir "${OUTPUT_BASE}/mypy" \
-      --setup-dir "testbed" \
-      --results-path "${OUTPUT_BASE}/results"
-    COUNT_RESULTS=$(count_json "$RESULTS_JSON")
-    echo " -> Remaining after Step 4: $COUNT_RESULTS agent results"
+    # If there are no versioned instances, skip the agent inference step.
+    if [[ -f "$INSTANCES_VERSIONS" ]] && [[ $(count_jsonl "$INSTANCES_VERSIONS") -gt 0 ]]; then
+      python -m app.main swe-bench \
+        --model "$MODEL" \
+        --tasks-map "$INSTANCES_VERSIONS" \
+        --num-processes 10 \
+        --model-temperature 0.2 \
+        --conv-round-limit 10 \
+        --output-dir "${OUTPUT_BASE}/mypy" \
+        --setup-dir "testbed" \
+        --results-path "${OUTPUT_BASE}/results"
+      COUNT_RESULTS=$(count_json "$RESULTS_JSON")
+      echo " -> Remaining after Step 4: $COUNT_RESULTS agent results"
+    else
+      echo " -> No versioned instances found; skipping SWE-Builder (Step 4)."
+      COUNT_RESULTS=0
+    fi
 
-    echo -e "\n[5/6] Running Fail2Pass evaluation..."
-    python evaluation/run_evaluation.py \
-      --dataset_name "$RESULTS_JSON" \
-      --predictions_path "gold" \
-      --max_workers 5 \
-      --run_id "$RUN_ID" \
-      --output_path "$RUN_INSTANCES_DIR" \
-      --timeout 3600 \
-      --is_judge_fail2pass
+    if [[ "$COUNT_RESULTS" -gt 0 ]]; then
+      echo -e "\n[5/6] Running Fail2Pass evaluation..."
+      python evaluation/run_evaluation.py \
+        --dataset_name "$RESULTS_JSON" \
+        --predictions_path "gold" \
+        --max_workers 5 \
+        --run_id "$RUN_ID" \
+        --output_path "$RUN_INSTANCES_DIR" \
+        --timeout 3600 \
+        --is_judge_fail2pass
+    else
+      echo "\n[5/6] Skipping Fail2Pass evaluation because no agent results were produced."
+    fi
 
     echo -e "\n[6/6] Classifying Fail2Pass Status..."
     if [[ -d "$GOLD_DIR" ]]; then
@@ -132,10 +142,6 @@ echo "=============================================="
     else
       echo "Directory not found: $GOLD_DIR, skipping judge_fail2pass"
     fi
-
-    #echo -e "\n[7/6] F2P checking..."
-    #python scripts/f2p_from_swegent_bundle.py 
-    # How do we do f2p checking?
 
     # ==============================================================================
     # 3. END TRACKING & METRICS REPORT
