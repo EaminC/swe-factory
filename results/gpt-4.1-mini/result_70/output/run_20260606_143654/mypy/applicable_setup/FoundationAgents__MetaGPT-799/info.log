@@ -1,0 +1,758 @@
+2026-06-06 14:40:56.490 | INFO     | Model API request cost info: input_tokens=1315, output_tokens=84, cost=0.000000
+2026-06-06 14:40:56.496 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-06-06 14:40:57.527 | INFO     | Model API request cost info: input_tokens=682, output_tokens=56, cost=0.000000
+2026-06-06 14:40:57.529 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"README.md\", \"environment setup, dependencies versions, programming language versions, and commands to run tests, especially for specific test files\")"],
+  "collected_information": null,
+  "terminate": false
+}
+2026-06-06 14:40:57.529 | DEBUG    | Extracted a valid json
+2026-06-06 14:40:57.537 | INFO     | entering browse
+2026-06-06 14:40:57.538 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/README.md ===
+
+# MetaGPT: The Multi-Agent Framework
+
+<p align="center">
+<a href=""><img src="docs/resources/MetaGPT-new-log.png" alt="MetaGPT logo: Enable GPT to work in software company, collaborating to tackle more complex tasks." width="150px"></a>
+</p>
+
+<p align="center">
+<b>Assign different roles to GPTs to form a collaborative entity for complex tasks.</b>
+</p>
+
+<p align="center">
+<a href="docs/README_CN.md"><img src="https://img.shields.io/badge/文档-中文版-blue.svg" alt="CN doc"></a>
+<a href="README.md"><img src="https://img.shields.io/badge/document-English-blue.svg" alt="EN doc"></a>
+<a href="docs/README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-blue.svg" alt="JA doc"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+<a href="docs/ROADMAP.md"><img src="https://img.shields.io/badge/ROADMAP-路线图-blue" alt="roadmap"></a>
+<a href="https://discord.gg/DYn29wFk9z"><img src="https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat" alt="Discord Follow"></a>
+<a href="https://twitter.com/MetaGPT_"><img src="https://img.shields.io/twitter/follow/MetaGPT?style=social" alt="Twitter Follow"></a>
+</p>
+
+<p align="center">
+   <a href="https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/geekan/MetaGPT"><img src="https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode" alt="Open in Dev Containers"></a>
+   <a href="https://codespaces.new/geekan/MetaGPT"><img src="https://img.shields.io/badge/Github_Codespace-Open-blue?logo=github" alt="Open in GitHub Codespaces"></a>
+   <a href="https://huggingface.co/spaces/deepwisdom/MetaGPT" target="_blank"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20-Hugging%20Face-blue?color=blue&logoColor=white" /></a>
+</p>
+
+## News
+🚀 Jan. 16, 2024: Our paper [MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework
+](https://arxiv.org/abs/2308.00352) accepted for oral presentation **(top 1.2%)** at ICLR 2024, **ranking #1** in the LLM-based Agent category.
+
+🚀 Jan. 03, 2024: [v0.6.0](https://github.com/geekan/MetaGPT/releases/tag/v0.6.0) released, new features include serialization, upgraded OpenAI package and supported multiple LLM, provided [minimal example for debate](https://github.com/geekan/MetaGPT/blob/main/examples/debate_simple.py) etc.
+
+🚀 Dec. 15, 2023: [v0.5.0](https://github.com/geekan/MetaGPT/releases/tag/v0.5.0) released, introducing some experimental features such as **incremental development**, **multilingual**, **multiple programming languages**, etc.
+
+🔥 Nov. 08, 2023: MetaGPT is selected into [Open100: Top 100 Open Source achievements](https://www.benchcouncil.org/evaluation/opencs/annual.html).
+
+🔥 Sep. 01, 2023: MetaGPT tops GitHub Trending Monthly for the **17th time** in August 2023.
+
+🌟 Jun. 30, 2023: MetaGPT is now open source.
+
+🌟 Apr. 24, 2023: First line of MetaGPT code committed.
+
+## Software Company as Multi-Agent System
+
+1. MetaGPT takes a **one line requirement** as input and outputs **user stories / competitive analysis / requirements / data structures / APIs / documents, etc.**
+2. Internally, MetaGPT includes **product managers / architects / project managers / engineers.** It provides the entire process of a **software company along with carefully orchestrated SOPs.**
+   1. `Code = SOP(Team)` is the core philosophy. We materialize SOP and apply it to teams composed of LLMs.
+
+![A software company consists of LLM-based roles](docs/resources/software_company_cd.jpeg)
+
+<p align="center">Software Company Multi-Agent Schematic (Gradually Implementing)</p>
+
+## Install
+
+### Pip installation
+
+```bash
+# Step 1: Ensure that Python 3.9+ is installed on your system. You can check this by using:
+# You can use conda to initialize a new python env
+#     conda create -n metagpt python=3.9
+#     conda activate metagpt
+python3 --version
+
+# Step 2: Clone the repository to your local machine for latest version, and install it.
+git clone https://github.com/geekan/MetaGPT.git
+cd MetaGPT
+pip3 install -e .     # or pip3 install metagpt  # for stable version
+
+# Step 3: setup your OPENAI_API_KEY, or make sure it existed in the env
+mkdir ~/.metagpt
+cp config/config.yaml ~/.metagpt/config.yaml
+vim ~/.metagpt/config.yaml
+
+# Step 4: run metagpt cli
+metagpt "Create a 2048 game in python"
+
+# Step 5 [Optional]: If you want to save the artifacts like diagrams such as quadrant chart, system designs, sequence flow in the workspace, you can execute the step before Step 3. By default, the framework is compatible, and the entire process can be run completely without executing this step.
+# If executing, ensure that NPM is installed on your system. Then install mermaid-js. (If you don't have npm in your computer, please go to the Node.js official website to install Node.js https://nodejs.org/ and then you will have npm tool in your computer.)
+npm --version
+sudo npm install -g @mermaid-js/mermaid-cli
+```
+
+detail installation please refer to [cli_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version)
+
+### Docker installation
+> Note: In the Windows, you need to replace "/opt/metagpt" with a directory that Docker has permission to create, such as "D:\Users\x\metagpt"
+
+```bash
+# Step 1: Download metagpt official image and prepare config.yaml
+docker pull metagpt/metagpt:latest
+mkdir -p /opt/metagpt/{config,workspace}
+docker run --rm metagpt/metagpt:latest cat /app/metagpt/config/config.yaml > /opt/metagpt/config/key.yaml
+vim /opt/metagpt/config/key.yaml # Change the config
+
+# Step 2: Run metagpt demo with container
+docker run --rm \
+    --privileged \
+    -v /opt/metagpt/config/key.yaml:/app/metagpt/config/key.yaml \
+    -v /opt/metagpt/workspace:/app/metagpt/workspace \
+    metagpt/metagpt:latest \
+    metagpt "Write a cli snake game"
+```
+
+detail installation please refer to [docker_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker)
+
+### QuickStart & Demo Video
+- Try it on [MetaGPT Huggingface Space](https://huggingface.co/spaces/deepwisdom/MetaGPT)
+- [Matthew Berman: How To Install MetaGPT - Build A Startup With One Prompt!!](https://youtu.be/uT75J_KG_aY)
+- [Official Demo Video](https://github.com/geekan/MetaGPT/assets/2707039/5e8c1062-8c35-440f-bb20-2b0320f8d27d)
+
+https://github.com/geekan/MetaGPT/assets/34952977/34345016-5d13-489d-b9f9-b82ace413419
+
+## Tutorial
+
+- 🗒 [Online Document](https://docs.deepwisdom.ai/main/en/)
+- 💻 [Usage](https://docs.deepwisdom.ai/main/en/guide/get_started/quickstart.html)  
+- 🔎 [What can MetaGPT do?](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
+- 🛠 How to build your own agents? 
+  - [MetaGPT Usage & Development Guide | Agent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/agent_101.html)
+  - [MetaGPT Usage & Development Guide | MultiAgent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/multi_agent_101.html)
+- 🧑‍💻 Contribution
+  - [Develop Roadmap](docs/ROADMAP.md)
+- 🔖 Use Cases
+  - [Debate](https://docs.deepwisdom.ai/main/en/guide/use_cases/multi_agent/debate.html)
+  - [Researcher](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/researcher.html)
+  - [Recepit Assistant](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/receipt_assistant.html)
+- ❓ [FAQs](https://docs.deepwisdom.ai/main/en/guide/faq.html)
+
+## Support
+
+### Discard Join US
+📢 Join Our [Discord Channel](https://discord.gg/ZRHeExS6xv)!
+
+Looking forward to seeing you there! 🎉
+
+### Contact Information
+
+If you have any questions or feedback about this project, please feel free to contact us. We highly appreciate your suggestions!
+
+- **Email:** alexanderwu@deepwisdom.ai
+- **GitHub Issues:** For more technical inquiries, you can also create a new issue in our [GitHub repository](https://github.com/geekan/metagpt/issues).
+
+We will respond to all questions within 2-3 business days.
+
+## Citation
+
+For now, cite the [arXiv paper](https://arxiv.org/abs/2308.00352):
+
+```bibtex
+@misc{hong2023metagpt,
+      title={MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework}, 
+      author={Sirui Hong and Mingchen Zhuge and Jonathan Chen and Xiawu Zheng and Yuheng Cheng and Ceyao Zhang and Jinlin Wang and Zili Wang and Steven Ka Shing Yau and Zijuan Lin and Liyang Zhou and Chenyu Ran and Lingfeng Xiao and Chenglin Wu and Jürgen Schmidhuber},
+      year={2023},
+      eprint={2308.00352},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+```
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/README.md ===
+2026-06-06 14:40:57.538 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-06-06 14:41:05.911 | INFO     | Model API request cost info: input_tokens=2996, output_tokens=615, cost=0.000000
+2026-06-06 14:41:05.913 | SUCCESS  | Successfully extracted environment config
+2026-06-06 14:41:05.913 | INFO     | ******
+2026-06-06 14:41:05.914 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/README.md]
+- Programming Language Version:
+  - Python 3.9+ (explicitly recommended and tested)
+
+- Environment Setup:
+  - Use conda or other virtual environment tools:
+    - `conda create -n metagpt python=3.9`
+    - `conda activate metagpt`
+  - Clone repo and install:
+    - `git clone https://github.com/geekan/MetaGPT.git`
+    - `cd MetaGPT`
+    - `pip3 install -e .` (For latest development version)
+    - or `pip3 install metagpt` (For stable version from PyPI)
+  - Environment variable/configuration:
+    - Set `OPENAI_API_KEY` in your environment.
+    - Copy and edit configuration file:
+      - `mkdir ~/.metagpt`
+      - `cp config/config.yaml ~/.metagpt/config.yaml`
+      - Customize with `vim ~/.metagpt/config.yaml`
+
+- Dependencies Versions:
+  - No explicit version pinning in README, but:
+    - Python 3.9+ is required.
+    - OpenAI package upgraded recently (v0.6.0 release notes mention that).
+  - For optional diagram artifact saving:
+    - Requires Node.js and npm.
+    - Install mermaid-cli globally:
+      - `sudo npm install -g @mermaid-js/mermaid-cli`
+
+- Docker Setup:
+  - Pull official image: `docker pull metagpt/metagpt:latest`
+  - Prepare config and workspace directories, for example:
+    - `/opt/metagpt/config/key.yaml`
+    - `/opt/metagpt/workspace`
+  - Run example command inside container:
+    ```bash
+    docker run --rm \
+        --privileged \
+        -v /opt/metagpt/config/key.yaml:/app/metagpt/config/key.yaml \
+        -v /opt/metagpt/workspace:/app/metagpt/workspace \
+        metagpt/metagpt:latest \
+        metagpt "Write a cli snake game"
+    ```
+
+- Commands to run the application/test:
+  - Runs via CLI command `metagpt "<prompt>"` - an example given:
+    - `metagpt "Create a 2048 game in python"`
+  - No explicit test suite or test commands are described in this README.
+  - No specific commands for running individual or specific test files mentioned.
+
+- Additional Notes:
+  - The README refers to detailed installation documents here:  
+    - https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version  
+    - https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker
+
+- No references to libraries with exact pinned versions or test frameworks for running tests are provided in this README.
+
+[/Key Information]
+2026-06-06 14:41:05.914 | INFO     | ******
+2026-06-06 14:41:05.914 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/README.md]\n- Programming Language Version:\n  - Python 3.9+ (explicitly recommended and tested)\n\n- Environment Setup:\n  - Use conda or other virtual environment tools:\n    - `conda create -n metagpt python=3.9`\n    - `conda activate metagpt`\n  - Clone repo and install:\n    - `git clone https://github.com/geekan/MetaGPT.git`\n    - `cd MetaGPT`\n    - `pip3 install -e .` (For latest development version)\n    - or `pip3 install metagpt` (For stable version from PyPI)\n  - Environment variable/configuration:\n    - Set `OPENAI_API_KEY` in your environment.\n    - Copy and edit configuration file:\n      - `mkdir ~/.metagpt`\n      - `cp config/config.yaml ~/.metagpt/config.yaml`\n      - Customize with `vim ~/.metagpt/config.yaml`\n\n- Dependencies Versions:\n  - No explicit version pinning in README, but:\n    - Python 3.9+ is required.\n    - OpenAI package upgraded recently (v0.6.0 release notes mention that).\n  - For optional diagram artifact saving:\n    - Requires Node.js and npm.\n    - Install mermaid-cli globally:\n      - `sudo npm install -g @mermaid-js/mermaid-cli`\n\n- Docker Setup:\n  - Pull official image: `docker pull metagpt/metagpt:latest`\n  - Prepare config and workspace directories, for example:\n    - `/opt/metagpt/config/key.yaml`\n    - `/opt/metagpt/workspace`\n  - Run example command inside container:\n    ```bash\n    docker run --rm \\\n        --privileged \\\n        -v /opt/metagpt/config/key.yaml:/app/metagpt/config/key.yaml \\\n        -v /opt/metagpt/workspace:/app/metagpt/workspace \\\n        metagpt/metagpt:latest \\\n        metagpt "Write a cli snake game"\n    ```\n\n- Commands to run the application/test:\n  - Runs via CLI command `metagpt "<prompt>"` - an example given:\n    - `metagpt "Create a 2048 game in python"`\n  - No explicit test suite or test commands are described in this README.\n  - No specific commands for running individual or specific test files mentioned.\n\n- Additional Notes:\n  - The README refers to detailed installation documents here:  \n    - https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version  \n    - https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker\n\n- No references to libraries with exact pinned versions or test frameworks for running tests are provided in this README.\n\n[/Key Information]', 'Get File Info', True)
+2026-06-06 14:41:11.772 | INFO     | Model API request cost info: input_tokens=2309, output_tokens=472, cost=0.000000
+2026-06-06 14:41:11.789 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-06-06 14:41:13.141 | INFO     | Model API request cost info: input_tokens=1070, output_tokens=72, cost=0.000000
+2026-06-06 14:41:13.142 | DEBUG    | {
+  "API_calls": [
+    "search_files_by_keyword(\"CONTRIBUTING\")",
+    "search_files_by_keyword(\"requirements\")",
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_folder(\"tests\", \"1\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-06-06 14:41:13.143 | DEBUG    | Extracted a valid json
+2026-06-06 14:41:13.150 | DEBUG    | Result of dispatch_intent: ("No files found containing the keyword 'CONTRIBUTING'.", 'No matching files found', True)
+2026-06-06 14:41:13.153 | DEBUG    | Result of dispatch_intent: ("Found 1 files containing the keyword 'requirements':\n\n- requirements.txt", 'File search completed successfully', True)
+2026-06-06 14:41:13.153 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\nbuild-package.yaml\n\npre-commit.yaml\n\nunittest.yaml\n\n', 'folder structure collected', True)
+2026-06-06 14:41:13.154 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/tests. The browsing Depth is 1.\nStructure of this directory:\n\n__init__.py\n\nconftest.py\n\nmetagpt/\n\nscripts/\n\nmock/\n\ndata/\n\n', 'folder structure collected', True)
+2026-06-06 14:41:17.749 | INFO     | Model API request cost info: input_tokens=3258, output_tokens=282, cost=0.000000
+2026-06-06 14:41:17.762 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-06-06 14:41:19.203 | INFO     | Model API request cost info: input_tokens=880, output_tokens=70, cost=0.000000
+2026-06-06 14:41:19.205 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"requirements.txt\", \"extract dependency versions including test dependencies\")",
+    "browse_file_for_environment_info(\".github/workflows/unittest.yaml\", \"extract test commands and environment setup details\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-06-06 14:41:19.206 | DEBUG    | Extracted a valid json
+2026-06-06 14:41:19.211 | INFO     | entering browse
+2026-06-06 14:41:19.211 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/requirements.txt ===
+aiohttp==3.8.4
+#azure_storage==0.37.0
+channels==4.0.0
+# chromadb
+# Django==4.1.5
+# docx==0.2.4
+#faiss==1.5.3
+faiss_cpu==1.7.4
+fire==0.4.0
+typer==0.9.0
+# godot==0.1.1
+# google_api_python_client==2.93.0  # Used by search_engine.py
+lancedb==0.4.0
+langchain==0.0.352
+loguru==0.6.0
+meilisearch==0.21.0
+numpy==1.24.3
+openai==1.6.0
+openpyxl
+beautifulsoup4==4.12.2
+pandas==2.0.3
+pydantic==2.5.3
+#pygame==2.1.3
+#pymilvus==2.2.8
+# pytest==7.2.2 # test extras require
+python_docx==0.8.11
+PyYAML==6.0.1
+# sentence_transformers==2.2.2
+setuptools==65.6.3
+tenacity==8.2.2
+tiktoken==0.5.2
+tqdm==4.65.0
+#unstructured[local-inference]
+# selenium>4
+# webdriver_manager<3.9
+anthropic==0.8.1
+typing-inspect==0.8.0
+typing_extensions==4.9.0
+libcst==1.0.1
+qdrant-client==1.7.0
+# pytest-mock==3.11.1  # test extras require
+# open-interpreter==0.1.7; python_version>"3.9" # Conflict with openai 1.x
+ta==0.10.2
+semantic-kernel==0.4.3.dev0
+wrapt==1.15.0
+#aiohttp_jinja2
+# azure-cognitiveservices-speech~=1.31.0 # Used by metagpt/tools/azure_tts.py
+#aioboto3~=11.3.0  # Used by metagpt/utils/s3.py
+aioredis~=2.0.1 # Used by metagpt/utils/redis.py
+websocket-client==1.6.2
+aiofiles==23.2.1
+gitpython==3.1.40
+zhipuai==2.0.1
+socksio~=1.0.0
+gitignore-parser==0.1.9
+# connexion[uvicorn]~=3.0.5 # Used by metagpt/tools/openapi_v3_hello.py
+websockets~=12.0
+networkx~=3.2.1
+google-generativeai==0.3.2
+# playwright==1.40.0  # playwright extras require
+anytree
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/requirements.txt ===
+2026-06-06 14:41:19.212 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-06-06 14:41:26.364 | INFO     | Model API request cost info: input_tokens=1234, output_tokens=554, cost=0.000000
+2026-06-06 14:41:26.366 | SUCCESS  | Successfully extracted environment config
+2026-06-06 14:41:26.366 | INFO     | ******
+2026-06-06 14:41:26.367 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/requirements.txt]
+- Dependencies and Exact Versions:
+  - aiohttp==3.8.4
+  - channels==4.0.0
+  - faiss_cpu==1.7.4
+  - fire==0.4.0
+  - typer==0.9.0
+  - lancedb==0.4.0
+  - langchain==0.0.352
+  - loguru==0.6.0
+  - meilisearch==0.21.0
+  - numpy==1.24.3
+  - openai==1.6.0
+  - openpyxl (version not pinned)
+  - beautifulsoup4==4.12.2
+  - pandas==2.0.3
+  - pydantic==2.5.3
+  - python_docx==0.8.11
+  - PyYAML==6.0.1
+  - setuptools==65.6.3
+  - tenacity==8.2.2
+  - tiktoken==0.5.2
+  - tqdm==4.65.0
+  - anthropic==0.8.1
+  - typing-inspect==0.8.0
+  - typing_extensions==4.9.0
+  - libcst==1.0.1
+  - qdrant-client==1.7.0
+  - ta==0.10.2
+  - semantic-kernel==0.4.3.dev0
+  - wrapt==1.15.0
+  - aioredis~=2.0.1 (approximate version)
+  - websocket-client==1.6.2
+  - aiofiles==23.2.1
+  - gitpython==3.1.40
+  - zhipuai==2.0.1
+  - socksio~=1.0.0 (approximate version)
+  - gitignore-parser==0.1.9
+  - websockets~=12.0 (approximate version)
+  - networkx~=3.2.1 (approximate version)
+  - google-generativeai==0.3.2
+  - anytree (version not pinned)
+
+- Test dependencies:
+  - None explicitly included or pinned.
+  - Some commented out test related packages:
+    - pytest==7.2.2
+    - pytest-mock==3.11.1
+
+[/Key Information]
+2026-06-06 14:41:26.367 | INFO     | ******
+2026-06-06 14:41:26.367 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/requirements.txt]\n- Dependencies and Exact Versions:\n  - aiohttp==3.8.4\n  - channels==4.0.0\n  - faiss_cpu==1.7.4\n  - fire==0.4.0\n  - typer==0.9.0\n  - lancedb==0.4.0\n  - langchain==0.0.352\n  - loguru==0.6.0\n  - meilisearch==0.21.0\n  - numpy==1.24.3\n  - openai==1.6.0\n  - openpyxl (version not pinned)\n  - beautifulsoup4==4.12.2\n  - pandas==2.0.3\n  - pydantic==2.5.3\n  - python_docx==0.8.11\n  - PyYAML==6.0.1\n  - setuptools==65.6.3\n  - tenacity==8.2.2\n  - tiktoken==0.5.2\n  - tqdm==4.65.0\n  - anthropic==0.8.1\n  - typing-inspect==0.8.0\n  - typing_extensions==4.9.0\n  - libcst==1.0.1\n  - qdrant-client==1.7.0\n  - ta==0.10.2\n  - semantic-kernel==0.4.3.dev0\n  - wrapt==1.15.0\n  - aioredis~=2.0.1 (approximate version)\n  - websocket-client==1.6.2\n  - aiofiles==23.2.1\n  - gitpython==3.1.40\n  - zhipuai==2.0.1\n  - socksio~=1.0.0 (approximate version)\n  - gitignore-parser==0.1.9\n  - websockets~=12.0 (approximate version)\n  - networkx~=3.2.1 (approximate version)\n  - google-generativeai==0.3.2\n  - anytree (version not pinned)\n\n- Test dependencies:\n  - None explicitly included or pinned.\n  - Some commented out test related packages:\n    - pytest==7.2.2\n    - pytest-mock==3.11.1\n\n[/Key Information]', 'Get File Info', True)
+2026-06-06 14:41:26.368 | INFO     | entering browse
+2026-06-06 14:41:26.368 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/.github/workflows/unittest.yaml ===
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  pull_request_target:
+  push: 
+    branches:
+      - '*-debugger'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: unittest
+    strategy:
+      matrix:
+        # python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9']
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        sh tests/scripts/run_install_deps.sh
+    - name: Run reverse proxy script for ssh service
+      if: contains(github.ref, '-debugger')
+      continue-on-error: true
+      env:
+        FPR_SERVER_ADDR: ${{ secrets.FPR_SERVER_ADDR }}
+        FPR_TOKEN: ${{ secrets.FPR_TOKEN }}
+        FPR_SSH_REMOTE_PORT: ${{ secrets.FPR_SSH_REMOTE_PORT }}
+        RSA_PUB: ${{ secrets.RSA_PUB }}
+        SSH_PORT: ${{ vars.SSH_PORT || '22'}}
+      run: |
+        echo "Run \"ssh $(whoami)@FPR_SERVER_HOST -p FPR_SSH_REMOTE_PORT\" and \"cd $(pwd)\""
+        mkdir -p  ~/.ssh/
+        echo $RSA_PUB >> ~/.ssh/authorized_keys
+        chmod 600 ~/.ssh/authorized_keys
+        wget https://github.com/fatedier/frp/releases/download/v0.32.1/frp_0.32.1_linux_amd64.tar.gz -O frp.tar.gz
+        tar xvzf frp.tar.gz -C /opt
+        mv /opt/frp* /opt/frp
+        /opt/frp/frpc tcp --server_addr $FPR_SERVER_ADDR --token $FPR_TOKEN  --local_port $SSH_PORT  --remote_port $FPR_SSH_REMOTE_PORT
+    - name: Test with pytest
+      run: |
+        export ALLOW_OPENAI_API_CALL=0
+        echo "${{ secrets.METAGPT_KEY_YAML }}" | base64 -d > config/key.yaml
+        pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt
+    - name: Show coverage report
+      run: |
+        coverage report -m
+    - name: Show failed tests and overall summary
+      run: |
+        grep -E "FAILED tests|ERROR tests|[0-9]+ passed," unittest.txt
+        failed_count=$(grep -E "FAILED|ERROR" unittest.txt | wc -l)
+        if [[ "$failed_count" -gt 0 ]]; then
+          echo "$failed_count failed lines found! Task failed."
+          exit 1
+        fi
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: |
+          ./unittest.txt
+          ./htmlcov/
+          ./tests/data/rsp_cache_new.json
+        retention-days: 3
+      if: ${{ always() }}
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: ${{ always() }}
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/.github/workflows/unittest.yaml ===
+2026-06-06 14:41:26.368 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-06-06 14:41:31.044 | INFO     | Model API request cost info: input_tokens=1361, output_tokens=502, cost=0.000000
+2026-06-06 14:41:31.046 | SUCCESS  | Successfully extracted environment config
+2026-06-06 14:41:31.047 | INFO     | ******
+2026-06-06 14:41:31.047 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/.github/workflows/unittest.yaml]
+- Environment Setup:
+  - Runs on: ubuntu-latest
+  - Python version: 3.9 (configured in matrix)
+  - Python setup action: uses actions/setup-python@v4 with caching for pip
+  - Dependencies installation command:
+    - `sh tests/scripts/run_install_deps.sh`
+  - Environment variables for reverse proxy (conditional upon branch name containing '-debugger'):
+    - FPR_SERVER_ADDR (secret)
+    - FPR_TOKEN (secret)
+    - FPR_SSH_REMOTE_PORT (secret)
+    - RSA_PUB (secret)
+    - SSH_PORT (variable, default '22')
+  - Additional tools downloaded and run during setup for SSH reverse proxy:
+    - frp version 0.32.1 (downloaded from github releases)
+
+- Test Commands:
+  - Main test run command using pytest:
+    ```
+    export ALLOW_OPENAI_API_CALL=0
+    echo "${{ secrets.METAGPT_KEY_YAML }}" | base64 -d > config/key.yaml
+    pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt
+    ```
+  - Coverage report display:
+    - `coverage report -m`
+  - Failure summary:
+    - Grep lines with FAILED or ERROR in unittest.txt and count them
+    - If failures exist, exit with error code
+  - Test artifacts uploaded include:
+    - unittest.txt (test logs)
+    - htmlcov/ (coverage HTML report)
+    - tests/data/rsp_cache_new.json
+
+- Notes:
+  - The pytest command runs all tests inside `tests/`
+  - Includes doctest modules and coverage reporting with xml and html export
+  - Environment variable ALLOW_OPENAI_API_CALL is set to 0 before tests
+  - A decoded secret file is saved at `config/key.yaml` prior to running tests
+
+- No explicit command is provided for running an individual or specific test file, but pytest is invoked on `tests/` directory, so running individual tests would likely follow standard pytest syntax (e.g., `pytest tests/specific_test.py`), based on this setup.
+
+[/Key Information]
+2026-06-06 14:41:31.047 | INFO     | ******
+2026-06-06 14:41:31.047 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05/.github/workflows/unittest.yaml]\n- Environment Setup:\n  - Runs on: ubuntu-latest\n  - Python version: 3.9 (configured in matrix)\n  - Python setup action: uses actions/setup-python@v4 with caching for pip\n  - Dependencies installation command:\n    - `sh tests/scripts/run_install_deps.sh`\n  - Environment variables for reverse proxy (conditional upon branch name containing \'-debugger\'):\n    - FPR_SERVER_ADDR (secret)\n    - FPR_TOKEN (secret)\n    - FPR_SSH_REMOTE_PORT (secret)\n    - RSA_PUB (secret)\n    - SSH_PORT (variable, default \'22\')\n  - Additional tools downloaded and run during setup for SSH reverse proxy:\n    - frp version 0.32.1 (downloaded from github releases)\n\n- Test Commands:\n  - Main test run command using pytest:\n    ```\n    export ALLOW_OPENAI_API_CALL=0\n    echo "${{ secrets.METAGPT_KEY_YAML }}" | base64 -d > config/key.yaml\n    pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt\n    ```\n  - Coverage report display:\n    - `coverage report -m`\n  - Failure summary:\n    - Grep lines with FAILED or ERROR in unittest.txt and count them\n    - If failures exist, exit with error code\n  - Test artifacts uploaded include:\n    - unittest.txt (test logs)\n    - htmlcov/ (coverage HTML report)\n    - tests/data/rsp_cache_new.json\n\n- Notes:\n  - The pytest command runs all tests inside `tests/`\n  - Includes doctest modules and coverage reporting with xml and html export\n  - Environment variable ALLOW_OPENAI_API_CALL is set to 0 before tests\n  - A decoded secret file is saved at `config/key.yaml` prior to running tests\n\n- No explicit command is provided for running an individual or specific test file, but pytest is invoked on `tests/` directory, so running individual tests would likely follow standard pytest syntax (e.g., `pytest tests/specific_test.py`), based on this setup.\n\n[/Key Information]', 'Get File Info', True)
+2026-06-06 14:41:43.440 | INFO     | Model API request cost info: input_tokens=4894, output_tokens=1166, cost=0.000000
+2026-06-06 14:41:43.471 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-06-06 14:41:56.749 | INFO     | Model API request cost info: input_tokens=1764, output_tokens=982, cost=0.000000
+2026-06-06 14:41:56.751 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Environment Setup from README.md": {
+      "Python Version": "Python 3.9+",
+      "Setup Instructions": [
+        "conda create -n metagpt python=3.9",
+        "conda activate metagpt",
+        "git clone https://github.com/geekan/MetaGPT.git",
+        "cd MetaGPT",
+        "pip3 install -e . (latest development version)",
+        "pip3 install metagpt (stable version from PyPI)",
+        "Set environment variable OPENAI_API_KEY",
+        "mkdir ~/.metagpt",
+        "cp config/config.yaml ~/.metagpt/config.yaml",
+        "Customize config as needed (vim ~/.metagpt/config.yaml)"
+      ],
+      "Additional Notes": [
+        "Optional diagram artifact saving requires Node.js, npm, and mermaid-cli globally installed.",
+        "Docker setup instructions provided for container usage with config and workspace mounts."
+      ]
+    },
+    "Dependencies Versions from requirements.txt": {
+      "Pinned Dependencies": {
+        "aiohttp": "3.8.4",
+        "channels": "4.0.0",
+        "faiss_cpu": "1.7.4",
+        "fire": "0.4.0",
+        "typer": "0.9.0",
+        "lancedb": "0.4.0",
+        "langchain": "0.0.352",
+        "loguru": "0.6.0",
+        "meilisearch": "0.21.0",
+        "numpy": "1.24.3",
+        "openai": "1.6.0",
+        "beautifulsoup4": "4.12.2",
+        "pandas": "2.0.3",
+        "pydantic": "2.5.3",
+        "python_docx": "0.8.11",
+        "PyYAML": "6.0.1",
+        "setuptools": "65.6.3",
+        "tenacity": "8.2.2",
+        "tiktoken": "0.5.2",
+        "tqdm": "4.65.0",
+        "anthropic": "0.8.1",
+        "typing-inspect": "0.8.0",
+        "typing_extensions": "4.9.0",
+        "libcst": "1.0.1",
+        "qdrant-client": "1.7.0",
+        "ta": "0.10.2",
+        "semantic-kernel": "0.4.3.dev0",
+        "wrapt": "1.15.0",
+        "aioredis": "~=2.0.1",
+        "websocket-client": "1.6.2",
+        "aiofiles": "23.2.1",
+        "gitpython": "3.1.40",
+        "zhipuai": "2.0.1",
+        "socksio": "~=1.0.0",
+        "gitignore-parser": "0.1.9",
+        "websockets": "~=12.0",
+        "networkx": "~=3.2.1",
+        "google-generativeai": "0.3.2"
+      },
+      "Not Pinned": [
+        "openpyxl",
+        "anytree"
+      ],
+      "Test Dependencies": {
+        "Explicit": "None",
+        "Commented-out": [
+          "pytest==7.2.2",
+          "pytest-mock==3.11.1"
+        ]
+      }
+    },
+    "Test Execution and Environment from .github/workflows/unittest.yaml": {
+      "CI environment": "ubuntu-latest",
+      "Python Version": "3.9",
+      "Dependency Installation": "sh tests/scripts/run_install_deps.sh",
+      "Environment Variables": {
+        "ALLOW_OPENAI_API_CALL": "0",
+        "Config Key": "Decoded and saved to config/key.yaml"
+      },
+      "Test Command": "pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt",
+      "Test Artifacts": [
+        "unittest.txt",
+        "coverage reports",
+        "test cache files"
+      ],
+      "Note on Running Specific Test File": "Run pytest with the path to the test file, e.g. pytest tests/metagpt/utils/test_repair_llm_raw_output.py"
+    }
+  },
+  "terminate": true
+}
+2026-06-06 14:41:56.751 | DEBUG    | Extracted a valid json
+2026-06-06 14:41:56.755 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 14:42:01.334 | INFO     | Model API request cost info: input_tokens=2590, output_tokens=465, cost=0.000000
+2026-06-06 14:42:01.336 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 14:42:01.352 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-06-06 14:42:04.562 | INFO     | Model API request cost info: input_tokens=2649, output_tokens=256, cost=0.000000
+2026-06-06 14:42:04.564 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-06-06 14:43:25.415 | DEBUG    | Result of dispatch_intent: ("Step 6/11 : RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh\n ---> Running in 22d53f4c6af0\n ---> Removed intermediate container 22d53f4c6af0\nError: The command '/bin/bash -c wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh' returned a non-zero code: 8", 'Failed to build Docker image.', False)
+2026-06-06 14:43:25.426 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 14:43:30.290 | INFO     | Model API request cost info: input_tokens=2099, output_tokens=270, cost=0.000000
+2026-06-06 14:43:30.292 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile fails during the step installing Miniconda with the error: \"The command '/bin/bash -c wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh && bash /tmp/miniconda.sh -b -p /opt/miniconda3 && rm /tmp/miniconda.sh' returned a non-zero code: 8\". This non-zero exit code typically means a fetch or installer failure possibly caused by network issues or the installer script being corrupted or unavailable at that URL. To fix, verify the URL is correct and accessible from the docker build environment. You may try adding debug flags (e.g., removing --quiet) to wget to get more detailed error logs, or downloading the installer outside the RUN command to test manually. Additionally, ensure that wget is properly installed before this step (which it is here). Finally, consider updating the Miniconda installer version or switching to an official conda base image to avoid manual installation errors.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 14:43:30.293 | DEBUG    | Extracted a valid json
+2026-06-06 14:43:30.302 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 14:43:44.057 | INFO     | Model API request cost info: input_tokens=4030, output_tokens=356, cost=0.000000
+2026-06-06 14:43:44.074 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 14:50:30.507 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 7890cb22abf1c91ec5393dd33b272ea6be4ec5e0b9697152a05eb04d6ee80de3 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-799-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-06-06 14:50:30.517 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 14:50:35.008 | INFO     | Model API request cost info: input_tokens=2162, output_tokens=347, cost=0.000000
+2026-06-06 14:50:35.011 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "No modifications required for the Dockerfile at this stage. The environment setup in the Dockerfile seems correct, including installing dependencies and creating the conda environment. The error does not stem from the Dockerfile itself.",
+  "guidance_for_write_eval_script_agent": "The test execution failed because the evaluation script attempts to source conda from /opt/miniconda3/etc/profile.d/conda.sh, but the Dockerfile uses continuumio/miniconda3 which installs conda under /opt/conda/, not /opt/miniconda3/. This mismatch causes the error '/opt/miniconda3/etc/profile.d/conda.sh: No such file or directory' and results in failure to activate the conda environment. Consequently, the pytest command is not found and tests do not run.\n\nTo fix this:\n1. Update the eval script to source conda from the correct path: /opt/conda/etc/profile.d/conda.sh.\n2. Ensure 'conda activate testbed' works correctly afterwards.\n3. Confirm pytest is installed in the 'testbed' environment (this appears to be done via requirements.txt and pip install -e .) so that pytest command is available.\n4. After correction, the eval script should run pytest and correctly catch its exit code, echoing \"OMNIGRIL_EXIT_CODE=$rc\" as before.\n\nBy fixing the conda source path in the eval script, environment activation and pytest availability can be ensured, allowing the tests to run properly.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 14:50:35.011 | DEBUG    | Extracted a valid json
+2026-06-06 14:50:35.044 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 14:50:47.523 | INFO     | Model API request cost info: input_tokens=5070, output_tokens=377, cost=0.000000
+2026-06-06 14:50:47.525 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 14:50:47.586 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-06-06 14:50:50.937 | INFO     | Model API request cost info: input_tokens=3750, output_tokens=255, cost=0.000000
+2026-06-06 14:50:50.939 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-06-06 14:57:32.544 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer bddef0faf3308886f39df51931fe453711f03b27849c1941b5ad68fd34f7e6be started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-799-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-06-06 14:57:32.547 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 14:57:38.299 | INFO     | Model API request cost info: input_tokens=3545, output_tokens=347, cost=0.000000
+2026-06-06 14:57:38.301 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test log shows that the evaluation script fails to run `pytest` with the error `/eval.sh: line 53: pytest: command not found` and exit code 127. This indicates that the `pytest` command is missing from the activated conda environment.\n\nThe Dockerfile currently installs requirements from `requirements.txt` and installs the package in editable mode inside the `testbed` conda environment. However, it does not explicitly install `pytest`. It's possible that `pytest` is not listed in `requirements.txt` or not installed globally.\n\nPlease revise the eval script to ensure that the testing framework (`pytest`) is available in the environment before running tests. A better approach is to explicitly install `pytest` in the Dockerfile within the `testbed` environment by adding `pip install pytest` or verifying if `pytest` is included in `requirements.txt`.\n\nIf modifying the Dockerfile is not preferred, alternatively you could explicitly install `pytest` inside the evaluation script before running tests, but this is less ideal.\n\nSummary of required changes:\n- Confirm `pytest` is installed and available in the `testbed` environment.\n- Revise the eval script to handle environment setup issues like missing `pytest` or provide error message guidance if still missing.\n\nCurrent error: `/eval.sh: line 53: pytest: command not found`.\n\nThis fix will allow tests to run and produce actual test results in the log.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 14:57:38.301 | DEBUG    | Extracted a valid json
+2026-06-06 14:57:38.308 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-06-06 14:57:41.746 | INFO     | Model API request cost info: input_tokens=4884, output_tokens=273, cost=0.000000
+2026-06-06 14:57:41.748 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-06-06 15:04:04.843 | DEBUG    | Result of dispatch_intent: ('Step 11/12 : RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh &&     conda activate testbed &&     pip install --upgrade pip setuptools wheel &&     pip install -r /testbed/requirements.txt &&     pip install -e /testbed/"\n ---> Running in c548704a90a7\nRequirement already satisfied: pip in /opt/conda/envs/testbed/lib/python3.9/site-packages (26.0.1)\nRequirement already satisfied: setuptools in /opt/conda/envs/testbed/lib/python3.9/site-packages (80.9.0)\nCollecting setuptools\n  Downloading setuptools-82.0.1-py3-none-any.whl.metadata (6.5 kB)\nRequirement already satisfied: wheel in /opt/conda/envs/testbed/lib/python3.9/site-packages (0.45.1)\nCollecting wheel\n  Downloading wheel-0.47.0-py3-none-any.whl.metadata (2.3 kB)\nCollecting packaging>=24.0 (from wheel)\n  Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)\nDownloading setuptools-82.0.1-py3-none-any.whl (1.0 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 51.1 MB/s  0:00:00\nDownloading wheel-0.47.0-py3-none-any.whl (32 kB)\nDownloading packaging-26.2-py3-none-any.whl (100 kB)\nInstalling collected packages: setuptools, packaging, wheel\n  Attempting uninstall: setuptools\n    Found existing installation: setuptools 80.9.0\n    Uninstalling setuptools-80.9.0:\n      Successfully uninstalled setuptools-80.9.0\n  Attempting uninstall: wheel\n    Found existing installation: wheel 0.45.1\n    Uninstalling wheel-0.45.1:\n      Successfully uninstalled wheel-0.45.1\nSuccessfully installed packaging-26.2 setuptools-82.0.1 wheel-0.47.0\nWARNING: Running pip as the \'root\' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\nCollecting aiohttp==3.8.4 (from -r /testbed/requirements.txt (line 1))\n  Downloading aiohttp-3.8.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.4 kB)\nCollecting channels==4.0.0 (from -r /testbed/requirements.txt (line 3))\n  Downloading channels-4.0.0-py3-none-any.whl.metadata (1.5 kB)\nCollecting faiss_cpu==1.7.4 (from -r /testbed/requirements.txt (line 8))\n  Downloading faiss_cpu-1.7.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.3 kB)\nCollecting fire==0.4.0 (from -r /testbed/requirements.txt (line 9))\n  Downloading fire-0.4.0.tar.gz (87 kB)\n  Installing build dependencies: started\n  Installing build dependencies: finished with status \'done\'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status \'done\'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status \'done\'\nCollecting typer==0.9.0 (from -r /testbed/requirements.txt (line 10))\n  Downloading typer-0.9.0-py3-none-any.whl.metadata (14 kB)\nCollecting lancedb==0.4.0 (from -r /testbed/requirements.txt (line 13))\n  Downloading lancedb-0.4.0-py3-none-any.whl.metadata (16 kB)\nCollecting langchain==0.0.352 (from -r /testbed/requirements.txt (line 14))\n  Downloading langchain-0.0.352-py3-none-any.whl.metadata (13 kB)\nCollecting loguru==0.6.0 (from -r /testbed/requirements.txt (line 15))\n  Downloading loguru-0.6.0-py3-none-any.whl.metadata (21 kB)\nCollecting meilisearch==0.21.0 (from -r /testbed/requirements.txt (line 16))\n  Downloading meilisearch-0.21.0-py3-none-any.whl.metadata (8.8 kB)\nCollecting numpy==1.24.3 (from -r /testbed/requirements.txt (line 17))\n  Downloading numpy-1.24.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.6 kB)\nCollecting openai==1.6.0 (from -r /testbed/requirements.txt (line 18))\n  Downloading openai-1.6.0-py3-none-any.whl.metadata (17 kB)\nCollecting openpyxl (from -r /testbed/requirements.txt (line 19))\n  Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)\nCollecting beautifulsoup4==4.12.2 (from -r /testbed/requirements.txt (line 20))\n  Downloading beautifulsoup4-4.12.2-py3-none-any.whl.metadata (3.6 kB)\nCollecting pandas==2.0.3 (from -r /testbed/requirements.txt (line 21))\n  Downloading pandas-2.0.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (18 kB)\nCollecting pydantic==2.5.3 (from -r /testbed/requirements.txt (line 22))\n  Downloading pydantic-2.5.3-py3-none-any.whl.metadata (65 kB)\nCollecting python_docx==0.8.11 (from -r /testbed/requirements.txt (line 26))\n  Downloading python-docx-0.8.11.tar.gz (5.6 MB)\n     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 20.8 MB/s  0:00:00\n  Installing build dependencies: started\n  Installing build dependencies: finished with status \'done\'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status \'done\'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status \'done\'\nCollecting PyYAML==6.0.1 (from -r /testbed/requirements.txt (line 27))\n  Downloading PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)\nCollecting setuptools==65.6.3 (from -r /testbed/requirements.txt (line 29))\n  Downloading setuptools-65.6.3-py3-none-any.whl.metadata (6.1 kB)\nCollecting tenacity==8.2.2 (from -r /testbed/requirements.txt (line 30))\n  Downloading tenacity-8.2.2-py3-none-any.whl.metadata (1.1 kB)\nCollecting tiktoken==0.5.2 (from -r /testbed/requirements.txt (line 31))\n  Downloading tiktoken-0.5.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)\nCollecting tqdm==4.65.0 (from -r /testbed/requirements.txt (line 32))\n  Downloading tqdm-4.65.0-py3-none-any.whl.metadata (56 kB)\nCollecting anthropic==0.8.1 (from -r /testbed/requirements.txt (line 36))\n  Downloading anthropic-0.8.1-py3-none-any.whl.metadata (13 kB)\nCollecting typing-inspect==0.8.0 (from -r /testbed/requirements.txt (line 37))\n  Downloading typing_inspect-0.8.0-py3-none-any.whl.metadata (1.5 kB)\nCollecting typing_extensions==4.9.0 (from -r /testbed/requirements.txt (line 38))\n  Downloading typing_extensions-4.9.0-py3-none-any.whl.metadata (3.0 kB)\nCollecting libcst==1.0.1 (from -r /testbed/requirements.txt (line 39))\n  Downloading libcst-1.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (17 kB)\nCollecting qdrant-client==1.7.0 (from -r /testbed/requirements.txt (line 40))\n  Downloading qdrant_client-1.7.0-py3-none-any.whl.metadata (9.3 kB)\nCollecting ta==0.10.2 (from -r /testbed/requirements.txt (line 43))\n  Downloading ta-0.10.2.tar.gz (25 kB)\n  Installing build dependencies: started\n  Installing build dependencies: finished with status \'done\'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status \'done\'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status \'done\'\nCollecting semantic-kernel==0.4.3.dev0 (from -r /testbed/requirements.txt (line 44))\n  Downloading semantic_kernel-0.4.3.dev0-py3-none-any.whl.metadata (2.1 kB)\nCollecting wrapt==1.15.0 (from -r /testbed/requirements.txt (line 45))\n  Downloading wrapt-1.15.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.7 kB)\nCollecting aioredis~=2.0.1 (from -r /testbed/requirements.txt (line 49))\n  Downloading aioredis-2.0.1-py3-none-any.whl.metadata (15 kB)\nCollecting websocket-client==1.6.2 (from -r /testbed/requirements.txt (line 50))\n  Downloading websocket_client-1.6.2-py3-none-any.whl.metadata (7.5 kB)\nCollecting aiofiles==23.2.1 (from -r /testbed/requirements.txt (line 51))\n  Downloading aiofiles-23.2.1-py3-none-any.whl.metadata (9.7 kB)\nCollecting gitpython==3.1.40 (from -r /testbed/requirements.txt (line 52))\n  Downloading GitPython-3.1.40-py3-none-any.whl.metadata (12 kB)\nCollecting zhipuai==2.0.1 (from -r /testbed/requirements.txt (line 53))\n  Downloading zhipuai-2.0.1-py3-none-any.whl.metadata (2.7 kB)\nCollecting socksio~=1.0.0 (from -r /testbed/requirements.txt (line 54))\n  Downloading socksio-1.0.0-py3-none-any.whl.metadata (6.1 kB)\nCollecting gitignore-parser==0.1.9 (from -r /testbed/requirements.txt (line 55))\n  Downloading gitignore_parser-0.1.9.tar.gz (5.3 kB)\n  Installing build dependencies: started\n  Installing build dependencies: finished with status \'done\'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status \'done\'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status \'done\'\nCollecting websockets~=12.0 (from -r /testbed/requirements.txt (line 57))\n  Downloading websockets-12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)\nCollecting networkx~=3.2.1 (from -r /testbed/requirements.txt (line 58))\n  Downloading networkx-3.2.1-py3-none-any.whl.metadata (5.2 kB)\nCollecting google-generativeai==0.3.2 (from -r /testbed/requirements.txt (line 59))\n  Downloading google_generativeai-0.3.2-py3-none-any.whl.metadata (5.9 kB)\nCollecting anytree (from -r /testbed/requirements.txt (line 61))\n  Downloading anytree-2.13.0-py3-none-any.whl.metadata (8.0 kB)\nCollecting attrs>=17.3.0 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)\nCollecting charset-normalizer<4.0,>=2.0 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading charset_normalizer-3.4.7-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)\nCollecting multidict<7.0,>=4.5 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading multidict-6.7.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)\nCollecting async-timeout<5.0,>=4.0.0a3 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading async_timeout-4.0.3-py3-none-any.whl.metadata (4.2 kB)\nCollecting yarl<2.0,>=1.0 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading yarl-1.22.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (75 kB)\nCollecting frozenlist>=1.1.1 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading frozenlist-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)\nCollecting aiosignal>=1.1.2 (from aiohttp==3.8.4->-r /testbed/requirements.txt (line 1))\n  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)\nCollecting Django>=3.2 (from channels==4.0.0->-r /testbed/requirements.txt (line 3))\n  Downloading django-4.2.30-py3-none-any.whl.metadata (4.2 kB)\nCollecting asgiref<4,>=3.5.0 (from channels==4.0.0->-r /testbed/requirements.txt (line 3))\n  Downloading asgiref-3.11.1-py3-none-any.whl.metadata (9.3 kB)\nCollecting six (from fire==0.4.0->-r /testbed/requirements.txt (line 9))\n  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)\nCollecting termcolor (from fire==0.4.0->-r /testbed/requirements.txt (line 9))\n  Downloading termcolor-3.1.0-py3-none-any.whl.metadata (6.4 kB)\nCollecting click<9.0.0,>=7.1.1 (from typer==0.9.0->-r /testbed/requirements.txt (line 10))\n  Downloading click-8.1.8-py3-none-any.whl.metadata (2.3 kB)\nCollecting deprecation (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)\nCollecting pylance==0.9.0 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading pylance-0.9.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.9 kB)\nCollecting ratelimiter~=1.0 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading ratelimiter-1.2.0.post0-py3-none-any.whl.metadata (4.0 kB)\nCollecting retry>=0.9.2 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading retry-0.9.2-py2.py3-none-any.whl.metadata (5.8 kB)\nCollecting semver>=3.0 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading semver-3.0.4-py3-none-any.whl.metadata (6.8 kB)\nCollecting cachetools (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading cachetools-6.2.6-py3-none-any.whl.metadata (5.6 kB)\nCollecting requests>=2.31.0 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)\nCollecting overrides>=0.7 (from lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)\nCollecting SQLAlchemy<3,>=1.4 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading sqlalchemy-2.0.50-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)\nCollecting dataclasses-json<0.7,>=0.5.7 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading dataclasses_json-0.6.7-py3-none-any.whl.metadata (25 kB)\nCollecting jsonpatch<2.0,>=1.33 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading jsonpatch-1.33-py2.py3-none-any.whl.metadata (3.0 kB)\nCollecting langchain-community<0.1,>=0.0.2 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading langchain_community-0.0.38-py3-none-any.whl.metadata (8.7 kB)\nCollecting langchain-core<0.2,>=0.1 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading langchain_core-0.1.53-py3-none-any.whl.metadata (5.9 kB)\nCollecting langsmith<0.1.0,>=0.0.70 (from langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading langsmith-0.0.92-py3-none-any.whl.metadata (9.9 kB)\nCollecting annotated-types>=0.4.0 (from pydantic==2.5.3->-r /testbed/requirements.txt (line 22))\n  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)\nCollecting pydantic-core==2.14.6 (from pydantic==2.5.3->-r /testbed/requirements.txt (line 22))\n  Downloading pydantic_core-2.14.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)\nCollecting camel-converter[pydantic] (from meilisearch==0.21.0->-r /testbed/requirements.txt (line 16))\n  Downloading camel_converter-4.0.1-py3-none-any.whl.metadata (6.4 kB)\nCollecting anyio<5,>=3.5.0 (from openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)\nCollecting distro<2,>=1.7.0 (from openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)\nCollecting httpx<1,>=0.23.0 (from openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)\nCollecting sniffio (from openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)\nCollecting soupsieve>1.2 (from beautifulsoup4==4.12.2->-r /testbed/requirements.txt (line 20))\n  Downloading soupsieve-2.8.4-py3-none-any.whl.metadata (4.6 kB)\nCollecting python-dateutil>=2.8.2 (from pandas==2.0.3->-r /testbed/requirements.txt (line 21))\n  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)\nCollecting pytz>=2020.1 (from pandas==2.0.3->-r /testbed/requirements.txt (line 21))\n  Downloading pytz-2026.2-py2.py3-none-any.whl.metadata (22 kB)\nCollecting tzdata>=2022.1 (from pandas==2.0.3->-r /testbed/requirements.txt (line 21))\n  Downloading tzdata-2026.2-py2.py3-none-any.whl.metadata (1.4 kB)\nCollecting lxml>=2.3.2 (from python_docx==0.8.11->-r /testbed/requirements.txt (line 26))\n  Downloading lxml-6.1.1-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)\nCollecting regex>=2022.1.18 (from tiktoken==0.5.2->-r /testbed/requirements.txt (line 31))\n  Downloading regex-2026.1.15-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)\nCollecting tokenizers>=0.13.0 (from anthropic==0.8.1->-r /testbed/requirements.txt (line 36))\n  Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)\nCollecting mypy-extensions>=0.3.0 (from typing-inspect==0.8.0->-r /testbed/requirements.txt (line 37))\n  Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)\nCollecting grpcio>=1.41.0 (from qdrant-client==1.7.0->-r /testbed/requirements.txt (line 40))\n  Downloading grpcio-1.80.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)\nCollecting grpcio-tools>=1.41.0 (from qdrant-client==1.7.0->-r /testbed/requirements.txt (line 40))\n  Downloading grpcio_tools-1.80.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)\nCollecting portalocker<3.0.0,>=2.7.0 (from qdrant-client==1.7.0->-r /testbed/requirements.txt (line 40))\n  Downloading portalocker-2.10.1-py3-none-any.whl.metadata (8.5 kB)\nCollecting urllib3<2.0.0,>=1.26.14 (from qdrant-client==1.7.0->-r /testbed/requirements.txt (line 40))\n  Downloading urllib3-1.26.20-py2.py3-none-any.whl.metadata (50 kB)\nCollecting motor<4.0.0,>=3.3.1 (from semantic-kernel==0.4.3.dev0->-r /testbed/requirements.txt (line 44))\n  Downloading motor-3.7.1-py3-none-any.whl.metadata (21 kB)\nCollecting openapi_core<0.19.0,>=0.18.0 (from semantic-kernel==0.4.3.dev0->-r /testbed/requirements.txt (line 44))\n  Downloading openapi_core-0.18.2-py3-none-any.whl.metadata (6.3 kB)\nCollecting prance<24.0.0.0,>=23.6.21.0 (from semantic-kernel==0.4.3.dev0->-r /testbed/requirements.txt (line 44))\n  Downloading prance-23.6.21.0-py3-none-any.whl.metadata (13 kB)\nCollecting python-dotenv==1.0.0 (from semantic-kernel==0.4.3.dev0->-r /testbed/requirements.txt (line 44))\n  Downloading python_dotenv-1.0.0-py3-none-any.whl.metadata (21 kB)\nCollecting regex>=2022.1.18 (from tiktoken==0.5.2->-r /testbed/requirements.txt (line 31))\n  Downloading regex-2023.12.25-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (40 kB)\nCollecting gitdb<5,>=4.0.1 (from gitpython==3.1.40->-r /testbed/requirements.txt (line 52))\n  Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)\nCollecting pyjwt~=2.8.0 (from zhipuai==2.0.1->-r /testbed/requirements.txt (line 53))\n  Downloading PyJWT-2.8.0-py3-none-any.whl.metadata (4.2 kB)\nCollecting google-ai-generativelanguage==0.4.0 (from google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading google_ai_generativelanguage-0.4.0-py3-none-any.whl.metadata (5.1 kB)\nCollecting google-auth (from google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading google_auth-2.50.0-py3-none-any.whl.metadata (6.2 kB)\nCollecting google-api-core (from google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading google_api_core-2.30.3-py3-none-any.whl.metadata (3.1 kB)\nCollecting protobuf (from google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)\nCollecting proto-plus<2.0.0dev,>=1.22.3 (from google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading proto_plus-1.27.2-py3-none-any.whl.metadata (2.2 kB)\nCollecting protobuf (from google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl.metadata (541 bytes)\nCollecting pyarrow>=12 (from pylance==0.9.0->lancedb==0.4.0->-r /testbed/requirements.txt (line 13))\n  Downloading pyarrow-21.0.0-cp39-cp39-manylinux_2_28_x86_64.whl.metadata (3.3 kB)\nCollecting exceptiongroup>=1.0.2 (from anyio<5,>=3.5.0->openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)\nCollecting idna>=2.8 (from anyio<5,>=3.5.0->openai==1.6.0->-r /testbed/requirements.txt (line 18))\n  Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)\nCollecting marshmallow<4.0.0,>=3.18.0 (from dataclasses-json<0.7,>=0.5.7->langchain==0.0.352->-r /testbed/requirements.txt (line 14))\n  Downloading marshmallow-3.26.2-py3-none-any.whl.metadata (7.3 kB)\nCollecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython==3.1.40->-r /testbed/requirements.txt (line 52))\n  Downloading smmap-5.0.3-py3-none-any.whl.metadata (4.6 kB)\nCollecting googleapis-common-protos<2.0.0,>=1.63.2 (from google-api-core->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)\nCollecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading grpcio_status-1.80.0-py3-none-any.whl.metadata (1.3 kB)\nCollecting pyasn1-modules>=0.2.1 (from google-auth->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)\nCollecting cryptography>=38.0.3 (from google-auth->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading cryptography-48.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)\nINFO: pip is looking at multiple versions of grpcio to determine which version is compatible with other requirements. This could take a while.\nCollecting grpcio>=1.41.0 (from qdrant-client==1.7.0->-r /testbed/requirements.txt (line 40))\n  Downloading grpcio-1.78.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)\n  Downloading grpcio-1.76.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)\n  Downloading grpcio-1.75.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)\n  Downloading grpcio-1.75.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)\n  Downloading grpcio-1.74.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.8 kB)\nINFO: pip is looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.\nCollecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r /testbed/requirements.txt (line 59))\n  Downloading grpcio_status-1.78.0-py3-none-any.whl.metadata (1.3 kB)\n  Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.75.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.75.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.74.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.73.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.73.0-py3-none-any.whl.metadata (1.1 kB)\nINFO: pip is still looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.\n  Downloading grpcio_status-1.72.2-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.72.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.71.2-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.71.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.70.0-py3-none-any.whl.metadata (1.1 kB)\nINFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.\n  Downloading grpcio_status-1.69.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.68.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.68.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.67.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.67.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.66.2-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.66.1-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.66.0-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.65.5-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.65.4-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.65.2-py3-none-any.whl.metadata (1.1 kB)\n  Downloading grpcio_status-1.65.1-py3-none-any.whl.metadata (1.1 kB)\n...skipped 270 lines...\nDownloading httpcore-1.0.9-py3-none-any.whl (78 kB)\nDownloading jsonpatch-1.33-py2.py3-none-any.whl (12 kB)\nDownloading langchain_community-0.0.20-py3-none-any.whl (1.7 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 77.4 MB/s  0:00:00\nDownloading langchain_core-0.1.23-py3-none-any.whl (241 kB)\nDownloading langsmith-0.0.87-py3-none-any.whl (55 kB)\nDownloading marshmallow-3.26.2-py3-none-any.whl (50 kB)\nDownloading motor-3.7.1-py3-none-any.whl (74 kB)\nDownloading multidict-6.7.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (240 kB)\nDownloading openapi_core-0.18.2-py3-none-any.whl (82 kB)\nDownloading jsonschema-4.25.1-py3-none-any.whl (90 kB)\nDownloading jsonschema_spec-0.2.4-py3-none-any.whl (14 kB)\nDownloading openapi_schema_validator-0.6.3-py3-none-any.whl (8.8 kB)\nDownloading openapi_spec_validator-0.7.2-py3-none-any.whl (39 kB)\nDownloading jsonschema_path-0.3.4-py3-none-any.whl (14 kB)\nDownloading lazy_object_proxy-1.12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (66 kB)\nDownloading packaging-23.2-py3-none-any.whl (53 kB)\nDownloading pathable-0.4.4-py3-none-any.whl (9.6 kB)\nDownloading portalocker-2.10.1-py3-none-any.whl (18 kB)\nDownloading prance-23.6.21.0-py3-none-any.whl (36 kB)\nDownloading proto_plus-1.27.2-py3-none-any.whl (50 kB)\nDownloading protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl (295 kB)\nDownloading PyJWT-2.8.0-py3-none-any.whl (22 kB)\nDownloading pymongo-4.17.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (985 kB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 985.8/985.8 kB 97.9 MB/s  0:00:00\nDownloading dnspython-2.7.0-py3-none-any.whl (313 kB)\nDownloading ratelimiter-1.2.0.post0-py3-none-any.whl (6.6 kB)\nDownloading referencing-0.30.2-py3-none-any.whl (25 kB)\nDownloading regex-2023.12.25-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (773 kB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 773.4/773.4 kB 66.2 MB/s  0:00:00\nDownloading requests-2.32.5-py3-none-any.whl (64 kB)\nDownloading idna-3.18-py3-none-any.whl (65 kB)\nDownloading six-1.17.0-py2.py3-none-any.whl (11 kB)\nDownloading smmap-5.0.3-py3-none-any.whl (24 kB)\nDownloading sqlalchemy-2.0.50-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 81.6 MB/s  0:00:00\nDownloading urllib3-1.26.20-py2.py3-none-any.whl (144 kB)\nDownloading yarl-1.22.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (346 kB)\nDownloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)\nDownloading anytree-2.13.0-py3-none-any.whl (45 kB)\nDownloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)\nDownloading annotated_types-0.7.0-py3-none-any.whl (13 kB)\nDownloading attrs-26.1.0-py3-none-any.whl (67 kB)\nDownloading cachetools-6.2.6-py3-none-any.whl (11 kB)\nDownloading certifi-2026.5.20-py3-none-any.whl (134 kB)\nDownloading chardet-5.2.0-py3-none-any.whl (199 kB)\nDownloading cryptography-45.0.7-cp37-abi3-manylinux_2_34_x86_64.whl (4.4 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 82.0 MB/s  0:00:00\nDownloading cffi-2.0.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (216 kB)\nDownloading django-4.2.30-py3-none-any.whl (8.0 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.0/8.0 MB 92.6 MB/s  0:00:00\nDownloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)\nDownloading frozenlist-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)\nDownloading greenlet-3.2.5-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (587 kB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.5/587.5 kB 53.8 MB/s  0:00:00\nDownloading grpcio_tools-1.62.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.8 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 83.5 MB/s  0:00:00\nDownloading h11-0.16.0-py3-none-any.whl (37 kB)\nDownloading h2-4.3.0-py3-none-any.whl (61 kB)\nDownloading hpack-4.1.0-py3-none-any.whl (34 kB)\nDownloading hyperframe-6.1.0-py3-none-any.whl (13 kB)\nDownloading jsonpointer-3.0.0-py2.py3-none-any.whl (7.6 kB)\nDownloading jsonschema_specifications-2023.7.1-py3-none-any.whl (17 kB)\nDownloading lxml-6.1.1-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.3 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.3/5.3 MB 70.7 MB/s  0:00:00\nDownloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)\nDownloading overrides-7.7.0-py3-none-any.whl (17 kB)\nDownloading propcache-0.4.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (197 kB)\nDownloading pyarrow-21.0.0-cp39-cp39-manylinux_2_28_x86_64.whl (42.7 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.7/42.7 MB 68.5 MB/s  0:00:00\nDownloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)\nDownloading pyasn1-0.6.3-py3-none-any.whl (83 kB)\nDownloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)\nDownloading pytz-2026.2-py2.py3-none-any.whl (510 kB)\nDownloading retry-0.9.2-py2.py3-none-any.whl (8.0 kB)\nDownloading py-1.11.0-py2.py3-none-any.whl (98 kB)\nDownloading decorator-5.3.1-py3-none-any.whl (10 kB)\nDownloading rpds_py-0.27.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (384 kB)\nDownloading ruamel_yaml-0.19.1-py3-none-any.whl (118 kB)\nDownloading semver-3.0.4-py3-none-any.whl (17 kB)\nDownloading soupsieve-2.8.4-py3-none-any.whl (37 kB)\nDownloading sqlparse-0.5.5-py3-none-any.whl (46 kB)\nDownloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 29.6 MB/s  0:00:00\nDownloading huggingface_hub-1.8.0-py3-none-any.whl (625 kB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 625.2/625.2 kB 16.6 MB/s  0:00:00\nDownloading hf_xet-1.5.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 37.2 MB/s  0:00:00\nDownloading filelock-3.19.1-py3-none-any.whl (15 kB)\nDownloading fsspec-2025.10.0-py3-none-any.whl (200 kB)\nDownloading tzdata-2026.2-py2.py3-none-any.whl (349 kB)\nDownloading camel_converter-4.0.1-py3-none-any.whl (6.2 kB)\nDownloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)\nDownloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)\nDownloading isodate-0.7.2-py3-none-any.whl (22 kB)\nDownloading more_itertools-10.8.0-py3-none-any.whl (69 kB)\nDownloading parse-1.22.1-py2.py3-none-any.whl (20 kB)\nDownloading pycparser-2.23-py3-none-any.whl (118 kB)\nDownloading rfc3339_validator-0.1.4-py2.py3-none-any.whl (3.5 kB)\nDownloading sniffio-1.3.1-py3-none-any.whl (10 kB)\nDownloading termcolor-3.1.0-py3-none-any.whl (7.7 kB)\nDownloading werkzeug-3.1.8-py3-none-any.whl (226 kB)\nDownloading markupsafe-3.0.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)\nBuilding wheels for collected packages: fire, python_docx, ta, gitignore-parser\n  Building wheel for fire (pyproject.toml): started\n  Building wheel for fire (pyproject.toml): finished with status \'done\'\n  Created wheel for fire: filename=fire-0.4.0-py2.py3-none-any.whl size=116013 sha256=87577952da898458aad13a0e95ac32f35c02e5d15b620bb156cb0f83826f51f7\n  Stored in directory: /root/.cache/pip/wheels/2a/93/86/8cd17bc6c40fb605c3ac549d0b860ef7e84ee5f67bf01a3287\n  Building wheel for python_docx (pyproject.toml): started\n  Building wheel for python_docx (pyproject.toml): finished with status \'done\'\n  Created wheel for python_docx: filename=python_docx-0.8.11-py3-none-any.whl size=184570 sha256=8be5cbf836dd0919f651ba9ef616fbeef44f9a1c696b7f2424db0f70e1b7de3d\n  Stored in directory: /root/.cache/pip/wheels/83/8b/7c/09ae60c42c7ba4ed2dddaf2b8b9186cb105255856d6ed3dba5\n  Building wheel for ta (pyproject.toml): started\n  Building wheel for ta (pyproject.toml): finished with status \'done\'\n  Created wheel for ta: filename=ta-0.10.2-py3-none-any.whl size=29161 sha256=381b4372ea31c32bbe4ac54ece572a99fc8685602bb8dc7e2bab969f1fbad489\n  Stored in directory: /root/.cache/pip/wheels/6a/76/03/7f785aaa50b9c6ec7e3fd105a62c1b2c45a034512d51e024a9\n  Building wheel for gitignore-parser (pyproject.toml): started\n  Building wheel for gitignore-parser (pyproject.toml): finished with status \'done\'\n  Created wheel for gitignore-parser: filename=gitignore_parser-0.1.9-py3-none-any.whl size=5040 sha256=705220d732f1f885901e9d5796010dffd40c32f709eabdefde50caf65ac04cdc\n  Stored in directory: /root/.cache/pip/wheels/73/3a/8b/564f6a55718dc6fa2f8048b98bd9a8375958dd8c8ba7e734ae\nSuccessfully built fire python_docx ta gitignore-parser\nInstalling collected packages: ratelimiter, pytz, parse, gitignore-parser, faiss_cpu, wrapt, websockets, websocket-client, urllib3, tzdata, typing_extensions, tqdm, termcolor, tenacity, sqlparse, soupsieve, socksio, sniffio, smmap, six, setuptools, semver, ruamel.yaml, rpds-py, regex, PyYAML, python-dotenv, pyjwt, pycparser, pyasn1, pyarrow, py, protobuf, propcache, portalocker, pathable, packaging, overrides, numpy, networkx, mypy-extensions, more-itertools, markupsafe, lxml, loguru, lazy-object-proxy, jsonpointer, isodate, idna, hyperframe, hpack, hf-xet, h11, grpcio, greenlet, fsspec, frozenlist, filelock, et-xmlfile, dnspython, distro, decorator, click, charset-normalizer, chardet, certifi, camel-converter, cachetools, attrs, async-timeout, anytree, annotated-types, aiofiles, werkzeug, typing-inspect, typer, SQLAlchemy, rfc3339-validator, retry, requests, referencing, python_docx, python-dateutil, pymongo, pylance, pydantic-core, pyasn1-modules, proto-plus, openpyxl, multidict, marshmallow, jsonpatch, httpcore, h2, grpcio-tools, googleapis-common-protos, gitdb, fire, exceptiongroup, deprecation, cffi, beautifulsoup4, asgiref, aiosignal, aioredis, yarl, tiktoken, pydantic, prance, pandas, motor, libcst, jsonschema-specifications, jsonschema-spec, jsonschema-path, grpcio-status, gitpython, Django, dataclasses-json, cryptography, anyio, ta, langsmith, jsonschema, httpx, google-auth, channels, aiohttp, zhipuai, openapi-schema-validator, openai, meilisearch, langchain-core, lancedb, huggingface-hub, google-api-core, tokenizers, qdrant-client, openapi-spec-validator, langchain-community, openapi_core, langchain, google-ai-generativelanguage, anthropic, semantic-kernel, google-generativeai\n  Attempting uninstall: setuptools\n    Found existing installation: setuptools 82.0.1\n    Uninstalling setuptools-82.0.1:\n      Successfully uninstalled setuptools-82.0.1\n  Attempting uninstall: packaging\n    Found existing installation: packaging 26.2\n    Uninstalling packaging-26.2:\n      Successfully uninstalled packaging-26.2\nERROR: pip\'s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\nwheel 0.47.0 requires packaging>=24.0, but you have packaging 23.2 which is incompatible.\nSuccessfully installed Django-4.2.30 PyYAML-6.0.1 SQLAlchemy-2.0.50 aiofiles-23.2.1 aiohttp-3.8.4 aioredis-2.0.1 aiosignal-1.4.0 annotated-types-0.7.0 anthropic-0.8.1 anyio-4.12.1 anytree-2.13.0 asgiref-3.11.1 async-timeout-4.0.3 attrs-26.1.0 beautifulsoup4-4.12.2 cachetools-6.2.6 camel-converter-4.0.1 certifi-2026.5.20 cffi-2.0.0 channels-4.0.0 chardet-5.2.0 charset-normalizer-3.4.7 click-8.1.8 cryptography-45.0.7 dataclasses-json-0.6.7 decorator-5.3.1 deprecation-2.1.0 distro-1.9.0 dnspython-2.7.0 et-xmlfile-2.0.0 exceptiongroup-1.3.1 faiss_cpu-1.7.4 filelock-3.19.1 fire-0.4.0 frozenlist-1.8.0 fsspec-2025.10.0 gitdb-4.0.12 gitignore-parser-0.1.9 gitpython-3.1.40 google-ai-generativelanguage-0.4.0 google-api-core-2.30.3 google-auth-2.50.0 google-generativeai-0.3.2 googleapis-common-protos-1.75.0 greenlet-3.2.5 grpcio-1.74.0 grpcio-status-1.62.3 grpcio-tools-1.62.3 h11-0.16.0 h2-4.3.0 hf-xet-1.5.0 hpack-4.1.0 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.8.0 hyperframe-6.1.0 idna-3.18 isodate-0.7.2 jsonpatch-1.33 jsonpointer-3.0.0 jsonschema-4.25.1 jsonschema-path-0.3.4 jsonschema-spec-0.2.4 jsonschema-specifications-2023.7.1 lancedb-0.4.0 langchain-0.0.352 langchain-community-0.0.20 langchain-core-0.1.23 langsmith-0.0.87 lazy-object-proxy-1.12.0 libcst-1.0.1 loguru-0.6.0 lxml-6.1.1 markupsafe-3.0.3 marshmallow-3.26.2 meilisearch-0.21.0 more-itertools-10.8.0 motor-3.7.1 multidict-6.7.1 mypy-extensions-1.1.0 networkx-3.2.1 numpy-1.24.3 openai-1.6.0 openapi-schema-validator-0.6.3 openapi-spec-validator-0.7.2 openapi_core-0.18.2 openpyxl-3.1.5 overrides-7.7.0 packaging-23.2 pandas-2.0.3 parse-1.22.1 pathable-0.4.4 portalocker-2.10.1 prance-23.6.21.0 propcache-0.4.1 proto-plus-1.27.2 protobuf-4.25.9 py-1.11.0 pyarrow-21.0.0 pyasn1-0.6.3 pyasn1-modules-0.4.2 pycparser-2.23 pydantic-2.5.3 pydantic-core-2.14.6 pyjwt-2.8.0 pylance-0.9.0 pymongo-4.17.0 python-dateutil-2.9.0.post0 python-dotenv-1.0.0 python_docx-0.8.11 pytz-2026.2 qdrant-client-1.7.0 ratelimiter-1.2.0.post0 referencing-0.30.2 regex-2023.12.25 requests-2.32.5 retry-0.9.2 rfc3339-validator-0.1.4 rpds-py-0.27.1 ruamel.yaml-0.19.1 semantic-kernel-0.4.3.dev0 semver-3.0.4 setuptools-65.6.3 six-1.17.0 smmap-5.0.3 sniffio-1.3.1 socksio-1.0.0 soupsieve-2.8.4 sqlparse-0.5.5 ta-0.10.2 tenacity-8.2.2 termcolor-3.1.0 tiktoken-0.5.2 tokenizers-0.22.2 tqdm-4.65.0 typer-0.9.0 typing-inspect-0.8.0 typing_extensions-4.9.0 tzdata-2026.2 urllib3-1.26.20 websocket-client-1.6.2 websockets-12.0 werkzeug-3.1.8 wrapt-1.15.0 yarl-1.22.0 zhipuai-2.0.1\nWARNING: Running pip as the \'root\' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\nObtaining file:///testbed\n  Installing build dependencies: started\n  Installing build dependencies: finished with status \'done\'\n  Checking if build backend supports build_editable: started\n  Checking if build backend supports build_editable: finished with status \'done\'\n  Getting requirements to build editable: started\n  Getting requirements to build editable: finished with status \'done\'\n  Preparing editable metadata (pyproject.toml): started\n  Preparing editable metadata (pyproject.toml): finished with status \'done\'\nRequirement already satisfied: aiohttp==3.8.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.8.4)\nRequirement already satisfied: channels==4.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.0.0)\nRequirement already satisfied: faiss_cpu==1.7.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.7.4)\nRequirement already satisfied: fire==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.0)\nRequirement already satisfied: typer==0.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.9.0)\nRequirement already satisfied: lancedb==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.0)\nRequirement already satisfied: langchain==0.0.352 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.0.352)\nRequirement already satisfied: loguru==0.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.6.0)\nRequirement already satisfied: meilisearch==0.21.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.21.0)\nRequirement already satisfied: numpy==1.24.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.24.3)\nRequirement already satisfied: openai==1.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.6.0)\nRequirement already satisfied: openpyxl in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.1.5)\nRequirement already satisfied: beautifulsoup4==4.12.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.12.2)\nRequirement already satisfied: pandas==2.0.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.3)\nRequirement already satisfied: pydantic==2.5.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.5.3)\nRequirement already satisfied: python_docx==0.8.11 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.11)\nRequirement already satisfied: PyYAML==6.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (6.0.1)\nRequirement already satisfied: setuptools==65.6.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (65.6.3)\nRequirement already satisfied: tenacity==8.2.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (8.2.2)\nRequirement already satisfied: tiktoken==0.5.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.5.2)\nRequirement already satisfied: tqdm==4.65.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.65.0)\nRequirement already satisfied: anthropic==0.8.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.1)\nRequirement already satisfied: typing-inspect==0.8.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.0)\nRequirement already satisfied: typing_extensions==4.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.9.0)\nRequirement already satisfied: libcst==1.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.0.1)\nRequirement already satisfied: qdrant-client==1.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.7.0)\nRequirement already satisfied: ta==0.10.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.10.2)\nRequirement already satisfied: semantic-kernel==0.4.3.dev0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.3.dev0)\nRequirement already satisfied: wrapt==1.15.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.15.0)\nRequirement already satisfied: aioredis~=2.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.1)\nRequirement already satisfied: websocket-client==1.6.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.6.2)\nRequirement already satisfied: aiofiles==23.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (23.2.1)\nRequirement already satisfied: gitpython==3.1.40 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.1.40)\nRequirement already satisfied: zhipuai==2.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.1)\nRequirement already satisfied: socksio~=1.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.0.0)\nRequirement already satisfied: gitignore-parser==0.1.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.1.9)\nRequirement already satisfied: websockets~=12.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (12.0)\nRequirement already satisfied: networkx~=3.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.2.1)\nRequirement already satisfied: google-generativeai==0.3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.3.2)\nRequirement already satisfied: anytree in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.13.0)\nRequirement already satisfied: attrs>=17.3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (26.1.0)\nRequirement already satisfied: charset-normalizer<4.0,>=2.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (3.4.7)\nRequirement already satisfied: multidict<7.0,>=4.5 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (6.7.1)\nRequirement already satisfied: async-timeout<5.0,>=4.0.0a3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (4.0.3)\nRequirement already satisfied: yarl<2.0,>=1.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.22.0)\nRequirement already satisfied: frozenlist>=1.1.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.8.0)\nRequirement already satisfied: aiosignal>=1.1.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.4.0)\nRequirement already satisfied: anyio<5,>=3.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (4.12.1)\nRequirement already satisfied: distro<2,>=1.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (1.9.0)\nRequirement already satisfied: httpx<1,>=0.23.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (0.28.1)\nRequirement already satisfied: sniffio in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (1.3.1)\nRequirement already satisfied: tokenizers>=0.13.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (0.22.2)\nRequirement already satisfied: annotated-types>=0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pydantic==2.5.3->metagpt==0.6.0) (0.7.0)\nRequirement already satisfied: pydantic-core==2.14.6 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pydantic==2.5.3->metagpt==0.6.0) (2.14.6)\nRequirement already satisfied: soupsieve>1.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from beautifulsoup4==4.12.2->metagpt==0.6.0) (2.8.4)\nRequirement already satisfied: Django>=3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from channels==4.0.0->metagpt==0.6.0) (4.2.30)\nRequirement already satisfied: asgiref<4,>=3.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from channels==4.0.0->metagpt==0.6.0) (3.11.1)\nRequirement already satisfied: six in /opt/conda/envs/testbed/lib/python3.9/site-packages (from fire==0.4.0->metagpt==0.6.0) (1.17.0)\nRequirement already satisfied: termcolor in /opt/conda/envs/testbed/lib/python3.9/site-packages (from fire==0.4.0->metagpt==0.6.0) (3.1.0)\nRequirement already satisfied: gitdb<5,>=4.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from gitpython==3.1.40->metagpt==0.6.0) (4.0.12)\nRequirement already satisfied: google-ai-generativelanguage==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (0.4.0)\nRequirement already satisfied: google-auth in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (2.50.0)\nRequirement already satisfied: google-api-core in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (2.30.3)\nRequirement already satisfied: protobuf in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (4.25.9)\nRequirement already satisfied: proto-plus<2.0.0dev,>=1.22.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->metagpt==0.6.0) (1.27.2)\nRequirement already satisfied: deprecation in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (2.1.0)\nRequirement already satisfied: pylance==0.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (0.9.0)\nRequirement already satisfied: ratelimiter~=1.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (1.2.0.post0)\nRequirement already satisfied: retry>=0.9.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (0.9.2)\nRequirement already satisfied: semver>=3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (3.0.4)\nRequirement already satisfied: cachetools in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (6.2.6)\nRequirement already satisfied: click>=8.1.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (8.1.8)\nRequirement already satisfied: requests>=2.31.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (2.32.5)\nRequirement already satisfied: overrides>=0.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (7.7.0)\nRequirement already satisfied: SQLAlchemy<3,>=1.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (2.0.50)\nRequirement already satisfied: dataclasses-json<0.7,>=0.5.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.6.7)\nRequirement already satisfied: jsonpatch<2.0,>=1.33 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (1.33)\nRequirement already satisfied: langchain-community<0.1,>=0.0.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.0.20)\nRequirement already satisfied: langchain-core<0.2,>=0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.1.23)\nRequirement already satisfied: langsmith<0.1.0,>=0.0.70 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.0.87)\nRequirement already satisfied: camel-converter[pydantic] in /opt/conda/envs/testbed/lib/python3.9/site-packages (from meilisearch==0.21.0->metagpt==0.6.0) (4.0.1)\nRequirement already satisfied: python-dateutil>=2.8.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2.9.0.post0)\nRequirement already satisfied: pytz>=2020.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2026.2)\nRequirement already satisfied: tzdata>=2022.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2026.2)\nRequirement already satisfied: pyarrow>=12 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pylance==0.9.0->lancedb==0.4.0->metagpt==0.6.0) (21.0.0)\nRequirement already satisfied: lxml>=2.3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from python_docx==0.8.11->metagpt==0.6.0) (6.1.1)\nRequirement already satisfied: grpcio>=1.41.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.74.0)\nRequirement already satisfied: grpcio-tools>=1.41.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.62.3)\nRequirement already satisfied: portalocker<3.0.0,>=2.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (2.10.1)\nRequirement already satisfied: urllib3<2.0.0,>=1.26.14 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.26.20)\nRequirement already satisfied: motor<4.0.0,>=3.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.7.1)\nRequirement already satisfied: openapi_core<0.19.0,>=0.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.18.2)\nRequirement already satisfied: prance<24.0.0.0,>=23.6.21.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (23.6.21.0)\nRequirement already satisfied: python-dotenv==1.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.0.0)\nRequirement already satisfied: regex<2024.0.0,>=2023.6.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2023.12.25)\nRequirement already satisfied: mypy-extensions>=0.3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from typing-inspect==0.8.0->metagpt==0.6.0) (1.1.0)\nRequirement already satisfied: pyjwt~=2.8.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from zhipuai==2.0.1->metagpt==0.6.0) (2.8.0)\nRequirement already satisfied: exceptiongroup>=1.0.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anyio<5,>=3.5.0->anthropic==0.8.1->metagpt==0.6.0) (1.3.1)\nRequirement already satisfied: idna>=2.8 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anyio<5,>=3.5.0->anthropic==0.8.1->metagpt==0.6.0) (3.18)\nRequirement already satisfied: marshmallow<4.0.0,>=3.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from dataclasses-json<0.7,>=0.5.7->langchain==0.0.352->metagpt==0.6.0) (3.26.2)\nRequirement already satisfied: smmap<6,>=3.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from gitdb<5,>=4.0.1->gitpython==3.1.40->metagpt==0.6.0) (5.0.3)\nRequirement already satisfied: googleapis-common-protos<2.0.0,>=1.63.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-api-core->google-generativeai==0.3.2->metagpt==0.6.0) (1.75.0)\nRequirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->metagpt==0.6.0) (1.62.3)\nRequirement already satisfied: pyasn1-modules>=0.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (0.4.2)\nRequirement already satisfied: cryptography>=38.0.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (45.0.7)\nRequirement already satisfied: certifi in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (2026.5.20)\nRequirement already satisfied: httpcore==1.* in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (1.0.9)\nRequirement already satisfied: h11>=0.16 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (0.16.0)\nRequirement already satisfied: jsonpointer>=1.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonpatch<2.0,>=1.33->langchain==0.0.352->metagpt==0.6.0) (3.0.0)\nRequirement already satisfied: packaging<24.0,>=23.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain-core<0.2,>=0.1->langchain==0.0.352->metagpt==0.6.0) (23.2)\nRequirement already satisfied: pymongo<5.0,>=4.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (4.17.0)\nRequirement already satisfied: isodate in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.7.2)\nRequirement already satisfied: jsonschema<5.0.0,>=4.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (4.25.1)\nRequirement already satisfied: jsonschema-spec<0.3.0,>=0.2.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.2.4)\nRequirement already satisfied: more-itertools in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (10.8.0)\nRequirement already satisfied: openapi-schema-validator<0.7.0,>=0.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.6.3)\nRequirement already satisfied: openapi-spec-validator<0.8.0,>=0.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.7.2)\nRequirement already satisfied: parse in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.22.1)\nRequirement already satisfied: werkzeug in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.1.8)\nRequirement already satisfied: jsonschema-specifications>=2023.03.6 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2023.7.1)\nRequirement already satisfied: referencing>=0.28.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.30.2)\nRequirement already satisfied: rpds-py>=0.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.27.1)\nRequirement already satisfied: pathable<0.5.0,>=0.4.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema-spec<0.3.0,>=0.2.3->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.4.4)\nRequirement already satisfied: rfc3339-validator in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-schema-validator<0.7.0,>=0.6.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.1.4)\nRequirement already satisfied: jsonschema-path<0.4.0,>=0.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.3.4)\nRequirement already satisfied: lazy-object-proxy<2.0.0,>=1.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.12.0)\nRequirement already satisfied: chardet>=3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (5.2.0)\nRequirement already satisfied: ruamel.yaml>=0.17.10 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.19.1)\nRequirement already satisfied: dnspython<3.0.0,>=2.6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pymongo<5.0,>=4.9->motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2.7.0)\nRequirement already satisfied: greenlet>=1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from SQLAlchemy<3,>=1.4->langchain==0.0.352->metagpt==0.6.0) (3.2.5)\nRequirement already satisfied: propcache>=0.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from yarl<2.0,>=1.0->aiohttp==3.8.4->metagpt==0.6.0) (0.4.1)\nRequirement already satisfied: cffi>=1.14 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (2.0.0)\nRequirement already satisfied: pycparser in /opt/conda/envs/testbed/lib/python3.9/site-packages (from cffi>=1.14->cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (2.23)\nRequirement already satisfied: sqlparse>=0.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from Django>=3.2->channels==4.0.0->metagpt==0.6.0) (0.5.5)\nRequirement already satisfied: h2<5,>=3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (4.3.0)\nRequirement already satisfied: hyperframe<7,>=6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (6.1.0)\nRequirement already satisfied: hpack<5,>=4.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (4.1.0)\nRequirement already satisfied: pyasn1<0.7.0,>=0.6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pyasn1-modules>=0.2.1->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (0.6.3)\nRequirement already satisfied: decorator>=3.4.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from retry>=0.9.2->lancedb==0.4.0->metagpt==0.6.0) (5.3.1)\nRequirement already satisfied: py<2.0.0,>=1.4.26 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from retry>=0.9.2->lancedb==0.4.0->metagpt==0.6.0) (1.11.0)\nRequirement already satisfied: huggingface-hub<2.0,>=0.16.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (1.8.0)\nRequirement already satisfied: filelock>=3.10.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (3.19.1)\nRequirement already satisfied: fsspec>=2023.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (2025.10.0)\nRequirement already satisfied: hf-xet<2.0.0,>=1.4.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (1.5.0)\nRequirement already satisfied: et-xmlfile in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openpyxl->metagpt==0.6.0) (2.0.0)\nRequirement already satisfied: markupsafe>=2.1.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from werkzeug->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.0.3)\nBuilding wheels for collected packages: metagpt\n  Building editable for metagpt (pyproject.toml): started\n  Building editable for metagpt (pyproject.toml): finished with status \'done\'\n  Created wheel for metagpt: filename=metagpt-0.6.0-0.editable-py3-none-any.whl size=8450 sha256=7cf51402f934f972b8d294c4063b88ed69876e31044c1d6af1bdeee7a39099c7\n  Stored in directory: /tmp/pip-ephem-wheel-cache-nyvrd3uu/wheels/7d/66/67/70d1ee2124ccf21d601c352e25cdca10f611f7c8b3f9ffb9e4\nSuccessfully built metagpt\nInstalling collected packages: metagpt\nSuccessfully installed metagpt-0.6.0\nWARNING: Running pip as the \'root\' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\n ---> Removed intermediate container c548704a90a7\nError: unknown parent image ID sha256:73779f817919aeb34c165cad0962612fdda5615112350e2690854422a811d0b8', 'Failed to build Docker image.', False)
+2026-06-06 15:04:04.851 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:04:10.227 | INFO     | Model API request cost info: input_tokens=25942, output_tokens=245, cost=0.000000
+2026-06-06 15:04:10.230 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build process encounters an error after successful dependency installation: \"Error: unknown parent image ID sha256:73779f817919aeb34c165cad0962612fdda5615112350e2690854422a811d0b8\". This error indicates a Docker daemon or image layer state issue during the build, not related to the package installation itself. To address this, consider cleaning up dangling or corrupted Docker images and cache on the build host, or rebuilding with a clean Docker environment. Also, verify that the base image 'continuumio/miniconda3:latest' for 'linux/x86_64' platform is correctly pulled and intact. It might help to explicitly specify a stable version tag instead of 'latest' to avoid unexpected base image changes. Ensure no Docker service or storage corruption is present. No environment issues are found from dependencies as they install successfully. No test execution happens because the Docker build fails, so fix this build error first.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:04:10.231 | DEBUG    | Extracted a valid json
+2026-06-06 15:04:10.235 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:04:28.116 | INFO     | Model API request cost info: input_tokens=6309, output_tokens=512, cost=0.000000
+2026-06-06 15:04:28.118 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:05:57.889 | DEBUG    | Result of dispatch_intent: ("Step 8/14 : RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh\n ---> Running in 0c480c91ba11\n--2026-06-06 15:05:57--  https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh\nResolving repo.anaconda.com (repo.anaconda.com)... 104.16.32.241, 104.16.191.158, 2606:4700::6810:bf9e, ...\nConnecting to repo.anaconda.com (repo.anaconda.com)|104.16.32.241|:443... connected.\nHTTP request sent, awaiting response... 404 Not Found\n2026-06-06 15:05:57 ERROR 404: Not Found.\n ---> Removed intermediate container 0c480c91ba11\nError: The command '/bin/bash -c wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh' returned a non-zero code: 8", 'Failed to build Docker image.', False)
+2026-06-06 15:05:57.893 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:06:00.515 | INFO     | Model API request cost info: input_tokens=2304, output_tokens=204, cost=0.000000
+2026-06-06 15:06:00.517 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails at the step downloading Miniconda installer with the following error: '404 Not Found' when running wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh. This indicates that the specified Miniconda version or URL is incorrect or no longer available. Please update the Dockerfile to use a valid and available Miniconda installer URL. You can check the official Miniconda repository for the latest stable version and modify the wget URL accordingly. For example, consider using a more recent or stable version of Miniconda3-py39 available at https://repo.anaconda.com/miniconda/. Fixing this is essential for environment setup and subsequent test execution.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:06:00.517 | DEBUG    | Extracted a valid json
+2026-06-06 15:06:00.521 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:06:15.560 | INFO     | Model API request cost info: input_tokens=7778, output_tokens=513, cost=0.000000
+2026-06-06 15:06:15.561 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:08:34.385 | DEBUG    | Result of dispatch_intent: ('Step 6/14 : ENV LANG=C.UTF-8 LC_ALL=C.UTF-8\n ---> Running in 31855aea2b29\n ---> Removed intermediate container 31855aea2b29\nError: failed to get digest sha256:b0704dc5d72d45694974e34da72fd7c7046903b643dd846b817a5355c1394c9d: open /var/lib/docker/image/overlay2/imagedb/content/sha256/b0704dc5d72d45694974e34da72fd7c7046903b643dd846b817a5355c1394c9d: no such file or directory', 'Failed to build Docker image.', False)
+2026-06-06 15:08:34.388 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:08:38.588 | INFO     | Model API request cost info: input_tokens=2112, output_tokens=319, cost=0.000000
+2026-06-06 15:08:38.589 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails with the following error: 'Error: failed to get digest sha256:b0704dc5d72d45694974e34da72fd7c7046903b643dd846b817a5355c1394c9d: open /var/lib/docker/image/overlay2/imagedb/content/sha256/b0704dc5d72d45694974e34da72fd7c7046903b643dd846b817a5355c1394c9d: no such file or directory'. This error indicates a Docker internal storage or cache corruption rather than an issue with the Dockerfile syntax or environment setup commands. To fix it, please try these steps: 1) Clean up Docker system by running 'docker system prune -a' to remove unused images and cache (ensure this is safe for your environment). 2) Verify Docker daemon has sufficient disk space and permissions. 3) Restart the Docker daemon. 4) Try rebuilding the image again. If the problem persists, consider rebuilding on another host or clearing Docker overlay2 storage manually. Since this is a low-level Docker daemon storage error, it is unrelated to the Dockerfile content. No changes to the Dockerfile are needed at this point, but these Docker environment fixes are required to enable the build process to proceed.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:08:38.590 | DEBUG    | Extracted a valid json
+2026-06-06 15:08:38.591 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:08:55.383 | INFO     | Model API request cost info: input_tokens=9364, output_tokens=512, cost=0.000000
+2026-06-06 15:08:55.393 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:11:47.925 | DEBUG    | Result of dispatch_intent: ("Step 8/14 : RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh\n ---> Running in fcc5f382ea77\n--2026-06-06 15:11:45--  https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-1-Linux-x86_64.sh\nResolving repo.anaconda.com (repo.anaconda.com)... 104.16.191.158, 104.16.32.241, 2606:4700::6810:20f1, ...\nConnecting to repo.anaconda.com (repo.anaconda.com)|104.16.191.158|:443... connected.\nHTTP request sent, awaiting response... 404 Not Found\n2026-06-06 15:11:46 ERROR 404: Not Found.\n ---> Removed intermediate container fcc5f382ea77\nError: The command '/bin/bash -c wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh' returned a non-zero code: 8", 'Failed to build Docker image.', False)
+2026-06-06 15:11:47.930 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:11:50.686 | INFO     | Model API request cost info: input_tokens=2302, output_tokens=265, cost=0.000000
+2026-06-06 15:11:50.687 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build failed at the step where it attempts to download Miniconda installer from https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-1-Linux-x86_64.sh. The HTTP request received a 404 Not Found error, indicating that the specific Miniconda version file is no longer available at this URL. This prevented Miniconda installation and thus environment setup failed. To fix this, update the Dockerfile to use a valid and existing Miniconda installer URL. This can be done by either visiting https://repo.anaconda.com/miniconda/ and verifying the latest Miniconda3-py39 Linux x86_64 installer URL or replacing with a more recent stable Miniconda installer version that matches Python 3.9. For example, switch from version 23.3.1-1 to the latest available (like 23.7.2-1 or whatever is correct at the time of building). Ensure the new URL is tested to successfully download in the Dockerfile build step.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:11:50.687 | DEBUG    | Extracted a valid json
+2026-06-06 15:11:50.707 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:12:08.419 | INFO     | Model API request cost info: input_tokens=10894, output_tokens=515, cost=0.000000
+2026-06-06 15:12:08.427 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:14:06.572 | DEBUG    | Result of dispatch_intent: ("Step 8/14 : RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh\n ---> Running in d1a944551c75\n--2026-06-06 15:14:05--  https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh\nResolving repo.anaconda.com (repo.anaconda.com)... 104.16.191.158, 104.16.32.241, 2606:4700::6810:20f1, ...\nConnecting to repo.anaconda.com (repo.anaconda.com)|104.16.191.158|:443... connected.\nHTTP request sent, awaiting response... 404 Not Found\n2026-06-06 15:14:05 ERROR 404: Not Found.\n ---> Removed intermediate container d1a944551c75\nError: The command '/bin/bash -c wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh -O /tmp/miniconda.sh     && bash /tmp/miniconda.sh -b -p /opt/miniconda3     && rm /tmp/miniconda.sh' returned a non-zero code: 8", 'Failed to build Docker image.', False)
+2026-06-06 15:14:06.577 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:14:11.614 | INFO     | Model API request cost info: input_tokens=2305, output_tokens=255, cost=0.000000
+2026-06-06 15:14:11.616 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile fails to build due to a 404 Not Found error when trying to download Miniconda installer script https://repo.anaconda.com/miniconda/Miniconda3-py39_23.7.2-1-Linux-x86_64.sh. The specified version 'Miniconda3-py39_23.7.2-1-Linux-x86_64.sh' does not exist on the official repo at the time of build. To fix this, update the Miniconda installer URL to a valid existing Miniconda Linux x86_64 installer for Python 3.9 that is currently available. You can check https://repo.anaconda.com/miniconda/ for available installer names or use a stable earlier version like Miniconda3-py39_4.12.0-Linux-x86_64.sh or the latest Miniconda3-latest-Linux-x86_64.sh if allowed by compatibility. Without this fix, the environment setup will fail and tests cannot run.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:14:11.617 | DEBUG    | Extracted a valid json
+2026-06-06 15:14:11.621 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:14:21.372 | INFO     | Model API request cost info: input_tokens=12420, output_tokens=517, cost=0.000000
+2026-06-06 15:14:21.374 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:23:10.311 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 5bd5ca87bf9ecd7cc4a9ac9635b8dbb5b9c4bd8f8828c4601a8add2d12a05b1a started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-799-dockerfile9:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-06-06 15:23:10.314 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:23:19.746 | INFO     | Model API request cost info: input_tokens=2939, output_tokens=388, cost=0.000000
+2026-06-06 15:23:19.751 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The test failures stem from a missing Python module 'yaml' which caused ImportError in tests/conftest.py. This indicates that the PyYAML package is not installed in the conda environment built via the Dockerfile. Please add 'pyyaml' to the pip install command in the Dockerfile's environment setup step (e.g., modify the pip install line to include 'pyyaml' alongside other requirements). Additionally, note that the eval script sources the conda profile from '/opt/conda/etc/profile.d/conda.sh', but in the Dockerfile Miniconda is installed to '/opt/miniconda3', so the corresponding source path in the eval script should be updated to '/opt/miniconda3/etc/profile.d/conda.sh' to ensure conda environment activation works correctly. Current error snippet: \"/eval.sh: line 4: /opt/conda/etc/profile.d/conda.sh: No such file or directory\", and import error: \"ModuleNotFoundError: No module named 'yaml'\". Fix these to ensure environment is correctly prepared for tests.",
+  "guidance_for_write_eval_script_agent": "The eval script attempts to source the conda profile from '/opt/conda/etc/profile.d/conda.sh' which does not exist, causing failure to activate the conda environment (CommandNotFoundError). Change the source line in the eval script to '/opt/miniconda3/etc/profile.d/conda.sh' to match the Dockerfile installation path. This fix is necessary to ensure the tests run inside the conda environment with all dependencies. The script correctly captures and echoes the exit code of pytest as OMNIGRIL_EXIT_CODE, so no changes are needed there.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-06-06 15:23:19.751 | DEBUG    | Extracted a valid json
+2026-06-06 15:23:19.764 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-06-06 15:23:25.927 | INFO     | Model API request cost info: input_tokens=13962, output_tokens=528, cost=0.000000
+2026-06-06 15:23:25.964 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-06-06 15:23:26.106 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-06-06 15:23:29.135 | INFO     | Model API request cost info: input_tokens=6020, output_tokens=256, cost=0.000000
+2026-06-06 15:23:29.137 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-06-06 15:30:46.124 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 035bac5e77d3546728c6dd53cd6797fc71808ac0d64bb9e366ed8d0682b46713 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-799-dockerfile10:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-06-06 15:30:46.126 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-06-06 15:30:50.839 | INFO     | Model API request cost info: input_tokens=3524, output_tokens=292, cost=0.000000
+2026-06-06 15:30:50.842 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed because the 'pytest' command was not found in the activated conda environment. The log shows the error: '/eval.sh: line 53: pytest: command not found', resulting in exit code 127. This indicates that pytest is either not installed or not accessible in the conda environment 'testbed'. Please modify the evaluation script or Dockerfile to ensure pytest is installed in the conda environment before running the tests. Specifically, verify that 'pytest' is included as a dependency in the requirements.txt or explicitly install it via pip (e.g., 'pip install pytest') in the conda environment during the setup phase. Also, confirm that the Python environment is activated correctly before test execution and that the PATH includes pytest's executable location.",
+  "guidance_for_context_retrieval_agent": "Please retrieve and provide the contents of 'requirements.txt' and any other dependency management files such as 'environment.yml', 'setup.py', or 'pyproject.toml' from the repository root. This is to verify whether pytest and other test dependencies are declared properly and to confirm that the Dockerfile’s pip install commands cover all necessary packages for running tests. Additionally, provide any documentation files like README.md or CONTRIBUTING.md that contain test setup or dependency installation instructions."
+}
+2026-06-06 15:30:50.843 | DEBUG    | Extracted a valid json
+2026-06-06 15:30:50.904 | INFO     | Too many rounds. Exceed largest number of tries..
+2026-06-06 15:30:51.031 | INFO     | Removed project repository at testbed/FoundationAgents__MetaGPT-799_2026-06-06_14-40-05
+2026-06-06 15:30:51.032 | INFO     | Task FoundationAgents__MetaGPT-799 completed successfully.

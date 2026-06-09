@@ -1,0 +1,23 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset target test files to the specified commit state
+git checkout 4c43b4cc82e02dd0dd2d58992618195521bdc865 "tests/conftest.py" "tests/unit/test_messages.py"
+
+# Apply the test patch (content replaced programmatically)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test files using pytest
+# Using pytest with no header, show all summary info and no traceback to keep output concise
+# poetry is configured to not create venv; poetry run uses system environment
+poetry run pytest --no-header -rA --tb=no "tests/conftest.py" "tests/unit/test_messages.py"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset target test files to original commit state to clean up changes
+git checkout 4c43b4cc82e02dd0dd2d58992618195521bdc865 "tests/conftest.py" "tests/unit/test_messages.py"

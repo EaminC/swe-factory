@@ -1,0 +1,29 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout ab846f65e481a655b791959eb0f89fb4b1c84128 "tests/metagpt/provider/test_bedrock_api.py"
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment
+source /opt/venv/bin/activate
+
+# Ensure metagpt config directory and config file copied before test run
+export ALLOW_OPENAI_API_CALL=0
+mkdir -p ~/.metagpt
+cp tests/config2.yaml ~/.metagpt/config2.yaml
+
+# Run only the target test file with pytest showing concise results on file level
+pytest -rA --tb=short --disable-warnings tests/metagpt/provider/test_bedrock_api.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Clean up by resetting the patched test file
+git checkout ab846f65e481a655b791959eb0f89fb4b1c84128 "tests/metagpt/provider/test_bedrock_api.py"
+</script>

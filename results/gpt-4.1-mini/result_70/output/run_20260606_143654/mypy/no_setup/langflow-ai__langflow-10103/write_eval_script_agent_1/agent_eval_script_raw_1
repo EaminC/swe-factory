@@ -1,0 +1,25 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Restore the target test file to match the commit before patching
+git checkout 58efe809d4dad3decc833afd2f29b9a1038f6d5c "src/backend/tests/unit/components/agents/test_agent_events.py"
+
+# Apply the test patch to the target test file
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the python virtual environment
+source /testbed/testbed/bin/activate
+
+# Run the specified target test file using the recommended command
+uv run pytest --no-header -rA --tb=short "src/backend/tests/unit/components/agents/test_agent_events.py"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the modified test file to original state after running tests
+git checkout 58efe809d4dad3decc833afd2f29b9a1038f6d5c "src/backend/tests/unit/components/agents/test_agent_events.py"
+</script>

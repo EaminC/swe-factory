@@ -1,0 +1,316 @@
+2026-06-06 15:12:32,892 - INFO - Checking if image agentscope-ai__agentscope-962-dockerfile4:latest exists locally...
+2026-06-06 15:12:32,903 - INFO - Image agentscope-ai__agentscope-962-dockerfile4:latest found locally.
+2026-06-06 15:12:32,905 - INFO - Creating container for agentscope-ai__agentscope-962...
+2026-06-06 15:12:33,388 - INFO - Container for agentscope-ai__agentscope-962 started: b269cbb724bf6637205214ce5eac96645e444ce6e077460ce60185c61083dbcb
+2026-06-06 15:12:33,389 - INFO - Intermediate patch for agentscope-ai__agentscope-962 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/agentscope-ai__agentscope-962/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-06 15:12:33,828 - INFO - Apply patch success:
+Checking patch docs/tutorial/en/src/quickstart_agent.py...
+Checking patch src/agentscope/_utils/_common.py...
+Checking patch src/agentscope/_version.py...
+Checking patch src/agentscope/tool/_toolkit.py...
+Applied patch docs/tutorial/en/src/quickstart_agent.py cleanly.
+Applied patch src/agentscope/_utils/_common.py cleanly.
+Applied patch src/agentscope/_version.py cleanly.
+Applied patch src/agentscope/tool/_toolkit.py cleanly.
+
+2026-06-06 15:12:34,177 - INFO - Git diff before:
+diff --git a/docs/tutorial/en/src/quickstart_agent.py b/docs/tutorial/en/src/quickstart_agent.py
+index e58bf72e..509efac6 100644
+--- a/docs/tutorial/en/src/quickstart_agent.py
++++ b/docs/tutorial/en/src/quickstart_agent.py
+@@ -79,7 +79,7 @@ from agentscope.tool import Toolkit, execute_python_code
+ #
+ #       - ``agent_control``: allow agent to control the long-term memory by itself
+ #       - ``static_control``: retrieving and recording from/to long-term memory will happen in the beginning/end of each reply.
+-#       - ``both``: active the above two modes at the same time
++#       - ``both``: activate the above two modes at the same time
+ #   * - ``enable_meta_tool``
+ #     - :ref:`tool`
+ #     - Whether to enable the meta tool, which allows the agent to manage tools by itself
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index aa19a254..e7008228 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -321,7 +321,7 @@ def _parse_tool_function(
+     if include_long_description and docstring.long_description is not None:
+         descriptions.append(docstring.long_description)
+ 
+-    func_description = "\n\n".join(descriptions)
++    func_description = "\n".join(descriptions)
+ 
+     # Create a dynamic model with the function signature
+     fields = {}
+diff --git a/src/agentscope/_version.py b/src/agentscope/_version.py
+index b2b674eb..cd2706a1 100644
+--- a/src/agentscope/_version.py
++++ b/src/agentscope/_version.py
+@@ -1,4 +1,4 @@
+ # -*- coding: utf-8 -*-
+ """The version of agentscope."""
+ 
+-__version__ = "1.0.8"
++__version__ = "1.0.9dev"
+diff --git a/src/agentscope/tool/_toolkit.py b/src/agentscope/tool/_toolkit.py
+index 42eec3bd..60abbb1c 100644
+--- a/src/agentscope/tool/_toolkit.py
++++ b/src/agentscope/tool/_toolkit.py
+@@ -624,8 +624,31 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+                 None,
+             )
+ 
+-        # Prepare function and keyword arguments
++        # Obtain the tool function
+         tool_func = self.tools[tool_call["name"]]
++
++        # Check if the tool function is in an inactive group
++        if (
++            tool_func.group != "basic"
++            and not self.groups[tool_func.group].active
++        ):
++            return _object_wrapper(
++                ToolResponse(
++                    content=[
++                        TextBlock(
++                            type="text",
++                            text="FunctionInactiveError: The function "
++                            f"'{tool_call['name']}' is in the inactive "
++                            f"group '{tool_func.group}'. Activate the tool "
++                            "group by calling 'reset_equipped_tools' "
++                            "first to use this tool.",
++                        ),
++                    ],
++                ),
++                None,
++            )
++
++        # Prepare keyword arguments
+         kwargs = {
+             **tool_func.preset_kwargs,
+             **(tool_call.get("input", {}) or {}),
+@@ -905,23 +928,28 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+             if group.active and group.notes:
+                 collected_notes.append(
+                     "\n".join(
+-                        [f"## About {group_name} Tools", group.notes],
++                        [f"## About Tool Group '{group_name}'", group.notes],
+                     ),
+                 )
+         return "\n".join(collected_notes)
+ 
+     def reset_equipped_tools(self, **kwargs: Any) -> ToolResponse:
+-        """Choose appropriate tools to equip yourself with, so that you can
+-        finish your task. Each argument in this function represents a group
+-        of related tools, and the value indicates whether to activate the
+-        group or not. Besides, the tool response of this function will
+-        contain the precaution notes for using them, which you
+-        **MUST pay attention to and follow**. You can also reuse this function
+-        to check the notes of the tool groups.
+-
+-        Note this function will `reset` the tools, so that the original tools
+-        will be removed first.
+-        """
++        """This function allows you to activate or deactivate tool groups
++        dynamically based on your current task requirements.
++        **Important: Each call sets the absolute final state of ALL tool
++        groups, not incremental changes**. Any group not explicitly set to True
++        will be deactivated, regardless of its previous state.
++
++        **Best practice**: Actively manage your tool groups——activate only
++        what you need for the current task, and promptly deactivate groups as
++        soon as they are no longer needed to conserve context space.
++
++        The function will return the usage instructions for the activated tool
++        groups, which you **MUST pay attention to and follow**. You can also
++        reuse this function to check the notes of the tool groups."""
++
++        # Deactivate all tool groups first
++        self.update_tool_groups(list(self.groups.keys()), active=False)
+ 
+         to_activate = []
+         for key, value in kwargs.items():
+@@ -943,13 +971,28 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+ 
+         notes = self.get_activated_notes()
+ 
++        text_response = ""
++        if to_activate:
++            text_response += (
++                "Now tool groups "
++                + ", ".join([f"'{_}'" for _ in to_activate])
++                + " are activated."
++            )
++
++        if notes:
++            text_response += (
++                f" You MUST follow these notes to use these tools:\n"
++                f"<notes>{notes}</notes>"
++            )
++
++        if not text_response:
++            text_response = "All tool groups are now deactivated currently."
++
+         return ToolResponse(
+             content=[
+                 TextBlock(
+                     type="text",
+-                    text=f"Active tool groups successfully: {to_activate}. "
+-                    "You MUST follow these notes to use the tools:\n"
+-                    f"<notes>{notes}</notes>",
++                    text=text_response,
+                 ),
+             ],
+         )
+2026-06-06 15:12:34,178 - INFO - Eval script for agentscope-ai__agentscope-962 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/agentscope-ai__agentscope-962/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-06 15:12:45,430 - INFO - Test output for agentscope-ai__agentscope-962 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/agentscope-ai__agentscope-962/test_analysis_agent_4/test_output.txt
+2026-06-06 15:12:45,551 - INFO - Git diff after:
+diff --git a/docs/tutorial/en/src/quickstart_agent.py b/docs/tutorial/en/src/quickstart_agent.py
+index e58bf72e..509efac6 100644
+--- a/docs/tutorial/en/src/quickstart_agent.py
++++ b/docs/tutorial/en/src/quickstart_agent.py
+@@ -79,7 +79,7 @@ from agentscope.tool import Toolkit, execute_python_code
+ #
+ #       - ``agent_control``: allow agent to control the long-term memory by itself
+ #       - ``static_control``: retrieving and recording from/to long-term memory will happen in the beginning/end of each reply.
+-#       - ``both``: active the above two modes at the same time
++#       - ``both``: activate the above two modes at the same time
+ #   * - ``enable_meta_tool``
+ #     - :ref:`tool`
+ #     - Whether to enable the meta tool, which allows the agent to manage tools by itself
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index aa19a254..e7008228 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -321,7 +321,7 @@ def _parse_tool_function(
+     if include_long_description and docstring.long_description is not None:
+         descriptions.append(docstring.long_description)
+ 
+-    func_description = "\n\n".join(descriptions)
++    func_description = "\n".join(descriptions)
+ 
+     # Create a dynamic model with the function signature
+     fields = {}
+diff --git a/src/agentscope/_version.py b/src/agentscope/_version.py
+index b2b674eb..cd2706a1 100644
+--- a/src/agentscope/_version.py
++++ b/src/agentscope/_version.py
+@@ -1,4 +1,4 @@
+ # -*- coding: utf-8 -*-
+ """The version of agentscope."""
+ 
+-__version__ = "1.0.8"
++__version__ = "1.0.9dev"
+diff --git a/src/agentscope/tool/_toolkit.py b/src/agentscope/tool/_toolkit.py
+index 42eec3bd..60abbb1c 100644
+--- a/src/agentscope/tool/_toolkit.py
++++ b/src/agentscope/tool/_toolkit.py
+@@ -624,8 +624,31 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+                 None,
+             )
+ 
+-        # Prepare function and keyword arguments
++        # Obtain the tool function
+         tool_func = self.tools[tool_call["name"]]
++
++        # Check if the tool function is in an inactive group
++        if (
++            tool_func.group != "basic"
++            and not self.groups[tool_func.group].active
++        ):
++            return _object_wrapper(
++                ToolResponse(
++                    content=[
++                        TextBlock(
++                            type="text",
++                            text="FunctionInactiveError: The function "
++                            f"'{tool_call['name']}' is in the inactive "
++                            f"group '{tool_func.group}'. Activate the tool "
++                            "group by calling 'reset_equipped_tools' "
++                            "first to use this tool.",
++                        ),
++                    ],
++                ),
++                None,
++            )
++
++        # Prepare keyword arguments
+         kwargs = {
+             **tool_func.preset_kwargs,
+             **(tool_call.get("input", {}) or {}),
+@@ -905,23 +928,28 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+             if group.active and group.notes:
+                 collected_notes.append(
+                     "\n".join(
+-                        [f"## About {group_name} Tools", group.notes],
++                        [f"## About Tool Group '{group_name}'", group.notes],
+                     ),
+                 )
+         return "\n".join(collected_notes)
+ 
+     def reset_equipped_tools(self, **kwargs: Any) -> ToolResponse:
+-        """Choose appropriate tools to equip yourself with, so that you can
+-        finish your task. Each argument in this function represents a group
+-        of related tools, and the value indicates whether to activate the
+-        group or not. Besides, the tool response of this function will
+-        contain the precaution notes for using them, which you
+-        **MUST pay attention to and follow**. You can also reuse this function
+-        to check the notes of the tool groups.
+-
+-        Note this function will `reset` the tools, so that the original tools
+-        will be removed first.
+-        """
++        """This function allows you to activate or deactivate tool groups
++        dynamically based on your current task requirements.
++        **Important: Each call sets the absolute final state of ALL tool
++        groups, not incremental changes**. Any group not explicitly set to True
++        will be deactivated, regardless of its previous state.
++
++        **Best practice**: Actively manage your tool groups——activate only
++        what you need for the current task, and promptly deactivate groups as
++        soon as they are no longer needed to conserve context space.
++
++        The function will return the usage instructions for the activated tool
++        groups, which you **MUST pay attention to and follow**. You can also
++        reuse this function to check the notes of the tool groups."""
++
++        # Deactivate all tool groups first
++        self.update_tool_groups(list(self.groups.keys()), active=False)
+ 
+         to_activate = []
+         for key, value in kwargs.items():
+@@ -943,13 +971,28 @@ Check "{dir}/SKILL.md" for how to use this skill"""
+ 
+         notes = self.get_activated_notes()
+ 
++        text_response = ""
++        if to_activate:
++            text_response += (
++                "Now tool groups "
++                + ", ".join([f"'{_}'" for _ in to_activate])
++                + " are activated."
++            )
++
++        if notes:
++            text_response += (
++                f" You MUST follow these notes to use these tools:\n"
++                f"<notes>{notes}</notes>"
++            )
++
++        if not text_response:
++            text_response = "All tool groups are now deactivated currently."
++
+         return ToolResponse(
+             content=[
+                 TextBlock(
+                     type="text",
+-                    text=f"Active tool groups successfully: {to_activate}. "
+-                    "You MUST follow these notes to use the tools:\n"
+-                    f"<notes>{notes}</notes>",
++                    text=text_response,
+                 ),
+             ],
+         )
+2026-06-06 15:12:45,658 - INFO - Attempting to stop container agentscope-ai__agentscope-962-test2...
+2026-06-06 15:13:04,459 - INFO - Attempting to remove container agentscope-ai__agentscope-962-test2...
+2026-06-06 15:13:04,508 - INFO - Container agentscope-ai__agentscope-962-test2 removed.
+2026-06-06 15:13:04,508 - INFO - Attempting to remove image agentscope-ai__agentscope-962-dockerfile4:latest...
+2026-06-06 15:13:12,221 - INFO - Image agentscope-ai__agentscope-962-dockerfile4:latest removed.

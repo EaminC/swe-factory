@@ -1,0 +1,22 @@
+{
+    "task_id": "agentscope-ai__agentscope-263",
+    "setup_info": {
+        "repo_path": "testbed/agentscope-ai__agentscope-263_2026-06-06_14-40-05",
+        "repo_cache_path": "testbed/agentscope-ai/agentscope_cache"
+    },
+    "task_info": {
+        "repo": "agentscope-ai/agentscope",
+        "pull_number": 263,
+        "instance_id": "agentscope-ai__agentscope-263",
+        "issue_numbers": [
+            "259"
+        ],
+        "base_commit": "f761cf215fbd1f0a1e57eb2d073229628b77f462",
+        "patch": "diff --git a/src/agentscope/_init.py b/src/agentscope/_init.py\n--- a/src/agentscope/_init.py\n+++ b/src/agentscope/_init.py\n@@ -162,6 +162,9 @@ def init_process(\n     if runtime_id is not None:\n         _runtime.runtime_id = runtime_id\n \n+    # Init file manager and save configs by default\n+    file_manager.init(save_dir, save_api_invoke)\n+\n     # Init logger\n     dir_log = str(file_manager.dir_log) if save_log else None\n     setup_logger(dir_log, logger_level)\n@@ -170,9 +173,6 @@ def init_process(\n     if model_configs is not None:\n         read_model_configs(model_configs)\n \n-    # Init file manager and save configs by default\n-    file_manager.init(save_dir, save_api_invoke)\n-\n     # Init monitor\n     _ = MonitorFactory.get_monitor(\n         db_path=file_manager.path_db,\n",
+        "test_patch": "diff --git a/tests/rpc_agent_test.py b/tests/rpc_agent_test.py\n--- a/tests/rpc_agent_test.py\n+++ b/tests/rpc_agent_test.py\n@@ -4,6 +4,7 @@\n \"\"\"\n import unittest\n import time\n+import os\n import shutil\n from loguru import logger\n \n@@ -159,14 +160,15 @@ def setUp(self) -> None:\n         agentscope.init(\n             project=\"test\",\n             name=\"rpc_agent\",\n-            save_dir=\"./test_runs\",\n+            save_dir=\"./.unittest_runs\",\n             save_log=True,\n         )\n+        self.assertTrue(os.path.exists(\"./.unittest_runs\"))\n \n     def tearDown(self) -> None:\n         MonitorFactory._instance = None  # pylint: disable=W0212\n         logger.remove()\n-        shutil.rmtree(\"./test_runs\")\n+        shutil.rmtree(\"./.unittest_runs\")\n \n     def test_single_rpc_agent_server(self) -> None:\n         \"\"\"test setup a single rpc agent\"\"\"\n",
+        "problem_statement": "[Bug]:\u5df2\u7ecf\u5b9a\u4e49\u4e86\u8def\u5f84\uff0c\u4f46\u662f\u5bf9\u8bdd\u7684\u65e5\u5fd7\u751f\u6210\u8def\u5f84\u8fd8\u662f\u5728\u9ed8\u8ba4\u6587\u4ef6\u5939\n\u5df2\u7ecf\u5b9a\u4e49\u4e86\u8def\u5f84\uff0c\u4f46\u662f\u5bf9\u8bdd\u7684\u65e5\u5fd7\u751f\u6210\u8def\u5f84\u8fd8\u662f\u5728\u9ed8\u8ba4\u6587\u4ef6\u5939\r\n![image](https://github.com/modelscope/agentscope/assets/63997166/22fa7571-49fa-491d-91e5-c6c137dbed12)\r\n![image](https://github.com/modelscope/agentscope/assets/63997166/895d6d10-fd06-444f-933b-da49df47def0)\r\n\n",
+        "hints_text": "![image](https://github.com/modelscope/agentscope/assets/63997166/e156b494-9eec-4210-8ecf-66f4473fb8af)\r\n\u4e3a\u4ec0\u4e48\u662f\u5206\u5f00\u7684\uff1f\n\u611f\u8c22\u53cd\u9988\uff0c\u6211\u4eec\u4f1a\u5c3d\u5feb\u4fee\u590d",
+        "created_at": "2024-05-28T02:14:33Z",
+        "version": "0.0"
+    }
+}

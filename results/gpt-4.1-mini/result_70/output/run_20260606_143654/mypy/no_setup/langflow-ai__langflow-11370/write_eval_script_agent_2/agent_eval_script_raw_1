@@ -1,0 +1,28 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 1529f56bf4fb392bb27ae65442b519f1eff744b7 
+
+# Apply required test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Change directory to src/lfx for isolated test environment management
+cd src/lfx
+
+# Synchronize the isolated environment
+uv sync
+
+# Run the target test file with uv run pytest, using marker "unit" as recommended
+uv run pytest -rA -p no:benchmark -m "unit" tests/unit/components/utilities/test_current_date.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the patch on the applied test file
+cd /testbed
+git checkout 1529f56bf4fb392bb27ae65442b519f1eff744b7
+</script>

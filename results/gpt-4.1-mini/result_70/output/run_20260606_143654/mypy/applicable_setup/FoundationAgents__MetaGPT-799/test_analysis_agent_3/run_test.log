@@ -1,0 +1,84 @@
+2026-06-06 14:57:04,662 - INFO - Checking if image foundationagents__metagpt-799-dockerfile3:latest exists locally...
+2026-06-06 14:57:04,665 - INFO - Image foundationagents__metagpt-799-dockerfile3:latest found locally.
+2026-06-06 14:57:04,665 - INFO - Creating container for foundationagents__metagpt-799...
+2026-06-06 14:57:04,977 - INFO - Container for foundationagents__metagpt-799 started: bddef0faf3308886f39df51931fe453711f03b27849c1941b5ad68fd34f7e6be
+2026-06-06 14:57:04,977 - INFO - Intermediate patch for foundationagents__metagpt-799 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-799/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-06 14:57:05,374 - INFO - Apply patch success:
+Checking patch metagpt/utils/repair_llm_raw_output.py...
+Applied patch metagpt/utils/repair_llm_raw_output.py cleanly.
+
+2026-06-06 14:57:05,713 - INFO - Git diff before:
+diff --git a/metagpt/utils/repair_llm_raw_output.py b/metagpt/utils/repair_llm_raw_output.py
+index b71def13..6da974d9 100644
+--- a/metagpt/utils/repair_llm_raw_output.py
++++ b/metagpt/utils/repair_llm_raw_output.py
+@@ -119,15 +119,22 @@ def repair_json_format(output: str) -> str:
+         logger.info(f"repair_json_format: {'}]'}")
+     elif output.startswith("{") and output.endswith("]"):
+         output = output[:-1] + "}"
+-
+-    # remove `#` in output json str, usually appeared in `glm-4`
++    # remove comments in output json string, after json value content, maybe start with #, maybe start with //
+     arr = output.split("\n")
+     new_arr = []
+-    for line in arr:
+-        idx = line.find("#")
+-        if idx >= 0:
+-            line = line[:idx]
+-        new_arr.append(line)
++    for json_line in arr:
++        # look for # or // comments and make sure they are not inside the string value
++        comment_index = -1
++        for match in re.finditer(r"(\".*?\"|\'.*?\')|(#|//)", json_line):
++            if match.group(1):  # if the string value
++                continue
++            if match.group(2):  # if comments
++                comment_index = match.start(2)
++                break
++        # if comments, then delete them
++        if comment_index != -1:
++            json_line = json_line[:comment_index].rstrip()
++        new_arr.append(json_line)
+     output = "\n".join(new_arr)
+     return output
+2026-06-06 14:57:05,714 - INFO - Eval script for foundationagents__metagpt-799 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-799/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-06 14:57:06,748 - INFO - Test output for foundationagents__metagpt-799 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-799/test_analysis_agent_3/test_output.txt
+2026-06-06 14:57:06,833 - INFO - Git diff after:
+diff --git a/metagpt/utils/repair_llm_raw_output.py b/metagpt/utils/repair_llm_raw_output.py
+index b71def13..6da974d9 100644
+--- a/metagpt/utils/repair_llm_raw_output.py
++++ b/metagpt/utils/repair_llm_raw_output.py
+@@ -119,15 +119,22 @@ def repair_json_format(output: str) -> str:
+         logger.info(f"repair_json_format: {'}]'}")
+     elif output.startswith("{") and output.endswith("]"):
+         output = output[:-1] + "}"
+-
+-    # remove `#` in output json str, usually appeared in `glm-4`
++    # remove comments in output json string, after json value content, maybe start with #, maybe start with //
+     arr = output.split("\n")
+     new_arr = []
+-    for line in arr:
+-        idx = line.find("#")
+-        if idx >= 0:
+-            line = line[:idx]
+-        new_arr.append(line)
++    for json_line in arr:
++        # look for # or // comments and make sure they are not inside the string value
++        comment_index = -1
++        for match in re.finditer(r"(\".*?\"|\'.*?\')|(#|//)", json_line):
++            if match.group(1):  # if the string value
++                continue
++            if match.group(2):  # if comments
++                comment_index = match.start(2)
++                break
++        # if comments, then delete them
++        if comment_index != -1:
++            json_line = json_line[:comment_index].rstrip()
++        new_arr.append(json_line)
+     output = "\n".join(new_arr)
+     return output
+2026-06-06 14:57:06,833 - INFO - Attempting to stop container foundationagents__metagpt-799-test2...
+2026-06-06 14:57:24,866 - INFO - Attempting to remove container foundationagents__metagpt-799-test2...
+2026-06-06 14:57:24,889 - INFO - Container foundationagents__metagpt-799-test2 removed.
+2026-06-06 14:57:24,889 - INFO - Attempting to remove image foundationagents__metagpt-799-dockerfile3:latest...
+2026-06-06 14:57:32,544 - INFO - Image foundationagents__metagpt-799-dockerfile3:latest removed.

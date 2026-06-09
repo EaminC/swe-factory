@@ -1,0 +1,67 @@
+<dockerfile>
+# Use official Ubuntu 22.04 base image without platform restriction to avoid image metadata issues
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Set bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, wget, build essentials, python3 and tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    locales \
+    tzdata \
+    libffi-dev \
+    libssl-dev \
+    python3 \
+    python3-venv \
+    python3-distutils \
+    python3-pip \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install setuptools and wheel
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install Miniconda for Python 3.11 (stable version verified on official repo)
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.5.2-0-Linux-x86_64.sh -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/miniconda3 \
+    && rm miniconda.sh
+
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and create environment named 'testbed' with python 3.11 for paddlepaddle 2.4.2 compatibility
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.11 -y && \
+    conda clean -afy"
+
+# Clone the repository & checkout specific commit in separate step
+RUN git clone https://github.com/FoundationAgents/MetaGPT /testbed && \
+    cd /testbed && \
+    git reset --hard 8b209d4e17ad7dfc1ad7a80505eac42f71228734
+
+WORKDIR /testbed/
+
+# Install Python dependencies inside the conda environment
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install -e .[test]"
+
+# Install global npm package independently to isolate issues
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Install Playwright browsers with dependencies separately
+RUN /bin/bash -c "playwright install --with-deps"
+
+# Add environment activation to bashrc for easier interactive use
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+# Set environment variable recommended by testing info to disable OpenAI API calls by default
+ENV ALLOW_OPENAI_API_CALL=0
+</dockerfile>

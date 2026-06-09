@@ -1,0 +1,75 @@
+用gemini作为LLM，运行数据解析器中的data_visualization.py示例报错
+Traceback (most recent call last):
+  File "g:\metagpt\metagpt-main\metagpt\utils\common.py", line 638, in wrapper
+    return await func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\role.py", line 556, in run
+    rsp = await self.react()
+          ^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\role.py", line 527, in react
+    rsp = await self._plan_and_act()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\di\data_interpreter.py", line 89, in _plan_and_act
+    rsp = await super()._plan_and_act()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\role.py", line 495, in _plan_and_act
+    task_result = await self._act_on_task(task)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\di\data_interpreter.py", line 95, in _act_on_task
+    code, result, is_success = await self._write_and_exec_code()
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\di\data_interpreter.py", line 121, in _write_and_exec_code
+    code, cause_by = await self._write_code(counter, plan_status, tool_info)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\roles\di\data_interpreter.py", line 154, in _write_code
+    code = await todo.run(
+           ^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\actions\di\write_analysis_code.py", line 59, in run
+    rsp = await self.llm.aask(context, system_msgs=[INTERPRETER_SYSTEM_MSG], **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\provider\base_llm.py", line 127, in aask
+    rsp = await self.acompletion_text(message, stream=stream, timeout=timeout)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\tenacity\_asyncio.py", line 88, in async_wrapped
+    return await fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\tenacity\_asyncio.py", line 47, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\tenacity\__init__.py", line 314, in iter
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "G:\python\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "G:\python\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "g:\MetaGPT\pyenv\Lib\site-packages\tenacity\_asyncio.py", line 50, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\provider\base_llm.py", line 175, in acompletion_text
+    return await self._achat_completion_stream(messages, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\metagpt\metagpt-main\metagpt\provider\google_gemini_api.py", line 101, in _achat_completion_stream
+    resp: AsyncGenerateContentResponse = await self.llm.generate_content_async(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\generative_models.py", line 261, in generate_content_async
+    request = self._prepare_request(
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\generative_models.py", line 204, in _prepare_request
+    contents = content_types.to_contents(contents)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\types\content_types.py", line 232, in to_contents
+    contents = [strict_to_content(c) for c in contents]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\types\content_types.py", line 232, in <listcomp>
+    contents = [strict_to_content(c) for c in contents]
+                ^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\types\content_types.py", line 210, in strict_to_content
+    content = _convert_dict(content)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "g:\MetaGPT\pyenv\Lib\site-packages\google\generativeai\types\content_types.py", line 107, in _convert_dict
+    raise KeyError(
+KeyError: "Could not recognize the intended type of the `dict`. A `Content` should have a 'parts' key. A `Part` should have a 'inline_data' or a 'text' key. A `Blob` should have 'mime_type' and 'data' keys. Got keys: ['role', 'content']"
+
+

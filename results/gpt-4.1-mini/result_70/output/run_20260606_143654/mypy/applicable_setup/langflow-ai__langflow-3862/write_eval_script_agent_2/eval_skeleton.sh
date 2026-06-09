@@ -1,0 +1,31 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Since only "src/frontend/tests/core/features/chatInputOutputUser-shard-0.spec.ts" exists in the repo at the commit,
+# we do NOT checkout the other two test files that do not exist.
+# Just ensure clean checkout of this existing test file before applying patch.
+git checkout 667713f6c04fbc208fb7eefba70f101562070c9e "src/frontend/tests/core/features/chatInputOutputUser-shard-0.spec.ts"
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the python virtual environment
+source /opt/testbed-venv/bin/activate
+
+# Frontend test: run only the existing frontend test file using Playwright with proper working directory
+cd src/frontend
+
+# Run the single existing frontend test file with Playwright, using shard 0/1 to simplify
+npx playwright test tests/core/features/chatInputOutputUser-shard-0.spec.ts --trace on --shard 0/1 --workers 2
+rc=$?
+
+cd /testbed
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset patched test file after testing
+git checkout 667713f6c04fbc208fb7eefba70f101562070c9e "src/frontend/tests/core/features/chatInputOutputUser-shard-0.spec.ts"

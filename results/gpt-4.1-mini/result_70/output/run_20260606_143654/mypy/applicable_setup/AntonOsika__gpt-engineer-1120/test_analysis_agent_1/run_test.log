@@ -1,0 +1,130 @@
+2026-06-06 14:46:42,895 - INFO - Checking if image antonosika__gpt-engineer-1120-dockerfile1:latest exists locally...
+2026-06-06 14:46:42,900 - INFO - Image antonosika__gpt-engineer-1120-dockerfile1:latest found locally.
+2026-06-06 14:46:42,900 - INFO - Creating container for antonosika__gpt-engineer-1120...
+2026-06-06 14:46:43,484 - INFO - Container for antonosika__gpt-engineer-1120 started: 41381cf4f36068fcdd5cd637d7ddef4e4686f09f8754daf764ffceff49deb0c0
+2026-06-06 14:46:43,485 - INFO - Intermediate patch for antonosika__gpt-engineer-1120 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-1120/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-06 14:46:43,976 - INFO - Apply patch success:
+Checking patch gpt_engineer/applications/cli/learning.py...
+Checking patch gpt_engineer/core/prompt.py...
+Applied patch gpt_engineer/applications/cli/learning.py cleanly.
+Applied patch gpt_engineer/core/prompt.py cleanly.
+
+2026-06-06 14:46:44,184 - INFO - Git diff before:
+diff --git a/gpt_engineer/applications/cli/learning.py b/gpt_engineer/applications/cli/learning.py
+index eb183c5..d9a7cbc 100644
+--- a/gpt_engineer/applications/cli/learning.py
++++ b/gpt_engineer/applications/cli/learning.py
+@@ -79,7 +79,7 @@ class Learning:
+     Attributes
+     ----------
+     prompt : str
+-        The initial prompt provided to the GPT Engineer.
++        A JSON string representing the prompt provided to GPT Engineer.
+     model : str
+         The name of the model used during the session.
+     temperature : float
+@@ -98,7 +98,7 @@ class Learning:
+         The version of the learning data schema.
+     """
+ 
+-    prompt: Prompt
++    prompt: str
+     model: str
+     temperature: float
+     config: str
+@@ -266,7 +266,7 @@ def extract_learning(
+         An instance of Learning containing all the session details and user feedback.
+     """
+     return Learning(
+-        prompt=prompt,
++        prompt=prompt.to_json(),
+         model=model,
+         temperature=temperature,
+         config=json.dumps(config),
+diff --git a/gpt_engineer/core/prompt.py b/gpt_engineer/core/prompt.py
+index 675a22d..4d82863 100644
+--- a/gpt_engineer/core/prompt.py
++++ b/gpt_engineer/core/prompt.py
+@@ -1,3 +1,5 @@
++import json
++
+ from typing import Dict, Optional
+ 
+ 
+@@ -30,3 +32,13 @@ class Prompt:
+                 content.append(image_content)
+ 
+         return content
++
++    def to_dict(self):
++        return {
++            "text": self.text,
++            "image_urls": self.image_urls,
++            "entrypoint_prompt": self.entrypoint_prompt,
++        }
++
++    def to_json(self):
++        return json.dumps(self.to_dict())
+2026-06-06 14:46:44,190 - INFO - Eval script for antonosika__gpt-engineer-1120 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-1120/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-06 14:46:46,075 - INFO - Test output for antonosika__gpt-engineer-1120 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-1120/test_analysis_agent_1/test_output.txt
+2026-06-06 14:46:46,215 - INFO - Git diff after:
+diff --git a/gpt_engineer/applications/cli/learning.py b/gpt_engineer/applications/cli/learning.py
+index eb183c5..d9a7cbc 100644
+--- a/gpt_engineer/applications/cli/learning.py
++++ b/gpt_engineer/applications/cli/learning.py
+@@ -79,7 +79,7 @@ class Learning:
+     Attributes
+     ----------
+     prompt : str
+-        The initial prompt provided to the GPT Engineer.
++        A JSON string representing the prompt provided to GPT Engineer.
+     model : str
+         The name of the model used during the session.
+     temperature : float
+@@ -98,7 +98,7 @@ class Learning:
+         The version of the learning data schema.
+     """
+ 
+-    prompt: Prompt
++    prompt: str
+     model: str
+     temperature: float
+     config: str
+@@ -266,7 +266,7 @@ def extract_learning(
+         An instance of Learning containing all the session details and user feedback.
+     """
+     return Learning(
+-        prompt=prompt,
++        prompt=prompt.to_json(),
+         model=model,
+         temperature=temperature,
+         config=json.dumps(config),
+diff --git a/gpt_engineer/core/prompt.py b/gpt_engineer/core/prompt.py
+index 675a22d..4d82863 100644
+--- a/gpt_engineer/core/prompt.py
++++ b/gpt_engineer/core/prompt.py
+@@ -1,3 +1,5 @@
++import json
++
+ from typing import Dict, Optional
+ 
+ 
+@@ -30,3 +32,13 @@ class Prompt:
+                 content.append(image_content)
+ 
+         return content
++
++    def to_dict(self):
++        return {
++            "text": self.text,
++            "image_urls": self.image_urls,
++            "entrypoint_prompt": self.entrypoint_prompt,
++        }
++
++    def to_json(self):
++        return json.dumps(self.to_dict())
+2026-06-06 14:46:46,215 - INFO - Attempting to stop container antonosika__gpt-engineer-1120-test1...
+2026-06-06 14:47:01,748 - INFO - Attempting to remove container antonosika__gpt-engineer-1120-test1...
+2026-06-06 14:47:01,770 - INFO - Container antonosika__gpt-engineer-1120-test1 removed.
+2026-06-06 14:47:01,770 - INFO - Attempting to remove image antonosika__gpt-engineer-1120-dockerfile1:latest...
+2026-06-06 14:47:04,329 - INFO - Image antonosika__gpt-engineer-1120-dockerfile1:latest removed.

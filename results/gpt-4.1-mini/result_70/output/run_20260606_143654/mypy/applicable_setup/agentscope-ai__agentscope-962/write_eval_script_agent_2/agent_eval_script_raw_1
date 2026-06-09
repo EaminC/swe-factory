@@ -1,0 +1,27 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Checkout only existing test file at the commit; exclude missing or renamed files
+git checkout a2bf80ec96e29cb760ac6d4018680d6af68c9416 "tests/toolkit_test.py"
+
+# Apply the test patch which renames tests/toolkit_test.py to tests/toolkit_basic_test.py
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the Python virtual environment created at /testbed/testbed
+source /testbed/testbed/bin/activate
+
+# Run the actual test file present after patch application
+pytest -q -rA tests/toolkit_basic_test.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Revert changes on the initially checked-out test file (the one present before patch)
+git checkout a2bf80ec96e29cb760ac6d4018680d6af68c9416 "tests/toolkit_test.py"
+
+</script>

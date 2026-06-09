@@ -1,0 +1,354 @@
+2026-06-06 15:23:32,575 - INFO - Checking if image foundationagents__metagpt-1058-dockerfile6:latest exists locally...
+2026-06-06 15:23:32,577 - INFO - Image foundationagents__metagpt-1058-dockerfile6:latest found locally.
+2026-06-06 15:23:32,577 - INFO - Creating container for foundationagents__metagpt-1058...
+2026-06-06 15:23:32,861 - INFO - Container for foundationagents__metagpt-1058 started: 0886a2aac18b1c9bf01fcf47e175f180af664f8260658974a3be0e77957432b2
+2026-06-06 15:23:32,861 - INFO - Intermediate patch for foundationagents__metagpt-1058 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-1058/test_analysis_agent_6/patch.diff, now applying to container...
+2026-06-06 15:23:33,326 - INFO - Apply patch success:
+Checking patch metagpt/actions/di/write_analysis_code.py...
+Checking patch metagpt/provider/base_llm.py...
+Checking patch metagpt/provider/google_gemini_api.py...
+Checking patch metagpt/provider/openai_api.py...
+Checking patch metagpt/utils/common.py...
+Applied patch metagpt/actions/di/write_analysis_code.py cleanly.
+Applied patch metagpt/provider/base_llm.py cleanly.
+Applied patch metagpt/provider/google_gemini_api.py cleanly.
+Applied patch metagpt/provider/openai_api.py cleanly.
+Applied patch metagpt/utils/common.py cleanly.
+
+2026-06-06 15:23:33,778 - INFO - Git diff before:
+diff --git a/metagpt/actions/di/write_analysis_code.py b/metagpt/actions/di/write_analysis_code.py
+index 185926e3..711e56d3 100644
+--- a/metagpt/actions/di/write_analysis_code.py
++++ b/metagpt/actions/di/write_analysis_code.py
+@@ -18,7 +18,7 @@ from metagpt.prompts.di.write_analysis_code import (
+     STRUCTUAL_PROMPT,
+ )
+ from metagpt.schema import Message, Plan
+-from metagpt.utils.common import CodeParser, process_message, remove_comments
++from metagpt.utils.common import CodeParser, remove_comments
+ 
+ 
+ class WriteAnalysisCode(Action):
+@@ -50,7 +50,7 @@ class WriteAnalysisCode(Action):
+         )
+ 
+         working_memory = working_memory or []
+-        context = process_message([Message(content=structual_prompt, role="user")] + working_memory)
++        context = self.llm.format_msg([Message(content=structual_prompt, role="user")] + working_memory)
+ 
+         # LLM call
+         if use_reflection:
+diff --git a/metagpt/provider/base_llm.py b/metagpt/provider/base_llm.py
+index 71308930..601980d5 100644
+--- a/metagpt/provider/base_llm.py
++++ b/metagpt/provider/base_llm.py
+@@ -73,6 +73,28 @@ class BaseLLM(ABC):
+     def _system_msg(self, msg: str) -> dict[str, str]:
+         return {"role": "system", "content": msg}
+ 
++    def format_msg(self, messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
++        """convert messages to list[dict]."""
++        from metagpt.schema import Message
++
++        if not isinstance(messages, list):
++            messages = [messages]
++
++        processed_messages = []
++        for msg in messages:
++            if isinstance(msg, str):
++                processed_messages.append({"role": "user", "content": msg})
++            elif isinstance(msg, dict):
++                assert set(msg.keys()) == set(["role", "content"])
++                processed_messages.append(msg)
++            elif isinstance(msg, Message):
++                processed_messages.append(msg.to_dict())
++            else:
++                raise ValueError(
++                    f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!"
++                )
++        return processed_messages
++
+     def _system_msgs(self, msgs: list[str]) -> list[dict[str, str]]:
+         return [self._system_msg(msg) for msg in msgs]
+ 
+diff --git a/metagpt/provider/google_gemini_api.py b/metagpt/provider/google_gemini_api.py
+index 09e55420..7370747a 100644
+--- a/metagpt/provider/google_gemini_api.py
++++ b/metagpt/provider/google_gemini_api.py
+@@ -18,6 +18,7 @@ from metagpt.configs.llm_config import LLMConfig, LLMType
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
++from metagpt.schema import Message
+ 
+ 
+ class GeminiGenerativeModel(GenerativeModel):
+@@ -61,6 +62,35 @@ class GeminiLLM(BaseLLM):
+     def _assistant_msg(self, msg: str) -> dict[str, str]:
+         return {"role": "model", "parts": [msg]}
+ 
++    def _system_msg(self, msg: str) -> dict[str, str]:
++        return {"role": "user", "parts": [msg]}
++
++    def format_msg(self, messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
++        """convert messages to list[dict]."""
++        from metagpt.schema import Message
++
++        if not isinstance(messages, list):
++            messages = [messages]
++
++        # REF: https://ai.google.dev/tutorials/python_quickstart
++        # As a dictionary, the message requires `role` and `parts` keys.
++        # The role in a conversation can either be the `user`, which provides the prompts,
++        # or `model`, which provides the responses.
++        processed_messages = []
++        for msg in messages:
++            if isinstance(msg, str):
++                processed_messages.append({"role": "user", "parts": [msg]})
++            elif isinstance(msg, dict):
++                assert set(msg.keys()) == set(["role", "parts"])
++                processed_messages.append(msg)
++            elif isinstance(msg, Message):
++                processed_messages.append({"role": "user" if msg.role == "user" else "model", "parts": [msg.content]})
++            else:
++                raise ValueError(
++                    f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!"
++                )
++        return processed_messages
++
+     def _const_kwargs(self, messages: list[dict], stream: bool = False) -> dict:
+         kwargs = {"contents": messages, "generation_config": GenerationConfig(temperature=0.3), "stream": stream}
+         return kwargs
+diff --git a/metagpt/provider/openai_api.py b/metagpt/provider/openai_api.py
+index b4f99e69..2fb64dc8 100644
+--- a/metagpt/provider/openai_api.py
++++ b/metagpt/provider/openai_api.py
+@@ -29,12 +29,7 @@ from metagpt.logs import log_llm_stream, logger
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.constant import GENERAL_FUNCTION_SCHEMA
+ from metagpt.provider.llm_provider_registry import register_provider
+-from metagpt.utils.common import (
+-    CodeParser,
+-    decode_image,
+-    log_and_reraise,
+-    process_message,
+-)
++from metagpt.utils.common import CodeParser, decode_image, log_and_reraise
+ from metagpt.utils.cost_manager import CostManager
+ from metagpt.utils.exceptions import handle_exception
+ from metagpt.utils.token_counter import (
+@@ -150,7 +145,7 @@ class OpenAILLM(BaseLLM):
+     async def _achat_completion_function(
+         self, messages: list[dict], timeout: int = 3, **chat_configs
+     ) -> ChatCompletion:
+-        messages = process_message(messages)
++        messages = self.format_msg(messages)
+         kwargs = self._cons_kwargs(messages=messages, timeout=timeout, **chat_configs)
+         rsp: ChatCompletion = await self.aclient.chat.completions.create(**kwargs)
+         self._update_costs(rsp.usage)
+diff --git a/metagpt/utils/common.py b/metagpt/utils/common.py
+index e9cef69a..7493712c 100644
+--- a/metagpt/utils/common.py
++++ b/metagpt/utils/common.py
+@@ -802,29 +802,6 @@ def decode_image(img_url_or_b64: str) -> Image:
+     return img
+ 
+ 
+-def process_message(messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
+-    """convert messages to list[dict]."""
+-    from metagpt.schema import Message
+-
+-    # 全部转成list
+-    if not isinstance(messages, list):
+-        messages = [messages]
+-
+-    # 转成list[dict]
+-    processed_messages = []
+-    for msg in messages:
+-        if isinstance(msg, str):
+-            processed_messages.append({"role": "user", "content": msg})
+-        elif isinstance(msg, dict):
+-            assert set(msg.keys()) == set(["role", "content"])
+-            processed_messages.append(msg)
+-        elif isinstance(msg, Message):
+-            processed_messages.append(msg.to_dict())
+-        else:
+-            raise ValueError(f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!")
+-    return processed_messages
+-
+-
+ def log_and_reraise(retry_state: RetryCallState):
+     logger.error(f"Retry attempts exhausted. Last exception: {retry_state.outcome.exception()}")
+     logger.warning(
+2026-06-06 15:23:33,779 - INFO - Eval script for foundationagents__metagpt-1058 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-1058/test_analysis_agent_6/patch.diff, now applying to container...
+2026-06-06 15:23:38,419 - INFO - Test output for foundationagents__metagpt-1058 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/FoundationAgents__MetaGPT-1058/test_analysis_agent_6/test_output.txt
+2026-06-06 15:23:38,511 - INFO - Git diff after:
+diff --git a/metagpt/actions/di/write_analysis_code.py b/metagpt/actions/di/write_analysis_code.py
+index 185926e3..711e56d3 100644
+--- a/metagpt/actions/di/write_analysis_code.py
++++ b/metagpt/actions/di/write_analysis_code.py
+@@ -18,7 +18,7 @@ from metagpt.prompts.di.write_analysis_code import (
+     STRUCTUAL_PROMPT,
+ )
+ from metagpt.schema import Message, Plan
+-from metagpt.utils.common import CodeParser, process_message, remove_comments
++from metagpt.utils.common import CodeParser, remove_comments
+ 
+ 
+ class WriteAnalysisCode(Action):
+@@ -50,7 +50,7 @@ class WriteAnalysisCode(Action):
+         )
+ 
+         working_memory = working_memory or []
+-        context = process_message([Message(content=structual_prompt, role="user")] + working_memory)
++        context = self.llm.format_msg([Message(content=structual_prompt, role="user")] + working_memory)
+ 
+         # LLM call
+         if use_reflection:
+diff --git a/metagpt/provider/base_llm.py b/metagpt/provider/base_llm.py
+index 71308930..601980d5 100644
+--- a/metagpt/provider/base_llm.py
++++ b/metagpt/provider/base_llm.py
+@@ -73,6 +73,28 @@ class BaseLLM(ABC):
+     def _system_msg(self, msg: str) -> dict[str, str]:
+         return {"role": "system", "content": msg}
+ 
++    def format_msg(self, messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
++        """convert messages to list[dict]."""
++        from metagpt.schema import Message
++
++        if not isinstance(messages, list):
++            messages = [messages]
++
++        processed_messages = []
++        for msg in messages:
++            if isinstance(msg, str):
++                processed_messages.append({"role": "user", "content": msg})
++            elif isinstance(msg, dict):
++                assert set(msg.keys()) == set(["role", "content"])
++                processed_messages.append(msg)
++            elif isinstance(msg, Message):
++                processed_messages.append(msg.to_dict())
++            else:
++                raise ValueError(
++                    f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!"
++                )
++        return processed_messages
++
+     def _system_msgs(self, msgs: list[str]) -> list[dict[str, str]]:
+         return [self._system_msg(msg) for msg in msgs]
+ 
+diff --git a/metagpt/provider/google_gemini_api.py b/metagpt/provider/google_gemini_api.py
+index 09e55420..7370747a 100644
+--- a/metagpt/provider/google_gemini_api.py
++++ b/metagpt/provider/google_gemini_api.py
+@@ -18,6 +18,7 @@ from metagpt.configs.llm_config import LLMConfig, LLMType
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
++from metagpt.schema import Message
+ 
+ 
+ class GeminiGenerativeModel(GenerativeModel):
+@@ -61,6 +62,35 @@ class GeminiLLM(BaseLLM):
+     def _assistant_msg(self, msg: str) -> dict[str, str]:
+         return {"role": "model", "parts": [msg]}
+ 
++    def _system_msg(self, msg: str) -> dict[str, str]:
++        return {"role": "user", "parts": [msg]}
++
++    def format_msg(self, messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
++        """convert messages to list[dict]."""
++        from metagpt.schema import Message
++
++        if not isinstance(messages, list):
++            messages = [messages]
++
++        # REF: https://ai.google.dev/tutorials/python_quickstart
++        # As a dictionary, the message requires `role` and `parts` keys.
++        # The role in a conversation can either be the `user`, which provides the prompts,
++        # or `model`, which provides the responses.
++        processed_messages = []
++        for msg in messages:
++            if isinstance(msg, str):
++                processed_messages.append({"role": "user", "parts": [msg]})
++            elif isinstance(msg, dict):
++                assert set(msg.keys()) == set(["role", "parts"])
++                processed_messages.append(msg)
++            elif isinstance(msg, Message):
++                processed_messages.append({"role": "user" if msg.role == "user" else "model", "parts": [msg.content]})
++            else:
++                raise ValueError(
++                    f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!"
++                )
++        return processed_messages
++
+     def _const_kwargs(self, messages: list[dict], stream: bool = False) -> dict:
+         kwargs = {"contents": messages, "generation_config": GenerationConfig(temperature=0.3), "stream": stream}
+         return kwargs
+diff --git a/metagpt/provider/openai_api.py b/metagpt/provider/openai_api.py
+index b4f99e69..2fb64dc8 100644
+--- a/metagpt/provider/openai_api.py
++++ b/metagpt/provider/openai_api.py
+@@ -29,12 +29,7 @@ from metagpt.logs import log_llm_stream, logger
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.constant import GENERAL_FUNCTION_SCHEMA
+ from metagpt.provider.llm_provider_registry import register_provider
+-from metagpt.utils.common import (
+-    CodeParser,
+-    decode_image,
+-    log_and_reraise,
+-    process_message,
+-)
++from metagpt.utils.common import CodeParser, decode_image, log_and_reraise
+ from metagpt.utils.cost_manager import CostManager
+ from metagpt.utils.exceptions import handle_exception
+ from metagpt.utils.token_counter import (
+@@ -150,7 +145,7 @@ class OpenAILLM(BaseLLM):
+     async def _achat_completion_function(
+         self, messages: list[dict], timeout: int = 3, **chat_configs
+     ) -> ChatCompletion:
+-        messages = process_message(messages)
++        messages = self.format_msg(messages)
+         kwargs = self._cons_kwargs(messages=messages, timeout=timeout, **chat_configs)
+         rsp: ChatCompletion = await self.aclient.chat.completions.create(**kwargs)
+         self._update_costs(rsp.usage)
+diff --git a/metagpt/utils/common.py b/metagpt/utils/common.py
+index e9cef69a..7493712c 100644
+--- a/metagpt/utils/common.py
++++ b/metagpt/utils/common.py
+@@ -802,29 +802,6 @@ def decode_image(img_url_or_b64: str) -> Image:
+     return img
+ 
+ 
+-def process_message(messages: Union[str, Message, list[dict], list[Message], list[str]]) -> list[dict]:
+-    """convert messages to list[dict]."""
+-    from metagpt.schema import Message
+-
+-    # 全部转成list
+-    if not isinstance(messages, list):
+-        messages = [messages]
+-
+-    # 转成list[dict]
+-    processed_messages = []
+-    for msg in messages:
+-        if isinstance(msg, str):
+-            processed_messages.append({"role": "user", "content": msg})
+-        elif isinstance(msg, dict):
+-            assert set(msg.keys()) == set(["role", "content"])
+-            processed_messages.append(msg)
+-        elif isinstance(msg, Message):
+-            processed_messages.append(msg.to_dict())
+-        else:
+-            raise ValueError(f"Only support message type are: str, Message, dict, but got {type(messages).__name__}!")
+-    return processed_messages
+-
+-
+ def log_and_reraise(retry_state: RetryCallState):
+     logger.error(f"Retry attempts exhausted. Last exception: {retry_state.outcome.exception()}")
+     logger.warning(
+2026-06-06 15:23:38,511 - INFO - Attempting to stop container foundationagents__metagpt-1058-test2...
+2026-06-06 15:23:53,942 - INFO - Attempting to remove container foundationagents__metagpt-1058-test2...
+2026-06-06 15:23:53,979 - INFO - Container foundationagents__metagpt-1058-test2 removed.
+2026-06-06 15:23:53,979 - INFO - Attempting to remove image foundationagents__metagpt-1058-dockerfile6:latest...
+2026-06-06 15:24:00,091 - INFO - Image foundationagents__metagpt-1058-dockerfile6:latest removed.

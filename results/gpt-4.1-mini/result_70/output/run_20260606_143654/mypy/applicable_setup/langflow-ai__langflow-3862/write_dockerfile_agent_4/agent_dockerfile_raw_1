@@ -1,0 +1,74 @@
+<dockerfile>
+# Use Ubuntu 22.04 as base image with bash shell support
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, build tools, python3.10, nodejs, npm, poetry dependencies etc.
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure locale to UTF-8 (some python packages require a proper locale)
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install Poetry 1.8.2 specifically to match CI environment (using official installer)
+RUN curl -sSL https://install.python-poetry.org | python3.10 - --version 1.8.2
+ENV PATH="/root/.local/bin:$PATH"
+
+# Install Node.js 20.x (to ensure compatibility with latest npm)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    # Do NOT upgrade npm globally to avoid version incompatibility issues
+    rm -rf /var/lib/apt/lists/*
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone repo, checkout to target commit, and install dependencies in development mode
+RUN git clone https://github.com/langflow-ai/langflow.git /testbed && \
+    git reset --hard 667713f6c04fbc208fb7eefba70f101562070c9e && \
+    git remote remove origin && \
+    \
+    # Setup Python environment with venv
+    python3.10 -m venv /opt/testbed-venv && \
+    source /opt/testbed-venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install poetry==1.8.2 && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi && \
+    pip install -e . && \
+    \
+    # Install frontend dependencies with npm
+    cd src/frontend && \
+    npm install && \
+    cd /testbed
+
+# Set default shell to bash
+ENV SHELL=/bin/bash
+
+# Add the python venv to PATH
+ENV PATH="/opt/testbed-venv/bin:$PATH"
+
+# Activate the python virtual environment by default in interactive shells
+RUN echo "source /opt/testbed-venv/bin/activate" >> /root/.bashrc
+</dockerfile>

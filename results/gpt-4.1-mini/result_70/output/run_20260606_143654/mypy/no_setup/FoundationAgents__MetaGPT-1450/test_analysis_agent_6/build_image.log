@@ -1,0 +1,87 @@
+2026-06-06 15:49:57,955 - INFO - Building image foundationagents__metagpt-1450
+Using dockerfile:
+# Use a stable Ubuntu base image and manually install Python 3.10 and Node.js 20 to avoid issues with nikolaik/python-nodejs base image
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Set timezone and locales to avoid warnings
+RUN apt-get update && apt-get install -y tzdata locales && \
+    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata && \
+    locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Install essential system dependencies including git, curl, build tools, python3.10, python3.10-venv, python3.10-dev, pip, chromium, fonts, and certificates
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-dev \
+    python3-pip \
+    ca-certificates \
+    chromium-browser \
+    fonts-liberation \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Remove conflicting libnode-dev package before installing Node.js 20 from NodeSource to avoid dpkg file overwrite errors
+RUN apt-get remove -y libnode-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest \
+    && npm cache clean --force
+
+# Set environment variables required by Chromium and puppeteer in MetaGPT
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    puppeteer_config=/app/metagpt/config/puppeteer-config.json \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PATH="/opt/venv/bin:$PATH"
+
+# Create working directory inside container
+WORKDIR /testbed/
+
+# Clone repository and checkout the specified commit for reproducibility
+ARG COMMIT_SHA=ab846f65e481a655b791959eb0f89fb4b1c84128
+RUN git clone https://github.com/Geekan/MetaGPT.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create python virtual environment for isolation
+RUN python3.10 -m venv /opt/venv
+
+# Upgrade pip, setuptools, and wheel within venv
+RUN /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install dependencies from requirements.txt to ensure version constraints
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Install editable project with test extras separately to avoid deep dependency resolution issues
+RUN /opt/venv/bin/pip install --no-cache-dir -e .[test]
+
+# Globally install mermaid-cli for Node.js as required
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Prepare the configuration directory for MetaGPT runtime configs
+RUN mkdir -p /root/.metagpt
+
+# Add command to activate virtual environment on shell startup
+RUN echo "source /opt/venv/bin/activate" >> /root/.bashrc
+
+# Default shell to bash for interactive sessions
+CMD ["/bin/bash"]
+
+2026-06-06 15:49:57,960 - INFO - Do not find previous image, images list is clean.
+2026-06-06 15:49:57,976 - INFO - Step 1/19 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-06 15:49:57,976 - INFO -  ---> 86f1a8d7b38e
+2026-06-06 15:49:57,976 - INFO - Step 2/19 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-06 15:50:18,102 - INFO -  ---> Running in 70c708b779ac
+2026-06-06 15:50:21,525 - INFO -  ---> Removed intermediate container 70c708b779ac
+2026-06-06 15:50:21,525 - INFO -  ---> ab562b57bda8
+2026-06-06 15:50:21,526 - INFO - Step 3/19 : SHELL ["/bin/bash", "-c"]
+2026-06-06 15:50:43,628 - INFO -  ---> Running in 2778789f4cda
+2026-06-06 15:50:44,281 - INFO -  ---> Removed intermediate container 2778789f4cda
+2026-06-06 15:50:44,282 - ERROR - Error: failed to get digest sha256:ab562b57bda8dcfd457ad90fe121baef8fce67c0d02764a890f87872d7a5e4d4: open /var/lib/docker/image/overlay2/imagedb/content/sha256/ab562b57bda8dcfd457ad90fe121baef8fce67c0d02764a890f87872d7a5e4d4: no such file or directory
+2026-06-06 15:50:44,282 - ERROR - failed to get digest sha256:ab562b57bda8dcfd457ad90fe121baef8fce67c0d02764a890f87872d7a5e4d4: open /var/lib/docker/image/overlay2/imagedb/content/sha256/ab562b57bda8dcfd457ad90fe121baef8fce67c0d02764a890f87872d7a5e4d4: no such file or directory

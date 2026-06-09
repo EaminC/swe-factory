@@ -1,0 +1,1639 @@
+2026-06-06 14:43:44,122 - INFO - Building image foundationagents__metagpt-799
+Using dockerfile:
+FROM --platform=linux/x86_64 continuumio/miniconda3:latest
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    bzip2 \
+    build-essential \
+    libffi-dev \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment path and locale
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH=/opt/conda/bin:$PATH
+
+# Create and activate conda environment with Python 3.9
+RUN conda create -n testbed python=3.9 -y \
+    && conda clean -afy
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repository, checkout specific commit, install dependencies in editable mode
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/FoundationAgents/MetaGPT.git /testbed && \
+    git reset --hard 59afc5301f55037e7b379497767f4af62fd65b31 && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt && \
+    pip install -e ."
+
+# Ensure conda environment activates by default in bash
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+2026-06-06 14:43:44,126 - INFO - Do not find previous image, images list is clean.
+2026-06-06 14:43:44,171 - INFO - Step 1/11 : FROM --platform=linux/x86_64 continuumio/miniconda3:latest
+2026-06-06 14:44:43,787 - INFO -  ---> 266db4b7ae35
+2026-06-06 14:44:43,787 - INFO - Step 2/11 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-06 14:44:44,046 - INFO -  ---> Running in b06660e7ac33
+2026-06-06 14:44:44,097 - INFO -  ---> Removed intermediate container b06660e7ac33
+2026-06-06 14:44:44,097 - INFO -  ---> 4e461c39deb2
+2026-06-06 14:44:44,097 - INFO - Step 3/11 : ENV TZ=Etc/UTC
+2026-06-06 14:44:44,141 - INFO -  ---> Running in 64243ccf9c43
+2026-06-06 14:44:44,185 - INFO -  ---> Removed intermediate container 64243ccf9c43
+2026-06-06 14:44:44,186 - INFO -  ---> 23c8997fc674
+2026-06-06 14:44:44,186 - INFO - Step 4/11 : SHELL ["/bin/bash", "-c"]
+2026-06-06 14:44:44,262 - INFO -  ---> Running in 6ae9ecbce37c
+2026-06-06 14:44:44,314 - INFO -  ---> Removed intermediate container 6ae9ecbce37c
+2026-06-06 14:44:44,314 - INFO -  ---> 680496cf5441
+2026-06-06 14:44:44,314 - INFO - Step 5/11 : RUN apt-get update && apt-get install -y     git     curl     bzip2     build-essential     libffi-dev     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-06-06 14:44:44,403 - INFO -  ---> Running in 0a42b6fb9b5d
+2026-06-06 14:44:44,693 - INFO - Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+2026-06-06 14:44:44,720 - INFO - Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-06-06 14:44:44,720 - INFO - Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-06-06 14:44:44,749 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9671 kB]
+2026-06-06 14:44:44,876 - INFO - Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+2026-06-06 14:44:44,877 - INFO - Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [207 kB]
+2026-06-06 14:44:45,919 - INFO - Fetched 10.1 MB in 1s (8129 kB/s)
+2026-06-06 14:44:46,620 - INFO - Reading package lists...
+2026-06-06 14:44:47,319 - INFO - Reading package lists...
+2026-06-06 14:44:47,511 - INFO - Building dependency tree...
+2026-06-06 14:44:47,512 - INFO - Reading state information...
+2026-06-06 14:44:47,788 - INFO - git is already the newest version (1:2.47.3-0+deb13u1).
+2026-06-06 14:44:47,788 - INFO - bzip2 is already the newest version (1.0.8-6).
+2026-06-06 14:44:47,788 - INFO - The following additional packages will be installed:
+2026-06-06 14:44:47,788 - INFO -   bash-completion binutils binutils-common binutils-x86-64-linux-gnu cpp
+2026-06-06 14:44:47,788 - INFO -   cpp-14 cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev fakeroot g++
+2026-06-06 14:44:47,788 - INFO -   g++-14 g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-06-06 14:44:47,788 - INFO -   gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu libalgorithm-diff-perl
+2026-06-06 14:44:47,789 - INFO -   libalgorithm-diff-xs-perl libalgorithm-merge-perl libasan8 libbinutils
+2026-06-06 14:44:47,789 - INFO -   libc-bin libc-dev-bin libc-l10n libc6 libc6-dev libcc1-0 libcrypt-dev
+2026-06-06 14:44:47,789 - INFO -   libctf-nobfd0 libctf0 libcurl3t64-gnutls libcurl4t64 libdpkg-perl
+2026-06-06 14:44:47,789 - INFO -   libfakeroot libfile-fcntllock-perl libgcc-14-dev libgomp1 libgprofng0
+2026-06-06 14:44:47,789 - INFO -   libhwasan0 libisl23 libitm1 libjansson4 liblocale-gettext-perl liblsan0
+2026-06-06 14:44:47,790 - INFO -   libmpc3 libmpfr6 libquadmath0 libsframe1 libstdc++-14-dev libtsan2 libubsan1
+2026-06-06 14:44:47,790 - INFO -   linux-libc-dev make manpages manpages-dev patch rpcsvc-proto sq xz-utils
+2026-06-06 14:44:47,792 - INFO - Suggested packages:
+2026-06-06 14:44:47,792 - INFO -   binutils-doc gprofng-gui binutils-gold cpp-doc gcc-14-locales cpp-14-doc
+2026-06-06 14:44:47,792 - INFO -   debian-keyring debian-tag2upload-keyring g++-multilib g++-14-multilib
+2026-06-06 14:44:47,792 - INFO -   gcc-14-doc gcc-multilib autoconf automake libtool flex bison gdb gcc-doc
+2026-06-06 14:44:47,792 - INFO -   gcc-14-multilib gdb-x86-64-linux-gnu libc-devtools glibc-doc bzr
+2026-06-06 14:44:47,792 - INFO -   libstdc++-14-doc make-doc man-browser ed diffutils-doc
+2026-06-06 14:44:48,099 - INFO - The following NEW packages will be installed:
+2026-06-06 14:44:48,100 - INFO -   bash-completion binutils binutils-common binutils-x86-64-linux-gnu
+2026-06-06 14:44:48,100 - INFO -   build-essential cpp cpp-14 cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu curl
+2026-06-06 14:44:48,100 - INFO -   dpkg-dev fakeroot g++ g++-14 g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu
+2026-06-06 14:44:48,100 - INFO -   gcc gcc-14 gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu
+2026-06-06 14:44:48,100 - INFO -   libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+2026-06-06 14:44:48,100 - INFO -   libasan8 libbinutils libc-dev-bin libc-l10n libc6-dev libcc1-0 libcrypt-dev
+2026-06-06 14:44:48,101 - INFO -   libctf-nobfd0 libctf0 libcurl4t64 libdpkg-perl libfakeroot libffi-dev
+2026-06-06 14:44:48,101 - INFO -   libfile-fcntllock-perl libgcc-14-dev libgomp1 libgprofng0 libhwasan0
+2026-06-06 14:44:48,101 - INFO -   libisl23 libitm1 libjansson4 liblocale-gettext-perl liblsan0 libmpc3
+2026-06-06 14:44:48,101 - INFO -   libmpfr6 libquadmath0 libsframe1 libstdc++-14-dev libtsan2 libubsan1
+2026-06-06 14:44:48,101 - INFO -   linux-libc-dev locales locales-all make manpages manpages-dev patch
+2026-06-06 14:44:48,101 - INFO -   rpcsvc-proto sq xz-utils
+2026-06-06 14:44:48,102 - INFO - The following packages will be upgraded:
+2026-06-06 14:44:48,103 - INFO -   libc-bin libc6 libcurl3t64-gnutls tzdata
+2026-06-06 14:44:48,207 - INFO - 4 upgraded, 63 newly installed, 0 to remove and 22 not upgraded.
+2026-06-06 14:44:48,239 - INFO - Need to get 105 MB of archives.
+2026-06-06 14:44:48,239 - INFO - After this operation, 581 MB of additional disk space will be used.
+2026-06-06 14:44:48,239 - INFO - Get:1 http://deb.debian.org/debian trixie/main amd64 libc6 amd64 2.41-12+deb13u3 [2850 kB]
+2026-06-06 14:44:48,373 - INFO - Get:2 http://deb.debian.org/debian trixie/main amd64 libc-bin amd64 2.41-12+deb13u3 [638 kB]
+2026-06-06 14:44:48,389 - INFO - Get:3 http://deb.debian.org/debian trixie/main amd64 liblocale-gettext-perl amd64 1.07-7+b1 [15.3 kB]
+2026-06-06 14:44:48,390 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 tzdata all 2026b-0+deb13u1 [264 kB]
+2026-06-06 14:44:48,391 - INFO - Get:5 http://deb.debian.org/debian trixie/main amd64 bash-completion all 1:2.16.0-7 [319 kB]
+2026-06-06 14:44:48,416 - INFO - Get:6 http://deb.debian.org/debian trixie/main amd64 libc-l10n all 2.41-12+deb13u3 [740 kB]
+2026-06-06 14:44:48,427 - INFO - Get:7 http://deb.debian.org/debian trixie/main amd64 locales all 2.41-12+deb13u3 [3925 kB]
+2026-06-06 14:44:48,516 - INFO - Get:8 http://deb.debian.org/debian trixie/main amd64 manpages all 6.9.1-1 [1393 kB]
+2026-06-06 14:44:48,532 - INFO - Get:9 http://deb.debian.org/debian trixie/main amd64 xz-utils amd64 5.8.1-1 [660 kB]
+2026-06-06 14:44:48,538 - INFO - Get:10 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+2026-06-06 14:44:48,542 - INFO - Get:11 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+2026-06-06 14:44:48,595 - INFO - Get:12 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+2026-06-06 14:44:48,617 - INFO - Get:13 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+2026-06-06 14:44:48,647 - INFO - Get:14 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+2026-06-06 14:44:48,660 - INFO - Get:15 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+2026-06-06 14:44:48,678 - INFO - Get:16 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+2026-06-06 14:44:48,706 - INFO - Get:17 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+2026-06-06 14:44:48,737 - INFO - Get:18 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+2026-06-06 14:44:48,796 - INFO - Get:19 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u3 [59.8 kB]
+2026-06-06 14:44:48,818 - INFO - Get:20 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.90-2 [2813 kB]
+2026-06-06 14:44:48,876 - INFO - Get:21 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+2026-06-06 14:44:48,885 - INFO - Get:22 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+2026-06-06 14:44:48,886 - INFO - Get:23 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u3 [1992 kB]
+2026-06-06 14:44:48,915 - INFO - Get:24 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+2026-06-06 14:44:48,916 - INFO - Get:25 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+2026-06-06 14:44:48,926 - INFO - Get:26 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+2026-06-06 14:44:48,926 - INFO - Get:27 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+2026-06-06 14:44:49,137 - INFO - Get:28 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+2026-06-06 14:44:49,138 - INFO - Get:29 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+2026-06-06 14:44:49,138 - INFO - Get:30 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+2026-06-06 14:44:49,147 - INFO - Get:31 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+2026-06-06 14:44:49,147 - INFO - Get:32 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+2026-06-06 14:44:49,157 - INFO - Get:33 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+2026-06-06 14:44:49,158 - INFO - Get:34 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+2026-06-06 14:44:49,229 - INFO - Get:35 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+2026-06-06 14:44:49,254 - INFO - Get:36 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+2026-06-06 14:44:49,380 - INFO - Get:37 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+2026-06-06 14:44:49,408 - INFO - Get:38 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+2026-06-06 14:44:49,436 - INFO - Get:39 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+2026-06-06 14:44:49,450 - INFO - Get:40 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+2026-06-06 14:44:49,563 - INFO - Get:41 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+2026-06-06 14:44:50,618 - INFO - Get:42 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+2026-06-06 14:44:50,636 - INFO - Get:43 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+2026-06-06 14:44:50,636 - INFO - Get:44 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+2026-06-06 14:44:50,636 - INFO - Get:45 http://deb.debian.org/debian trixie/main amd64 libstdc++-14-dev amd64 14.2.0-19 [2376 kB]
+2026-06-06 14:44:50,746 - INFO - Get:46 http://deb.debian.org/debian trixie/main amd64 g++-14-x86-64-linux-gnu amd64 14.2.0-19 [12.1 MB]
+2026-06-06 14:44:51,007 - INFO - Get:47 http://deb.debian.org/debian trixie/main amd64 g++-14 amd64 14.2.0-19 [22.5 kB]
+2026-06-06 14:44:51,007 - INFO - Get:48 http://deb.debian.org/debian trixie/main amd64 g++-x86-64-linux-gnu amd64 4:14.2.0-1 [1200 B]
+2026-06-06 14:44:51,025 - INFO - Get:49 http://deb.debian.org/debian trixie/main amd64 g++ amd64 4:14.2.0-1 [1344 B]
+2026-06-06 14:44:51,026 - INFO - Get:50 http://deb.debian.org/debian trixie/main amd64 make amd64 4.4.1-2 [463 kB]
+2026-06-06 14:44:51,052 - INFO - Get:51 http://deb.debian.org/debian trixie/main amd64 libdpkg-perl all 1.22.22 [651 kB]
+2026-06-06 14:44:51,070 - INFO - Get:52 http://deb.debian.org/debian trixie/main amd64 patch amd64 2.8-2 [134 kB]
+2026-06-06 14:44:51,072 - INFO - Get:53 http://deb.debian.org/debian trixie/main amd64 dpkg-dev all 1.22.22 [1337 kB]
+2026-06-06 14:44:51,102 - INFO - Get:54 http://deb.debian.org/debian trixie/main amd64 build-essential amd64 12.12 [4624 B]
+2026-06-06 14:44:51,117 - INFO - Get:55 http://deb.debian.org/debian trixie/main amd64 libcurl4t64 amd64 8.14.1-2+deb13u3 [391 kB]
+2026-06-06 14:44:51,174 - INFO - Get:56 http://deb.debian.org/debian trixie/main amd64 curl amd64 8.14.1-2+deb13u3 [270 kB]
+2026-06-06 14:44:51,242 - INFO - Get:57 http://deb.debian.org/debian trixie/main amd64 libfakeroot amd64 1.37.1.1-1 [29.6 kB]
+2026-06-06 14:44:51,242 - INFO - Get:58 http://deb.debian.org/debian trixie/main amd64 fakeroot amd64 1.37.1.1-1 [76.0 kB]
+2026-06-06 14:44:51,244 - INFO - Get:59 http://deb.debian.org/debian trixie/main amd64 libalgorithm-diff-perl all 1.201-1 [43.3 kB]
+2026-06-06 14:44:51,244 - INFO - Get:60 http://deb.debian.org/debian trixie/main amd64 libalgorithm-diff-xs-perl amd64 0.04-9 [11.1 kB]
+2026-06-06 14:44:51,245 - INFO - Get:61 http://deb.debian.org/debian trixie/main amd64 libalgorithm-merge-perl all 0.08-5 [11.8 kB]
+2026-06-06 14:44:51,321 - INFO - Get:62 http://deb.debian.org/debian trixie/main amd64 libcurl3t64-gnutls amd64 8.14.1-2+deb13u3 [384 kB]
+2026-06-06 14:44:51,530 - INFO - Get:63 http://deb.debian.org/debian trixie/main amd64 libffi-dev amd64 3.4.8-2 [61.1 kB]
+2026-06-06 14:44:51,534 - INFO - Get:64 http://deb.debian.org/debian trixie/main amd64 libfile-fcntllock-perl amd64 0.22-4+b4 [34.6 kB]
+2026-06-06 14:44:51,535 - INFO - Get:65 http://deb.debian.org/debian trixie/main amd64 locales-all amd64 2.41-12+deb13u3 [11.1 MB]
+2026-06-06 14:44:51,778 - INFO - Get:66 http://deb.debian.org/debian trixie/main amd64 manpages-dev all 6.9.1-1 [2122 kB]
+2026-06-06 14:44:51,833 - INFO - Get:67 http://deb.debian.org/debian trixie/main amd64 sq amd64 1.3.1-2+b2 [5653 kB]
+2026-06-06 14:44:54,556 - INFO - Preconfiguring packages ...
+2026-06-06 14:44:54,960 - INFO - Fetched 105 MB in 4s (26.5 MB/s)
+2026-06-06 14:44:55,474 - INFO - (Reading database ... 
+2026-06-06 14:44:55,479 - INFO - (Reading database ... 5%
+2026-06-06 14:44:55,479 - INFO - (Reading database ... 10%
+2026-06-06 14:44:55,479 - INFO - (Reading database ... 15%
+2026-06-06 14:44:55,479 - INFO - (Reading database ... 20%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 25%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 30%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 35%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 40%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 45%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 50%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 55%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 60%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 65%
+2026-06-06 14:44:55,480 - INFO - (Reading database ... 70%
+2026-06-06 14:44:55,482 - INFO - (Reading database ... 75%
+2026-06-06 14:44:55,483 - INFO - (Reading database ... 80%
+2026-06-06 14:44:55,484 - INFO - (Reading database ... 85%
+2026-06-06 14:44:55,485 - INFO - (Reading database ... 90%
+2026-06-06 14:44:55,493 - INFO - (Reading database ... 95%
+2026-06-06 14:44:55,493 - INFO - (Reading database ... 100%
+2026-06-06 14:44:55,493 - INFO - (Reading database ... 11745 files and directories currently installed.)
+2026-06-06 14:44:55,493 - INFO - Preparing to unpack .../libc6_2.41-12+deb13u3_amd64.deb ...
+2026-06-06 14:44:56,274 - INFO - Unpacking libc6:amd64 (2.41-12+deb13u3) over (2.41-12+deb13u2) ...
+2026-06-06 14:44:58,167 - INFO - Setting up libc6:amd64 (2.41-12+deb13u3) ...
+2026-06-06 14:44:58,317 - INFO - (Reading database ... 
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 5%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 10%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 15%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 20%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 25%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 30%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 35%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 40%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 45%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 50%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 55%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 60%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 65%
+2026-06-06 14:44:58,319 - INFO - (Reading database ... 70%
+2026-06-06 14:44:58,321 - INFO - (Reading database ... 75%
+2026-06-06 14:44:58,321 - INFO - (Reading database ... 80%
+2026-06-06 14:44:58,322 - INFO - (Reading database ... 85%
+2026-06-06 14:44:58,323 - INFO - (Reading database ... 90%
+2026-06-06 14:44:58,325 - INFO - (Reading database ... 95%
+2026-06-06 14:44:58,328 - INFO - (Reading database ... 100%
+2026-06-06 14:44:58,328 - INFO - (Reading database ... 11745 files and directories currently installed.)
+2026-06-06 14:44:58,329 - INFO - Preparing to unpack .../libc-bin_2.41-12+deb13u3_amd64.deb ...
+2026-06-06 14:44:58,332 - INFO - Unpacking libc-bin (2.41-12+deb13u3) over (2.41-12+deb13u2) ...
+2026-06-06 14:44:58,427 - INFO - Setting up libc-bin (2.41-12+deb13u3) ...
+2026-06-06 14:44:58,498 - INFO - Selecting previously unselected package liblocale-gettext-perl.
+2026-06-06 14:44:58,498 - INFO - (Reading database ... 
+2026-06-06 14:44:58,500 - INFO - (Reading database ... 5%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 10%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 15%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 20%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 25%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 30%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 35%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 40%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 45%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 50%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 55%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 60%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 65%
+2026-06-06 14:44:58,501 - INFO - (Reading database ... 70%
+2026-06-06 14:44:58,504 - INFO - (Reading database ... 75%
+2026-06-06 14:44:58,505 - INFO - (Reading database ... 80%
+2026-06-06 14:44:58,506 - INFO - (Reading database ... 85%
+2026-06-06 14:44:58,507 - INFO - (Reading database ... 90%
+2026-06-06 14:44:58,508 - INFO - (Reading database ... 95%
+2026-06-06 14:44:58,511 - INFO - (Reading database ... 100%
+2026-06-06 14:44:58,511 - INFO - (Reading database ... 11745 files and directories currently installed.)
+2026-06-06 14:44:58,511 - INFO - Preparing to unpack .../00-liblocale-gettext-perl_1.07-7+b1_amd64.deb ...
+2026-06-06 14:44:58,513 - INFO - Unpacking liblocale-gettext-perl (1.07-7+b1) ...
+2026-06-06 14:44:58,558 - INFO - Preparing to unpack .../01-tzdata_2026b-0+deb13u1_all.deb ...
+2026-06-06 14:44:58,561 - INFO - Unpacking tzdata (2026b-0+deb13u1) over (2026a-0+deb13u1) ...
+2026-06-06 14:44:58,892 - INFO - Selecting previously unselected package bash-completion.
+2026-06-06 14:44:58,894 - INFO - Preparing to unpack .../02-bash-completion_1%3a2.16.0-7_all.deb ...
+2026-06-06 14:44:58,895 - INFO - Unpacking bash-completion (1:2.16.0-7) ...
+2026-06-06 14:44:59,032 - INFO - Selecting previously unselected package libc-l10n.
+2026-06-06 14:44:59,035 - INFO - Preparing to unpack .../03-libc-l10n_2.41-12+deb13u3_all.deb ...
+2026-06-06 14:44:59,036 - INFO - Unpacking libc-l10n (2.41-12+deb13u3) ...
+2026-06-06 14:44:59,118 - INFO - Selecting previously unselected package locales.
+2026-06-06 14:44:59,119 - INFO - Preparing to unpack .../04-locales_2.41-12+deb13u3_all.deb ...
+2026-06-06 14:44:59,121 - INFO - Unpacking locales (2.41-12+deb13u3) ...
+2026-06-06 14:44:59,372 - INFO - Selecting previously unselected package manpages.
+2026-06-06 14:44:59,374 - INFO - Preparing to unpack .../05-manpages_6.9.1-1_all.deb ...
+2026-06-06 14:44:59,375 - INFO - Unpacking manpages (6.9.1-1) ...
+2026-06-06 14:44:59,456 - INFO - Selecting previously unselected package xz-utils.
+2026-06-06 14:44:59,458 - INFO - Preparing to unpack .../06-xz-utils_5.8.1-1_amd64.deb ...
+2026-06-06 14:44:59,459 - INFO - Unpacking xz-utils (5.8.1-1) ...
+2026-06-06 14:44:59,517 - INFO - Selecting previously unselected package libsframe1:amd64.
+2026-06-06 14:44:59,518 - INFO - Preparing to unpack .../07-libsframe1_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,520 - INFO - Unpacking libsframe1:amd64 (2.44-3) ...
+2026-06-06 14:44:59,558 - INFO - Selecting previously unselected package binutils-common:amd64.
+2026-06-06 14:44:59,559 - INFO - Preparing to unpack .../08-binutils-common_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,560 - INFO - Unpacking binutils-common:amd64 (2.44-3) ...
+2026-06-06 14:44:59,721 - INFO - Selecting previously unselected package libbinutils:amd64.
+2026-06-06 14:44:59,723 - INFO - Preparing to unpack .../09-libbinutils_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,728 - INFO - Unpacking libbinutils:amd64 (2.44-3) ...
+2026-06-06 14:44:59,829 - INFO - Selecting previously unselected package libgprofng0:amd64.
+2026-06-06 14:44:59,832 - INFO - Preparing to unpack .../10-libgprofng0_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,834 - INFO - Unpacking libgprofng0:amd64 (2.44-3) ...
+2026-06-06 14:44:59,939 - INFO - Selecting previously unselected package libctf-nobfd0:amd64.
+2026-06-06 14:44:59,944 - INFO - Preparing to unpack .../11-libctf-nobfd0_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,947 - INFO - Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+2026-06-06 14:44:59,980 - INFO - Selecting previously unselected package libctf0:amd64.
+2026-06-06 14:44:59,983 - INFO - Preparing to unpack .../12-libctf0_2.44-3_amd64.deb ...
+2026-06-06 14:44:59,984 - INFO - Unpacking libctf0:amd64 (2.44-3) ...
+2026-06-06 14:45:00,013 - INFO - Selecting previously unselected package libjansson4:amd64.
+2026-06-06 14:45:00,015 - INFO - Preparing to unpack .../13-libjansson4_2.14-2+b3_amd64.deb ...
+2026-06-06 14:45:00,016 - INFO - Unpacking libjansson4:amd64 (2.14-2+b3) ...
+2026-06-06 14:45:00,050 - INFO - Selecting previously unselected package binutils-x86-64-linux-gnu.
+2026-06-06 14:45:00,052 - INFO - Preparing to unpack .../14-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+2026-06-06 14:45:00,053 - INFO - Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+2026-06-06 14:45:00,188 - INFO - Selecting previously unselected package binutils.
+2026-06-06 14:45:00,193 - INFO - Preparing to unpack .../15-binutils_2.44-3_amd64.deb ...
+2026-06-06 14:45:00,197 - INFO - Unpacking binutils (2.44-3) ...
+2026-06-06 14:45:00,253 - INFO - Selecting previously unselected package libc-dev-bin.
+2026-06-06 14:45:00,255 - INFO - Preparing to unpack .../16-libc-dev-bin_2.41-12+deb13u3_amd64.deb ...
+2026-06-06 14:45:00,262 - INFO - Unpacking libc-dev-bin (2.41-12+deb13u3) ...
+2026-06-06 14:45:00,297 - INFO - Selecting previously unselected package linux-libc-dev.
+2026-06-06 14:45:00,300 - INFO - Preparing to unpack .../17-linux-libc-dev_6.12.90-2_all.deb ...
+2026-06-06 14:45:00,308 - INFO - Unpacking linux-libc-dev (6.12.90-2) ...
+2026-06-06 14:45:01,085 - INFO - Selecting previously unselected package libcrypt-dev:amd64.
+2026-06-06 14:45:01,089 - INFO - Preparing to unpack .../18-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+2026-06-06 14:45:01,103 - INFO - Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-06-06 14:45:01,159 - INFO - Selecting previously unselected package rpcsvc-proto.
+2026-06-06 14:45:01,162 - INFO - Preparing to unpack .../19-rpcsvc-proto_1.4.3-1_amd64.deb ...
+2026-06-06 14:45:01,165 - INFO - Unpacking rpcsvc-proto (1.4.3-1) ...
+2026-06-06 14:45:01,220 - INFO - Selecting previously unselected package libc6-dev:amd64.
+2026-06-06 14:45:01,223 - INFO - Preparing to unpack .../20-libc6-dev_2.41-12+deb13u3_amd64.deb ...
+2026-06-06 14:45:01,225 - INFO - Unpacking libc6-dev:amd64 (2.41-12+deb13u3) ...
+2026-06-06 14:45:01,478 - INFO - Selecting previously unselected package libisl23:amd64.
+2026-06-06 14:45:01,480 - INFO - Preparing to unpack .../21-libisl23_0.27-1_amd64.deb ...
+2026-06-06 14:45:01,482 - INFO - Unpacking libisl23:amd64 (0.27-1) ...
+2026-06-06 14:45:01,559 - INFO - Selecting previously unselected package libmpfr6:amd64.
+2026-06-06 14:45:01,561 - INFO - Preparing to unpack .../22-libmpfr6_4.2.2-1_amd64.deb ...
+2026-06-06 14:45:01,565 - INFO - Unpacking libmpfr6:amd64 (4.2.2-1) ...
+2026-06-06 14:45:01,631 - INFO - Selecting previously unselected package libmpc3:amd64.
+2026-06-06 14:45:01,633 - INFO - Preparing to unpack .../23-libmpc3_1.3.1-1+b3_amd64.deb ...
+2026-06-06 14:45:01,634 - INFO - Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+2026-06-06 14:45:01,665 - INFO - Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+2026-06-06 14:45:01,668 - INFO - Preparing to unpack .../24-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:01,670 - INFO - Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:02,215 - INFO - Selecting previously unselected package cpp-14.
+2026-06-06 14:45:02,219 - INFO - Preparing to unpack .../25-cpp-14_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,221 - INFO - Unpacking cpp-14 (14.2.0-19) ...
+2026-06-06 14:45:02,249 - INFO - Selecting previously unselected package cpp-x86-64-linux-gnu.
+2026-06-06 14:45:02,251 - INFO - Preparing to unpack .../26-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:02,253 - INFO - Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:02,288 - INFO - Selecting previously unselected package cpp.
+2026-06-06 14:45:02,289 - INFO - Preparing to unpack .../27-cpp_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:02,303 - INFO - Unpacking cpp (4:14.2.0-1) ...
+2026-06-06 14:45:02,329 - INFO - Selecting previously unselected package libcc1-0:amd64.
+2026-06-06 14:45:02,331 - INFO - Preparing to unpack .../28-libcc1-0_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,333 - INFO - Unpacking libcc1-0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,368 - INFO - Selecting previously unselected package libgomp1:amd64.
+2026-06-06 14:45:02,371 - INFO - Preparing to unpack .../29-libgomp1_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,372 - INFO - Unpacking libgomp1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,413 - INFO - Selecting previously unselected package libitm1:amd64.
+2026-06-06 14:45:02,415 - INFO - Preparing to unpack .../30-libitm1_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,418 - INFO - Unpacking libitm1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,455 - INFO - Selecting previously unselected package libasan8:amd64.
+2026-06-06 14:45:02,457 - INFO - Preparing to unpack .../31-libasan8_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,458 - INFO - Unpacking libasan8:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,638 - INFO - Selecting previously unselected package liblsan0:amd64.
+2026-06-06 14:45:02,640 - INFO - Preparing to unpack .../32-liblsan0_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,642 - INFO - Unpacking liblsan0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,739 - INFO - Selecting previously unselected package libtsan2:amd64.
+2026-06-06 14:45:02,741 - INFO - Preparing to unpack .../33-libtsan2_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,743 - INFO - Unpacking libtsan2:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,908 - INFO - Selecting previously unselected package libubsan1:amd64.
+2026-06-06 14:45:02,910 - INFO - Preparing to unpack .../34-libubsan1_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:02,911 - INFO - Unpacking libubsan1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:02,999 - INFO - Selecting previously unselected package libhwasan0:amd64.
+2026-06-06 14:45:03,002 - INFO - Preparing to unpack .../35-libhwasan0_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:03,003 - INFO - Unpacking libhwasan0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:03,137 - INFO - Selecting previously unselected package libquadmath0:amd64.
+2026-06-06 14:45:03,141 - INFO - Preparing to unpack .../36-libquadmath0_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:03,145 - INFO - Unpacking libquadmath0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:03,198 - INFO - Selecting previously unselected package libgcc-14-dev:amd64.
+2026-06-06 14:45:03,200 - INFO - Preparing to unpack .../37-libgcc-14-dev_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:03,204 - INFO - Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-06-06 14:45:03,373 - INFO - Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+2026-06-06 14:45:03,377 - INFO - Preparing to unpack .../38-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:03,378 - INFO - Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:04,031 - INFO - Selecting previously unselected package gcc-14.
+2026-06-06 14:45:04,034 - INFO - Preparing to unpack .../39-gcc-14_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:04,035 - INFO - Unpacking gcc-14 (14.2.0-19) ...
+2026-06-06 14:45:04,087 - INFO - Selecting previously unselected package gcc-x86-64-linux-gnu.
+2026-06-06 14:45:04,091 - INFO - Preparing to unpack .../40-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:04,105 - INFO - Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:04,140 - INFO - Selecting previously unselected package gcc.
+2026-06-06 14:45:04,142 - INFO - Preparing to unpack .../41-gcc_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:04,144 - INFO - Unpacking gcc (4:14.2.0-1) ...
+2026-06-06 14:45:04,178 - INFO - Selecting previously unselected package libstdc++-14-dev:amd64.
+2026-06-06 14:45:04,184 - INFO - Preparing to unpack .../42-libstdc++-14-dev_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:04,185 - INFO - Unpacking libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-06-06 14:45:04,380 - INFO - Selecting previously unselected package g++-14-x86-64-linux-gnu.
+2026-06-06 14:45:04,384 - INFO - Preparing to unpack .../43-g++-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:04,385 - INFO - Unpacking g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:05,099 - INFO - Selecting previously unselected package g++-14.
+2026-06-06 14:45:05,101 - INFO - Preparing to unpack .../44-g++-14_14.2.0-19_amd64.deb ...
+2026-06-06 14:45:05,106 - INFO - Unpacking g++-14 (14.2.0-19) ...
+2026-06-06 14:45:06,095 - INFO - Selecting previously unselected package g++-x86-64-linux-gnu.
+2026-06-06 14:45:06,133 - INFO - Preparing to unpack .../45-g++-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:06,239 - INFO - Unpacking g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:06,875 - INFO - Selecting previously unselected package g++.
+2026-06-06 14:45:06,880 - INFO - Preparing to unpack .../46-g++_4%3a14.2.0-1_amd64.deb ...
+2026-06-06 14:45:06,891 - INFO - Unpacking g++ (4:14.2.0-1) ...
+2026-06-06 14:45:06,931 - INFO - Selecting previously unselected package make.
+2026-06-06 14:45:06,933 - INFO - Preparing to unpack .../47-make_4.4.1-2_amd64.deb ...
+2026-06-06 14:45:06,960 - INFO - Unpacking make (4.4.1-2) ...
+2026-06-06 14:45:07,039 - INFO - Selecting previously unselected package libdpkg-perl.
+2026-06-06 14:45:07,042 - INFO - Preparing to unpack .../48-libdpkg-perl_1.22.22_all.deb ...
+2026-06-06 14:45:07,056 - INFO - Unpacking libdpkg-perl (1.22.22) ...
+2026-06-06 14:45:07,166 - INFO - Selecting previously unselected package patch.
+2026-06-06 14:45:07,168 - INFO - Preparing to unpack .../49-patch_2.8-2_amd64.deb ...
+2026-06-06 14:45:07,170 - INFO - Unpacking patch (2.8-2) ...
+2026-06-06 14:45:07,214 - INFO - Selecting previously unselected package dpkg-dev.
+2026-06-06 14:45:07,219 - INFO - Preparing to unpack .../50-dpkg-dev_1.22.22_all.deb ...
+2026-06-06 14:45:07,221 - INFO - Unpacking dpkg-dev (1.22.22) ...
+2026-06-06 14:45:07,291 - INFO - Selecting previously unselected package build-essential.
+2026-06-06 14:45:07,294 - INFO - Preparing to unpack .../51-build-essential_12.12_amd64.deb ...
+2026-06-06 14:45:07,296 - INFO - Unpacking build-essential (12.12) ...
+2026-06-06 14:45:07,320 - INFO - Selecting previously unselected package libcurl4t64:amd64.
+2026-06-06 14:45:07,324 - INFO - Preparing to unpack .../52-libcurl4t64_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-06 14:45:07,326 - INFO - Unpacking libcurl4t64:amd64 (8.14.1-2+deb13u3) ...
+2026-06-06 14:45:07,381 - INFO - Selecting previously unselected package curl.
+2026-06-06 14:45:07,384 - INFO - Preparing to unpack .../53-curl_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-06 14:45:07,385 - INFO - Unpacking curl (8.14.1-2+deb13u3) ...
+2026-06-06 14:45:07,449 - INFO - Selecting previously unselected package libfakeroot:amd64.
+2026-06-06 14:45:07,453 - INFO - Preparing to unpack .../54-libfakeroot_1.37.1.1-1_amd64.deb ...
+2026-06-06 14:45:07,454 - INFO - Unpacking libfakeroot:amd64 (1.37.1.1-1) ...
+2026-06-06 14:45:07,486 - INFO - Selecting previously unselected package fakeroot.
+2026-06-06 14:45:07,489 - INFO - Preparing to unpack .../55-fakeroot_1.37.1.1-1_amd64.deb ...
+2026-06-06 14:45:07,490 - INFO - Unpacking fakeroot (1.37.1.1-1) ...
+2026-06-06 14:45:07,562 - INFO - Selecting previously unselected package libalgorithm-diff-perl.
+2026-06-06 14:45:07,567 - INFO - Preparing to unpack .../56-libalgorithm-diff-perl_1.201-1_all.deb ...
+2026-06-06 14:45:07,570 - INFO - Unpacking libalgorithm-diff-perl (1.201-1) ...
+2026-06-06 14:45:07,605 - INFO - Selecting previously unselected package libalgorithm-diff-xs-perl.
+2026-06-06 14:45:07,607 - INFO - Preparing to unpack .../57-libalgorithm-diff-xs-perl_0.04-9_amd64.deb ...
+2026-06-06 14:45:07,609 - INFO - Unpacking libalgorithm-diff-xs-perl (0.04-9) ...
+2026-06-06 14:45:07,660 - INFO - Selecting previously unselected package libalgorithm-merge-perl.
+2026-06-06 14:45:07,662 - INFO - Preparing to unpack .../58-libalgorithm-merge-perl_0.08-5_all.deb ...
+2026-06-06 14:45:07,680 - INFO - Unpacking libalgorithm-merge-perl (0.08-5) ...
+2026-06-06 14:45:07,713 - INFO - Preparing to unpack .../59-libcurl3t64-gnutls_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-06 14:45:07,719 - INFO - Unpacking libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u3) over (8.14.1-2+deb13u2) ...
+2026-06-06 14:45:07,779 - INFO - Selecting previously unselected package libffi-dev:amd64.
+2026-06-06 14:45:07,782 - INFO - Preparing to unpack .../60-libffi-dev_3.4.8-2_amd64.deb ...
+2026-06-06 14:45:07,784 - INFO - Unpacking libffi-dev:amd64 (3.4.8-2) ...
+2026-06-06 14:45:07,809 - INFO - Selecting previously unselected package libfile-fcntllock-perl.
+2026-06-06 14:45:07,812 - INFO - Preparing to unpack .../61-libfile-fcntllock-perl_0.22-4+b4_amd64.deb ...
+2026-06-06 14:45:07,815 - INFO - Unpacking libfile-fcntllock-perl (0.22-4+b4) ...
+2026-06-06 14:45:07,879 - INFO - Selecting previously unselected package locales-all.
+2026-06-06 14:45:07,882 - INFO - Preparing to unpack .../62-locales-all_2.41-12+deb13u3_amd64.deb ...
+2026-06-06 14:45:07,890 - INFO - Unpacking locales-all (2.41-12+deb13u3) ...
+2026-06-06 14:45:12,562 - INFO - Selecting previously unselected package manpages-dev.
+2026-06-06 14:45:12,570 - INFO - Preparing to unpack .../63-manpages-dev_6.9.1-1_all.deb ...
+2026-06-06 14:45:12,585 - INFO - Unpacking manpages-dev (6.9.1-1) ...
+2026-06-06 14:45:12,930 - INFO - Selecting previously unselected package sq.
+2026-06-06 14:45:12,935 - INFO - Preparing to unpack .../64-sq_1.3.1-2+b2_amd64.deb ...
+2026-06-06 14:45:12,946 - INFO - Unpacking sq (1.3.1-2+b2) ...
+2026-06-06 14:45:13,810 - INFO - Setting up libc-l10n (2.41-12+deb13u3) ...
+2026-06-06 14:45:14,237 - INFO - Setting up libcurl4t64:amd64 (8.14.1-2+deb13u3) ...
+2026-06-06 14:45:14,542 - INFO - Setting up libfile-fcntllock-perl (0.22-4+b4) ...
+2026-06-06 14:45:14,774 - INFO - Setting up libalgorithm-diff-perl (1.201-1) ...
+2026-06-06 14:45:14,935 - INFO - Setting up manpages (6.9.1-1) ...
+2026-06-06 14:45:15,037 - INFO - Setting up binutils-common:amd64 (2.44-3) ...
+2026-06-06 14:45:15,060 - INFO - Setting up libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u3) ...
+2026-06-06 14:45:15,100 - INFO - Setting up linux-libc-dev (6.12.90-2) ...
+2026-06-06 14:45:15,237 - INFO - Setting up libctf-nobfd0:amd64 (2.44-3) ...
+2026-06-06 14:45:15,334 - INFO - Setting up sq (1.3.1-2+b2) ...
+2026-06-06 14:45:15,439 - INFO - Setting up libgomp1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:15,590 - INFO - Setting up libffi-dev:amd64 (3.4.8-2) ...
+2026-06-06 14:45:15,661 - INFO - Setting up locales (2.41-12+deb13u3) ...
+2026-06-06 14:45:17,363 - INFO - locales-all installed, skipping locales generation
+2026-06-06 14:45:17,498 - INFO - Setting up locales-all (2.41-12+deb13u3) ...
+2026-06-06 14:45:17,540 - INFO - Setting up libsframe1:amd64 (2.44-3) ...
+2026-06-06 14:45:17,565 - INFO - Setting up libfakeroot:amd64 (1.37.1.1-1) ...
+2026-06-06 14:45:17,584 - INFO - Setting up libjansson4:amd64 (2.14-2+b3) ...
+2026-06-06 14:45:17,615 - INFO - Setting up tzdata (2026b-0+deb13u1) ...
+2026-06-06 14:45:17,859 - INFO - Current default time zone: 'Etc/UTC'
+2026-06-06 14:45:17,862 - INFO - Local time is now:      Sat Jun  6 14:45:17 UTC 2026.
+2026-06-06 14:45:17,862 - INFO - Universal Time is now:  Sat Jun  6 14:45:17 UTC 2026.
+2026-06-06 14:45:17,862 - INFO - Run 'dpkg-reconfigure tzdata' if you wish to change it.
+2026-06-06 14:45:17,969 - INFO - Setting up fakeroot (1.37.1.1-1) ...
+2026-06-06 14:45:17,991 - INFO - update-alternatives: using /usr/bin/fakeroot-sysv to provide /usr/bin/fakeroot (fakeroot) in auto mode
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/fakeroot.1.gz because associated file /usr/share/man/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/faked.1.gz because associated file /usr/share/man/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/es/man1/fakeroot.1.gz because associated file /usr/share/man/es/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/es/man1/faked.1.gz because associated file /usr/share/man/es/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/fr/man1/fakeroot.1.gz because associated file /usr/share/man/fr/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/fr/man1/faked.1.gz because associated file /usr/share/man/fr/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,991 - INFO - update-alternatives: warning: skip creation of /usr/share/man/sv/man1/fakeroot.1.gz because associated file /usr/share/man/sv/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:17,992 - INFO - update-alternatives: warning: skip creation of /usr/share/man/sv/man1/faked.1.gz because associated file /usr/share/man/sv/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-06 14:45:18,021 - INFO - Setting up rpcsvc-proto (1.4.3-1) ...
+2026-06-06 14:45:18,064 - INFO - Setting up make (4.4.1-2) ...
+2026-06-06 14:45:18,095 - INFO - Setting up libmpfr6:amd64 (4.2.2-1) ...
+2026-06-06 14:45:18,283 - INFO - Setting up bash-completion (1:2.16.0-7) ...
+2026-06-06 14:45:18,529 - INFO - Setting up xz-utils (5.8.1-1) ...
+2026-06-06 14:45:18,571 - INFO - update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+2026-06-06 14:45:18,571 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,571 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,571 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,571 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,572 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+2026-06-06 14:45:18,617 - INFO - Setting up libquadmath0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:18,636 - INFO - Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+2026-06-06 14:45:18,657 - INFO - Setting up patch (2.8-2) ...
+2026-06-06 14:45:18,682 - INFO - Setting up libdpkg-perl (1.22.22) ...
+2026-06-06 14:45:18,715 - INFO - Setting up libubsan1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:18,743 - INFO - Setting up libhwasan0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:18,787 - INFO - Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-06-06 14:45:18,877 - INFO - Setting up libasan8:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,012 - INFO - Setting up curl (8.14.1-2+deb13u3) ...
+2026-06-06 14:45:19,069 - INFO - Setting up libtsan2:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,100 - INFO - Setting up libbinutils:amd64 (2.44-3) ...
+2026-06-06 14:45:19,122 - INFO - Setting up libisl23:amd64 (0.27-1) ...
+2026-06-06 14:45:19,141 - INFO - Setting up libc-dev-bin (2.41-12+deb13u3) ...
+2026-06-06 14:45:19,165 - INFO - Setting up libalgorithm-diff-xs-perl (0.04-9) ...
+2026-06-06 14:45:19,179 - INFO - Setting up libcc1-0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,195 - INFO - Setting up liblocale-gettext-perl (1.07-7+b1) ...
+2026-06-06 14:45:19,219 - INFO - Setting up liblsan0:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,257 - INFO - Setting up libitm1:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,312 - INFO - Setting up libalgorithm-merge-perl (0.08-5) ...
+2026-06-06 14:45:19,337 - INFO - Setting up libctf0:amd64 (2.44-3) ...
+2026-06-06 14:45:19,351 - INFO - Setting up manpages-dev (6.9.1-1) ...
+2026-06-06 14:45:19,368 - INFO - Setting up libgprofng0:amd64 (2.44-3) ...
+2026-06-06 14:45:19,397 - INFO - Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:19,457 - INFO - Setting up cpp-14 (14.2.0-19) ...
+2026-06-06 14:45:19,487 - INFO - Setting up libc6-dev:amd64 (2.41-12+deb13u3) ...
+2026-06-06 14:45:19,508 - INFO - Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,527 - INFO - Setting up libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-06-06 14:45:19,558 - INFO - Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+2026-06-06 14:45:19,587 - INFO - Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:19,613 - INFO - Setting up binutils (2.44-3) ...
+2026-06-06 14:45:19,636 - INFO - Setting up dpkg-dev (1.22.22) ...
+2026-06-06 14:45:19,666 - INFO - Setting up cpp (4:14.2.0-1) ...
+2026-06-06 14:45:19,774 - INFO - Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:19,791 - INFO - Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:19,814 - INFO - Setting up gcc-14 (14.2.0-19) ...
+2026-06-06 14:45:19,838 - INFO - Setting up g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-06 14:45:19,858 - INFO - Setting up g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-06 14:45:19,893 - INFO - Setting up g++-14 (14.2.0-19) ...
+2026-06-06 14:45:19,942 - INFO - Setting up gcc (4:14.2.0-1) ...
+2026-06-06 14:45:20,054 - INFO - Setting up g++ (4:14.2.0-1) ...
+2026-06-06 14:45:20,073 - INFO - update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+2026-06-06 14:45:20,106 - INFO - Setting up build-essential (12.12) ...
+2026-06-06 14:45:20,126 - INFO - Processing triggers for libc-bin (2.41-12+deb13u3) ...
+2026-06-06 14:46:27,336 - INFO -  ---> Removed intermediate container 0a42b6fb9b5d
+2026-06-06 14:46:27,336 - INFO -  ---> ddf28305f35e
+2026-06-06 14:46:27,336 - INFO - Step 6/11 : ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+2026-06-06 14:46:27,642 - INFO -  ---> Running in 5d63a0e96f3d
+2026-06-06 14:46:27,724 - INFO -  ---> Removed intermediate container 5d63a0e96f3d
+2026-06-06 14:46:27,724 - INFO -  ---> e4212f9bb15c
+2026-06-06 14:46:27,725 - INFO - Step 7/11 : ENV PATH=/opt/conda/bin:$PATH
+2026-06-06 14:46:27,787 - INFO -  ---> Running in c1ef91087154
+2026-06-06 14:46:27,835 - INFO -  ---> Removed intermediate container c1ef91087154
+2026-06-06 14:46:27,835 - INFO -  ---> bc1cf291d2b6
+2026-06-06 14:46:27,836 - INFO - Step 8/11 : RUN conda create -n testbed python=3.9 -y     && conda clean -afy
+2026-06-06 14:46:27,886 - INFO -  ---> Running in 93f6b0d0d93a
+2026-06-06 14:46:29,700 - INFO - Retrieving notices: - \ | / - \ | / - done
+2026-06-06 14:46:29,719 - INFO - Channels:
+2026-06-06 14:46:29,720 - INFO -  - defaults
+2026-06-06 14:46:29,720 - INFO - Platform: linux-64
+2026-06-06 14:46:33,005 - INFO - Collecting package metadata (repodata.json): | / - \ | / - \ | / - \ | / - \ done
+2026-06-06 14:46:33,107 - INFO - Solving environment: / done
+2026-06-06 14:46:33,140 - INFO - ==> WARNING: A newer version of conda exists. <==
+2026-06-06 14:46:33,140 - INFO -     current version: 26.3.2
+2026-06-06 14:46:33,140 - INFO -     latest version: 26.5.2
+2026-06-06 14:46:33,140 - INFO - Please update conda by running
+2026-06-06 14:46:33,140 - INFO -     $ conda update -n base -c defaults conda
+2026-06-06 14:46:33,146 - INFO - ## Package Plan ##
+2026-06-06 14:46:33,146 - INFO -   environment location: /opt/conda/envs/testbed
+2026-06-06 14:46:33,146 - INFO -   added / updated specs:
+2026-06-06 14:46:33,147 - INFO -     - python=3.9
+2026-06-06 14:46:33,147 - INFO - The following packages will be downloaded:
+2026-06-06 14:46:33,147 - INFO -     package                    |            build
+2026-06-06 14:46:33,147 - INFO -     ---------------------------|-----------------
+2026-06-06 14:46:33,147 - INFO -     _libgcc_mutex-0.1          |             main           3 KB
+2026-06-06 14:46:33,147 - INFO -     _openmp_mutex-5.1          |           52_gnu           7 KB
+2026-06-06 14:46:33,147 - INFO -     bzip2-1.0.8                |       h5eee18b_6         262 KB
+2026-06-06 14:46:33,147 - INFO -     ca-certificates-2026.5.14  |       h06a4308_0         107 KB
+2026-06-06 14:46:33,147 - INFO -     expat-2.8.1                |       h7354ed3_0          24 KB
+2026-06-06 14:46:33,148 - INFO -     ld_impl_linux-64-2.44      |       h9e0c5a2_3         725 KB
+2026-06-06 14:46:33,148 - INFO -     libexpat-2.8.1             |       h7354ed3_0         123 KB
+2026-06-06 14:46:33,148 - INFO -     libffi-3.4.8               |       hc5d346e_2         136 KB
+2026-06-06 14:46:33,148 - INFO -     libgcc-15.2.0              |       h69a1729_8         803 KB
+2026-06-06 14:46:33,148 - INFO -     libgcc-ng-15.2.0           |       h166f726_8          28 KB
+2026-06-06 14:46:33,148 - INFO -     libnsl-2.0.0               |       h5eee18b_0          31 KB
+2026-06-06 14:46:33,148 - INFO -     libstdcxx-15.2.0           |       h39759b7_8         3.7 MB
+2026-06-06 14:46:33,162 - INFO -     libuuid-1.41.5             |       h5eee18b_0          27 KB
+2026-06-06 14:46:33,163 - INFO -     libxcb-1.17.0              |       h9b100fa_0         430 KB
+2026-06-06 14:46:33,163 - INFO -     libzlib-1.3.1              |       h47b2149_1          59 KB
+2026-06-06 14:46:33,163 - INFO -     ncurses-6.5                |       h7934f7d_0         1.1 MB
+2026-06-06 14:46:33,163 - INFO -     openssl-3.5.6              |       h1b28b03_0         5.6 MB
+2026-06-06 14:46:33,163 - INFO -     pip-26.0.1                 |     pyhc872135_1         1.1 MB
+2026-06-06 14:46:33,163 - INFO -     pthread-stubs-0.3          |       h0ce48e5_1           5 KB
+2026-06-06 14:46:33,163 - INFO -     python-3.9.25              |       h0dcde21_1        23.0 MB
+2026-06-06 14:46:33,163 - INFO -     readline-8.3               |       hc2a1206_0         471 KB
+2026-06-06 14:46:33,164 - INFO -     setuptools-80.9.0          |   py39h06a4308_0         1.4 MB
+2026-06-06 14:46:33,164 - INFO -     sqlite-3.51.2              |       h3e8d24a_0         1.2 MB
+2026-06-06 14:46:33,164 - INFO -     tk-8.6.15                  |       h54e0aa7_0         3.4 MB
+2026-06-06 14:46:33,164 - INFO -     tzdata-2026b               |       he532380_0         118 KB
+2026-06-06 14:46:33,164 - INFO -     wheel-0.45.1               |   py39h06a4308_0         114 KB
+2026-06-06 14:46:33,164 - INFO -     xorg-libx11-1.8.12         |       h9b100fa_1         895 KB
+2026-06-06 14:46:33,164 - INFO -     xorg-libxau-1.0.12         |       h9b100fa_0          13 KB
+2026-06-06 14:46:33,164 - INFO -     xorg-libxdmcp-1.1.5        |       h9b100fa_0          19 KB
+2026-06-06 14:46:33,164 - INFO -     xorg-xorgproto-2024.1      |       h5eee18b_1         580 KB
+2026-06-06 14:46:33,164 - INFO -     xz-5.8.2                   |       h448239c_0         621 KB
+2026-06-06 14:46:33,164 - INFO -     zlib-1.3.1                 |       h47b2149_1          89 KB
+2026-06-06 14:46:33,165 - INFO -     ------------------------------------------------------------
+2026-06-06 14:46:33,165 - INFO -                                            Total:        46.2 MB
+2026-06-06 14:46:33,165 - INFO - The following NEW packages will be INSTALLED:
+2026-06-06 14:46:33,165 - INFO -   _libgcc_mutex      pkgs/main/linux-64::_libgcc_mutex-0.1-main 
+2026-06-06 14:46:33,165 - INFO -   _openmp_mutex      pkgs/main/linux-64::_openmp_mutex-5.1-52_gnu 
+2026-06-06 14:46:33,165 - INFO -   bzip2              pkgs/main/linux-64::bzip2-1.0.8-h5eee18b_6 
+2026-06-06 14:46:33,165 - INFO -   ca-certificates    pkgs/main/linux-64::ca-certificates-2026.5.14-h06a4308_0 
+2026-06-06 14:46:33,165 - INFO -   expat              pkgs/main/linux-64::expat-2.8.1-h7354ed3_0 
+2026-06-06 14:46:33,165 - INFO -   ld_impl_linux-64   pkgs/main/linux-64::ld_impl_linux-64-2.44-h9e0c5a2_3 
+2026-06-06 14:46:33,165 - INFO -   libexpat           pkgs/main/linux-64::libexpat-2.8.1-h7354ed3_0 
+2026-06-06 14:46:33,165 - INFO -   libffi             pkgs/main/linux-64::libffi-3.4.8-hc5d346e_2 
+2026-06-06 14:46:33,166 - INFO -   libgcc             pkgs/main/linux-64::libgcc-15.2.0-h69a1729_8 
+2026-06-06 14:46:33,166 - INFO -   libgcc-ng          pkgs/main/linux-64::libgcc-ng-15.2.0-h166f726_8 
+2026-06-06 14:46:33,166 - INFO -   libnsl             pkgs/main/linux-64::libnsl-2.0.0-h5eee18b_0 
+2026-06-06 14:46:33,166 - INFO -   libstdcxx          pkgs/main/linux-64::libstdcxx-15.2.0-h39759b7_8 
+2026-06-06 14:46:33,166 - INFO -   libuuid            pkgs/main/linux-64::libuuid-1.41.5-h5eee18b_0 
+2026-06-06 14:46:33,166 - INFO -   libxcb             pkgs/main/linux-64::libxcb-1.17.0-h9b100fa_0 
+2026-06-06 14:46:33,166 - INFO -   libzlib            pkgs/main/linux-64::libzlib-1.3.1-h47b2149_1 
+2026-06-06 14:46:33,166 - INFO -   ncurses            pkgs/main/linux-64::ncurses-6.5-h7934f7d_0 
+2026-06-06 14:46:33,166 - INFO -   openssl            pkgs/main/linux-64::openssl-3.5.6-h1b28b03_0 
+2026-06-06 14:46:33,166 - INFO -   pip                pkgs/main/noarch::pip-26.0.1-pyhc872135_1 
+2026-06-06 14:46:33,166 - INFO -   pthread-stubs      pkgs/main/linux-64::pthread-stubs-0.3-h0ce48e5_1 
+2026-06-06 14:46:33,166 - INFO -   python             pkgs/main/linux-64::python-3.9.25-h0dcde21_1 
+2026-06-06 14:46:33,166 - INFO -   readline           pkgs/main/linux-64::readline-8.3-hc2a1206_0 
+2026-06-06 14:46:33,166 - INFO -   setuptools         pkgs/main/linux-64::setuptools-80.9.0-py39h06a4308_0 
+2026-06-06 14:46:33,166 - INFO -   sqlite             pkgs/main/linux-64::sqlite-3.51.2-h3e8d24a_0 
+2026-06-06 14:46:33,166 - INFO -   tk                 pkgs/main/linux-64::tk-8.6.15-h54e0aa7_0 
+2026-06-06 14:46:33,166 - INFO -   tzdata             pkgs/main/noarch::tzdata-2026b-he532380_0 
+2026-06-06 14:46:33,167 - INFO -   wheel              pkgs/main/linux-64::wheel-0.45.1-py39h06a4308_0 
+2026-06-06 14:46:33,167 - INFO -   xorg-libx11        pkgs/main/linux-64::xorg-libx11-1.8.12-h9b100fa_1 
+2026-06-06 14:46:33,167 - INFO -   xorg-libxau        pkgs/main/linux-64::xorg-libxau-1.0.12-h9b100fa_0 
+2026-06-06 14:46:33,167 - INFO -   xorg-libxdmcp      pkgs/main/linux-64::xorg-libxdmcp-1.1.5-h9b100fa_0 
+2026-06-06 14:46:33,167 - INFO -   xorg-xorgproto     pkgs/main/linux-64::xorg-xorgproto-2024.1-h5eee18b_1 
+2026-06-06 14:46:33,167 - INFO -   xz                 pkgs/main/linux-64::xz-5.8.2-h448239c_0 
+2026-06-06 14:46:33,167 - INFO -   zlib               pkgs/main/linux-64::zlib-1.3.1-h47b2149_1 
+2026-06-06 14:46:33,167 - INFO - Downloading and Extracting Packages: ...working...
+2026-06-06 14:46:33,167 - INFO - python-3.9.25        | 23.0 MB   |            |   0% 
+2026-06-06 14:46:33,168 - INFO - openssl-3.5.6        | 5.6 MB    |            |   0% 
+2026-06-06 14:46:33,168 - INFO - libstdcxx-15.2.0     | 3.7 MB    |            |   0% 
+2026-06-06 14:46:33,168 - INFO - tk-8.6.15            | 3.4 MB    |            |   0% 
+2026-06-06 14:46:33,168 - INFO - setuptools-80.9.0    | 1.4 MB    |            |   0% 
+2026-06-06 14:46:33,169 - INFO - sqlite-3.51.2        | 1.2 MB    |            |   0% 
+2026-06-06 14:46:33,169 - INFO - pip-26.0.1           | 1.1 MB    |            |   0% 
+2026-06-06 14:46:33,169 - INFO - ncurses-6.5          | 1.1 MB    |            |   0% 
+2026-06-06 14:46:33,169 - INFO - xorg-libx11-1.8.12   | 895 KB    |            |   0% 
+2026-06-06 14:46:33,169 - INFO - libgcc-15.2.0        | 803 KB    |            |   0% 
+2026-06-06 14:46:33,170 - INFO - ld_impl_linux-64-2.4 | 725 KB    |            |   0% 
+2026-06-06 14:46:33,170 - INFO - xz-5.8.2             | 621 KB    |            |   0% 
+2026-06-06 14:46:33,170 - INFO - xorg-xorgproto-2024. | 580 KB    |            |   0% 
+2026-06-06 14:46:33,170 - INFO - readline-8.3         | 471 KB    |            |   0% 
+2026-06-06 14:46:33,171 - INFO - libxcb-1.17.0        | 430 KB    |            |   0% 
+2026-06-06 14:46:33,171 - INFO - bzip2-1.0.8          | 262 KB    |            |   0% 
+2026-06-06 14:46:33,171 - INFO - libffi-3.4.8         | 136 KB    |            |   0% 
+2026-06-06 14:46:33,171 - INFO - libexpat-2.8.1       | 123 KB    |            |   0% 
+2026-06-06 14:46:33,172 - INFO - tzdata-2026b         | 118 KB    |            |   0% 
+2026-06-06 14:46:33,271 - INFO -  ... (more hidden) ...
+2026-06-06 14:46:33,272 - INFO - tk-8.6.15            | 3.4 MB    |            |   0% 
+2026-06-06 14:46:33,272 - INFO - openssl-3.5.6        | 5.6 MB    |            |   0% 
+2026-06-06 14:46:33,289 - INFO - libstdcxx-15.2.0     | 3.7 MB    |            |   0% 
+2026-06-06 14:46:33,301 - INFO - python-3.9.25        | 23.0 MB   |            |   0% 
+2026-06-06 14:46:33,371 - INFO - setuptools-80.9.0    | 1.4 MB    | 1          |   1% 
+2026-06-06 14:46:33,373 - INFO - tk-8.6.15            | 3.4 MB    | ######8    |  68% 
+2026-06-06 14:46:33,373 - INFO - openssl-3.5.6        | 5.6 MB    | ###1       |  31% 
+2026-06-06 14:46:33,389 - INFO - libstdcxx-15.2.0     | 3.7 MB    | ######1    |  62% 
+2026-06-06 14:46:33,425 - INFO - python-3.9.25        | 23.0 MB   | #3         |  13% 
+2026-06-06 14:46:33,427 - INFO - setuptools-80.9.0    | 1.4 MB    | ########## | 100% 
+2026-06-06 14:46:33,473 - INFO - setuptools-80.9.0    | 1.4 MB    | ########## | 100% 
+2026-06-06 14:46:33,477 - INFO - openssl-3.5.6        | 5.6 MB    | #######1   |  71% 
+2026-06-06 14:46:33,489 - INFO - sqlite-3.51.2        | 1.2 MB    | 1          |   1% 
+2026-06-06 14:46:33,583 - INFO - python-3.9.25        | 23.0 MB   | ##1        |  22% 
+2026-06-06 14:46:33,620 - INFO - openssl-3.5.6        | 5.6 MB    | #########9 |  99% 
+2026-06-06 14:46:33,669 - INFO - python-3.9.25        | 23.0 MB   | ##9        |  30% 
+2026-06-06 14:46:33,670 - INFO - sqlite-3.51.2        | 1.2 MB    | ########## | 100% 
+2026-06-06 14:46:33,690 - INFO - sqlite-3.51.2        | 1.2 MB    | ########## | 100% 
+2026-06-06 14:46:33,706 - INFO - tk-8.6.15            | 3.4 MB    | ########## | 100% 
+2026-06-06 14:46:33,716 - INFO - pip-26.0.1           | 1.1 MB    | 1          |   1% 
+2026-06-06 14:46:33,717 - INFO - libstdcxx-15.2.0     | 3.7 MB    | ########## | 100% 
+2026-06-06 14:46:33,721 - INFO - libstdcxx-15.2.0     | 3.7 MB    | ########## | 100% 
+2026-06-06 14:46:33,734 - INFO - python-3.9.25        | 23.0 MB   | #####4     |  55% 
+2026-06-06 14:46:33,754 - INFO - ncurses-6.5          | 1.1 MB    | 1          |   1% 
+2026-06-06 14:46:33,771 - INFO - openssl-3.5.6        | 5.6 MB    | ########## | 100% 
+2026-06-06 14:46:33,802 - INFO - xorg-libx11-1.8.12   | 895 KB    | 1          |   2% 
+2026-06-06 14:46:33,821 - INFO - libgcc-15.2.0        | 803 KB    | 1          |   2% 
+2026-06-06 14:46:33,822 - INFO - ncurses-6.5          | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:33,824 - INFO - pip-26.0.1           | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:33,859 - INFO - pip-26.0.1           | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:33,868 - INFO - xorg-libx11-1.8.12   | 895 KB    | ########## | 100% 
+2026-06-06 14:46:33,871 - INFO - ld_impl_linux-64-2.4 | 725 KB    | 2          |   2% 
+2026-06-06 14:46:33,876 - INFO - xz-5.8.2             | 621 KB    | 2          |   3% 
+2026-06-06 14:46:33,909 - INFO - python-3.9.25        | 23.0 MB   | ######8    |  69% 
+2026-06-06 14:46:33,909 - INFO - sqlite-3.51.2        | 1.2 MB    | ########## | 100% 
+2026-06-06 14:46:33,910 - INFO - xorg-xorgproto-2024. | 580 KB    | 2          |   3% 
+2026-06-06 14:46:33,911 - INFO - libgcc-15.2.0        | 803 KB    | ########## | 100% 
+2026-06-06 14:46:33,923 - INFO - libgcc-15.2.0        | 803 KB    | ########## | 100% 
+2026-06-06 14:46:33,935 - INFO - ld_impl_linux-64-2.4 | 725 KB    | ########## | 100% 
+2026-06-06 14:46:33,950 - INFO - xz-5.8.2             | 621 KB    | ########## | 100% 
+2026-06-06 14:46:33,963 - INFO - readline-8.3         | 471 KB    | 3          |   3% 
+2026-06-06 14:46:33,972 - INFO - libxcb-1.17.0        | 430 KB    | 3          |   4% 
+2026-06-06 14:46:33,980 - INFO - xorg-xorgproto-2024. | 580 KB    | ########## | 100% 
+2026-06-06 14:46:33,987 - INFO - bzip2-1.0.8          | 262 KB    | 6          |   6% 
+2026-06-06 14:46:34,021 - INFO - readline-8.3         | 471 KB    | ########## | 100% 
+2026-06-06 14:46:34,023 - INFO - libffi-3.4.8         | 136 KB    | #1         |  12% 
+2026-06-06 14:46:34,028 - INFO - bzip2-1.0.8          | 262 KB    | ########## | 100% 
+2026-06-06 14:46:34,033 - INFO - libxcb-1.17.0        | 430 KB    | ########## | 100% 
+2026-06-06 14:46:34,057 - INFO - libexpat-2.8.1       | 123 KB    | #2         |  13% 
+2026-06-06 14:46:34,068 - INFO - libffi-3.4.8         | 136 KB    | ########## | 100% 
+2026-06-06 14:46:34,068 - INFO - python-3.9.25        | 23.0 MB   | ########   |  81% 
+2026-06-06 14:46:34,073 - INFO - tzdata-2026b         | 118 KB    | #3         |  14% 
+2026-06-06 14:46:34,080 - INFO - libexpat-2.8.1       | 123 KB    | ########## | 100% 
+2026-06-06 14:46:34,085 - INFO -  ... (more hidden) ...
+2026-06-06 14:46:34,101 - INFO - tzdata-2026b         | 118 KB    | ########## | 100% 
+2026-06-06 14:46:34,169 - INFO -  ... (more hidden) ...
+2026-06-06 14:46:34,463 - INFO - python-3.9.25        | 23.0 MB   | #########2 |  92% 
+2026-06-06 14:46:34,562 - INFO - libstdcxx-15.2.0     | 3.7 MB    | ########## | 100% 
+2026-06-06 14:46:34,759 - INFO - python-3.9.25        | 23.0 MB   | ########## | 100% 
+2026-06-06 14:46:34,969 - INFO - tk-8.6.15            | 3.4 MB    | ########## | 100% 
+2026-06-06 14:46:36,050 - INFO - openssl-3.5.6        | 5.6 MB    | ########## | 100% 
+2026-06-06 14:46:36,223 - INFO - setuptools-80.9.0    | 1.4 MB    | ########## | 100% 
+2026-06-06 14:46:36,640 - INFO - pip-26.0.1           | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:36,690 - INFO - libgcc-15.2.0        | 803 KB    | ########## | 100% 
+2026-06-06 14:46:36,691 - INFO - xorg-libx11-1.8.12   | 895 KB    | ########## | 100% 
+2026-06-06 14:46:36,745 - INFO - xorg-libx11-1.8.12   | 895 KB    | ########## | 100% 
+2026-06-06 14:46:36,762 - INFO - ld_impl_linux-64-2.4 | 725 KB    | ########## | 100% 
+2026-06-06 14:46:38,287 - INFO - ld_impl_linux-64-2.4 | 725 KB    | ########## | 100% 
+2026-06-06 14:46:38,288 - INFO - xz-5.8.2             | 621 KB    | ########## | 100% 
+2026-06-06 14:46:38,492 - INFO - xz-5.8.2             | 621 KB    | ########## | 100% 
+2026-06-06 14:46:38,493 - INFO - ncurses-6.5          | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:38,567 - INFO - ncurses-6.5          | 1.1 MB    | ########## | 100% 
+2026-06-06 14:46:38,567 - INFO - readline-8.3         | 471 KB    | ########## | 100% 
+2026-06-06 14:46:38,568 - INFO - xorg-xorgproto-2024. | 580 KB    | ########## | 100% 
+2026-06-06 14:46:38,569 - INFO - readline-8.3         | 471 KB    | ########## | 100% 
+2026-06-06 14:46:38,641 - INFO - xorg-xorgproto-2024. | 580 KB    | ########## | 100% 
+2026-06-06 14:46:38,641 - INFO - bzip2-1.0.8          | 262 KB    | ########## | 100% 
+2026-06-06 14:46:38,786 - INFO - bzip2-1.0.8          | 262 KB    | ########## | 100% 
+2026-06-06 14:46:38,787 - INFO - libexpat-2.8.1       | 123 KB    | ########## | 100% 
+2026-06-06 14:46:39,006 - INFO - libexpat-2.8.1       | 123 KB    | ########## | 100% 
+2026-06-06 14:46:39,007 - INFO - libxcb-1.17.0        | 430 KB    | ########## | 100% 
+2026-06-06 14:46:39,451 - INFO - libxcb-1.17.0        | 430 KB    | ########## | 100% 
+2026-06-06 14:46:39,458 - INFO -  ... (more hidden) ...
+2026-06-06 14:46:39,505 - INFO -  ... (more hidden) ...
+2026-06-06 14:46:39,506 - INFO - libffi-3.4.8         | 136 KB    | ########## | 100% 
+2026-06-06 14:46:40,104 - INFO - libffi-3.4.8         | 136 KB    | ########## | 100% 
+2026-06-06 14:46:40,105 - INFO - tzdata-2026b         | 118 KB    | ########## | 100% 
+2026-06-06 14:46:41,158 - INFO - tzdata-2026b         | 118 KB    | ########## | 100% 
+2026-06-06 14:46:41,161 - INFO - python-3.9.25        | 23.0 MB   | ########## | 100% 
+2026-06-06 14:46:41,166 - INFO -  done
+2026-06-06 14:46:41,374 - INFO - Preparing transaction: \ | done
+2026-06-06 14:46:42,908 - INFO - Verifying transaction: - \ | / - \ | / - \ | / - \ | done
+2026-06-06 14:46:46,423 - INFO - Executing transaction: - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+2026-06-06 14:46:46,441 - INFO - #
+2026-06-06 14:46:46,441 - INFO - # To activate this environment, use
+2026-06-06 14:46:46,441 - INFO - #
+2026-06-06 14:46:46,441 - INFO - #     $ conda activate testbed
+2026-06-06 14:46:46,441 - INFO - #
+2026-06-06 14:46:46,441 - INFO - # To deactivate an active environment, use
+2026-06-06 14:46:46,441 - INFO - #
+2026-06-06 14:46:46,441 - INFO - #     $ conda deactivate
+2026-06-06 14:46:47,746 - INFO - Will remove 1 package cache(s).
+2026-06-06 14:47:10,174 - INFO -  ---> Removed intermediate container 93f6b0d0d93a
+2026-06-06 14:47:10,175 - INFO -  ---> e41320049c01
+2026-06-06 14:47:10,175 - INFO - Step 9/11 : WORKDIR /testbed/
+2026-06-06 14:47:11,524 - INFO -  ---> Running in abd84e6497ce
+2026-06-06 14:47:11,837 - INFO -  ---> Removed intermediate container abd84e6497ce
+2026-06-06 14:47:11,837 - INFO -  ---> bf5e01382464
+2026-06-06 14:47:11,838 - INFO - Step 10/11 : RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh &&     conda activate testbed &&     git clone https://github.com/FoundationAgents/MetaGPT.git /testbed &&     git reset --hard 59afc5301f55037e7b379497767f4af62fd65b31 &&     pip install --upgrade pip setuptools wheel &&     pip install -r requirements.txt &&     pip install -e ."
+2026-06-06 14:47:12,010 - INFO -  ---> Running in 6425bf9e177d
+2026-06-06 14:47:13,052 - INFO - Cloning into '/testbed'...
+2026-06-06 14:47:20,088 - INFO - HEAD is now at 59afc530 update token counter
+2026-06-06 14:47:20,386 - INFO - Requirement already satisfied: pip in /opt/conda/envs/testbed/lib/python3.9/site-packages (26.0.1)
+2026-06-06 14:47:20,499 - INFO - Requirement already satisfied: setuptools in /opt/conda/envs/testbed/lib/python3.9/site-packages (80.9.0)
+2026-06-06 14:47:20,690 - INFO - Collecting setuptools
+2026-06-06 14:47:20,748 - INFO -   Downloading setuptools-82.0.1-py3-none-any.whl.metadata (6.5 kB)
+2026-06-06 14:47:20,786 - INFO - Requirement already satisfied: wheel in /opt/conda/envs/testbed/lib/python3.9/site-packages (0.45.1)
+2026-06-06 14:47:20,837 - INFO - Collecting wheel
+2026-06-06 14:47:20,844 - INFO -   Downloading wheel-0.47.0-py3-none-any.whl.metadata (2.3 kB)
+2026-06-06 14:47:20,880 - INFO - Collecting packaging>=24.0 (from wheel)
+2026-06-06 14:47:20,887 - INFO -   Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+2026-06-06 14:47:20,920 - INFO - Downloading setuptools-82.0.1-py3-none-any.whl (1.0 MB)
+2026-06-06 14:47:21,145 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 3.5 MB/s  0:00:00
+2026-06-06 14:47:21,153 - INFO - Downloading wheel-0.47.0-py3-none-any.whl (32 kB)
+2026-06-06 14:47:21,254 - INFO - Downloading packaging-26.2-py3-none-any.whl (100 kB)
+2026-06-06 14:47:21,315 - INFO - Installing collected packages: setuptools, packaging, wheel
+2026-06-06 14:47:21,316 - INFO -   Attempting uninstall: setuptools
+2026-06-06 14:47:21,317 - INFO -     Found existing installation: setuptools 80.9.0
+2026-06-06 14:47:21,319 - INFO -     Uninstalling setuptools-80.9.0:
+2026-06-06 14:47:21,496 - INFO -       Successfully uninstalled setuptools-80.9.0
+2026-06-06 14:47:22,195 - INFO -   Attempting uninstall: wheel
+2026-06-06 14:47:22,195 - INFO -     Found existing installation: wheel 0.45.1
+2026-06-06 14:47:22,199 - INFO -     Uninstalling wheel-0.45.1:
+2026-06-06 14:47:22,216 - INFO -       Successfully uninstalled wheel-0.45.1
+2026-06-06 14:47:22,246 - INFO - Successfully installed packaging-26.2 setuptools-82.0.1 wheel-0.47.0
+2026-06-06 14:47:22,246 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-06 14:47:23,438 - INFO - Collecting aiohttp==3.8.4 (from -r requirements.txt (line 1))
+2026-06-06 14:47:23,497 - INFO -   Downloading aiohttp-3.8.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.4 kB)
+2026-06-06 14:47:23,544 - INFO - Collecting channels==4.0.0 (from -r requirements.txt (line 3))
+2026-06-06 14:47:23,552 - INFO -   Downloading channels-4.0.0-py3-none-any.whl.metadata (1.5 kB)
+2026-06-06 14:47:23,607 - INFO - Collecting faiss_cpu==1.7.4 (from -r requirements.txt (line 8))
+2026-06-06 14:47:23,614 - INFO -   Downloading faiss_cpu-1.7.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.3 kB)
+2026-06-06 14:47:23,632 - INFO - Collecting fire==0.4.0 (from -r requirements.txt (line 9))
+2026-06-06 14:47:23,638 - INFO -   Downloading fire-0.4.0.tar.gz (87 kB)
+2026-06-06 14:47:23,681 - INFO -   Installing build dependencies: started
+2026-06-06 14:47:24,462 - INFO -   Installing build dependencies: finished with status 'done'
+2026-06-06 14:47:24,463 - INFO -   Getting requirements to build wheel: started
+2026-06-06 14:47:25,586 - INFO -   Getting requirements to build wheel: finished with status 'done'
+2026-06-06 14:47:25,597 - INFO -   Preparing metadata (pyproject.toml): started
+2026-06-06 14:47:26,048 - INFO -   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-06 14:47:26,131 - INFO - Collecting typer==0.9.0 (from -r requirements.txt (line 10))
+2026-06-06 14:47:26,178 - INFO -   Downloading typer-0.9.0-py3-none-any.whl.metadata (14 kB)
+2026-06-06 14:47:26,357 - INFO - Collecting lancedb==0.4.0 (from -r requirements.txt (line 13))
+2026-06-06 14:47:26,387 - INFO -   Downloading lancedb-0.4.0-py3-none-any.whl.metadata (16 kB)
+2026-06-06 14:47:26,607 - INFO - Collecting langchain==0.0.352 (from -r requirements.txt (line 14))
+2026-06-06 14:47:26,622 - INFO -   Downloading langchain-0.0.352-py3-none-any.whl.metadata (13 kB)
+2026-06-06 14:47:26,907 - INFO - Collecting loguru==0.6.0 (from -r requirements.txt (line 15))
+2026-06-06 14:47:26,917 - INFO -   Downloading loguru-0.6.0-py3-none-any.whl.metadata (21 kB)
+2026-06-06 14:47:27,037 - INFO - Collecting meilisearch==0.21.0 (from -r requirements.txt (line 16))
+2026-06-06 14:47:27,044 - INFO -   Downloading meilisearch-0.21.0-py3-none-any.whl.metadata (8.8 kB)
+2026-06-06 14:47:27,513 - INFO - Collecting numpy==1.24.3 (from -r requirements.txt (line 17))
+2026-06-06 14:47:27,618 - INFO -   Downloading numpy-1.24.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.6 kB)
+2026-06-06 14:47:27,750 - INFO - Collecting openai==1.6.0 (from -r requirements.txt (line 18))
+2026-06-06 14:47:27,758 - INFO -   Downloading openai-1.6.0-py3-none-any.whl.metadata (17 kB)
+2026-06-06 14:47:27,884 - INFO - Collecting openpyxl (from -r requirements.txt (line 19))
+2026-06-06 14:47:27,893 - INFO -   Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-06-06 14:47:27,993 - INFO - Collecting beautifulsoup4==4.12.2 (from -r requirements.txt (line 20))
+2026-06-06 14:47:28,000 - INFO -   Downloading beautifulsoup4-4.12.2-py3-none-any.whl.metadata (3.6 kB)
+2026-06-06 14:47:28,361 - INFO - Collecting pandas==2.0.3 (from -r requirements.txt (line 21))
+2026-06-06 14:47:28,367 - INFO -   Downloading pandas-2.0.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (18 kB)
+2026-06-06 14:47:28,705 - INFO - Collecting pydantic==2.5.3 (from -r requirements.txt (line 22))
+2026-06-06 14:47:28,729 - INFO -   Downloading pydantic-2.5.3-py3-none-any.whl.metadata (65 kB)
+2026-06-06 14:47:28,991 - INFO - Collecting python_docx==0.8.11 (from -r requirements.txt (line 26))
+2026-06-06 14:47:29,018 - INFO -   Downloading python-docx-0.8.11.tar.gz (5.6 MB)
+2026-06-06 14:47:29,244 - INFO -      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 25.0 MB/s  0:00:00
+2026-06-06 14:47:29,677 - INFO -   Installing build dependencies: started
+2026-06-06 14:47:30,710 - INFO -   Installing build dependencies: finished with status 'done'
+2026-06-06 14:47:30,714 - INFO -   Getting requirements to build wheel: started
+2026-06-06 14:47:31,460 - INFO -   Getting requirements to build wheel: finished with status 'done'
+2026-06-06 14:47:31,461 - INFO -   Preparing metadata (pyproject.toml): started
+2026-06-06 14:47:31,745 - INFO -   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-06 14:47:32,378 - INFO - Collecting PyYAML==6.0.1 (from -r requirements.txt (line 27))
+2026-06-06 14:47:32,393 - INFO -   Downloading PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+2026-06-06 14:47:32,931 - INFO - Collecting setuptools==65.6.3 (from -r requirements.txt (line 29))
+2026-06-06 14:47:32,939 - INFO -   Downloading setuptools-65.6.3-py3-none-any.whl.metadata (6.1 kB)
+2026-06-06 14:47:33,643 - INFO - Collecting tenacity==8.2.2 (from -r requirements.txt (line 30))
+2026-06-06 14:47:33,651 - INFO -   Downloading tenacity-8.2.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:34,117 - INFO - Collecting tiktoken==0.5.2 (from -r requirements.txt (line 31))
+2026-06-06 14:47:34,124 - INFO -   Downloading tiktoken-0.5.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+2026-06-06 14:47:34,635 - INFO - Collecting tqdm==4.65.0 (from -r requirements.txt (line 32))
+2026-06-06 14:47:34,641 - INFO -   Downloading tqdm-4.65.0-py3-none-any.whl.metadata (56 kB)
+2026-06-06 14:47:35,190 - INFO - Collecting anthropic==0.8.1 (from -r requirements.txt (line 36))
+2026-06-06 14:47:35,196 - INFO -   Downloading anthropic-0.8.1-py3-none-any.whl.metadata (13 kB)
+2026-06-06 14:47:35,288 - INFO - Collecting typing-inspect==0.8.0 (from -r requirements.txt (line 37))
+2026-06-06 14:47:35,301 - INFO -   Downloading typing_inspect-0.8.0-py3-none-any.whl.metadata (1.5 kB)
+2026-06-06 14:47:35,375 - INFO - Collecting typing_extensions==4.9.0 (from -r requirements.txt (line 38))
+2026-06-06 14:47:35,385 - INFO -   Downloading typing_extensions-4.9.0-py3-none-any.whl.metadata (3.0 kB)
+2026-06-06 14:47:35,516 - INFO - Collecting libcst==1.0.1 (from -r requirements.txt (line 39))
+2026-06-06 14:47:35,522 - INFO -   Downloading libcst-1.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (17 kB)
+2026-06-06 14:47:35,642 - INFO - Collecting qdrant-client==1.7.0 (from -r requirements.txt (line 40))
+2026-06-06 14:47:35,649 - INFO -   Downloading qdrant_client-1.7.0-py3-none-any.whl.metadata (9.3 kB)
+2026-06-06 14:47:35,718 - INFO - Collecting ta==0.10.2 (from -r requirements.txt (line 43))
+2026-06-06 14:47:35,728 - INFO -   Downloading ta-0.10.2.tar.gz (25 kB)
+2026-06-06 14:47:35,820 - INFO -   Installing build dependencies: started
+2026-06-06 14:47:36,939 - INFO -   Installing build dependencies: finished with status 'done'
+2026-06-06 14:47:36,943 - INFO -   Getting requirements to build wheel: started
+2026-06-06 14:47:37,387 - INFO -   Getting requirements to build wheel: finished with status 'done'
+2026-06-06 14:47:37,391 - INFO -   Preparing metadata (pyproject.toml): started
+2026-06-06 14:47:37,586 - INFO -   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-06 14:47:37,672 - INFO - Collecting semantic-kernel==0.4.3.dev0 (from -r requirements.txt (line 44))
+2026-06-06 14:47:37,679 - INFO -   Downloading semantic_kernel-0.4.3.dev0-py3-none-any.whl.metadata (2.1 kB)
+2026-06-06 14:47:38,145 - INFO - Collecting wrapt==1.15.0 (from -r requirements.txt (line 45))
+2026-06-06 14:47:38,174 - INFO -   Downloading wrapt-1.15.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.7 kB)
+2026-06-06 14:47:38,241 - INFO - Collecting aioredis~=2.0.1 (from -r requirements.txt (line 49))
+2026-06-06 14:47:38,249 - INFO -   Downloading aioredis-2.0.1-py3-none-any.whl.metadata (15 kB)
+2026-06-06 14:47:38,331 - INFO - Collecting websocket-client==1.6.2 (from -r requirements.txt (line 50))
+2026-06-06 14:47:38,338 - INFO -   Downloading websocket_client-1.6.2-py3-none-any.whl.metadata (7.5 kB)
+2026-06-06 14:47:38,457 - INFO - Collecting aiofiles==23.2.1 (from -r requirements.txt (line 51))
+2026-06-06 14:47:38,464 - INFO -   Downloading aiofiles-23.2.1-py3-none-any.whl.metadata (9.7 kB)
+2026-06-06 14:47:38,565 - INFO - Collecting gitpython==3.1.40 (from -r requirements.txt (line 52))
+2026-06-06 14:47:38,572 - INFO -   Downloading GitPython-3.1.40-py3-none-any.whl.metadata (12 kB)
+2026-06-06 14:47:38,680 - INFO - Collecting zhipuai==2.0.1 (from -r requirements.txt (line 53))
+2026-06-06 14:47:38,686 - INFO -   Downloading zhipuai-2.0.1-py3-none-any.whl.metadata (2.7 kB)
+2026-06-06 14:47:38,819 - INFO - Collecting socksio~=1.0.0 (from -r requirements.txt (line 54))
+2026-06-06 14:47:38,827 - INFO -   Downloading socksio-1.0.0-py3-none-any.whl.metadata (6.1 kB)
+2026-06-06 14:47:38,972 - INFO - Collecting gitignore-parser==0.1.9 (from -r requirements.txt (line 55))
+2026-06-06 14:47:38,986 - INFO -   Downloading gitignore_parser-0.1.9.tar.gz (5.3 kB)
+2026-06-06 14:47:39,095 - INFO -   Installing build dependencies: started
+2026-06-06 14:47:39,808 - INFO -   Installing build dependencies: finished with status 'done'
+2026-06-06 14:47:39,811 - INFO -   Getting requirements to build wheel: started
+2026-06-06 14:47:40,177 - INFO -   Getting requirements to build wheel: finished with status 'done'
+2026-06-06 14:47:40,181 - INFO -   Preparing metadata (pyproject.toml): started
+2026-06-06 14:47:40,406 - INFO -   Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-06 14:47:40,571 - INFO - Collecting websockets~=12.0 (from -r requirements.txt (line 57))
+2026-06-06 14:47:40,577 - INFO -   Downloading websockets-12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+2026-06-06 14:47:40,644 - INFO - Collecting networkx~=3.2.1 (from -r requirements.txt (line 58))
+2026-06-06 14:47:40,649 - INFO -   Downloading networkx-3.2.1-py3-none-any.whl.metadata (5.2 kB)
+2026-06-06 14:47:40,668 - INFO - Collecting google-generativeai==0.3.2 (from -r requirements.txt (line 59))
+2026-06-06 14:47:40,675 - INFO -   Downloading google_generativeai-0.3.2-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:40,702 - INFO - Collecting anytree (from -r requirements.txt (line 61))
+2026-06-06 14:47:40,710 - INFO -   Downloading anytree-2.13.0-py3-none-any.whl.metadata (8.0 kB)
+2026-06-06 14:47:40,735 - INFO - Collecting attrs>=17.3.0 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:40,741 - INFO -   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-06-06 14:47:40,890 - INFO - Collecting charset-normalizer<4.0,>=2.0 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:40,895 - INFO -   Downloading charset_normalizer-3.4.7-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-06 14:47:41,286 - INFO - Collecting multidict<7.0,>=4.5 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:41,291 - INFO -   Downloading multidict-6.7.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:47:41,312 - INFO - Collecting async-timeout<5.0,>=4.0.0a3 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:41,317 - INFO -   Downloading async_timeout-4.0.3-py3-none-any.whl.metadata (4.2 kB)
+2026-06-06 14:47:41,624 - INFO - Collecting yarl<2.0,>=1.0 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:41,630 - INFO -   Downloading yarl-1.22.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (75 kB)
+2026-06-06 14:47:41,816 - INFO - Collecting frozenlist>=1.1.1 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:41,821 - INFO -   Downloading frozenlist-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-06-06 14:47:41,837 - INFO - Collecting aiosignal>=1.1.2 (from aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:47:41,843 - INFO -   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-06-06 14:47:41,917 - INFO - Collecting Django>=3.2 (from channels==4.0.0->-r requirements.txt (line 3))
+2026-06-06 14:47:41,922 - INFO -   Downloading django-4.2.30-py3-none-any.whl.metadata (4.2 kB)
+2026-06-06 14:47:41,949 - INFO - Collecting asgiref<4,>=3.5.0 (from channels==4.0.0->-r requirements.txt (line 3))
+2026-06-06 14:47:41,954 - INFO -   Downloading asgiref-3.11.1-py3-none-any.whl.metadata (9.3 kB)
+2026-06-06 14:47:41,974 - INFO - Collecting six (from fire==0.4.0->-r requirements.txt (line 9))
+2026-06-06 14:47:41,979 - INFO -   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-06-06 14:47:41,993 - INFO - Collecting termcolor (from fire==0.4.0->-r requirements.txt (line 9))
+2026-06-06 14:47:41,999 - INFO -   Downloading termcolor-3.1.0-py3-none-any.whl.metadata (6.4 kB)
+2026-06-06 14:47:42,029 - INFO - Collecting click<9.0.0,>=7.1.1 (from typer==0.9.0->-r requirements.txt (line 10))
+2026-06-06 14:47:42,034 - INFO -   Downloading click-8.1.8-py3-none-any.whl.metadata (2.3 kB)
+2026-06-06 14:47:42,051 - INFO - Collecting deprecation (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,057 - INFO -   Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+2026-06-06 14:47:42,132 - INFO - Collecting pylance==0.9.0 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,139 - INFO -   Downloading pylance-0.9.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.9 kB)
+2026-06-06 14:47:42,158 - INFO - Collecting ratelimiter~=1.0 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,164 - INFO -   Downloading ratelimiter-1.2.0.post0-py3-none-any.whl.metadata (4.0 kB)
+2026-06-06 14:47:42,181 - INFO - Collecting retry>=0.9.2 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,188 - INFO -   Downloading retry-0.9.2-py2.py3-none-any.whl.metadata (5.8 kB)
+2026-06-06 14:47:42,227 - INFO - Collecting semver>=3.0 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,233 - INFO -   Downloading semver-3.0.4-py3-none-any.whl.metadata (6.8 kB)
+2026-06-06 14:47:42,257 - INFO - Collecting cachetools (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,262 - INFO -   Downloading cachetools-6.2.6-py3-none-any.whl.metadata (5.6 kB)
+2026-06-06 14:47:42,292 - INFO - Collecting requests>=2.31.0 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,298 - INFO -   Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+2026-06-06 14:47:42,321 - INFO - Collecting overrides>=0.7 (from lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:42,327 - INFO -   Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)
+2026-06-06 14:47:42,670 - INFO - Collecting SQLAlchemy<3,>=1.4 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,677 - INFO -   Downloading sqlalchemy-2.0.50-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+2026-06-06 14:47:42,738 - INFO - Collecting dataclasses-json<0.7,>=0.5.7 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,743 - INFO -   Downloading dataclasses_json-0.6.7-py3-none-any.whl.metadata (25 kB)
+2026-06-06 14:47:42,760 - INFO - Collecting jsonpatch<2.0,>=1.33 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,765 - INFO -   Downloading jsonpatch-1.33-py2.py3-none-any.whl.metadata (3.0 kB)
+2026-06-06 14:47:42,797 - INFO - Collecting langchain-community<0.1,>=0.0.2 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,803 - INFO -   Downloading langchain_community-0.0.38-py3-none-any.whl.metadata (8.7 kB)
+2026-06-06 14:47:42,868 - INFO - Collecting langchain-core<0.2,>=0.1 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,874 - INFO -   Downloading langchain_core-0.1.53-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:42,954 - INFO - Collecting langsmith<0.1.0,>=0.0.70 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:42,960 - INFO -   Downloading langsmith-0.0.92-py3-none-any.whl.metadata (9.9 kB)
+2026-06-06 14:47:43,001 - INFO - Collecting annotated-types>=0.4.0 (from pydantic==2.5.3->-r requirements.txt (line 22))
+2026-06-06 14:47:43,007 - INFO -   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2026-06-06 14:47:43,924 - INFO - Collecting pydantic-core==2.14.6 (from pydantic==2.5.3->-r requirements.txt (line 22))
+2026-06-06 14:47:43,930 - INFO -   Downloading pydantic_core-2.14.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+2026-06-06 14:47:43,957 - INFO - Collecting camel-converter[pydantic] (from meilisearch==0.21.0->-r requirements.txt (line 16))
+2026-06-06 14:47:43,963 - INFO -   Downloading camel_converter-4.0.1-py3-none-any.whl.metadata (6.4 kB)
+2026-06-06 14:47:43,993 - INFO - Collecting anyio<5,>=3.5.0 (from openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:43,998 - INFO -   Downloading anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)
+2026-06-06 14:47:44,013 - INFO - Collecting distro<2,>=1.7.0 (from openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:44,019 - INFO -   Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+2026-06-06 14:47:44,042 - INFO - Collecting httpx<1,>=0.23.0 (from openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:44,048 - INFO -   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-06-06 14:47:44,069 - INFO - Collecting sniffio (from openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:44,075 - INFO -   Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-06 14:47:44,108 - INFO - Collecting soupsieve>1.2 (from beautifulsoup4==4.12.2->-r requirements.txt (line 20))
+2026-06-06 14:47:44,113 - INFO -   Downloading soupsieve-2.8.4-py3-none-any.whl.metadata (4.6 kB)
+2026-06-06 14:47:44,131 - INFO - Collecting python-dateutil>=2.8.2 (from pandas==2.0.3->-r requirements.txt (line 21))
+2026-06-06 14:47:44,137 - INFO -   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2026-06-06 14:47:44,186 - INFO - Collecting pytz>=2020.1 (from pandas==2.0.3->-r requirements.txt (line 21))
+2026-06-06 14:47:44,192 - INFO -   Downloading pytz-2026.2-py2.py3-none-any.whl.metadata (22 kB)
+2026-06-06 14:47:44,219 - INFO - Collecting tzdata>=2022.1 (from pandas==2.0.3->-r requirements.txt (line 21))
+2026-06-06 14:47:44,225 - INFO -   Downloading tzdata-2026.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-06-06 14:47:44,626 - INFO - Collecting lxml>=2.3.2 (from python_docx==0.8.11->-r requirements.txt (line 26))
+2026-06-06 14:47:44,632 - INFO -   Downloading lxml-6.1.1-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+2026-06-06 14:47:45,065 - INFO - Collecting regex>=2022.1.18 (from tiktoken==0.5.2->-r requirements.txt (line 31))
+2026-06-06 14:47:45,072 - INFO -   Downloading regex-2026.1.15-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-06 14:47:45,304 - INFO - Collecting tokenizers>=0.13.0 (from anthropic==0.8.1->-r requirements.txt (line 36))
+2026-06-06 14:47:45,310 - INFO -   Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-06-06 14:47:45,325 - INFO - Collecting mypy-extensions>=0.3.0 (from typing-inspect==0.8.0->-r requirements.txt (line 37))
+2026-06-06 14:47:45,330 - INFO -   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:46,104 - INFO - Collecting grpcio>=1.41.0 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:47:46,110 - INFO -   Downloading grpcio-1.80.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
+2026-06-06 14:47:46,697 - INFO - Collecting grpcio-tools>=1.41.0 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:47:46,703 - INFO -   Downloading grpcio_tools-1.80.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:47:46,727 - INFO - Collecting portalocker<3.0.0,>=2.7.0 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:47:46,732 - INFO -   Downloading portalocker-2.10.1-py3-none-any.whl.metadata (8.5 kB)
+2026-06-06 14:47:46,767 - INFO - Collecting urllib3<2.0.0,>=1.26.14 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:47:46,773 - INFO -   Downloading urllib3-1.26.20-py2.py3-none-any.whl.metadata (50 kB)
+2026-06-06 14:47:46,810 - INFO - Collecting motor<4.0.0,>=3.3.1 (from semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:46,817 - INFO -   Downloading motor-3.7.1-py3-none-any.whl.metadata (21 kB)
+2026-06-06 14:47:46,889 - INFO - Collecting openapi_core<0.19.0,>=0.18.0 (from semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:46,896 - INFO -   Downloading openapi_core-0.18.2-py3-none-any.whl.metadata (6.3 kB)
+2026-06-06 14:47:46,931 - INFO - Collecting prance<24.0.0.0,>=23.6.21.0 (from semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:46,938 - INFO -   Downloading prance-23.6.21.0-py3-none-any.whl.metadata (13 kB)
+2026-06-06 14:47:46,985 - INFO - Collecting python-dotenv==1.0.0 (from semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:46,991 - INFO -   Downloading python_dotenv-1.0.0-py3-none-any.whl.metadata (21 kB)
+2026-06-06 14:47:47,024 - INFO - Collecting regex>=2022.1.18 (from tiktoken==0.5.2->-r requirements.txt (line 31))
+2026-06-06 14:47:47,031 - INFO -   Downloading regex-2023.12.25-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (40 kB)
+2026-06-06 14:47:47,058 - INFO - Collecting gitdb<5,>=4.0.1 (from gitpython==3.1.40->-r requirements.txt (line 52))
+2026-06-06 14:47:47,063 - INFO -   Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+2026-06-06 14:47:47,099 - INFO - Collecting pyjwt~=2.8.0 (from zhipuai==2.0.1->-r requirements.txt (line 53))
+2026-06-06 14:47:47,105 - INFO -   Downloading PyJWT-2.8.0-py3-none-any.whl.metadata (4.2 kB)
+2026-06-06 14:47:47,128 - INFO - Collecting google-ai-generativelanguage==0.4.0 (from google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,135 - INFO -   Downloading google_ai_generativelanguage-0.4.0-py3-none-any.whl.metadata (5.1 kB)
+2026-06-06 14:47:47,184 - INFO - Collecting google-auth (from google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,189 - INFO -   Downloading google_auth-2.50.0-py3-none-any.whl.metadata (6.2 kB)
+2026-06-06 14:47:47,232 - INFO - Collecting google-api-core (from google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,237 - INFO -   Downloading google_api_core-2.30.3-py3-none-any.whl.metadata (3.1 kB)
+2026-06-06 14:47:47,449 - INFO - Collecting protobuf (from google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,454 - INFO -   Downloading protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+2026-06-06 14:47:47,569 - INFO - Collecting proto-plus<2.0.0dev,>=1.22.3 (from google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,866 - INFO -   Downloading proto_plus-1.27.2-py3-none-any.whl.metadata (2.2 kB)
+2026-06-06 14:47:47,906 - INFO - Collecting protobuf (from google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:47,911 - INFO -   Downloading protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl.metadata (541 bytes)
+2026-06-06 14:47:48,141 - INFO - Collecting pyarrow>=12 (from pylance==0.9.0->lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:47:48,273 - INFO -   Downloading pyarrow-21.0.0-cp39-cp39-manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+2026-06-06 14:47:48,497 - INFO - Collecting exceptiongroup>=1.0.2 (from anyio<5,>=3.5.0->openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:48,502 - INFO -   Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+2026-06-06 14:47:48,537 - INFO - Collecting idna>=2.8 (from anyio<5,>=3.5.0->openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:48,546 - INFO -   Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+2026-06-06 14:47:48,621 - INFO - Collecting marshmallow<4.0.0,>=3.18.0 (from dataclasses-json<0.7,>=0.5.7->langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:48,626 - INFO -   Downloading marshmallow-3.26.2-py3-none-any.whl.metadata (7.3 kB)
+2026-06-06 14:47:48,684 - INFO - Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython==3.1.40->-r requirements.txt (line 52))
+2026-06-06 14:47:48,690 - INFO -   Downloading smmap-5.0.3-py3-none-any.whl.metadata (4.6 kB)
+2026-06-06 14:47:48,816 - INFO - Collecting googleapis-common-protos<2.0.0,>=1.63.2 (from google-api-core->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:48,822 - INFO -   Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+2026-06-06 14:47:49,072 - INFO - Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:49,077 - INFO -   Downloading grpcio_status-1.80.0-py3-none-any.whl.metadata (1.3 kB)
+2026-06-06 14:47:49,123 - INFO - Collecting pyasn1-modules>=0.2.1 (from google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:49,132 - INFO -   Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+2026-06-06 14:47:49,410 - INFO - Collecting cryptography>=38.0.3 (from google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:49,416 - INFO -   Downloading cryptography-48.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+2026-06-06 14:47:49,443 - INFO - INFO: pip is looking at multiple versions of grpcio to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:49,444 - INFO - Collecting grpcio>=1.41.0 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:47:49,452 - INFO -   Downloading grpcio-1.78.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
+2026-06-06 14:47:49,479 - INFO -   Downloading grpcio-1.76.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+2026-06-06 14:47:49,514 - INFO -   Downloading grpcio-1.75.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+2026-06-06 14:47:49,566 - INFO -   Downloading grpcio-1.75.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+2026-06-06 14:47:49,582 - INFO -   Downloading grpcio-1.74.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.8 kB)
+2026-06-06 14:47:49,622 - INFO - INFO: pip is looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:49,623 - INFO - Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:47:49,628 - INFO -   Downloading grpcio_status-1.78.0-py3-none-any.whl.metadata (1.3 kB)
+2026-06-06 14:47:49,672 - INFO -   Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:49,693 - INFO -   Downloading grpcio_status-1.75.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:49,773 - INFO -   Downloading grpcio_status-1.75.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:49,863 - INFO -   Downloading grpcio_status-1.74.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:49,907 - INFO -   Downloading grpcio_status-1.73.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:49,985 - INFO -   Downloading grpcio_status-1.73.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,006 - INFO - INFO: pip is still looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:50,015 - INFO -   Downloading grpcio_status-1.72.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,040 - INFO -   Downloading grpcio_status-1.72.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,091 - INFO -   Downloading grpcio_status-1.71.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,360 - INFO -   Downloading grpcio_status-1.71.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,402 - INFO -   Downloading grpcio_status-1.70.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,463 - INFO - INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+2026-06-06 14:47:50,472 - INFO -   Downloading grpcio_status-1.69.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,490 - INFO -   Downloading grpcio_status-1.68.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,602 - INFO -   Downloading grpcio_status-1.68.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,703 - INFO -   Downloading grpcio_status-1.67.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,786 - INFO -   Downloading grpcio_status-1.67.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,822 - INFO -   Downloading grpcio_status-1.66.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:50,950 - INFO -   Downloading grpcio_status-1.66.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,310 - INFO -   Downloading grpcio_status-1.66.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,562 - INFO -   Downloading grpcio_status-1.65.5-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,617 - INFO -   Downloading grpcio_status-1.65.4-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,686 - INFO -   Downloading grpcio_status-1.65.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,763 - INFO -   Downloading grpcio_status-1.65.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,850 - INFO -   Downloading grpcio_status-1.64.3-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:51,896 - INFO -   Downloading grpcio_status-1.64.1-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:52,061 - INFO -   Downloading grpcio_status-1.64.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:52,110 - INFO -   Downloading grpcio_status-1.63.2-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:52,153 - INFO -   Downloading grpcio_status-1.63.0-py3-none-any.whl.metadata (1.1 kB)
+2026-06-06 14:47:52,206 - INFO -   Downloading grpcio_status-1.62.3-py3-none-any.whl.metadata (1.3 kB)
+2026-06-06 14:47:52,518 - INFO - Collecting certifi (from httpx<1,>=0.23.0->openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:52,608 - INFO -   Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+2026-06-06 14:47:52,969 - INFO - Collecting httpcore==1.* (from httpx<1,>=0.23.0->openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:52,974 - INFO -   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-06-06 14:47:53,313 - INFO - Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.23.0->openai==1.6.0->-r requirements.txt (line 18))
+2026-06-06 14:47:53,322 - INFO -   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-06 14:47:53,432 - INFO - Collecting jsonpointer>=1.9 (from jsonpatch<2.0,>=1.33->langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:53,437 - INFO -   Downloading jsonpointer-3.0.0-py2.py3-none-any.whl.metadata (2.3 kB)
+2026-06-06 14:47:53,560 - INFO - INFO: pip is looking at multiple versions of langchain-community to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:53,560 - INFO - Collecting langchain-community<0.1,>=0.0.2 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:53,576 - INFO -   Downloading langchain_community-0.0.37-py3-none-any.whl.metadata (8.7 kB)
+2026-06-06 14:47:53,735 - INFO -   Downloading langchain_community-0.0.36-py3-none-any.whl.metadata (8.7 kB)
+2026-06-06 14:47:53,916 - INFO -   Downloading langchain_community-0.0.35-py3-none-any.whl.metadata (8.7 kB)
+2026-06-06 14:47:53,987 - INFO -   Downloading langchain_community-0.0.34-py3-none-any.whl.metadata (8.5 kB)
+2026-06-06 14:47:54,068 - INFO -   Downloading langchain_community-0.0.33-py3-none-any.whl.metadata (8.5 kB)
+2026-06-06 14:47:54,131 - INFO -   Downloading langchain_community-0.0.32-py3-none-any.whl.metadata (8.5 kB)
+2026-06-06 14:47:54,186 - INFO -   Downloading langchain_community-0.0.31-py3-none-any.whl.metadata (8.4 kB)
+2026-06-06 14:47:54,265 - INFO - INFO: pip is still looking at multiple versions of langchain-community to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:54,308 - INFO -   Downloading langchain_community-0.0.30-py3-none-any.whl.metadata (8.4 kB)
+2026-06-06 14:47:54,424 - INFO -   Downloading langchain_community-0.0.29-py3-none-any.whl.metadata (8.3 kB)
+2026-06-06 14:47:54,713 - INFO -   Downloading langchain_community-0.0.28-py3-none-any.whl.metadata (8.3 kB)
+2026-06-06 14:47:54,818 - INFO -   Downloading langchain_community-0.0.27-py3-none-any.whl.metadata (8.2 kB)
+2026-06-06 14:47:54,953 - INFO -   Downloading langchain_community-0.0.26-py3-none-any.whl.metadata (8.2 kB)
+2026-06-06 14:47:55,050 - INFO - INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+2026-06-06 14:47:55,064 - INFO -   Downloading langchain_community-0.0.25-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,140 - INFO -   Downloading langchain_community-0.0.24-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,223 - INFO -   Downloading langchain_community-0.0.23-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,296 - INFO -   Downloading langchain_community-0.0.22-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,386 - INFO -   Downloading langchain_community-0.0.21-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,436 - INFO -   Downloading langchain_community-0.0.20-py3-none-any.whl.metadata (8.1 kB)
+2026-06-06 14:47:55,589 - INFO - INFO: pip is looking at multiple versions of langchain-core to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:55,589 - INFO - Collecting langchain-core<0.2,>=0.1 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:55,596 - INFO -   Downloading langchain_core-0.1.52-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:55,645 - INFO -   Downloading langchain_core-0.1.51-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:55,703 - INFO -   Downloading langchain_core-0.1.50-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:55,741 - INFO -   Downloading langchain_core-0.1.49-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:55,870 - INFO -   Downloading langchain_core-0.1.48-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,030 - INFO -   Downloading langchain_core-0.1.47-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,088 - INFO -   Downloading langchain_core-0.1.46-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,164 - INFO - INFO: pip is still looking at multiple versions of langchain-core to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:47:56,178 - INFO -   Downloading langchain_core-0.1.45-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,394 - INFO -   Downloading langchain_core-0.1.44-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,443 - INFO -   Downloading langchain_core-0.1.43-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,532 - INFO -   Downloading langchain_core-0.1.42-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,655 - INFO -   Downloading langchain_core-0.1.41-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,861 - INFO - INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+2026-06-06 14:47:56,870 - INFO -   Downloading langchain_core-0.1.40-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:56,970 - INFO -   Downloading langchain_core-0.1.39-py3-none-any.whl.metadata (5.9 kB)
+2026-06-06 14:47:57,025 - INFO -   Downloading langchain_core-0.1.38-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,074 - INFO -   Downloading langchain_core-0.1.37-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,115 - INFO -   Downloading langchain_core-0.1.36-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,149 - INFO -   Downloading langchain_core-0.1.35-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,177 - INFO -   Downloading langchain_core-0.1.34-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,209 - INFO -   Downloading langchain_core-0.1.33-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,253 - INFO -   Downloading langchain_core-0.1.32-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,299 - INFO -   Downloading langchain_core-0.1.31-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,381 - INFO -   Downloading langchain_core-0.1.30-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,425 - INFO -   Downloading langchain_core-0.1.29-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,516 - INFO -   Downloading langchain_core-0.1.28-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,598 - INFO -   Downloading langchain_core-0.1.27-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,660 - INFO -   Downloading langchain_core-0.1.26-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,710 - INFO -   Downloading langchain_core-0.1.25-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,763 - INFO -   Downloading langchain_core-0.1.24-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,815 - INFO -   Downloading langchain_core-0.1.23-py3-none-any.whl.metadata (6.0 kB)
+2026-06-06 14:47:57,865 - INFO - Collecting langsmith<0.1.0,>=0.0.70 (from langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:57,875 - INFO -   Downloading langsmith-0.0.87-py3-none-any.whl.metadata (10 kB)
+2026-06-06 14:47:57,948 - INFO - Collecting packaging<24.0,>=23.2 (from langchain-core<0.2,>=0.1->langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:47:57,955 - INFO -   Downloading packaging-23.2-py3-none-any.whl.metadata (3.2 kB)
+2026-06-06 14:47:58,394 - INFO - Collecting pymongo<5.0,>=4.9 (from motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,411 - INFO -   Downloading pymongo-4.17.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+2026-06-06 14:47:58,469 - INFO - Collecting isodate (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,475 - INFO -   Downloading isodate-0.7.2-py3-none-any.whl.metadata (11 kB)
+2026-06-06 14:47:58,536 - INFO - Collecting jsonschema<5.0.0,>=4.18.0 (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,541 - INFO -   Downloading jsonschema-4.25.1-py3-none-any.whl.metadata (7.6 kB)
+2026-06-06 14:47:58,577 - INFO - Collecting jsonschema-spec<0.3.0,>=0.2.3 (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,586 - INFO -   Downloading jsonschema_spec-0.2.4-py3-none-any.whl.metadata (4.3 kB)
+2026-06-06 14:47:58,629 - INFO - Collecting more-itertools (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,636 - INFO -   Downloading more_itertools-10.8.0-py3-none-any.whl.metadata (39 kB)
+2026-06-06 14:47:58,685 - INFO - Collecting openapi-schema-validator<0.7.0,>=0.6.0 (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,692 - INFO -   Downloading openapi_schema_validator-0.6.3-py3-none-any.whl.metadata (5.4 kB)
+2026-06-06 14:47:58,794 - INFO - Collecting openapi-spec-validator<0.8.0,>=0.7.1 (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,808 - INFO -   Downloading openapi_spec_validator-0.7.2-py3-none-any.whl.metadata (5.7 kB)
+2026-06-06 14:47:58,841 - INFO - Collecting parse (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,850 - INFO -   Downloading parse-1.22.1-py2.py3-none-any.whl.metadata (21 kB)
+2026-06-06 14:47:58,935 - INFO - Collecting werkzeug (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,943 - INFO -   Downloading werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+2026-06-06 14:47:58,969 - INFO - Collecting jsonschema-specifications>=2023.03.6 (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:58,975 - INFO -   Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-06 14:47:59,018 - INFO - Collecting referencing>=0.28.4 (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,023 - INFO -   Downloading referencing-0.36.2-py3-none-any.whl.metadata (2.8 kB)
+2026-06-06 14:47:59,401 - INFO - Collecting rpds-py>=0.7.1 (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,406 - INFO -   Downloading rpds_py-0.27.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+2026-06-06 14:47:59,424 - INFO - Collecting pathable<0.5.0,>=0.4.1 (from jsonschema-spec<0.3.0,>=0.2.3->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,430 - INFO -   Downloading pathable-0.4.4-py3-none-any.whl.metadata (1.8 kB)
+2026-06-06 14:47:59,436 - INFO - Collecting referencing>=0.28.4 (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,442 - INFO -   Downloading referencing-0.30.2-py3-none-any.whl.metadata (2.6 kB)
+2026-06-06 14:47:59,465 - INFO - Collecting rfc3339-validator (from openapi-schema-validator<0.7.0,>=0.6.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,470 - INFO -   Downloading rfc3339_validator-0.1.4-py2.py3-none-any.whl.metadata (1.5 kB)
+2026-06-06 14:47:59,494 - INFO - Collecting jsonschema-path<0.4.0,>=0.3.1 (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,501 - INFO -   Downloading jsonschema_path-0.3.4-py3-none-any.whl.metadata (4.3 kB)
+2026-06-06 14:47:59,550 - INFO - Collecting lazy-object-proxy<2.0.0,>=1.7.1 (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,557 - INFO -   Downloading lazy_object_proxy-1.12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.1 kB)
+2026-06-06 14:47:59,835 - INFO - Collecting chardet>=3.0 (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:47:59,856 - INFO -   Downloading chardet-5.2.0-py3-none-any.whl.metadata (3.4 kB)
+2026-06-06 14:48:00,408 - INFO - Collecting ruamel.yaml>=0.17.10 (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:48:00,414 - INFO -   Downloading ruamel_yaml-0.19.1-py3-none-any.whl.metadata (16 kB)
+2026-06-06 14:48:00,443 - INFO - Collecting dnspython<3.0.0,>=2.6.1 (from pymongo<5.0,>=4.9->motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:48:00,448 - INFO -   Downloading dnspython-2.7.0-py3-none-any.whl.metadata (5.8 kB)
+2026-06-06 14:48:00,650 - INFO - Collecting greenlet>=1 (from SQLAlchemy<3,>=1.4->langchain==0.0.352->-r requirements.txt (line 14))
+2026-06-06 14:48:00,656 - INFO -   Downloading greenlet-3.2.5-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB)
+2026-06-06 14:48:00,756 - INFO - Collecting propcache>=0.2.1 (from yarl<2.0,>=1.0->aiohttp==3.8.4->-r requirements.txt (line 1))
+2026-06-06 14:48:00,761 - INFO -   Downloading propcache-0.4.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+2026-06-06 14:48:00,775 - INFO - Collecting et-xmlfile (from openpyxl->-r requirements.txt (line 19))
+2026-06-06 14:48:00,780 - INFO -   Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2026-06-06 14:48:01,230 - INFO - Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:48:01,235 - INFO -   Downloading cffi-2.0.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2026-06-06 14:48:01,293 - INFO - INFO: pip is looking at multiple versions of cryptography to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:48:01,295 - INFO - Collecting cryptography>=38.0.3 (from google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:48:01,305 - INFO -   Downloading cryptography-47.0.0-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (4.5 kB)
+2026-06-06 14:48:01,331 - INFO -   Downloading cryptography-46.0.7-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,349 - INFO -   Downloading cryptography-46.0.6-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,376 - INFO -   Downloading cryptography-46.0.5-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,394 - INFO -   Downloading cryptography-46.0.4-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,411 - INFO -   Downloading cryptography-46.0.3-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,429 - INFO -   Downloading cryptography-46.0.2-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,442 - INFO - INFO: pip is still looking at multiple versions of cryptography to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:48:01,449 - INFO -   Downloading cryptography-46.0.1-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,463 - INFO -   Downloading cryptography-46.0.0-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,482 - INFO -   Downloading cryptography-45.0.7-cp37-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-06 14:48:01,501 - INFO - Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:48:01,506 - INFO -   Downloading pycparser-2.23-py3-none-any.whl.metadata (993 bytes)
+2026-06-06 14:48:01,525 - INFO - Collecting sqlparse>=0.3.1 (from Django>=3.2->channels==4.0.0->-r requirements.txt (line 3))
+2026-06-06 14:48:01,530 - INFO -   Downloading sqlparse-0.5.5-py3-none-any.whl.metadata (4.7 kB)
+2026-06-06 14:48:01,566 - INFO - INFO: pip is looking at multiple versions of grpcio-tools to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:48:01,566 - INFO - Collecting grpcio-tools>=1.41.0 (from qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:48:01,573 - INFO -   Downloading grpcio_tools-1.78.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,587 - INFO -   Downloading grpcio_tools-1.76.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,603 - INFO -   Downloading grpcio_tools-1.75.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,616 - INFO -   Downloading grpcio_tools-1.75.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,631 - INFO -   Downloading grpcio_tools-1.74.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,646 - INFO -   Downloading grpcio_tools-1.73.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,686 - INFO -   Downloading grpcio_tools-1.73.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,690 - INFO - INFO: pip is still looking at multiple versions of grpcio-tools to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:48:01,698 - INFO -   Downloading grpcio_tools-1.72.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,709 - INFO -   Downloading grpcio_tools-1.72.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,720 - INFO -   Downloading grpcio_tools-1.71.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,776 - INFO -   Downloading grpcio_tools-1.71.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,790 - INFO -   Downloading grpcio_tools-1.70.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,796 - INFO - INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+2026-06-06 14:48:01,803 - INFO -   Downloading grpcio_tools-1.69.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,814 - INFO -   Downloading grpcio_tools-1.68.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,829 - INFO -   Downloading grpcio_tools-1.68.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,841 - INFO -   Downloading grpcio_tools-1.67.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,852 - INFO -   Downloading grpcio_tools-1.67.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,865 - INFO -   Downloading grpcio_tools-1.66.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,877 - INFO -   Downloading grpcio_tools-1.66.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,890 - INFO -   Downloading grpcio_tools-1.66.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,903 - INFO -   Downloading grpcio_tools-1.65.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,914 - INFO -   Downloading grpcio_tools-1.65.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,927 - INFO -   Downloading grpcio_tools-1.65.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,944 - INFO -   Downloading grpcio_tools-1.65.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,957 - INFO -   Downloading grpcio_tools-1.64.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,970 - INFO -   Downloading grpcio_tools-1.64.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,983 - INFO -   Downloading grpcio_tools-1.64.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:01,996 - INFO -   Downloading grpcio_tools-1.63.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:02,008 - INFO -   Downloading grpcio_tools-1.63.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.3 kB)
+2026-06-06 14:48:02,022 - INFO -   Downloading grpcio_tools-1.62.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.2 kB)
+2026-06-06 14:48:02,050 - INFO - Collecting h2<5,>=3 (from httpx[http2]>=0.14.0->qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:48:02,055 - INFO -   Downloading h2-4.3.0-py3-none-any.whl.metadata (5.1 kB)
+2026-06-06 14:48:02,072 - INFO - Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:48:02,077 - INFO -   Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+2026-06-06 14:48:02,092 - INFO - Collecting hpack<5,>=4.1 (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->-r requirements.txt (line 40))
+2026-06-06 14:48:02,097 - INFO -   Downloading hpack-4.1.0-py3-none-any.whl.metadata (4.6 kB)
+2026-06-06 14:48:02,112 - INFO - INFO: pip is looking at multiple versions of jsonschema-specifications to determine which version is compatible with other requirements. This could take a while.
+2026-06-06 14:48:02,113 - INFO - Collecting jsonschema-specifications>=2023.03.6 (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:48:02,120 - INFO -   Downloading jsonschema_specifications-2025.4.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-06 14:48:02,137 - INFO -   Downloading jsonschema_specifications-2024.10.1-py3-none-any.whl.metadata (3.0 kB)
+2026-06-06 14:48:02,148 - INFO -   Downloading jsonschema_specifications-2023.12.1-py3-none-any.whl.metadata (3.0 kB)
+2026-06-06 14:48:02,159 - INFO -   Downloading jsonschema_specifications-2023.11.2-py3-none-any.whl.metadata (3.0 kB)
+2026-06-06 14:48:02,171 - INFO -   Downloading jsonschema_specifications-2023.11.1-py3-none-any.whl.metadata (2.8 kB)
+2026-06-06 14:48:02,184 - INFO -   Downloading jsonschema_specifications-2023.7.1-py3-none-any.whl.metadata (2.8 kB)
+2026-06-06 14:48:02,217 - INFO - Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth->google-generativeai==0.3.2->-r requirements.txt (line 59))
+2026-06-06 14:48:02,221 - INFO -   Downloading pyasn1-0.6.3-py3-none-any.whl.metadata (8.4 kB)
+2026-06-06 14:48:02,243 - INFO - Collecting decorator>=3.4.2 (from retry>=0.9.2->lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:48:02,248 - INFO -   Downloading decorator-5.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-06 14:48:02,264 - INFO - Collecting py<2.0.0,>=1.4.26 (from retry>=0.9.2->lancedb==0.4.0->-r requirements.txt (line 13))
+2026-06-06 14:48:02,269 - INFO -   Downloading py-1.11.0-py2.py3-none-any.whl.metadata (2.8 kB)
+2026-06-06 14:48:02,337 - INFO - Collecting huggingface-hub<2.0,>=0.16.4 (from tokenizers>=0.13.0->anthropic==0.8.1->-r requirements.txt (line 36))
+2026-06-06 14:48:02,346 - INFO -   Downloading huggingface_hub-1.8.0-py3-none-any.whl.metadata (13 kB)
+2026-06-06 14:48:02,389 - INFO - Collecting filelock>=3.10.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->-r requirements.txt (line 36))
+2026-06-06 14:48:02,395 - INFO -   Downloading filelock-3.19.1-py3-none-any.whl.metadata (2.1 kB)
+2026-06-06 14:48:02,420 - INFO - Collecting fsspec>=2023.5.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->-r requirements.txt (line 36))
+2026-06-06 14:48:02,425 - INFO -   Downloading fsspec-2025.10.0-py3-none-any.whl.metadata (10 kB)
+2026-06-06 14:48:02,493 - INFO - Collecting hf-xet<2.0.0,>=1.4.2 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->-r requirements.txt (line 36))
+2026-06-06 14:48:02,498 - INFO -   Downloading hf_xet-1.5.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-06-06 14:48:02,595 - INFO - Collecting markupsafe>=2.1.1 (from werkzeug->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->-r requirements.txt (line 44))
+2026-06-06 14:48:02,600 - INFO -   Downloading markupsafe-3.0.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-06-06 14:48:02,615 - INFO - Downloading aiohttp-3.8.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.0 MB)
+2026-06-06 14:48:02,642 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 62.9 MB/s  0:00:00
+2026-06-06 14:48:02,648 - INFO - Downloading channels-4.0.0-py3-none-any.whl (28 kB)
+2026-06-06 14:48:02,656 - INFO - Downloading faiss_cpu-1.7.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (17.6 MB)
+2026-06-06 14:48:02,958 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 17.6/17.6 MB 58.3 MB/s  0:00:00
+2026-06-06 14:48:02,964 - INFO - Downloading typer-0.9.0-py3-none-any.whl (45 kB)
+2026-06-06 14:48:02,976 - INFO - Downloading lancedb-0.4.0-py3-none-any.whl (81 kB)
+2026-06-06 14:48:02,986 - INFO - Downloading langchain-0.0.352-py3-none-any.whl (794 kB)
+2026-06-06 14:48:02,995 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 794.4/794.4 kB 87.5 MB/s  0:00:00
+2026-06-06 14:48:03,002 - INFO - Downloading numpy-1.24.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (17.3 MB)
+2026-06-06 14:48:03,185 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 17.3/17.3 MB 94.9 MB/s  0:00:00
+2026-06-06 14:48:03,192 - INFO - Downloading pydantic-2.5.3-py3-none-any.whl (381 kB)
+2026-06-06 14:48:03,204 - INFO - Downloading tenacity-8.2.2-py3-none-any.whl (24 kB)
+2026-06-06 14:48:03,213 - INFO - Downloading loguru-0.6.0-py3-none-any.whl (58 kB)
+2026-06-06 14:48:03,222 - INFO - Downloading meilisearch-0.21.0-py3-none-any.whl (19 kB)
+2026-06-06 14:48:03,231 - INFO - Downloading openai-1.6.0-py3-none-any.whl (225 kB)
+2026-06-06 14:48:03,242 - INFO - Downloading typing_extensions-4.9.0-py3-none-any.whl (32 kB)
+2026-06-06 14:48:03,251 - INFO - Downloading beautifulsoup4-4.12.2-py3-none-any.whl (142 kB)
+2026-06-06 14:48:03,263 - INFO - Downloading pandas-2.0.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+2026-06-06 14:48:03,377 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 110.3 MB/s  0:00:00
+2026-06-06 14:48:03,384 - INFO - Downloading PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (738 kB)
+2026-06-06 14:48:03,394 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 738.9/738.9 kB 71.0 MB/s  0:00:00
+2026-06-06 14:48:03,401 - INFO - Downloading setuptools-65.6.3-py3-none-any.whl (1.2 MB)
+2026-06-06 14:48:03,417 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 83.8 MB/s  0:00:00
+2026-06-06 14:48:03,425 - INFO - Downloading tiktoken-0.5.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+2026-06-06 14:48:03,446 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 100.3 MB/s  0:00:00
+2026-06-06 14:48:03,451 - INFO - Downloading tqdm-4.65.0-py3-none-any.whl (77 kB)
+2026-06-06 14:48:03,459 - INFO - Downloading anthropic-0.8.1-py3-none-any.whl (826 kB)
+2026-06-06 14:48:03,469 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 826.7/826.7 kB 90.3 MB/s  0:00:00
+2026-06-06 14:48:03,475 - INFO - Downloading typing_inspect-0.8.0-py3-none-any.whl (8.7 kB)
+2026-06-06 14:48:03,486 - INFO - Downloading libcst-1.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.9 MB)
+2026-06-06 14:48:03,521 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.9/2.9 MB 81.9 MB/s  0:00:00
+2026-06-06 14:48:03,527 - INFO - Downloading qdrant_client-1.7.0-py3-none-any.whl (203 kB)
+2026-06-06 14:48:03,536 - INFO - Downloading semantic_kernel-0.4.3.dev0-py3-none-any.whl (214 kB)
+2026-06-06 14:48:03,544 - INFO - Downloading aiofiles-23.2.1-py3-none-any.whl (15 kB)
+2026-06-06 14:48:03,552 - INFO - Downloading wrapt-1.15.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (78 kB)
+2026-06-06 14:48:03,561 - INFO - Downloading websocket_client-1.6.2-py3-none-any.whl (57 kB)
+2026-06-06 14:48:03,571 - INFO - Downloading GitPython-3.1.40-py3-none-any.whl (190 kB)
+2026-06-06 14:48:03,583 - INFO - Downloading zhipuai-2.0.1-py3-none-any.whl (26 kB)
+2026-06-06 14:48:03,594 - INFO - Downloading google_generativeai-0.3.2-py3-none-any.whl (146 kB)
+2026-06-06 14:48:03,606 - INFO - Downloading google_ai_generativelanguage-0.4.0-py3-none-any.whl (598 kB)
+2026-06-06 14:48:03,616 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 598.7/598.7 kB 52.8 MB/s  0:00:00
+2026-06-06 14:48:03,623 - INFO - Downloading pydantic_core-2.14.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-06-06 14:48:03,644 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 100.1 MB/s  0:00:00
+2026-06-06 14:48:03,680 - INFO - Downloading pylance-0.9.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (19.5 MB)
+2026-06-06 14:48:04,023 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 19.5/19.5 MB 57.5 MB/s  0:00:00
+2026-06-06 14:48:04,032 - INFO - Downloading python_dotenv-1.0.0-py3-none-any.whl (19 kB)
+2026-06-06 14:48:04,042 - INFO - Downloading aioredis-2.0.1-py3-none-any.whl (71 kB)
+2026-06-06 14:48:04,050 - INFO - Downloading socksio-1.0.0-py3-none-any.whl (12 kB)
+2026-06-06 14:48:04,059 - INFO - Downloading websockets-12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (130 kB)
+2026-06-06 14:48:04,067 - INFO - Downloading networkx-3.2.1-py3-none-any.whl (1.6 MB)
+2026-06-06 14:48:04,096 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 56.8 MB/s  0:00:00
+2026-06-06 14:48:04,102 - INFO - Downloading anyio-4.12.1-py3-none-any.whl (113 kB)
+2026-06-06 14:48:04,113 - INFO - Downloading asgiref-3.11.1-py3-none-any.whl (24 kB)
+2026-06-06 14:48:04,122 - INFO - Downloading async_timeout-4.0.3-py3-none-any.whl (5.7 kB)
+2026-06-06 14:48:04,130 - INFO - Downloading charset_normalizer-3.4.7-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (208 kB)
+2026-06-06 14:48:04,139 - INFO - Downloading click-8.1.8-py3-none-any.whl (98 kB)
+2026-06-06 14:48:04,146 - INFO - Downloading dataclasses_json-0.6.7-py3-none-any.whl (28 kB)
+2026-06-06 14:48:04,154 - INFO - Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+2026-06-06 14:48:04,162 - INFO - Downloading gitdb-4.0.12-py3-none-any.whl (62 kB)
+2026-06-06 14:48:04,170 - INFO - Downloading google_api_core-2.30.3-py3-none-any.whl (173 kB)
+2026-06-06 14:48:04,178 - INFO - Downloading google_auth-2.50.0-py3-none-any.whl (246 kB)
+2026-06-06 14:48:04,187 - INFO - Downloading googleapis_common_protos-1.75.0-py3-none-any.whl (300 kB)
+2026-06-06 14:48:04,197 - INFO - Downloading grpcio-1.74.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (6.2 MB)
+2026-06-06 14:48:04,422 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.2/6.2 MB 27.1 MB/s  0:00:00
+2026-06-06 14:48:04,431 - INFO - Downloading grpcio_status-1.62.3-py3-none-any.whl (14 kB)
+2026-06-06 14:48:04,440 - INFO - Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-06-06 14:48:04,448 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-06-06 14:48:04,458 - INFO - Downloading jsonpatch-1.33-py2.py3-none-any.whl (12 kB)
+2026-06-06 14:48:04,467 - INFO - Downloading langchain_community-0.0.20-py3-none-any.whl (1.7 MB)
+2026-06-06 14:48:04,498 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 52.9 MB/s  0:00:00
+2026-06-06 14:48:04,505 - INFO - Downloading langchain_core-0.1.23-py3-none-any.whl (241 kB)
+2026-06-06 14:48:04,517 - INFO - Downloading langsmith-0.0.87-py3-none-any.whl (55 kB)
+2026-06-06 14:48:04,526 - INFO - Downloading marshmallow-3.26.2-py3-none-any.whl (50 kB)
+2026-06-06 14:48:04,540 - INFO - Downloading motor-3.7.1-py3-none-any.whl (74 kB)
+2026-06-06 14:48:04,549 - INFO - Downloading multidict-6.7.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (240 kB)
+2026-06-06 14:48:04,561 - INFO - Downloading openapi_core-0.18.2-py3-none-any.whl (82 kB)
+2026-06-06 14:48:04,569 - INFO - Downloading jsonschema-4.25.1-py3-none-any.whl (90 kB)
+2026-06-06 14:48:04,578 - INFO - Downloading jsonschema_spec-0.2.4-py3-none-any.whl (14 kB)
+2026-06-06 14:48:04,587 - INFO - Downloading openapi_schema_validator-0.6.3-py3-none-any.whl (8.8 kB)
+2026-06-06 14:48:04,596 - INFO - Downloading openapi_spec_validator-0.7.2-py3-none-any.whl (39 kB)
+2026-06-06 14:48:04,604 - INFO - Downloading jsonschema_path-0.3.4-py3-none-any.whl (14 kB)
+2026-06-06 14:48:04,612 - INFO - Downloading lazy_object_proxy-1.12.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (66 kB)
+2026-06-06 14:48:04,619 - INFO - Downloading packaging-23.2-py3-none-any.whl (53 kB)
+2026-06-06 14:48:04,626 - INFO - Downloading pathable-0.4.4-py3-none-any.whl (9.6 kB)
+2026-06-06 14:48:04,633 - INFO - Downloading portalocker-2.10.1-py3-none-any.whl (18 kB)
+2026-06-06 14:48:04,642 - INFO - Downloading prance-23.6.21.0-py3-none-any.whl (36 kB)
+2026-06-06 14:48:04,648 - INFO - Downloading proto_plus-1.27.2-py3-none-any.whl (50 kB)
+2026-06-06 14:48:04,657 - INFO - Downloading protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl (295 kB)
+2026-06-06 14:48:04,665 - INFO - Downloading PyJWT-2.8.0-py3-none-any.whl (22 kB)
+2026-06-06 14:48:04,674 - INFO - Downloading pymongo-4.17.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (985 kB)
+2026-06-06 14:48:04,686 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 985.8/985.8 kB 85.9 MB/s  0:00:00
+2026-06-06 14:48:04,693 - INFO - Downloading dnspython-2.7.0-py3-none-any.whl (313 kB)
+2026-06-06 14:48:04,705 - INFO - Downloading ratelimiter-1.2.0.post0-py3-none-any.whl (6.6 kB)
+2026-06-06 14:48:04,713 - INFO - Downloading referencing-0.30.2-py3-none-any.whl (25 kB)
+2026-06-06 14:48:04,722 - INFO - Downloading regex-2023.12.25-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (773 kB)
+2026-06-06 14:48:04,731 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 773.4/773.4 kB 81.7 MB/s  0:00:00
+2026-06-06 14:48:04,736 - INFO - Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+2026-06-06 14:48:04,743 - INFO - Downloading idna-3.18-py3-none-any.whl (65 kB)
+2026-06-06 14:48:04,750 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-06-06 14:48:04,758 - INFO - Downloading smmap-5.0.3-py3-none-any.whl (24 kB)
+2026-06-06 14:48:04,768 - INFO - Downloading sqlalchemy-2.0.50-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+2026-06-06 14:48:04,813 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 72.5 MB/s  0:00:00
+2026-06-06 14:48:04,820 - INFO - Downloading urllib3-1.26.20-py2.py3-none-any.whl (144 kB)
+2026-06-06 14:48:04,830 - INFO - Downloading yarl-1.22.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (346 kB)
+2026-06-06 14:48:04,841 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2026-06-06 14:48:04,852 - INFO - Downloading anytree-2.13.0-py3-none-any.whl (45 kB)
+2026-06-06 14:48:04,860 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-06-06 14:48:04,867 - INFO - Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2026-06-06 14:48:04,874 - INFO - Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-06-06 14:48:04,881 - INFO - Downloading cachetools-6.2.6-py3-none-any.whl (11 kB)
+2026-06-06 14:48:04,887 - INFO - Downloading certifi-2026.5.20-py3-none-any.whl (134 kB)
+2026-06-06 14:48:04,895 - INFO - Downloading chardet-5.2.0-py3-none-any.whl (199 kB)
+2026-06-06 14:48:04,903 - INFO - Downloading cryptography-45.0.7-cp37-abi3-manylinux_2_34_x86_64.whl (4.4 MB)
+2026-06-06 14:48:04,972 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 64.5 MB/s  0:00:00
+2026-06-06 14:48:04,979 - INFO - Downloading cffi-2.0.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (216 kB)
+2026-06-06 14:48:04,992 - INFO - Downloading django-4.2.30-py3-none-any.whl (8.0 MB)
+2026-06-06 14:48:05,121 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.0/8.0 MB 62.7 MB/s  0:00:00
+2026-06-06 14:48:05,129 - INFO - Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+2026-06-06 14:48:05,138 - INFO - Downloading frozenlist-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+2026-06-06 14:48:05,148 - INFO - Downloading greenlet-3.2.5-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (587 kB)
+2026-06-06 14:48:05,158 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.5/587.5 kB 49.7 MB/s  0:00:00
+2026-06-06 14:48:05,164 - INFO - Downloading grpcio_tools-1.62.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.8 MB)
+2026-06-06 14:48:05,209 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 60.0 MB/s  0:00:00
+2026-06-06 14:48:05,215 - INFO - Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-06-06 14:48:05,224 - INFO - Downloading h2-4.3.0-py3-none-any.whl (61 kB)
+2026-06-06 14:48:05,232 - INFO - Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
+2026-06-06 14:48:05,239 - INFO - Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
+2026-06-06 14:48:05,246 - INFO - Downloading jsonpointer-3.0.0-py2.py3-none-any.whl (7.6 kB)
+2026-06-06 14:48:05,253 - INFO - Downloading jsonschema_specifications-2023.7.1-py3-none-any.whl (17 kB)
+2026-06-06 14:48:05,261 - INFO - Downloading lxml-6.1.1-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.3 MB)
+2026-06-06 14:48:05,343 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.3/5.3 MB 63.3 MB/s  0:00:00
+2026-06-06 14:48:05,351 - INFO - Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+2026-06-06 14:48:05,360 - INFO - Downloading overrides-7.7.0-py3-none-any.whl (17 kB)
+2026-06-06 14:48:05,369 - INFO - Downloading propcache-0.4.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (197 kB)
+2026-06-06 14:48:05,386 - INFO - Downloading pyarrow-21.0.0-cp39-cp39-manylinux_2_28_x86_64.whl (42.7 MB)
+2026-06-06 14:48:05,965 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.7/42.7 MB 74.0 MB/s  0:00:00
+2026-06-06 14:48:05,971 - INFO - Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+2026-06-06 14:48:05,980 - INFO - Downloading pyasn1-0.6.3-py3-none-any.whl (83 kB)
+2026-06-06 14:48:05,986 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2026-06-06 14:48:05,995 - INFO - Downloading pytz-2026.2-py2.py3-none-any.whl (510 kB)
+2026-06-06 14:48:06,005 - INFO - Downloading retry-0.9.2-py2.py3-none-any.whl (8.0 kB)
+2026-06-06 14:48:06,013 - INFO - Downloading py-1.11.0-py2.py3-none-any.whl (98 kB)
+2026-06-06 14:48:06,020 - INFO - Downloading decorator-5.3.1-py3-none-any.whl (10 kB)
+2026-06-06 14:48:06,027 - INFO - Downloading rpds_py-0.27.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (384 kB)
+2026-06-06 14:48:06,036 - INFO - Downloading ruamel_yaml-0.19.1-py3-none-any.whl (118 kB)
+2026-06-06 14:48:06,046 - INFO - Downloading semver-3.0.4-py3-none-any.whl (17 kB)
+2026-06-06 14:48:06,054 - INFO - Downloading soupsieve-2.8.4-py3-none-any.whl (37 kB)
+2026-06-06 14:48:06,061 - INFO - Downloading sqlparse-0.5.5-py3-none-any.whl (46 kB)
+2026-06-06 14:48:06,069 - INFO - Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-06-06 14:48:06,106 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 98.1 MB/s  0:00:00
+2026-06-06 14:48:06,115 - INFO - Downloading huggingface_hub-1.8.0-py3-none-any.whl (625 kB)
+2026-06-06 14:48:06,129 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 625.2/625.2 kB 44.1 MB/s  0:00:00
+2026-06-06 14:48:06,134 - INFO - Downloading hf_xet-1.5.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+2026-06-06 14:48:06,172 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 124.4 MB/s  0:00:00
+2026-06-06 14:48:06,177 - INFO - Downloading filelock-3.19.1-py3-none-any.whl (15 kB)
+2026-06-06 14:48:06,186 - INFO - Downloading fsspec-2025.10.0-py3-none-any.whl (200 kB)
+2026-06-06 14:48:06,197 - INFO - Downloading tzdata-2026.2-py2.py3-none-any.whl (349 kB)
+2026-06-06 14:48:06,207 - INFO - Downloading camel_converter-4.0.1-py3-none-any.whl (6.2 kB)
+2026-06-06 14:48:06,215 - INFO - Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+2026-06-06 14:48:06,223 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2026-06-06 14:48:06,230 - INFO - Downloading isodate-0.7.2-py3-none-any.whl (22 kB)
+2026-06-06 14:48:06,237 - INFO - Downloading more_itertools-10.8.0-py3-none-any.whl (69 kB)
+2026-06-06 14:48:06,247 - INFO - Downloading parse-1.22.1-py2.py3-none-any.whl (20 kB)
+2026-06-06 14:48:06,255 - INFO - Downloading pycparser-2.23-py3-none-any.whl (118 kB)
+2026-06-06 14:48:06,262 - INFO - Downloading rfc3339_validator-0.1.4-py2.py3-none-any.whl (3.5 kB)
+2026-06-06 14:48:06,269 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2026-06-06 14:48:06,276 - INFO - Downloading termcolor-3.1.0-py3-none-any.whl (7.7 kB)
+2026-06-06 14:48:06,283 - INFO - Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+2026-06-06 14:48:06,291 - INFO - Downloading markupsafe-3.0.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+2026-06-06 14:48:06,935 - INFO - Building wheels for collected packages: fire, python_docx, ta, gitignore-parser
+2026-06-06 14:48:06,936 - INFO -   Building wheel for fire (pyproject.toml): started
+2026-06-06 14:48:07,213 - INFO -   Building wheel for fire (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:07,217 - INFO -   Created wheel for fire: filename=fire-0.4.0-py2.py3-none-any.whl size=116013 sha256=9158c828909220b9f8d0338e8a9c609ba09ff699025701bd31568958189560fb
+2026-06-06 14:48:07,217 - INFO -   Stored in directory: /root/.cache/pip/wheels/2a/93/86/8cd17bc6c40fb605c3ac549d0b860ef7e84ee5f67bf01a3287
+2026-06-06 14:48:07,232 - INFO -   Building wheel for python_docx (pyproject.toml): started
+2026-06-06 14:48:07,609 - INFO -   Building wheel for python_docx (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:07,613 - INFO -   Created wheel for python_docx: filename=python_docx-0.8.11-py3-none-any.whl size=184570 sha256=ad60a19abee74952ade508b62c1cb33f922ce46487c3cb3704d37bf3919a180d
+2026-06-06 14:48:07,614 - INFO -   Stored in directory: /root/.cache/pip/wheels/83/8b/7c/09ae60c42c7ba4ed2dddaf2b8b9186cb105255856d6ed3dba5
+2026-06-06 14:48:07,623 - INFO -   Building wheel for ta (pyproject.toml): started
+2026-06-06 14:48:07,880 - INFO -   Building wheel for ta (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:07,883 - INFO -   Created wheel for ta: filename=ta-0.10.2-py3-none-any.whl size=29161 sha256=0c65a926e4c2df3c852da3c083f5548e80c020ffe4ec34abd02c46a6f237027a
+2026-06-06 14:48:07,883 - INFO -   Stored in directory: /root/.cache/pip/wheels/6a/76/03/7f785aaa50b9c6ec7e3fd105a62c1b2c45a034512d51e024a9
+2026-06-06 14:48:07,892 - INFO -   Building wheel for gitignore-parser (pyproject.toml): started
+2026-06-06 14:48:08,170 - INFO -   Building wheel for gitignore-parser (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:08,172 - INFO -   Created wheel for gitignore-parser: filename=gitignore_parser-0.1.9-py3-none-any.whl size=5040 sha256=5d02b3a55fa42e71fb74f61d15743f309076498a59cd64a3d3a5e6c416ecc92e
+2026-06-06 14:48:08,172 - INFO -   Stored in directory: /root/.cache/pip/wheels/73/3a/8b/564f6a55718dc6fa2f8048b98bd9a8375958dd8c8ba7e734ae
+2026-06-06 14:48:08,210 - INFO - Successfully built fire python_docx ta gitignore-parser
+2026-06-06 14:48:08,608 - INFO - Installing collected packages: ratelimiter, pytz, parse, gitignore-parser, faiss_cpu, wrapt, websockets, websocket-client, urllib3, tzdata, typing_extensions, tqdm, termcolor, tenacity, sqlparse, soupsieve, socksio, sniffio, smmap, six, setuptools, semver, ruamel.yaml, rpds-py, regex, PyYAML, python-dotenv, pyjwt, pycparser, pyasn1, pyarrow, py, protobuf, propcache, portalocker, pathable, packaging, overrides, numpy, networkx, mypy-extensions, more-itertools, markupsafe, lxml, loguru, lazy-object-proxy, jsonpointer, isodate, idna, hyperframe, hpack, hf-xet, h11, grpcio, greenlet, fsspec, frozenlist, filelock, et-xmlfile, dnspython, distro, decorator, click, charset-normalizer, chardet, certifi, camel-converter, cachetools, attrs, async-timeout, anytree, annotated-types, aiofiles, werkzeug, typing-inspect, typer, SQLAlchemy, rfc3339-validator, retry, requests, referencing, python_docx, python-dateutil, pymongo, pylance, pydantic-core, pyasn1-modules, proto-plus, openpyxl, multidict, marshmallow, jsonpatch, httpcore, h2, grpcio-tools, googleapis-common-protos, gitdb, fire, exceptiongroup, deprecation, cffi, beautifulsoup4, asgiref, aiosignal, aioredis, yarl, tiktoken, pydantic, prance, pandas, motor, libcst, jsonschema-specifications, jsonschema-spec, jsonschema-path, grpcio-status, gitpython, Django, dataclasses-json, cryptography, anyio, ta, langsmith, jsonschema, httpx, google-auth, channels, aiohttp, zhipuai, openapi-schema-validator, openai, meilisearch, langchain-core, lancedb, huggingface-hub, google-api-core, tokenizers, qdrant-client, openapi-spec-validator, langchain-community, openapi_core, langchain, google-ai-generativelanguage, anthropic, semantic-kernel, google-generativeai
+2026-06-06 14:48:12,104 - INFO -   Attempting uninstall: setuptools
+2026-06-06 14:48:12,106 - INFO -     Found existing installation: setuptools 82.0.1
+2026-06-06 14:48:12,153 - INFO -     Uninstalling setuptools-82.0.1:
+2026-06-06 14:48:12,178 - INFO -       Successfully uninstalled setuptools-82.0.1
+2026-06-06 14:48:15,674 - INFO -   Attempting uninstall: packaging
+2026-06-06 14:48:15,675 - INFO -     Found existing installation: packaging 26.2
+2026-06-06 14:48:15,678 - INFO -     Uninstalling packaging-26.2:
+2026-06-06 14:48:15,680 - INFO -       Successfully uninstalled packaging-26.2
+2026-06-06 14:48:48,240 - INFO - ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+2026-06-06 14:48:48,240 - INFO - wheel 0.47.0 requires packaging>=24.0, but you have packaging 23.2 which is incompatible.
+2026-06-06 14:48:48,241 - INFO - Successfully installed Django-4.2.30 PyYAML-6.0.1 SQLAlchemy-2.0.50 aiofiles-23.2.1 aiohttp-3.8.4 aioredis-2.0.1 aiosignal-1.4.0 annotated-types-0.7.0 anthropic-0.8.1 anyio-4.12.1 anytree-2.13.0 asgiref-3.11.1 async-timeout-4.0.3 attrs-26.1.0 beautifulsoup4-4.12.2 cachetools-6.2.6 camel-converter-4.0.1 certifi-2026.5.20 cffi-2.0.0 channels-4.0.0 chardet-5.2.0 charset-normalizer-3.4.7 click-8.1.8 cryptography-45.0.7 dataclasses-json-0.6.7 decorator-5.3.1 deprecation-2.1.0 distro-1.9.0 dnspython-2.7.0 et-xmlfile-2.0.0 exceptiongroup-1.3.1 faiss_cpu-1.7.4 filelock-3.19.1 fire-0.4.0 frozenlist-1.8.0 fsspec-2025.10.0 gitdb-4.0.12 gitignore-parser-0.1.9 gitpython-3.1.40 google-ai-generativelanguage-0.4.0 google-api-core-2.30.3 google-auth-2.50.0 google-generativeai-0.3.2 googleapis-common-protos-1.75.0 greenlet-3.2.5 grpcio-1.74.0 grpcio-status-1.62.3 grpcio-tools-1.62.3 h11-0.16.0 h2-4.3.0 hf-xet-1.5.0 hpack-4.1.0 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.8.0 hyperframe-6.1.0 idna-3.18 isodate-0.7.2 jsonpatch-1.33 jsonpointer-3.0.0 jsonschema-4.25.1 jsonschema-path-0.3.4 jsonschema-spec-0.2.4 jsonschema-specifications-2023.7.1 lancedb-0.4.0 langchain-0.0.352 langchain-community-0.0.20 langchain-core-0.1.23 langsmith-0.0.87 lazy-object-proxy-1.12.0 libcst-1.0.1 loguru-0.6.0 lxml-6.1.1 markupsafe-3.0.3 marshmallow-3.26.2 meilisearch-0.21.0 more-itertools-10.8.0 motor-3.7.1 multidict-6.7.1 mypy-extensions-1.1.0 networkx-3.2.1 numpy-1.24.3 openai-1.6.0 openapi-schema-validator-0.6.3 openapi-spec-validator-0.7.2 openapi_core-0.18.2 openpyxl-3.1.5 overrides-7.7.0 packaging-23.2 pandas-2.0.3 parse-1.22.1 pathable-0.4.4 portalocker-2.10.1 prance-23.6.21.0 propcache-0.4.1 proto-plus-1.27.2 protobuf-4.25.9 py-1.11.0 pyarrow-21.0.0 pyasn1-0.6.3 pyasn1-modules-0.4.2 pycparser-2.23 pydantic-2.5.3 pydantic-core-2.14.6 pyjwt-2.8.0 pylance-0.9.0 pymongo-4.17.0 python-dateutil-2.9.0.post0 python-dotenv-1.0.0 python_docx-0.8.11 pytz-2026.2 qdrant-client-1.7.0 ratelimiter-1.2.0.post0 referencing-0.30.2 regex-2023.12.25 requests-2.32.5 retry-0.9.2 rfc3339-validator-0.1.4 rpds-py-0.27.1 ruamel.yaml-0.19.1 semantic-kernel-0.4.3.dev0 semver-3.0.4 setuptools-65.6.3 six-1.17.0 smmap-5.0.3 sniffio-1.3.1 socksio-1.0.0 soupsieve-2.8.4 sqlparse-0.5.5 ta-0.10.2 tenacity-8.2.2 termcolor-3.1.0 tiktoken-0.5.2 tokenizers-0.22.2 tqdm-4.65.0 typer-0.9.0 typing-inspect-0.8.0 typing_extensions-4.9.0 tzdata-2026.2 urllib3-1.26.20 websocket-client-1.6.2 websockets-12.0 werkzeug-3.1.8 wrapt-1.15.0 yarl-1.22.0 zhipuai-2.0.1
+2026-06-06 14:48:48,242 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-06 14:48:51,094 - INFO - Obtaining file:///testbed
+2026-06-06 14:48:51,118 - INFO -   Installing build dependencies: started
+2026-06-06 14:48:52,888 - INFO -   Installing build dependencies: finished with status 'done'
+2026-06-06 14:48:52,983 - INFO -   Checking if build backend supports build_editable: started
+2026-06-06 14:48:53,479 - INFO -   Checking if build backend supports build_editable: finished with status 'done'
+2026-06-06 14:48:53,497 - INFO -   Getting requirements to build editable: started
+2026-06-06 14:48:53,928 - INFO -   Getting requirements to build editable: finished with status 'done'
+2026-06-06 14:48:53,936 - INFO -   Preparing editable metadata (pyproject.toml): started
+2026-06-06 14:48:54,194 - INFO -   Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:54,241 - INFO - Requirement already satisfied: aiohttp==3.8.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.8.4)
+2026-06-06 14:48:54,243 - INFO - Requirement already satisfied: channels==4.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.0.0)
+2026-06-06 14:48:54,244 - INFO - Requirement already satisfied: faiss_cpu==1.7.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.7.4)
+2026-06-06 14:48:54,244 - INFO - Requirement already satisfied: fire==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.0)
+2026-06-06 14:48:54,246 - INFO - Requirement already satisfied: typer==0.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.9.0)
+2026-06-06 14:48:54,246 - INFO - Requirement already satisfied: lancedb==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.0)
+2026-06-06 14:48:54,246 - INFO - Requirement already satisfied: langchain==0.0.352 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.0.352)
+2026-06-06 14:48:54,248 - INFO - Requirement already satisfied: loguru==0.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.6.0)
+2026-06-06 14:48:54,248 - INFO - Requirement already satisfied: meilisearch==0.21.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.21.0)
+2026-06-06 14:48:54,250 - INFO - Requirement already satisfied: numpy==1.24.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.24.3)
+2026-06-06 14:48:54,250 - INFO - Requirement already satisfied: openai==1.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.6.0)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: openpyxl in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.1.5)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: beautifulsoup4==4.12.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.12.2)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: pandas==2.0.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.3)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: pydantic==2.5.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.5.3)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: python_docx==0.8.11 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.11)
+2026-06-06 14:48:54,252 - INFO - Requirement already satisfied: PyYAML==6.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (6.0.1)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: setuptools==65.6.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (65.6.3)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: tenacity==8.2.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (8.2.2)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: tiktoken==0.5.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.5.2)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: tqdm==4.65.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.65.0)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: anthropic==0.8.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.1)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: typing-inspect==0.8.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.8.0)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: typing_extensions==4.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (4.9.0)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: libcst==1.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.0.1)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: qdrant-client==1.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.7.0)
+2026-06-06 14:48:54,253 - INFO - Requirement already satisfied: ta==0.10.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.10.2)
+2026-06-06 14:48:54,254 - INFO - Requirement already satisfied: semantic-kernel==0.4.3.dev0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.4.3.dev0)
+2026-06-06 14:48:54,254 - INFO - Requirement already satisfied: wrapt==1.15.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.15.0)
+2026-06-06 14:48:54,255 - INFO - Requirement already satisfied: aioredis~=2.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.1)
+2026-06-06 14:48:54,255 - INFO - Requirement already satisfied: websocket-client==1.6.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.6.2)
+2026-06-06 14:48:54,256 - INFO - Requirement already satisfied: aiofiles==23.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (23.2.1)
+2026-06-06 14:48:54,256 - INFO - Requirement already satisfied: gitpython==3.1.40 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.1.40)
+2026-06-06 14:48:54,256 - INFO - Requirement already satisfied: zhipuai==2.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.0.1)
+2026-06-06 14:48:54,257 - INFO - Requirement already satisfied: socksio~=1.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (1.0.0)
+2026-06-06 14:48:54,257 - INFO - Requirement already satisfied: gitignore-parser==0.1.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.1.9)
+2026-06-06 14:48:54,258 - INFO - Requirement already satisfied: websockets~=12.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (12.0)
+2026-06-06 14:48:54,258 - INFO - Requirement already satisfied: networkx~=3.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (3.2.1)
+2026-06-06 14:48:54,259 - INFO - Requirement already satisfied: google-generativeai==0.3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (0.3.2)
+2026-06-06 14:48:54,259 - INFO - Requirement already satisfied: anytree in /opt/conda/envs/testbed/lib/python3.9/site-packages (from metagpt==0.6.0) (2.13.0)
+2026-06-06 14:48:54,263 - INFO - Requirement already satisfied: attrs>=17.3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (26.1.0)
+2026-06-06 14:48:54,263 - INFO - Requirement already satisfied: charset-normalizer<4.0,>=2.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (3.4.7)
+2026-06-06 14:48:54,263 - INFO - Requirement already satisfied: multidict<7.0,>=4.5 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (6.7.1)
+2026-06-06 14:48:54,264 - INFO - Requirement already satisfied: async-timeout<5.0,>=4.0.0a3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (4.0.3)
+2026-06-06 14:48:54,264 - INFO - Requirement already satisfied: yarl<2.0,>=1.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.22.0)
+2026-06-06 14:48:54,265 - INFO - Requirement already satisfied: frozenlist>=1.1.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.8.0)
+2026-06-06 14:48:54,265 - INFO - Requirement already satisfied: aiosignal>=1.1.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from aiohttp==3.8.4->metagpt==0.6.0) (1.4.0)
+2026-06-06 14:48:54,267 - INFO - Requirement already satisfied: anyio<5,>=3.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (4.12.1)
+2026-06-06 14:48:54,268 - INFO - Requirement already satisfied: distro<2,>=1.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (1.9.0)
+2026-06-06 14:48:54,268 - INFO - Requirement already satisfied: httpx<1,>=0.23.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (0.28.1)
+2026-06-06 14:48:54,269 - INFO - Requirement already satisfied: sniffio in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (1.3.1)
+2026-06-06 14:48:54,270 - INFO - Requirement already satisfied: tokenizers>=0.13.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anthropic==0.8.1->metagpt==0.6.0) (0.22.2)
+2026-06-06 14:48:54,273 - INFO - Requirement already satisfied: annotated-types>=0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pydantic==2.5.3->metagpt==0.6.0) (0.7.0)
+2026-06-06 14:48:54,275 - INFO - Requirement already satisfied: pydantic-core==2.14.6 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pydantic==2.5.3->metagpt==0.6.0) (2.14.6)
+2026-06-06 14:48:54,289 - INFO - Requirement already satisfied: soupsieve>1.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from beautifulsoup4==4.12.2->metagpt==0.6.0) (2.8.4)
+2026-06-06 14:48:54,291 - INFO - Requirement already satisfied: Django>=3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from channels==4.0.0->metagpt==0.6.0) (4.2.30)
+2026-06-06 14:48:54,291 - INFO - Requirement already satisfied: asgiref<4,>=3.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from channels==4.0.0->metagpt==0.6.0) (3.11.1)
+2026-06-06 14:48:54,293 - INFO - Requirement already satisfied: six in /opt/conda/envs/testbed/lib/python3.9/site-packages (from fire==0.4.0->metagpt==0.6.0) (1.17.0)
+2026-06-06 14:48:54,293 - INFO - Requirement already satisfied: termcolor in /opt/conda/envs/testbed/lib/python3.9/site-packages (from fire==0.4.0->metagpt==0.6.0) (3.1.0)
+2026-06-06 14:48:54,297 - INFO - Requirement already satisfied: gitdb<5,>=4.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from gitpython==3.1.40->metagpt==0.6.0) (4.0.12)
+2026-06-06 14:48:54,299 - INFO - Requirement already satisfied: google-ai-generativelanguage==0.4.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (0.4.0)
+2026-06-06 14:48:54,307 - INFO - Requirement already satisfied: google-auth in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (2.50.0)
+2026-06-06 14:48:54,321 - INFO - Requirement already satisfied: google-api-core in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (2.30.3)
+2026-06-06 14:48:54,321 - INFO - Requirement already satisfied: protobuf in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-generativeai==0.3.2->metagpt==0.6.0) (4.25.9)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: proto-plus<2.0.0dev,>=1.22.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->metagpt==0.6.0) (1.27.2)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: deprecation in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (2.1.0)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: pylance==0.9.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (0.9.0)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: ratelimiter~=1.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (1.2.0.post0)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: retry>=0.9.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (0.9.2)
+2026-06-06 14:48:54,322 - INFO - Requirement already satisfied: semver>=3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (3.0.4)
+2026-06-06 14:48:54,323 - INFO - Requirement already satisfied: cachetools in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (6.2.6)
+2026-06-06 14:48:54,323 - INFO - Requirement already satisfied: click>=8.1.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (8.1.8)
+2026-06-06 14:48:54,323 - INFO - Requirement already satisfied: requests>=2.31.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (2.32.5)
+2026-06-06 14:48:54,323 - INFO - Requirement already satisfied: overrides>=0.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from lancedb==0.4.0->metagpt==0.6.0) (7.7.0)
+2026-06-06 14:48:54,333 - INFO - Requirement already satisfied: SQLAlchemy<3,>=1.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (2.0.50)
+2026-06-06 14:48:54,335 - INFO - Requirement already satisfied: dataclasses-json<0.7,>=0.5.7 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.6.7)
+2026-06-06 14:48:54,338 - INFO - Requirement already satisfied: jsonpatch<2.0,>=1.33 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (1.33)
+2026-06-06 14:48:54,338 - INFO - Requirement already satisfied: langchain-community<0.1,>=0.0.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.0.20)
+2026-06-06 14:48:54,338 - INFO - Requirement already satisfied: langchain-core<0.2,>=0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.1.23)
+2026-06-06 14:48:54,338 - INFO - Requirement already satisfied: langsmith<0.1.0,>=0.0.70 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain==0.0.352->metagpt==0.6.0) (0.0.87)
+2026-06-06 14:48:54,348 - INFO - Requirement already satisfied: camel-converter[pydantic] in /opt/conda/envs/testbed/lib/python3.9/site-packages (from meilisearch==0.21.0->metagpt==0.6.0) (4.0.1)
+2026-06-06 14:48:54,370 - INFO - Requirement already satisfied: python-dateutil>=2.8.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2.9.0.post0)
+2026-06-06 14:48:54,371 - INFO - Requirement already satisfied: pytz>=2020.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2026.2)
+2026-06-06 14:48:54,371 - INFO - Requirement already satisfied: tzdata>=2022.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pandas==2.0.3->metagpt==0.6.0) (2026.2)
+2026-06-06 14:48:54,376 - INFO - Requirement already satisfied: pyarrow>=12 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pylance==0.9.0->lancedb==0.4.0->metagpt==0.6.0) (21.0.0)
+2026-06-06 14:48:54,377 - INFO - Requirement already satisfied: lxml>=2.3.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from python_docx==0.8.11->metagpt==0.6.0) (6.1.1)
+2026-06-06 14:48:54,391 - INFO - Requirement already satisfied: grpcio>=1.41.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.74.0)
+2026-06-06 14:48:54,391 - INFO - Requirement already satisfied: grpcio-tools>=1.41.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.62.3)
+2026-06-06 14:48:54,391 - INFO - Requirement already satisfied: portalocker<3.0.0,>=2.7.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (2.10.1)
+2026-06-06 14:48:54,393 - INFO - Requirement already satisfied: urllib3<2.0.0,>=1.26.14 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from qdrant-client==1.7.0->metagpt==0.6.0) (1.26.20)
+2026-06-06 14:48:54,393 - INFO - Requirement already satisfied: motor<4.0.0,>=3.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.7.1)
+2026-06-06 14:48:54,393 - INFO - Requirement already satisfied: openapi_core<0.19.0,>=0.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.18.2)
+2026-06-06 14:48:54,393 - INFO - Requirement already satisfied: prance<24.0.0.0,>=23.6.21.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (23.6.21.0)
+2026-06-06 14:48:54,397 - INFO - Requirement already satisfied: python-dotenv==1.0.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.0.0)
+2026-06-06 14:48:54,398 - INFO - Requirement already satisfied: regex<2024.0.0,>=2023.6.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2023.12.25)
+2026-06-06 14:48:54,410 - INFO - Requirement already satisfied: mypy-extensions>=0.3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from typing-inspect==0.8.0->metagpt==0.6.0) (1.1.0)
+2026-06-06 14:48:54,416 - INFO - Requirement already satisfied: pyjwt~=2.8.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from zhipuai==2.0.1->metagpt==0.6.0) (2.8.0)
+2026-06-06 14:48:54,424 - INFO - Requirement already satisfied: exceptiongroup>=1.0.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anyio<5,>=3.5.0->anthropic==0.8.1->metagpt==0.6.0) (1.3.1)
+2026-06-06 14:48:54,424 - INFO - Requirement already satisfied: idna>=2.8 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from anyio<5,>=3.5.0->anthropic==0.8.1->metagpt==0.6.0) (3.18)
+2026-06-06 14:48:54,431 - INFO - Requirement already satisfied: marshmallow<4.0.0,>=3.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from dataclasses-json<0.7,>=0.5.7->langchain==0.0.352->metagpt==0.6.0) (3.26.2)
+2026-06-06 14:48:54,437 - INFO - Requirement already satisfied: smmap<6,>=3.0.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from gitdb<5,>=4.0.1->gitpython==3.1.40->metagpt==0.6.0) (5.0.3)
+2026-06-06 14:48:54,437 - INFO - Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.63.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-api-core->google-generativeai==0.3.2->metagpt==0.6.0) (1.75.0)
+2026-06-06 14:48:54,441 - INFO - Requirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.0->google-ai-generativelanguage==0.4.0->google-generativeai==0.3.2->metagpt==0.6.0) (1.62.3)
+2026-06-06 14:48:54,447 - INFO - Requirement already satisfied: pyasn1-modules>=0.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (0.4.2)
+2026-06-06 14:48:54,448 - INFO - Requirement already satisfied: cryptography>=38.0.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (45.0.7)
+2026-06-06 14:48:54,456 - INFO - Requirement already satisfied: certifi in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (2026.5.20)
+2026-06-06 14:48:54,457 - INFO - Requirement already satisfied: httpcore==1.* in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (1.0.9)
+2026-06-06 14:48:54,460 - INFO - Requirement already satisfied: h11>=0.16 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->anthropic==0.8.1->metagpt==0.6.0) (0.16.0)
+2026-06-06 14:48:54,462 - INFO - Requirement already satisfied: jsonpointer>=1.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonpatch<2.0,>=1.33->langchain==0.0.352->metagpt==0.6.0) (3.0.0)
+2026-06-06 14:48:54,478 - INFO - Requirement already satisfied: packaging<24.0,>=23.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from langchain-core<0.2,>=0.1->langchain==0.0.352->metagpt==0.6.0) (23.2)
+2026-06-06 14:48:54,489 - INFO - Requirement already satisfied: pymongo<5.0,>=4.9 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (4.17.0)
+2026-06-06 14:48:54,499 - INFO - Requirement already satisfied: isodate in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.7.2)
+2026-06-06 14:48:54,502 - INFO - Requirement already satisfied: jsonschema<5.0.0,>=4.18.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (4.25.1)
+2026-06-06 14:48:54,508 - INFO - Requirement already satisfied: jsonschema-spec<0.3.0,>=0.2.3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.2.4)
+2026-06-06 14:48:54,508 - INFO - Requirement already satisfied: more-itertools in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (10.8.0)
+2026-06-06 14:48:54,508 - INFO - Requirement already satisfied: openapi-schema-validator<0.7.0,>=0.6.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.6.3)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: openapi-spec-validator<0.8.0,>=0.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.7.2)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: parse in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.22.1)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: werkzeug in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.1.8)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2023.7.1)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: referencing>=0.28.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.30.2)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: rpds-py>=0.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema<5.0.0,>=4.18.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.27.1)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: pathable<0.5.0,>=0.4.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from jsonschema-spec<0.3.0,>=0.2.3->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.4.4)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: rfc3339-validator in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-schema-validator<0.7.0,>=0.6.0->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.1.4)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: jsonschema-path<0.4.0,>=0.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.3.4)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: lazy-object-proxy<2.0.0,>=1.7.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openapi-spec-validator<0.8.0,>=0.7.1->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (1.12.0)
+2026-06-06 14:48:54,561 - INFO - Requirement already satisfied: chardet>=3.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (5.2.0)
+2026-06-06 14:48:54,568 - INFO - Requirement already satisfied: ruamel.yaml>=0.17.10 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from prance<24.0.0.0,>=23.6.21.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (0.19.1)
+2026-06-06 14:48:54,568 - INFO - Requirement already satisfied: dnspython<3.0.0,>=2.6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pymongo<5.0,>=4.9->motor<4.0.0,>=3.3.1->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (2.7.0)
+2026-06-06 14:48:54,578 - INFO - Requirement already satisfied: greenlet>=1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from SQLAlchemy<3,>=1.4->langchain==0.0.352->metagpt==0.6.0) (3.2.5)
+2026-06-06 14:48:54,590 - INFO - Requirement already satisfied: propcache>=0.2.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from yarl<2.0,>=1.0->aiohttp==3.8.4->metagpt==0.6.0) (0.4.1)
+2026-06-06 14:48:54,609 - INFO - Requirement already satisfied: cffi>=1.14 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (2.0.0)
+2026-06-06 14:48:54,612 - INFO - Requirement already satisfied: pycparser in /opt/conda/envs/testbed/lib/python3.9/site-packages (from cffi>=1.14->cryptography>=38.0.3->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (2.23)
+2026-06-06 14:48:54,619 - INFO - Requirement already satisfied: sqlparse>=0.3.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from Django>=3.2->channels==4.0.0->metagpt==0.6.0) (0.5.5)
+2026-06-06 14:48:54,632 - INFO - Requirement already satisfied: h2<5,>=3 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (4.3.0)
+2026-06-06 14:48:54,641 - INFO - Requirement already satisfied: hyperframe<7,>=6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (6.1.0)
+2026-06-06 14:48:54,650 - INFO - Requirement already satisfied: hpack<5,>=4.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from h2<5,>=3->httpx[http2]>=0.14.0->qdrant-client==1.7.0->metagpt==0.6.0) (4.1.0)
+2026-06-06 14:48:54,656 - INFO - Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from pyasn1-modules>=0.2.1->google-auth->google-generativeai==0.3.2->metagpt==0.6.0) (0.6.3)
+2026-06-06 14:48:54,666 - INFO - Requirement already satisfied: decorator>=3.4.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from retry>=0.9.2->lancedb==0.4.0->metagpt==0.6.0) (5.3.1)
+2026-06-06 14:48:54,668 - INFO - Requirement already satisfied: py<2.0.0,>=1.4.26 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from retry>=0.9.2->lancedb==0.4.0->metagpt==0.6.0) (1.11.0)
+2026-06-06 14:48:54,687 - INFO - Requirement already satisfied: huggingface-hub<2.0,>=0.16.4 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (1.8.0)
+2026-06-06 14:48:54,703 - INFO - Requirement already satisfied: filelock>=3.10.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (3.19.1)
+2026-06-06 14:48:54,710 - INFO - Requirement already satisfied: fsspec>=2023.5.0 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (2025.10.0)
+2026-06-06 14:48:54,711 - INFO - Requirement already satisfied: hf-xet<2.0.0,>=1.4.2 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.0->anthropic==0.8.1->metagpt==0.6.0) (1.5.0)
+2026-06-06 14:48:54,754 - INFO - Requirement already satisfied: et-xmlfile in /opt/conda/envs/testbed/lib/python3.9/site-packages (from openpyxl->metagpt==0.6.0) (2.0.0)
+2026-06-06 14:48:54,770 - INFO - Requirement already satisfied: markupsafe>=2.1.1 in /opt/conda/envs/testbed/lib/python3.9/site-packages (from werkzeug->openapi_core<0.19.0,>=0.18.0->semantic-kernel==0.4.3.dev0->metagpt==0.6.0) (3.0.3)
+2026-06-06 14:48:54,800 - INFO - Building wheels for collected packages: metagpt
+2026-06-06 14:48:54,802 - INFO -   Building editable for metagpt (pyproject.toml): started
+2026-06-06 14:48:55,128 - INFO -   Building editable for metagpt (pyproject.toml): finished with status 'done'
+2026-06-06 14:48:55,131 - INFO -   Created wheel for metagpt: filename=metagpt-0.6.0-0.editable-py3-none-any.whl size=8448 sha256=cc94f545fb1bf83baac4db5d92cc6f583cb35ecfe57ab29ed012a9c0db6ed94d
+2026-06-06 14:48:55,131 - INFO -   Stored in directory: /tmp/pip-ephem-wheel-cache-w1azbomc/wheels/7d/66/67/70d1ee2124ccf21d601c352e25cdca10f611f7c8b3f9ffb9e4
+2026-06-06 14:48:55,142 - INFO - Successfully built metagpt
+2026-06-06 14:48:55,162 - INFO - Installing collected packages: metagpt
+2026-06-06 14:48:55,258 - INFO - Successfully installed metagpt-0.6.0
+2026-06-06 14:48:55,258 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-06 14:50:07,952 - INFO -  ---> Removed intermediate container 6425bf9e177d
+2026-06-06 14:50:07,953 - INFO -  ---> 52d6804a29e9
+2026-06-06 14:50:07,953 - INFO - Step 11/11 : RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+2026-06-06 14:50:08,069 - INFO -  ---> Running in 88bd6d570f68
+2026-06-06 14:50:09,414 - INFO -  ---> Removed intermediate container 88bd6d570f68
+2026-06-06 14:50:09,414 - INFO -  ---> 47f6f9efd087
+2026-06-06 14:50:09,414 - INFO - Successfully built 47f6f9efd087
+2026-06-06 14:50:09,426 - INFO - Successfully tagged foundationagents__metagpt-799-dockerfile2:latest
+2026-06-06 14:50:09,428 - INFO - Image built successfully!

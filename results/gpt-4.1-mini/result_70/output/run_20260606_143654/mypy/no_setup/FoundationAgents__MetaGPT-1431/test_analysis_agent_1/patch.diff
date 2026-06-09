@@ -1,0 +1,83 @@
+diff --git a/metagpt/actions/action_node.py b/metagpt/actions/action_node.py
+--- a/metagpt/actions/action_node.py
++++ b/metagpt/actions/action_node.py
+@@ -237,12 +237,19 @@ def create_model_class(cls, class_name: str, mapping: Dict[str, Tuple[Type, Any]
+         """基于pydantic v2的模型动态生成，用来检验结果类型正确性"""
+ 
+         def check_fields(cls, values):
+-            required_fields = set(mapping.keys())
++            all_fields = set(mapping.keys())
++            required_fields = set()
++            for k, v in mapping.items():
++                type_v, field_info = v
++                if ActionNode.is_optional_type(type_v):
++                    continue
++                required_fields.add(k)
++
+             missing_fields = required_fields - set(values.keys())
+             if missing_fields:
+                 raise ValueError(f"Missing fields: {missing_fields}")
+ 
+-            unrecognized_fields = set(values.keys()) - required_fields
++            unrecognized_fields = set(values.keys()) - all_fields
+             if unrecognized_fields:
+                 logger.warning(f"Unrecognized fields: {unrecognized_fields}")
+             return values
+@@ -717,3 +724,12 @@ def from_pydantic(cls, model: Type[BaseModel], key: str = None):
+             root_node.add_child(child_node)
+ 
+         return root_node
++
++    @staticmethod
++    def is_optional_type(tp) -> bool:
++        """Return True if `tp` is `typing.Optional[...]`"""
++        if typing.get_origin(tp) is Union:
++            args = typing.get_args(tp)
++            non_none_types = [arg for arg in args if arg is not type(None)]
++            return len(non_none_types) == 1 and len(args) == 2
++        return False
+diff --git a/metagpt/actions/design_api_an.py b/metagpt/actions/design_api_an.py
+--- a/metagpt/actions/design_api_an.py
++++ b/metagpt/actions/design_api_an.py
+@@ -5,7 +5,7 @@
+ @Author  : alexanderwu
+ @File    : design_api_an.py
+ """
+-from typing import List,Optional
++from typing import List, Optional
+ 
+ from metagpt.actions.action_node import ActionNode
+ from metagpt.utils.mermaid import MMC1, MMC2
+@@ -45,7 +45,7 @@
+     example=["main.py", "game.py", "new_feature.py"],
+ )
+ 
+-#optional,because low success reproduction of class diagram in non py project.
++# optional,because low success reproduction of class diagram in non py project.
+ DATA_STRUCTURES_AND_INTERFACES = ActionNode(
+     key="Data structures and interfaces",
+     expected_type=Optional[str],
+diff --git a/metagpt/actions/project_management_an.py b/metagpt/actions/project_management_an.py
+--- a/metagpt/actions/project_management_an.py
++++ b/metagpt/actions/project_management_an.py
+@@ -12,7 +12,7 @@
+ REQUIRED_PACKAGES = ActionNode(
+     key="Required packages",
+     expected_type=Optional[List[str]],
+-    instruction="Provide required packages in requirements.txt format.",
++    instruction="Provide required third-party packages in requirements.txt format.",
+     example=["flask==1.1.2", "bcrypt==3.2.0"],
+ )
+ 
+diff --git a/metagpt/actions/write_code_an_draft.py b/metagpt/actions/write_code_an_draft.py
+--- a/metagpt/actions/write_code_an_draft.py
++++ b/metagpt/actions/write_code_an_draft.py
+@@ -139,7 +139,7 @@ class Main {\
+     end", "Anything UNCLEAR": "目前项目要求明确，没有不清楚的地方。"}
+ 
+ ## Tasks
+-{"Required packages": ["无需Python包"], "Required Other language third-party packages": ["vue.js"], "Logic Analysis": [["index.html", "作为游戏的入口文件和主要的HTML结构"], ["styles.css", "包含所有的CSS样式，确保游戏界面美观"], ["main.js", "包含Main类，负责初始化游戏和绑定事件"], ["game.js", "包含Game类，负责游戏逻辑，如开始游戏、移动方块等"], ["storage.js", "包含Storage类，用于获取和设置玩家的最高分"]], "Task list": ["index.html", "styles.css", "storage.js", "game.js", "main.js"], "Full API spec": "", "Shared Knowledge": "\'game.js\' 包含游戏逻辑相关的函数，被 \'main.js\' 调用。", "Anything UNCLEAR": "目前项目要求明确，没有不清楚的地方。"}
++{"Required packages": ["无需第三方包"], "Required Other language third-party packages": ["vue.js"], "Logic Analysis": [["index.html", "作为游戏的入口文件和主要的HTML结构"], ["styles.css", "包含所有的CSS样式，确保游戏界面美观"], ["main.js", "包含Main类，负责初始化游戏和绑定事件"], ["game.js", "包含Game类，负责游戏逻辑，如开始游戏、移动方块等"], ["storage.js", "包含Storage类，用于获取和设置玩家的最高分"]], "Task list": ["index.html", "styles.css", "storage.js", "game.js", "main.js"], "Full API spec": "", "Shared Knowledge": "\'game.js\' 包含游戏逻辑相关的函数，被 \'main.js\' 调用。", "Anything UNCLEAR": "目前项目要求明确，没有不清楚的地方。"}
+ 
+ ## Code Files
+ ----- index.html

@@ -1,0 +1,33 @@
+DO NOT FORCE VALIDATE '{'Required Python packages'}' by default
+**Bug description**
+`metagpt\actions\action_node.py", line 432, in _aask_v1
+    instruct_content = output_class(**parsed_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "..........\Lib\site-packages\pydantic\main.py", line 171, in __init__
+    self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for PM_NODE_AN
+  Value error, Missing fields: {'Required Python packages'} `
+
+**Bug solved method**
+DO NOT VALIDATE THIS FIELD. user may ask the agents to do non py related stuff,why would we force this validate and introduce a hard error? Seems silly.
+
+**Environment information**
+irrelevant
+
+- LLM type and model name:
+- MetaGPT version or branch:0.8.1
+
+
+**Screenshots or logs**
+`action_node.py", line 432, in _aask_v1
+    instruct_content = output_class(**parsed_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ".........\Lib\site-packages\pydantic\main.py", line 171, in __init__
+    self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for PM_NODE_AN
+  Value error, Missing fields: {'Required Python packages'} [type=value_error, input_value={'Required Rust packages'...ption for backup data.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.6/v/value_error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):`

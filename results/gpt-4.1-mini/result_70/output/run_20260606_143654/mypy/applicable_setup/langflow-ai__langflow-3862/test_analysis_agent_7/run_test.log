@@ -1,0 +1,180 @@
+2026-06-06 16:52:19,492 - INFO - Checking if image langflow-ai__langflow-3862-dockerfile7:latest exists locally...
+2026-06-06 16:52:19,498 - INFO - Image langflow-ai__langflow-3862-dockerfile7:latest found locally.
+2026-06-06 16:52:19,498 - INFO - Creating container for langflow-ai__langflow-3862...
+2026-06-06 16:52:19,749 - INFO - Container for langflow-ai__langflow-3862 started: 50a63cafcf18ed6072b0b51d9640fcb8173793ec63e3e250b7489a89dd71ae6d
+2026-06-06 16:52:19,750 - INFO - Intermediate patch for langflow-ai__langflow-3862 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-3862/test_analysis_agent_7/patch.diff, now applying to container...
+2026-06-06 16:52:20,169 - INFO - Apply patch success:
+Checking patch src/backend/base/langflow/graph/utils.py...
+Checking patch src/backend/base/langflow/graph/vertex/types.py...
+Checking patch src/backend/base/langflow/services/database/models/message/model.py...
+Applied patch src/backend/base/langflow/graph/utils.py cleanly.
+Applied patch src/backend/base/langflow/graph/vertex/types.py cleanly.
+Applied patch src/backend/base/langflow/services/database/models/message/model.py cleanly.
+
+2026-06-06 16:52:22,746 - INFO - Git diff before:
+diff --git a/src/backend/base/langflow/graph/utils.py b/src/backend/base/langflow/graph/utils.py
+index a5987df091..9ca656a3a9 100644
+--- a/src/backend/base/langflow/graph/utils.py
++++ b/src/backend/base/langflow/graph/utils.py
+@@ -185,3 +185,19 @@ def log_vertex_build(
+             logger.debug(f"Logged vertex build: {inserted.build_id}")
+     except Exception as e:
+         logger.exception(f"Error logging vertex build: {e}")
++
++
++def rewrite_file_path(file_path: str):
++    file_path = file_path.replace("\\", "/")
++
++    if ":" in file_path:
++        file_path = file_path.split(":", 1)[-1]
++
++    file_path_split = [part for part in file_path.split("/") if part]
++
++    if len(file_path_split) >= 2:
++        consistent_file_path = f"{file_path_split[-2]}/{file_path_split[-1]}"
++    else:
++        consistent_file_path = "/".join(file_path_split)
++
++    return [consistent_file_path]
+diff --git a/src/backend/base/langflow/graph/vertex/types.py b/src/backend/base/langflow/graph/vertex/types.py
+index a44c4ef120..9a83e2ffe2 100644
+--- a/src/backend/base/langflow/graph/vertex/types.py
++++ b/src/backend/base/langflow/graph/vertex/types.py
+@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage, AIMessageChunk
+ from loguru import logger
+ 
+ from langflow.graph.schema import CHAT_COMPONENTS, RECORDS_COMPONENTS, InterfaceComponentTypes, ResultData
+-from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, serialize_field
++from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, rewrite_file_path, serialize_field
+ from langflow.graph.vertex.base import Vertex
+ from langflow.graph.vertex.exceptions import NoComponentInstance
+ from langflow.graph.vertex.schema import NodeData
+@@ -256,6 +256,10 @@ class InterfaceVertex(ComponentVertex):
+         sender = self.params.get("sender", None)
+         sender_name = self.params.get("sender_name", None)
+         message = self.params.get(INPUT_FIELD_NAME, None)
++        files = self.params.get("files", [])
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
+         files = [{"path": file} if isinstance(file, str) else file for file in self.params.get("files", [])]
+         if isinstance(message, str):
+             message = unescape_string(message)
+@@ -382,6 +386,12 @@ class InterfaceVertex(ComponentVertex):
+                 yield message
+                 complete_message += message
+ 
++        files = self.params.get("files", [])
++
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
++
+         if hasattr(self.params.get("sender_name"), "get_text"):
+             sender_name = self.params.get("sender_name").get_text()
+         else:
+diff --git a/src/backend/base/langflow/services/database/models/message/model.py b/src/backend/base/langflow/services/database/models/message/model.py
+index 69e7458c16..79d5476063 100644
+--- a/src/backend/base/langflow/services/database/models/message/model.py
++++ b/src/backend/base/langflow/services/database/models/message/model.py
+@@ -30,6 +30,13 @@ class MessageBase(SQLModel):
+         # first check if the record has all the required fields
+         if message.text is None or not message.sender or not message.sender_name:
+             raise ValueError("The message does not have the required fields (text, sender, sender_name).")
++        if message.files:
++            image_paths = []
++            for file in message.files:
++                if hasattr(file, "path") and hasattr(file, "url") and file.path:
++                    session_id = message.session_id
++                    image_paths.append(f"{session_id}{file.path.split(session_id)[1]}")
++            message.files = image_paths
+         if isinstance(message.timestamp, str):
+             timestamp = datetime.fromisoformat(message.timestamp)
+         else:
+2026-06-06 16:52:22,747 - INFO - Eval script for langflow-ai__langflow-3862 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-3862/test_analysis_agent_7/patch.diff, now applying to container...
+2026-06-06 16:52:53,348 - INFO - Test output for langflow-ai__langflow-3862 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-3862/test_analysis_agent_7/test_output.txt
+2026-06-06 16:52:53,454 - INFO - Git diff after:
+diff --git a/src/backend/base/langflow/graph/utils.py b/src/backend/base/langflow/graph/utils.py
+index a5987df091..9ca656a3a9 100644
+--- a/src/backend/base/langflow/graph/utils.py
++++ b/src/backend/base/langflow/graph/utils.py
+@@ -185,3 +185,19 @@ def log_vertex_build(
+             logger.debug(f"Logged vertex build: {inserted.build_id}")
+     except Exception as e:
+         logger.exception(f"Error logging vertex build: {e}")
++
++
++def rewrite_file_path(file_path: str):
++    file_path = file_path.replace("\\", "/")
++
++    if ":" in file_path:
++        file_path = file_path.split(":", 1)[-1]
++
++    file_path_split = [part for part in file_path.split("/") if part]
++
++    if len(file_path_split) >= 2:
++        consistent_file_path = f"{file_path_split[-2]}/{file_path_split[-1]}"
++    else:
++        consistent_file_path = "/".join(file_path_split)
++
++    return [consistent_file_path]
+diff --git a/src/backend/base/langflow/graph/vertex/types.py b/src/backend/base/langflow/graph/vertex/types.py
+index a44c4ef120..9a83e2ffe2 100644
+--- a/src/backend/base/langflow/graph/vertex/types.py
++++ b/src/backend/base/langflow/graph/vertex/types.py
+@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage, AIMessageChunk
+ from loguru import logger
+ 
+ from langflow.graph.schema import CHAT_COMPONENTS, RECORDS_COMPONENTS, InterfaceComponentTypes, ResultData
+-from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, serialize_field
++from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, rewrite_file_path, serialize_field
+ from langflow.graph.vertex.base import Vertex
+ from langflow.graph.vertex.exceptions import NoComponentInstance
+ from langflow.graph.vertex.schema import NodeData
+@@ -256,6 +256,10 @@ class InterfaceVertex(ComponentVertex):
+         sender = self.params.get("sender", None)
+         sender_name = self.params.get("sender_name", None)
+         message = self.params.get(INPUT_FIELD_NAME, None)
++        files = self.params.get("files", [])
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
+         files = [{"path": file} if isinstance(file, str) else file for file in self.params.get("files", [])]
+         if isinstance(message, str):
+             message = unescape_string(message)
+@@ -382,6 +386,12 @@ class InterfaceVertex(ComponentVertex):
+                 yield message
+                 complete_message += message
+ 
++        files = self.params.get("files", [])
++
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
++
+         if hasattr(self.params.get("sender_name"), "get_text"):
+             sender_name = self.params.get("sender_name").get_text()
+         else:
+diff --git a/src/backend/base/langflow/services/database/models/message/model.py b/src/backend/base/langflow/services/database/models/message/model.py
+index 69e7458c16..79d5476063 100644
+--- a/src/backend/base/langflow/services/database/models/message/model.py
++++ b/src/backend/base/langflow/services/database/models/message/model.py
+@@ -30,6 +30,13 @@ class MessageBase(SQLModel):
+         # first check if the record has all the required fields
+         if message.text is None or not message.sender or not message.sender_name:
+             raise ValueError("The message does not have the required fields (text, sender, sender_name).")
++        if message.files:
++            image_paths = []
++            for file in message.files:
++                if hasattr(file, "path") and hasattr(file, "url") and file.path:
++                    session_id = message.session_id
++                    image_paths.append(f"{session_id}{file.path.split(session_id)[1]}")
++            message.files = image_paths
+         if isinstance(message.timestamp, str):
+             timestamp = datetime.fromisoformat(message.timestamp)
+         else:
+2026-06-06 16:52:53,455 - INFO - Attempting to stop container langflow-ai__langflow-3862-test2...
+2026-06-06 16:53:09,391 - INFO - Attempting to remove container langflow-ai__langflow-3862-test2...
+2026-06-06 16:53:09,598 - INFO - Container langflow-ai__langflow-3862-test2 removed.
+2026-06-06 16:53:09,598 - INFO - Attempting to remove image langflow-ai__langflow-3862-dockerfile7:latest...
+2026-06-06 16:53:13,826 - INFO - Image langflow-ai__langflow-3862-dockerfile7:latest removed.

@@ -1,0 +1,27 @@
+Researcher Role Cannot Serialize SearchEngine After Exception
+**Bug description**
+It looks like I'm consistently encountering an issue when using the `Researcher` role. At some point during the research, an SSL `ssl.SSLWantReadError` exception is encountered, and when attempting to serialize to support breakpoint recovery, the SearchEngine fails to get serialized. I've attached the entire terminal log output for clarity. If this is not a mistake I made and just something that needs to be added, let me know and I can try to look into this, I need it for work.
+
+**Bug solved method**
+I'm not sure if the `Researcher` role has been fleshed out. Here are the steps to reproduce the issue:
+1. I made a conda environment via `conda create -n metagpt -y python==3.9` and `conda activate metagpt`
+2. I set up env vars for OPENAI and SERPAPI via `conda env config vars set KEY=VALUE`
+3. `pip install metagpt` and I also had to run `pip install playwright==1.40.0`
+4. Open `metagpt/roles/__init__.py` and add the Researcher Role: `from metagpt.roles.researcher import Researcher` and `"Researcher",` to `__all__`
+5. Modify the `metagpt/startup.py` to include the Researcher role in `company.hire()`
+6. Run the following:
+```
+python startup.py "Research and develop a system to interact with an open source LLM, such as Llama 2 13b chat, and perform Retrieval Augmented Generation based on documents from a file stored as various text files. The researcher should be responsible for choosing the vector database to use, and they should debate the pros and cons of open source vector databases and closed source ones. The project should all be done in Python."
+```
+
+**Environment information**
+- System Version：Windows 11, 
+- Python version: (conda python 3.9.0), 
+- LLM type and model: (OpenAI gpt-4)
+
+- packages version: Default
+- installation method: pip
+
+**Screenshots or logs**
+[Terminal_Log.txt](https://github.com/geekan/MetaGPT/files/13834329/Terminal_Log.txt)
+

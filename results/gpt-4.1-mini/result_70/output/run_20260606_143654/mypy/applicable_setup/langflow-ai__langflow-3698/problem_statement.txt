@@ -1,0 +1,54 @@
+Langflow completely mess up with outputs when more than one is present (gemini issue maybe?)
+### Bug Description
+
+I have a flow that I want to extract some informations, so I use some LLMs to do some processing and use a "Text Output" so I can easily get the output values I want.
+
+My initial intention was to then use SubFlow to get the outputs, but it's getting wrong data on some fields. Then I checked the flow and it's happening directly on the flow too.
+
+If you have some "Text Output" on the flow, they may get mixed up. If I check the LLM output, everything seems fine. If I check the output I put just after the LLM, they are completely messed up. Sometime they both assume a value of the other one, but they both always had the same value.
+
+(I'm using the gemini because of the context window since the LLM data iterator is also broken) 😢
+
+#iadevs
+
+### Reproduction
+
+I created a flow with some LLMs and Text Inputs / Text Outputs.
+
+Then, after the flow is run, some outputs receive a wrong value somehow.
+
+I tried removing they more than once and nothing. I deleted both of them and then and the issue persist, because the value of another outputs is used as input for other things. This is really confusing and frustrating.
+
+The outputs that get messed up seems to be only from gemini model, but you can see on video that the _previews_ shows that model is outputting different texts. It seems that when the value is used in the next component, it receives a wrong value.
+
+
+### Expected behavior
+
+I would expect that if a output is linked to another node, the text output value should be the same as the output they're connected to.
+
+### Who can help?
+
+_No response_
+
+### Operating System
+
+Manjaro, using Docker official image.
+
+### Langflow Version
+
+1.0.16 and 1.0.17, didn't noticed before but can't be sure
+
+### Python Version
+
+3.12
+
+### Screenshot
+
+
+https://github.com/user-attachments/assets/163b7595-dca4-4e0a-a063-b54ae1cc4b4e
+
+
+
+### Flow File
+
+I can send in discord DM if needed.

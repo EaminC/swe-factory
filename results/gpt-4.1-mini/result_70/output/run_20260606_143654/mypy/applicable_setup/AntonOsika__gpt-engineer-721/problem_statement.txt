@@ -1,0 +1,19 @@
+Fix the "improve" prompt to make sure that it generates diffs, and parse and apply those diffs to the existing codebase
+One way to do this is to write the prompt for gpt-engineer with `-i` flag to annotate each codeblock with one of:
+
+1. `NEW CODE`
+2. `REPLACING ONE FUNCTION`
+
+If 1., the generated code can just be written to a new file (or appended to an existing file).
+
+If it is replacing an existing function, we could make sure to find the name of the function that is being replaced using an AST parser (see how [here](https://chat.openai.com/share/71012377-7ebb-47f2-a8fc-7d1bfd4fabe2))
+
+
+## Why this is necessary
+As an example, I tried to use it on the project itself and got a codeblock that was just changing one of the function (so it should not be used to overwrite the entire file)
+
+## How to do it
+
+We can take inspiration from Aider, that generates diffs, or sweep in how they prompt for "<copy_lines>" and [parse the GPT4 output here](https://github.com/sweepai/sweep/blob/e384c9fc3e0278257324c4ce57a888fa64f071b7/sweepai/utils/diff.py#L113)
+
+Should be quite straightforward!

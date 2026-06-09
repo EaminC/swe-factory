@@ -1,0 +1,57 @@
+<dockerfile>
+# Use Ubuntu 22.04 base image with bash
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, wget, build tools, python3.10, python3-pip, and other essentials
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    libffi-dev \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.10 explicitly and pip to python3-pip
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && python3 -m pip install --upgrade pip
+
+# Create workdir
+WORKDIR /testbed/
+
+# Clone the target repository and checkout the specific commit SHA, then install dependencies with poetry
+# Poetry installation from official recommended script
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3.10 - && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+# Clone repo and checkout specified commit. Install dependencies using poetry in virtual env mode
+ARG COMMIT_SHA=04c71d7d297447479d897b6803206210ed589d53
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    cd /testbed && \
+    git reset --hard $COMMIT_SHA && \
+    # Configure poetry to create virtual env inside the project
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-interaction --no-ansi
+
+# Set bashrc to activate the poetry environment automatically on starting a shell inside container
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Export environment variable note for OPENAI_API_KEY (will be set externally for tests)
+ENV OPENAI_API_KEY=""
+
+# Default shell
+CMD ["/bin/bash"]
+</dockerfile>

@@ -1,0 +1,142 @@
+diff --git a/docs/tutorial/en/src/quickstart_agent.py b/docs/tutorial/en/src/quickstart_agent.py
+--- a/docs/tutorial/en/src/quickstart_agent.py
++++ b/docs/tutorial/en/src/quickstart_agent.py
+@@ -79,7 +79,7 @@
+ #
+ #       - ``agent_control``: allow agent to control the long-term memory by itself
+ #       - ``static_control``: retrieving and recording from/to long-term memory will happen in the beginning/end of each reply.
+-#       - ``both``: active the above two modes at the same time
++#       - ``both``: activate the above two modes at the same time
+ #   * - ``enable_meta_tool``
+ #     - :ref:`tool`
+ #     - Whether to enable the meta tool, which allows the agent to manage tools by itself
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -321,7 +321,7 @@ def _parse_tool_function(
+     if include_long_description and docstring.long_description is not None:
+         descriptions.append(docstring.long_description)
+ 
+-    func_description = "\n\n".join(descriptions)
++    func_description = "\n".join(descriptions)
+ 
+     # Create a dynamic model with the function signature
+     fields = {}
+diff --git a/src/agentscope/_version.py b/src/agentscope/_version.py
+--- a/src/agentscope/_version.py
++++ b/src/agentscope/_version.py
+@@ -1,4 +1,4 @@
+ # -*- coding: utf-8 -*-
+ """The version of agentscope."""
+ 
+-__version__ = "1.0.8"
++__version__ = "1.0.9dev"
+diff --git a/src/agentscope/tool/_toolkit.py b/src/agentscope/tool/_toolkit.py
+--- a/src/agentscope/tool/_toolkit.py
++++ b/src/agentscope/tool/_toolkit.py
+@@ -624,8 +624,31 @@ async def call_tool_function(
+                 None,
+             )
+ 
+-        # Prepare function and keyword arguments
++        # Obtain the tool function
+         tool_func = self.tools[tool_call["name"]]
++
++        # Check if the tool function is in an inactive group
++        if (
++            tool_func.group != "basic"
++            and not self.groups[tool_func.group].active
++        ):
++            return _object_wrapper(
++                ToolResponse(
++                    content=[
++                        TextBlock(
++                            type="text",
++                            text="FunctionInactiveError: The function "
++                            f"'{tool_call['name']}' is in the inactive "
++                            f"group '{tool_func.group}'. Activate the tool "
++                            "group by calling 'reset_equipped_tools' "
++                            "first to use this tool.",
++                        ),
++                    ],
++                ),
++                None,
++            )
++
++        # Prepare keyword arguments
+         kwargs = {
+             **tool_func.preset_kwargs,
+             **(tool_call.get("input", {}) or {}),
+@@ -905,23 +928,28 @@ def get_activated_notes(self) -> str:
+             if group.active and group.notes:
+                 collected_notes.append(
+                     "\n".join(
+-                        [f"## About {group_name} Tools", group.notes],
++                        [f"## About Tool Group '{group_name}'", group.notes],
+                     ),
+                 )
+         return "\n".join(collected_notes)
+ 
+     def reset_equipped_tools(self, **kwargs: Any) -> ToolResponse:
+-        """Choose appropriate tools to equip yourself with, so that you can
+-        finish your task. Each argument in this function represents a group
+-        of related tools, and the value indicates whether to activate the
+-        group or not. Besides, the tool response of this function will
+-        contain the precaution notes for using them, which you
+-        **MUST pay attention to and follow**. You can also reuse this function
+-        to check the notes of the tool groups.
+-
+-        Note this function will `reset` the tools, so that the original tools
+-        will be removed first.
+-        """
++        """This function allows you to activate or deactivate tool groups
++        dynamically based on your current task requirements.
++        **Important: Each call sets the absolute final state of ALL tool
++        groups, not incremental changes**. Any group not explicitly set to True
++        will be deactivated, regardless of its previous state.
++
++        **Best practice**: Actively manage your tool groups——activate only
++        what you need for the current task, and promptly deactivate groups as
++        soon as they are no longer needed to conserve context space.
++
++        The function will return the usage instructions for the activated tool
++        groups, which you **MUST pay attention to and follow**. You can also
++        reuse this function to check the notes of the tool groups."""
++
++        # Deactivate all tool groups first
++        self.update_tool_groups(list(self.groups.keys()), active=False)
+ 
+         to_activate = []
+         for key, value in kwargs.items():
+@@ -943,13 +971,28 @@ def reset_equipped_tools(self, **kwargs: Any) -> ToolResponse:
+ 
+         notes = self.get_activated_notes()
+ 
++        text_response = ""
++        if to_activate:
++            text_response += (
++                "Now tool groups "
++                + ", ".join([f"'{_}'" for _ in to_activate])
++                + " are activated."
++            )
++
++        if notes:
++            text_response += (
++                f" You MUST follow these notes to use these tools:\n"
++                f"<notes>{notes}</notes>"
++            )
++
++        if not text_response:
++            text_response = "All tool groups are now deactivated currently."
++
+         return ToolResponse(
+             content=[
+                 TextBlock(
+                     type="text",
+-                    text=f"Active tool groups successfully: {to_activate}. "
+-                    "You MUST follow these notes to use the tools:\n"
+-                    f"<notes>{notes}</notes>",
++                    text=text_response,
+                 ),
+             ],
+         )

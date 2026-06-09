@@ -1,0 +1,25 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Checkout the target test file to ensure clean state
+git checkout 4ef4c93baccf30fc18936941ec9110b5f2fc2a59 "src/backend/tests/unit/components/outputs/test_chat_output_component.py"
+
+# Apply the test patch (content to be substituted at runtime)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /testbed/testbed_venv/bin/activate
+
+# Run the specified test file using uv run pytest as recommended
+# Output test names and pass/fail/skip status with concise formatting
+uv run pytest -v --tb=short "src/backend/tests/unit/components/outputs/test_chat_output_component.py"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to original state, discarding patch changes
+git checkout 4ef4c93baccf30fc18936941ec9110b5f2fc2a59 "src/backend/tests/unit/components/outputs/test_chat_output_component.py"

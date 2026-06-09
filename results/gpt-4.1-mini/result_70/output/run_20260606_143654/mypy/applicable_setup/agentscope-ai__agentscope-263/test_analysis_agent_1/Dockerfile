@@ -1,0 +1,56 @@
+# Use Ubuntu 22.04 as base image for broad compatibility and bash shell availability
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+# Avoid interactive tzdata dialogs during build
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system packages and tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.9 \
+    python3.9-venv \
+    python3-pip \
+    python3.9-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.9 explicitly to avoid ambiguity
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+
+# Upgrade pip to latest in the python3 context
+RUN python3 -m pip install --upgrade pip
+
+# Create and activate a Python virtual environment called 'testbed'
+RUN python3 -m venv /opt/venvs/testbed
+ENV VIRTUAL_ENV=/opt/venvs/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Ensure pip, setuptools and wheel are installed in the venv
+RUN pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone target repository and checkout the specified commit
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    git reset --hard f761cf215fbd1f0a1e57eb2d073229628b77f462
+
+# Install the project in editable mode with all extras including distribute, full and dev
+RUN pip install -e . && \
+    pip install -e ".[distribute]" && \
+    pip install -e ".[full]" && \
+    pip install -e ".[dev]"
+
+# Install pre-commit hooks (as per context retrieval agent instructions)
+RUN pre-commit install || echo "pre-commit not installed or failed, ignored"
+
+# Add bashrc to activate venv by default in interactive sessions
+RUN echo "source $VIRTUAL_ENV/bin/activate" >> /root/.bashrc

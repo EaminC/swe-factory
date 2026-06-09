@@ -1,0 +1,70 @@
+2026-06-06 15:41:47,208 - INFO - Building image antonosika__gpt-engineer-721
+Using dockerfile:
+FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-distutils \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda (lightweight conda installer)
+RUN wget "https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh" -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/miniconda3 \
+    && rm miniconda.sh
+
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and add conda-forge channel
+RUN conda init bash \
+    && conda config --append channels conda-forge
+
+# Create conda environment "testbed" with Python 3.10 (符合 >=3.8,<4.0 的约束)
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.10 -y"
+
+# Activate conda env and upgrade pip, install pytest only (others installed via pip install -e .)
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install --upgrade pip && \
+    pip install pytest==7.3.1"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository, checkout specific commit, and install repo in editable mode (with dependencies)
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/AntonOsika/gpt-engineer /testbed && \
+    cd /testbed && \
+    git reset --hard 7dac88a3f8e8c0610e9e3189c867b19d055dab2d && \
+    pip install -e ."
+
+# Enable automatic conda activation for interactive bash shells
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+2026-06-06 15:41:47,211 - INFO - Do not find previous image, images list is clean.
+2026-06-06 15:41:47,224 - INFO - Step 1/13 : FROM ubuntu:22.04
+2026-06-06 15:41:47,599 - INFO -  ---> 86f1a8d7b38e
+2026-06-06 15:41:47,599 - INFO - Step 2/13 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-06 15:42:13,793 - INFO -  ---> Running in c6c74319ddb3
+2026-06-06 15:42:14,624 - INFO -  ---> Removed intermediate container c6c74319ddb3
+2026-06-06 15:42:14,624 - INFO -  ---> 1f8b389bfbeb
+2026-06-06 15:42:14,625 - INFO - Step 3/13 : ENV TZ=Etc/UTC
+2026-06-06 15:42:15,451 - INFO -  ---> Running in 580b1a6a17cd
+2026-06-06 15:42:16,509 - INFO -  ---> Removed intermediate container 580b1a6a17cd
+2026-06-06 15:42:22,651 - ERROR - Error: failed to get digest sha256:1f8b389bfbeb75a06f09cb21fffb5f44bd65fe6732a0961b5b9a06f050429427: open /var/lib/docker/image/overlay2/imagedb/content/sha256/1f8b389bfbeb75a06f09cb21fffb5f44bd65fe6732a0961b5b9a06f050429427: no such file or directory
+2026-06-06 15:42:22,651 - ERROR - failed to get digest sha256:1f8b389bfbeb75a06f09cb21fffb5f44bd65fe6732a0961b5b9a06f050429427: open /var/lib/docker/image/overlay2/imagedb/content/sha256/1f8b389bfbeb75a06f09cb21fffb5f44bd65fe6732a0961b5b9a06f050429427: no such file or directory

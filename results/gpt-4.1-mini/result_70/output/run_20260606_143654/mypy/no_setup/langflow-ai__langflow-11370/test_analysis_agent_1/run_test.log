@@ -1,0 +1,122 @@
+2026-06-06 16:00:41,341 - INFO - Checking if image langflow-ai__langflow-11370-dockerfile1:latest exists locally...
+2026-06-06 16:00:41,350 - INFO - Image langflow-ai__langflow-11370-dockerfile1:latest found locally.
+2026-06-06 16:00:41,350 - INFO - Creating container for langflow-ai__langflow-11370...
+2026-06-06 16:00:41,792 - INFO - Container for langflow-ai__langflow-11370 started: 05d8cbae0c30130ea991db58eadbbe6180059a10393422160a2070b9d19ce78f
+2026-06-06 16:00:41,793 - INFO - Intermediate patch for langflow-ai__langflow-11370 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-11370/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-06 16:00:42,186 - INFO - Apply patch success:
+Checking patch src/lfx/src/lfx/io/schema.py...
+Applied patch src/lfx/src/lfx/io/schema.py cleanly.
+
+2026-06-06 16:00:43,995 - INFO - Git diff before:
+diff --git a/src/lfx/src/lfx/io/schema.py b/src/lfx/src/lfx/io/schema.py
+index f12bec75d1..bd42e130b1 100644
+--- a/src/lfx/src/lfx/io/schema.py
++++ b/src/lfx/src/lfx/io/schema.py
+@@ -15,6 +15,11 @@ from lfx.inputs.inputs import (
+ )
+ from lfx.schema.dotdict import dotdict
+ 
++# Maximum number of options to include as enum in tool schemas.
++# Dropdowns with more options will use string type with default value instead,
++# avoiding token waste when sending tool schemas to LLMs.
++MAX_OPTIONS_FOR_TOOL_ENUM = 50
++
+ _convert_field_type_to_type: dict[FieldTypes, type] = {
+     FieldTypes.TEXT: str,
+     FieldTypes.INTEGER: int,
+@@ -217,10 +222,14 @@ def create_input_schema(inputs: list["InputTypes"]) -> type[BaseModel]:
+         else:
+             msg = f"Invalid field type: {field_type}"
+             raise TypeError(msg)
+-        if hasattr(input_model, "options") and isinstance(input_model.options, list) and input_model.options:
++        # Skip enum for large option lists to avoid token waste
++        if (
++            hasattr(input_model, "options")
++            and isinstance(input_model.options, list)
++            and input_model.options
++            and len(input_model.options) <= MAX_OPTIONS_FOR_TOOL_ENUM
++        ):
+             literal_string = f"Literal{input_model.options}"
+-            # validate that the literal_string is a valid literal
+-
+             field_type = eval(literal_string, {"Literal": Literal})  # noqa: S307
+         if hasattr(input_model, "is_list") and input_model.is_list:
+             field_type = list[field_type]  # type: ignore[valid-type]
+@@ -255,10 +264,14 @@ def create_input_schema_from_dict(inputs: list[dotdict], param_key: str | None =
+     for input_model in inputs:
+         # Create a Pydantic Field for each input field
+         field_type = input_model.type
+-        if hasattr(input_model, "options") and isinstance(input_model.options, list) and input_model.options:
++        # Skip enum for large option lists to avoid token waste
++        if (
++            hasattr(input_model, "options")
++            and isinstance(input_model.options, list)
++            and input_model.options
++            and len(input_model.options) <= MAX_OPTIONS_FOR_TOOL_ENUM
++        ):
+             literal_string = f"Literal{input_model.options}"
+-            # validate that the literal_string is a valid literal
+-
+             field_type = eval(literal_string, {"Literal": Literal})  # noqa: S307
+         if hasattr(input_model, "is_list") and input_model.is_list:
+             field_type = list[field_type]  # type: ignore[valid-type]
+2026-06-06 16:00:43,995 - INFO - Eval script for langflow-ai__langflow-11370 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-11370/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-06 16:00:58,540 - INFO - Test output for langflow-ai__langflow-11370 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/langflow-ai__langflow-11370/test_analysis_agent_1/test_output.txt
+2026-06-06 16:00:58,670 - INFO - Git diff after:
+diff --git a/src/lfx/src/lfx/io/schema.py b/src/lfx/src/lfx/io/schema.py
+index f12bec75d1..bd42e130b1 100644
+--- a/src/lfx/src/lfx/io/schema.py
++++ b/src/lfx/src/lfx/io/schema.py
+@@ -15,6 +15,11 @@ from lfx.inputs.inputs import (
+ )
+ from lfx.schema.dotdict import dotdict
+ 
++# Maximum number of options to include as enum in tool schemas.
++# Dropdowns with more options will use string type with default value instead,
++# avoiding token waste when sending tool schemas to LLMs.
++MAX_OPTIONS_FOR_TOOL_ENUM = 50
++
+ _convert_field_type_to_type: dict[FieldTypes, type] = {
+     FieldTypes.TEXT: str,
+     FieldTypes.INTEGER: int,
+@@ -217,10 +222,14 @@ def create_input_schema(inputs: list["InputTypes"]) -> type[BaseModel]:
+         else:
+             msg = f"Invalid field type: {field_type}"
+             raise TypeError(msg)
+-        if hasattr(input_model, "options") and isinstance(input_model.options, list) and input_model.options:
++        # Skip enum for large option lists to avoid token waste
++        if (
++            hasattr(input_model, "options")
++            and isinstance(input_model.options, list)
++            and input_model.options
++            and len(input_model.options) <= MAX_OPTIONS_FOR_TOOL_ENUM
++        ):
+             literal_string = f"Literal{input_model.options}"
+-            # validate that the literal_string is a valid literal
+-
+             field_type = eval(literal_string, {"Literal": Literal})  # noqa: S307
+         if hasattr(input_model, "is_list") and input_model.is_list:
+             field_type = list[field_type]  # type: ignore[valid-type]
+@@ -255,10 +264,14 @@ def create_input_schema_from_dict(inputs: list[dotdict], param_key: str | None =
+     for input_model in inputs:
+         # Create a Pydantic Field for each input field
+         field_type = input_model.type
+-        if hasattr(input_model, "options") and isinstance(input_model.options, list) and input_model.options:
++        # Skip enum for large option lists to avoid token waste
++        if (
++            hasattr(input_model, "options")
++            and isinstance(input_model.options, list)
++            and input_model.options
++            and len(input_model.options) <= MAX_OPTIONS_FOR_TOOL_ENUM
++        ):
+             literal_string = f"Literal{input_model.options}"
+-            # validate that the literal_string is a valid literal
+-
+             field_type = eval(literal_string, {"Literal": Literal})  # noqa: S307
+         if hasattr(input_model, "is_list") and input_model.is_list:
+             field_type = list[field_type]  # type: ignore[valid-type]
+2026-06-06 16:00:58,670 - INFO - Attempting to stop container langflow-ai__langflow-11370-test1...
+2026-06-06 16:01:14,725 - INFO - Attempting to remove container langflow-ai__langflow-11370-test1...
+2026-06-06 16:01:14,776 - INFO - Container langflow-ai__langflow-11370-test1 removed.
+2026-06-06 16:01:14,776 - INFO - Attempting to remove image langflow-ai__langflow-11370-dockerfile1:latest...
+2026-06-06 16:01:22,717 - INFO - Image langflow-ai__langflow-11370-dockerfile1:latest removed.

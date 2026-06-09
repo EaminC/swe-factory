@@ -1,0 +1,72 @@
+# Use a stable Ubuntu base image and manually install Python 3.10 and Node.js 20 to ensure reliability
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Set timezone and locales to avoid warnings during build
+RUN apt-get update && apt-get install -y tzdata locales && \
+    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata && \
+    locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Install essential system dependencies including git, curl, build tools, python3.10 and related packages,
+# chromium browser, fonts, certificates, and locales
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-dev \
+    python3-pip \
+    ca-certificates \
+    chromium-browser \
+    fonts-liberation \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x from NodeSource without removing libnode-dev (not present by default)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest \
+    && npm cache clean --force
+
+# Set environment variables required by Chromium and puppeteer in MetaGPT
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    puppeteer_config=/app/metagpt/config/puppeteer-config.json \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PATH="/opt/venv/bin:$PATH"
+
+# Create working directory inside container
+WORKDIR /testbed/
+
+# Clone repository and checkout the specified commit for reproducibility
+ARG COMMIT_SHA=ab846f65e481a655b791959eb0f89fb4b1c84128
+RUN git clone https://github.com/Geekan/MetaGPT.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create python virtual environment for isolation
+RUN python3.10 -m venv /opt/venv
+
+# Upgrade pip, setuptools, and wheel within venv
+RUN /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install dependencies from requirements.txt to ensure version constraints and reduce resolution complexity
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Install editable project with test extras separately to avoid deep dependency resolution issues
+RUN /opt/venv/bin/pip install --no-cache-dir -e .[test]
+
+# Globally install mermaid-cli for Node.js as required by the project
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Prepare the configuration directory for MetaGPT runtime configs
+RUN mkdir -p /root/.metagpt
+
+# Add command to activate virtual environment on shell startup
+RUN echo "source /opt/venv/bin/activate" >> /root/.bashrc
+
+# Default to bash shell for interactive use
+CMD ["/bin/bash"]

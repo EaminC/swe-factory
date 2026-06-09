@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+
+source /opt/conda/etc/profile.d/conda.sh
+conda activate testbed
+
+# Ensure pytest is installed in the conda environment before running tests
+pip install pytest
+
+cd /testbed
+
+# Reset the target test file to the committed state before patch
+git checkout 59afc5301f55037e7b379497767f4af62fd65b31 "tests/metagpt/utils/test_repair_llm_raw_output.py"
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file with concise output showing pass/fail/skip of each test in that file
+pytest -q --tb=short --disable-warnings --maxfail=1 tests/metagpt/utils/test_repair_llm_raw_output.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Restore the test file to the committed state after tests to clean up
+git checkout 59afc5301f55037e7b379497767f4af62fd65b31 "tests/metagpt/utils/test_repair_llm_raw_output.py"

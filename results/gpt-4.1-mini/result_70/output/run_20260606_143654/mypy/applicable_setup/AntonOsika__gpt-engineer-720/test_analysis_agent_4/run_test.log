@@ -1,0 +1,184 @@
+2026-06-06 15:05:57,315 - INFO - Checking if image antonosika__gpt-engineer-720-dockerfile4:latest exists locally...
+2026-06-06 15:05:57,320 - INFO - Image antonosika__gpt-engineer-720-dockerfile4:latest found locally.
+2026-06-06 15:05:57,321 - INFO - Creating container for antonosika__gpt-engineer-720...
+2026-06-06 15:05:57,831 - INFO - Container for antonosika__gpt-engineer-720 started: bcdeaa509ac7c492fd4c49989fcbf10a04a5fe3306312f74fc13ad62c24a58eb
+2026-06-06 15:05:57,831 - INFO - Intermediate patch for antonosika__gpt-engineer-720 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-720/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-06 15:05:58,172 - INFO - Apply patch success:
+Checking patch gpt_engineer/db.py...
+Checking patch gpt_engineer/main.py...
+Checking patch gpt_engineer/steps.py...
+Applied patch gpt_engineer/db.py cleanly.
+Applied patch gpt_engineer/main.py cleanly.
+Applied patch gpt_engineer/steps.py cleanly.
+
+2026-06-06 15:05:58,291 - INFO - Git diff before:
+diff --git a/gpt_engineer/db.py b/gpt_engineer/db.py
+index 536a157..c270ee5 100644
+--- a/gpt_engineer/db.py
++++ b/gpt_engineer/db.py
+@@ -122,6 +122,7 @@ class DBs:
+     input: DB
+     workspace: DB
+     archive: DB
++    project_metadata: DB
+ 
+ 
+ def archive(dbs: DBs) -> None:
+diff --git a/gpt_engineer/main.py b/gpt_engineer/main.py
+index a1c88b9..a5e6485 100644
+--- a/gpt_engineer/main.py
++++ b/gpt_engineer/main.py
+@@ -63,9 +63,10 @@ def main(
+     )
+ 
+     input_path = Path(project_path).absolute()
+-    memory_path = input_path / "memory"
++    project_metadata_path = input_path / ".gpteng"
++    memory_path = project_metadata_path / "memory"
+     workspace_path = input_path / "workspace"
+-    archive_path = input_path / "archive"
++    archive_path = project_metadata_path / "archive"
+ 
+     dbs = DBs(
+         memory=DB(memory_path),
+@@ -76,6 +77,7 @@ def main(
+             Path(__file__).parent / "preprompts"
+         ),  # Loads preprompts from the preprompts directory
+         archive=DB(archive_path),
++        project_metadata=DB(project_metadata_path),
+     )
+ 
+     if steps_config not in [
+diff --git a/gpt_engineer/steps.py b/gpt_engineer/steps.py
+index b0846c4..b4a235b 100644
+--- a/gpt_engineer/steps.py
++++ b/gpt_engineer/steps.py
+@@ -295,7 +295,7 @@ def use_feedback(ai: AI, dbs: DBs):
+ 
+ def set_improve_filelist(ai: AI, dbs: DBs):
+     """Sets the file list for files to work with in existing code mode."""
+-    ask_for_files(dbs.input)  # stores files as full paths.
++    ask_for_files(dbs.project_metadata)  # stores files as full paths.
+     return []
+ 
+ 
+@@ -303,8 +303,8 @@ def assert_files_ready(ai: AI, dbs: DBs):
+     """Checks that the required files are present for headless
+     improve code execution."""
+     assert (
+-        "file_list.txt" in dbs.input
+-    ), "For auto_mode file_list.txt need to be in your project folder."
++        "file_list.txt" in dbs.project_metadata
++    ), "For auto_mode file_list.txt need to be in your .gpteng folder."
+     assert "prompt" in dbs.input, "For auto_mode a prompt file must exist."
+     return []
+ 
+@@ -324,7 +324,7 @@ def get_improve_prompt(ai: AI, dbs: DBs):
+             "-----------------------------",
+             "The following files will be used in the improvement process:",
+             f"{FILE_LIST_NAME}:",
+-            str(dbs.input["file_list.txt"]),
++            str(dbs.project_metadata["file_list.txt"]),
+             "",
+             "The inserted prompt is the following:",
+             f"'{dbs.input['prompt']}'",
+@@ -346,7 +346,9 @@ def improve_existing_code(ai: AI, dbs: DBs):
+     to sent the formatted prompt to the LLM.
+     """
+ 
+-    files_info = get_code_strings(dbs.input)  # this only has file names not paths
++    files_info = get_code_strings(
++        dbs.project_metadata
++    )  # this only has file names not paths
+ 
+     messages = [
+         ai.fsystem(setup_sys_prompt_existing_code(dbs)),
+2026-06-06 15:05:58,291 - INFO - Eval script for antonosika__gpt-engineer-720 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-720/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-06 15:06:00,095 - INFO - Test output for antonosika__gpt-engineer-720 written to /home/cc/swe-factory/output/run_20260606_143654/mypy/AntonOsika__gpt-engineer-720/test_analysis_agent_4/test_output.txt
+2026-06-06 15:06:00,192 - INFO - Git diff after:
+diff --git a/gpt_engineer/db.py b/gpt_engineer/db.py
+index 536a157..c270ee5 100644
+--- a/gpt_engineer/db.py
++++ b/gpt_engineer/db.py
+@@ -122,6 +122,7 @@ class DBs:
+     input: DB
+     workspace: DB
+     archive: DB
++    project_metadata: DB
+ 
+ 
+ def archive(dbs: DBs) -> None:
+diff --git a/gpt_engineer/main.py b/gpt_engineer/main.py
+index a1c88b9..a5e6485 100644
+--- a/gpt_engineer/main.py
++++ b/gpt_engineer/main.py
+@@ -63,9 +63,10 @@ def main(
+     )
+ 
+     input_path = Path(project_path).absolute()
+-    memory_path = input_path / "memory"
++    project_metadata_path = input_path / ".gpteng"
++    memory_path = project_metadata_path / "memory"
+     workspace_path = input_path / "workspace"
+-    archive_path = input_path / "archive"
++    archive_path = project_metadata_path / "archive"
+ 
+     dbs = DBs(
+         memory=DB(memory_path),
+@@ -76,6 +77,7 @@ def main(
+             Path(__file__).parent / "preprompts"
+         ),  # Loads preprompts from the preprompts directory
+         archive=DB(archive_path),
++        project_metadata=DB(project_metadata_path),
+     )
+ 
+     if steps_config not in [
+diff --git a/gpt_engineer/steps.py b/gpt_engineer/steps.py
+index b0846c4..b4a235b 100644
+--- a/gpt_engineer/steps.py
++++ b/gpt_engineer/steps.py
+@@ -295,7 +295,7 @@ def use_feedback(ai: AI, dbs: DBs):
+ 
+ def set_improve_filelist(ai: AI, dbs: DBs):
+     """Sets the file list for files to work with in existing code mode."""
+-    ask_for_files(dbs.input)  # stores files as full paths.
++    ask_for_files(dbs.project_metadata)  # stores files as full paths.
+     return []
+ 
+ 
+@@ -303,8 +303,8 @@ def assert_files_ready(ai: AI, dbs: DBs):
+     """Checks that the required files are present for headless
+     improve code execution."""
+     assert (
+-        "file_list.txt" in dbs.input
+-    ), "For auto_mode file_list.txt need to be in your project folder."
++        "file_list.txt" in dbs.project_metadata
++    ), "For auto_mode file_list.txt need to be in your .gpteng folder."
+     assert "prompt" in dbs.input, "For auto_mode a prompt file must exist."
+     return []
+ 
+@@ -324,7 +324,7 @@ def get_improve_prompt(ai: AI, dbs: DBs):
+             "-----------------------------",
+             "The following files will be used in the improvement process:",
+             f"{FILE_LIST_NAME}:",
+-            str(dbs.input["file_list.txt"]),
++            str(dbs.project_metadata["file_list.txt"]),
+             "",
+             "The inserted prompt is the following:",
+             f"'{dbs.input['prompt']}'",
+@@ -346,7 +346,9 @@ def improve_existing_code(ai: AI, dbs: DBs):
+     to sent the formatted prompt to the LLM.
+     """
+ 
+-    files_info = get_code_strings(dbs.input)  # this only has file names not paths
++    files_info = get_code_strings(
++        dbs.project_metadata
++    )  # this only has file names not paths
+ 
+     messages = [
+         ai.fsystem(setup_sys_prompt_existing_code(dbs)),
+2026-06-06 15:06:00,192 - INFO - Attempting to stop container antonosika__gpt-engineer-720-test4...
+2026-06-06 15:06:16,619 - INFO - Attempting to remove container antonosika__gpt-engineer-720-test4...
+2026-06-06 15:06:16,652 - INFO - Container antonosika__gpt-engineer-720-test4 removed.
+2026-06-06 15:06:16,652 - INFO - Attempting to remove image antonosika__gpt-engineer-720-dockerfile4:latest...
+2026-06-06 15:06:17,783 - INFO - Image antonosika__gpt-engineer-720-dockerfile4:latest removed.

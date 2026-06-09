@@ -1,0 +1,32 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Ensure target test files are reset to original state before patching
+git checkout a4dc5381b2cf31c507cc32f9027f76bf00d61ccc \
+    "src/backend/tests/unit/test_custom_component.py" \
+    "src/backend/tests/unit/test_database.py"
+
+# Apply patch for the target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate Poetry virtual environment
+source /testbed/.venv/bin/activate
+
+# Run only the specified target test files using poetry and pytest with recommended flags
+poetry run pytest \
+    src/backend/tests/unit/test_custom_component.py \
+    src/backend/tests/unit/test_database.py \
+    --instafail -ra -m "not api_key_required"
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset modified files after test run
+git checkout a4dc5381b2cf31c507cc32f9027f76bf00d61ccc \
+    "src/backend/tests/unit/test_custom_component.py" \
+    "src/backend/tests/unit/test_database.py"

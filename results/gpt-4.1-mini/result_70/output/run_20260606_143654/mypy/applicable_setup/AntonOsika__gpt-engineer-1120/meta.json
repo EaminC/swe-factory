@@ -1,0 +1,22 @@
+{
+    "task_id": "AntonOsika__gpt-engineer-1120",
+    "setup_info": {
+        "repo_path": "testbed/AntonOsika__gpt-engineer-1120_2026-06-06_14-40-00",
+        "repo_cache_path": "testbed/AntonOsika/gpt-engineer_cache"
+    },
+    "task_info": {
+        "repo": "AntonOsika/gpt-engineer",
+        "pull_number": 1120,
+        "instance_id": "AntonOsika__gpt-engineer-1120",
+        "issue_numbers": [
+            "1115"
+        ],
+        "base_commit": "04c71d7d297447479d897b6803206210ed589d53",
+        "patch": "diff --git a/gpt_engineer/applications/cli/learning.py b/gpt_engineer/applications/cli/learning.py\n--- a/gpt_engineer/applications/cli/learning.py\n+++ b/gpt_engineer/applications/cli/learning.py\n@@ -79,7 +79,7 @@ class Learning:\n     Attributes\n     ----------\n     prompt : str\n-        The initial prompt provided to the GPT Engineer.\n+        A JSON string representing the prompt provided to GPT Engineer.\n     model : str\n         The name of the model used during the session.\n     temperature : float\n@@ -98,7 +98,7 @@ class Learning:\n         The version of the learning data schema.\n     \"\"\"\n \n-    prompt: Prompt\n+    prompt: str\n     model: str\n     temperature: float\n     config: str\n@@ -266,7 +266,7 @@ def extract_learning(\n         An instance of Learning containing all the session details and user feedback.\n     \"\"\"\n     return Learning(\n-        prompt=prompt,\n+        prompt=prompt.to_json(),\n         model=model,\n         temperature=temperature,\n         config=json.dumps(config),\ndiff --git a/gpt_engineer/core/prompt.py b/gpt_engineer/core/prompt.py\n--- a/gpt_engineer/core/prompt.py\n+++ b/gpt_engineer/core/prompt.py\n@@ -1,3 +1,5 @@\n+import json\n+\n from typing import Dict, Optional\n \n \n@@ -30,3 +32,13 @@ def to_langchain_content(self):\n                 content.append(image_content)\n \n         return content\n+\n+    def to_dict(self):\n+        return {\n+            \"text\": self.text,\n+            \"image_urls\": self.image_urls,\n+            \"entrypoint_prompt\": self.entrypoint_prompt,\n+        }\n+\n+    def to_json(self):\n+        return json.dumps(self.to_dict())\n",
+        "test_patch": "diff --git a/tests/applications/cli/test_learning.py b/tests/applications/cli/test_learning.py\n--- a/tests/applications/cli/test_learning.py\n+++ b/tests/applications/cli/test_learning.py\n@@ -3,6 +3,7 @@\n from gpt_engineer.applications.cli import learning\n from gpt_engineer.applications.cli.learning import Learning\n from gpt_engineer.core.default.disk_memory import DiskMemory\n+from gpt_engineer.core.prompt import Prompt\n \n \n def test_human_review_input_no_concent_returns_none():\n@@ -86,7 +87,7 @@ def test_extract_learning():\n     memory.to_json.return_value = {\"prompt\": \"prompt\"}\n \n     result = learning.extract_learning(\n-        \"prompt\",\n+        Prompt(\"prompt\"),\n         \"model_name\",\n         0.01,\n         (\"prompt_tokens\", \"completion_tokens\"),\n",
+        "problem_statement": "TypeError: Object of type Prompt is not JSON serializable \u2013 uploading learning\nWhen trying to upload learning if it worked or not it can't serialize the \"Prompt\" class\r\n\r\n@TheoMcCabe do you think we could have a fix?\r\n\r\n(for now I think it's OK to serialize by just saying `has_image: true`)\r\n<img width=\"713\" alt=\"image\" src=\"https://github.com/gpt-engineer-org/gpt-engineer/assets/4467025/cc61f895-4eb2-4e38-a600-d9b3a02cf710\">\r\n\n",
+        "hints_text": "yep ill take a look\r\n\nGreat thanks Theo\r\n\r\nAnton Osika\r\n\r\n\r\n\r\nOn Mon, Apr 15, 2024 at 00:06:39, Theo McCabe ***@***.***>\r\nwrote:\r\n\r\n> yep ill take a look\r\n>\r\n> \u2014\r\n> Reply to this email directly, view it on GitHub\r\n> <https://github.com/gpt-engineer-org/gpt-engineer/issues/1115#issuecomment-2054198542>,\r\n> or unsubscribe\r\n> <https://github.com/notifications/unsubscribe-auth/ABCCSULJBIUYRN3PF2JY6ALY5L4W7AVCNFSM6AAAAABGGJH372VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHMZDANJUGE4TQNJUGI>\r\n> .\r\n> You are receiving this because you authored the thread.Message ID:\r\n> ***@***.***>\r\n>\r\n",
+        "created_at": "2024-04-16T22:36:26Z",
+        "version": "0.2"
+    }
+}

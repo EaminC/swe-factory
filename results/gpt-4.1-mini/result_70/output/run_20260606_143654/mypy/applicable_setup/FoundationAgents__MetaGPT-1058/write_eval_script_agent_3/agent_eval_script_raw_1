@@ -1,0 +1,40 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+# Activate conda environment
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+
+# Ensure pytest is installed
+pip install pytest
+
+cd /testbed
+
+# Reset target test file before patching
+git checkout adb42f44d65a3fd9468c2919a1557e1c3751759d "tests/mock/mock_llm.py"
+
+# Prepare valid mock configuration for API key to avoid validation error
+mkdir -p ~/.metagpt/
+cat > ~/.metagpt/config2.yaml << EOF
+llm:
+  api_key: "mocked_api_key_for_testing"
+  api_type: "openai"
+  model: "gpt-3.5-turbo"
+  base_url: "https://api.openai.com/v1"
+EOF
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file with concise output
+python -m pytest --maxfail=1 --disable-warnings --no-header -rA --tb=no -p no:cacheprovider tests/mock/mock_llm.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to original state after tests
+git checkout adb42f44d65a3fd9468c2919a1557e1c3751759d "tests/mock/mock_llm.py"
+</script>

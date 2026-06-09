@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 1529f56bf4fb392bb27ae65442b519f1eff744b7 
+
+# Apply required test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified target test file(s) using the recommended pytest command
+# Using `python -m pytest` as per pyproject.toml guidance and giving output concise enough 
+# to show pass/fail status for the target test file
+python -m pytest -rA -p no:benchmark -m "unit" src/lfx/tests/unit/components/utilities/test_current_date.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file changes after test run to clean the working tree
+git checkout 1529f56bf4fb392bb27ae65442b519f1eff744b7 src/lfx/tests/unit/components/utilities/test_current_date.py

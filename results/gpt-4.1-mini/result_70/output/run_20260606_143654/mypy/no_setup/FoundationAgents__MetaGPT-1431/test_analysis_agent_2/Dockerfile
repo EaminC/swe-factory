@@ -1,0 +1,57 @@
+# Use a Python 3.9 and Node.js 20 slim base image with bash pre-installed
+FROM --platform=linux/x86_64 nikolaik/python-nodejs:python3.9-nodejs20-slim
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Install essential OS packages and dependencies for repo build & testing,
+# including git, chromium, fonts, and libraries required for MetaGPT and puppeteer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    chromium \
+    fonts-liberation \
+    libgomp1 \
+    libxss1 \
+    wget \
+    curl \
+    ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install mermaid CLI globally (needed by MetaGPT per original dockerfile hints)
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Set environment variables for Chromium for headless operation (used by MetaGPT)
+ENV CHROME_BIN=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+# Set working directory for the cloned repository
+WORKDIR /testbed/
+
+# Clone the specified repository and checkout the specific commit (commit injected via build arg)
+ARG REPO=https://github.com/FoundationAgents/MetaGPT.git
+ARG COMMIT_SHA=22e100912839965231144ae25790d643180ddc57
+
+RUN git clone ${REPO} . \
+    && git reset --hard ${COMMIT_SHA}
+
+# Install Python virtual environment tooling
+RUN python3 -m pip install --upgrade pip setuptools wheel virtualenv
+
+# Create and activate Python virtual environment named testbed,
+# then install requirements & the project itself in editable mode.
+# Use requirements.txt present in repo for pinned dependencies.
+RUN python3 -m virtualenv /opt/testbed \
+ && source /opt/testbed/bin/activate \
+ && pip install --upgrade pip \
+ && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi \
+ && pip install -e .
+
+# Add virtual environment activation to bashrc for convenience
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash, working dir already set to /testbed
+# No test running or entrypoint specified as per instructions

@@ -1,0 +1,49 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools required for Python development and git
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Upgrade pip and install virtualenv
+RUN python3 -m pip install --upgrade pip setuptools wheel virtualenv
+
+# Create and activate virtualenv at /testbed/testbed
+RUN python3 -m virtualenv /testbed/testbed
+
+ENV VIRTUAL_ENV=/testbed/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Clone repository and checkout specific commit
+WORKDIR /testbed/
+RUN git clone https://github.com/agentscope-ai/agentscope.git . && \
+    git reset --hard a2bf80ec96e29cb760ac6d4018680d6af68c9416
+
+# Install the repo and all dependencies in development mode inside virtualenv
+# The repo uses "pip install -e ." with extras [dev] to pull in dev dependencies including pytest
+RUN pip install --upgrade pip && \
+    pip install -e .[dev]
+
+# Set default workdir to /testbed (repository root)
+WORKDIR /testbed/
+
+# Export bashrc so that virtualenv is activated for interactive sessions
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# No tests run in Dockerfile, tests to be run externally

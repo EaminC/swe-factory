@@ -1,0 +1,55 @@
+# Use Python 3.10 with Node.js 20 slim image to ensure compatibility and include necessary runtimes
+FROM --platform=linux/x86_64 nikolaik/python-nodejs:python3.10-nodejs20-slim
+
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies, including build tools and development headers for building native Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    chromium \
+    fonts-liberation \
+    ca-certificates \
+    build-essential \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables required by Chromium and puppeteer in Metagpt
+ENV CHROME_BIN=/usr/bin/chromium \
+    puppeteer_config=/app/metagpt/config/puppeteer-config.json \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+# Create working directory inside container
+WORKDIR /testbed/
+
+# Clone repository and checkout the specified commit for reproducibility
+ARG COMMIT_SHA=ab846f65e481a655b791959eb0f89fb4b1c84128
+
+RUN git clone https://github.com/Geekan/MetaGPT.git . \
+ && git reset --hard ${COMMIT_SHA} \
+ && git remote remove origin
+
+# Create virtual environment for dependency isolation and add it to PATH
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip, setuptools, and wheel before installing dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install core python dependencies via requirements.txt first to reduce resolver complexity
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install the editable project and test extras separately to avoid deep dependency resolution issues
+RUN pip install --no-cache-dir -e .[test]
+
+# Globally install mermaid-cli for Node.js as required by the project
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Prepare the configuration directory for Metagpt runtime configs
+RUN mkdir -p /root/.metagpt
+
+# Automatically activate the python virtual environment when starting bash
+RUN echo "source /opt/venv/bin/activate" >> /root/.bashrc
+
+# Default shell to bash for interactive sessions
+CMD ["/bin/bash"]
