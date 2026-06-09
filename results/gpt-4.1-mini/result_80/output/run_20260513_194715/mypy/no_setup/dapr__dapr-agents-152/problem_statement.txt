@@ -1,0 +1,56 @@
+WSL2/Windows Compatibility Issue in Quickstart 07 - MCP Agent with SSE Transport
+# WSL2/Windows Compatibility Issue in Quickstart 07 - MCP Agent with SSE Transport
+
+#Created usind Claude
+
+## Environment
+- **OS**: Windows 11 with WSL2 (Ubuntu distribution)
+- **Python**: 3.10
+- **dapr-agents**: Latest version
+- **Example**: `quickstarts/07-agent-mcp-client-sse`
+
+## Problem Description
+
+The MCP Agent with SSE Transport example (quickstart 07) fails to start on WSL2/Windows environments due to a `NotImplementedError` related to signal handler registration.
+
+## Steps to Reproduce
+
+1. Set up the environment as described in quickstart 07
+2. Start the MCP server: `python server.py --server_type sse --port 8000`
+3. Run the agent: `python app.py`
+4. Agent crashes during startup
+
+## Error Details
+
+```
+NotImplementedError
+```
+
+**Error Location**: The exception occurs in Python's `asyncio` library during a call to `loop.add_signal_handler()` function.
+
+**Trigger**: The error is raised when `DurableAgent.as_service(port=8001).start()` is called, specifically during the internal web server startup process.
+
+**Root Cause**: The `asyncio.add_signal_handler()` function is not supported on Windows and WSL2 environments. This is a known limitation of asyncio on these platforms.
+
+## Technical Analysis
+
+The issue originates from the `DurableAgent.as_service()` method, which internally uses a web server (likely FastAPI/Uvicorn) that attempts to register signal handlers (SIGINT, SIGTERM) for graceful shutdown. These signal handlers are not supported on Windows/WSL2.
+
+## Impact
+
+- **Scope**: Affects all Windows and WSL2 users attempting to run dapr-agents examples
+- **Severity**: Complete failure to start agent services
+- **Workaround**: Currently requires using native Linux environment
+
+## Documentation Gap
+
+The quickstart documentation doesn't mention this platform limitation, which could lead to confusion for Windows/WSL2 users.
+
+
+## Additional Context
+
+This is a common issue across Python web frameworks and has established solutions. Many frameworks like FastAPI, Uvicorn, and others have already implemented Windows-compatible signal handling.
+
+## Expected Behavior
+
+The agent should start successfully on WSL2/Windows environments

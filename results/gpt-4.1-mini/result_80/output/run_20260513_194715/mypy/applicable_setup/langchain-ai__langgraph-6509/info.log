@@ -1,0 +1,1252 @@
+2026-05-13 22:20:19.405 | INFO     | Model API request cost info: input_tokens=1280, output_tokens=89, cost=0.000000
+2026-05-13 22:20:19.409 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:20:20.835 | INFO     | Model API request cost info: input_tokens=687, output_tokens=71, cost=0.000000
+2026-05-13 22:20:20.837 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"README.md\", \"extract environment setup instructions, dependencies and their versions, programming language version, and commands for running tests\")",
+    "browse_folder(\"libs/prebuilt/tests\", \"1\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 22:20:20.837 | DEBUG    | Extracted a valid json
+2026-05-13 22:20:20.843 | INFO     | entering browse
+2026-05-13 22:20:20.844 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+<picture class="github-only">
+  <source media="(prefers-color-scheme: light)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_light.svg">
+  <img alt="LangGraph Logo" src="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg" width="80%">
+</picture>
+
+<div>
+<br>
+</div>
+
+[![Version](https://img.shields.io/pypi/v/langgraph.svg)](https://pypi.org/project/langgraph/)
+[![Downloads](https://static.pepy.tech/badge/langgraph/month)](https://pepy.tech/project/langgraph)
+[![Open Issues](https://img.shields.io/github/issues-raw/langchain-ai/langgraph)](https://github.com/langchain-ai/langgraph/issues)
+[![Docs](https://img.shields.io/badge/docs-latest-blue)](https://docs.langchain.com/oss/python/langgraph/overview)
+
+Trusted by companies shaping the future of agents – including Klarna, Replit, Elastic, and more – LangGraph is a low-level orchestration framework for building, managing, and deploying long-running, stateful agents.
+
+## Get started
+
+Install LangGraph:
+
+```
+pip install -U langgraph
+```
+
+Create a simple workflow:
+
+```python
+from langgraph.graph import START, StateGraph
+from typing_extensions import TypedDict
+
+
+class State(TypedDict):
+    text: str
+
+
+def node_a(state: State) -> dict:
+    return {"text": state["text"] + "a"}
+
+
+def node_b(state: State) -> dict:
+    return {"text": state["text"] + "b"}
+
+
+graph = StateGraph(State)
+graph.add_node("node_a", node_a)
+graph.add_node("node_b", node_b)
+graph.add_edge(START, "node_a")
+graph.add_edge("node_a", "node_b")
+
+print(graph.compile().invoke({"text": ""}))
+# {'text': 'ab'}
+```
+
+Get started with the [LangGraph Quickstart](https://docs.langchain.com/oss/python/langgraph/quickstart).
+
+To quickly build agents with LangChain's `create_agent` (built on LangGraph), see the [LangChain Agents documentation](https://docs.langchain.com/oss/python/langchain/agents).
+
+## Core benefits
+
+LangGraph provides low-level supporting infrastructure for *any* long-running, stateful workflow or agent. LangGraph does not abstract prompts or architecture, and provides the following central benefits:
+
+- [Durable execution](https://docs.langchain.com/oss/python/langgraph/durable-execution): Build agents that persist through failures and can run for extended periods, automatically resuming from exactly where they left off.
+- [Human-in-the-loop](https://docs.langchain.com/oss/python/langgraph/interrupts): Seamlessly incorporate human oversight by inspecting and modifying agent state at any point during execution.
+- [Comprehensive memory](https://docs.langchain.com/oss/python/langgraph/memory): Create truly stateful agents with both short-term working memory for ongoing reasoning and long-term persistent memory across sessions.
+- [Debugging with LangSmith](http://www.langchain.com/langsmith): Gain deep visibility into complex agent behavior with visualization tools that trace execution paths, capture state transitions, and provide detailed runtime metrics.
+- [Production-ready deployment](https://docs.langchain.com/langsmith/app-development): Deploy sophisticated agent systems confidently with scalable infrastructure designed to handle the unique challenges of stateful, long-running workflows.
+
+## LangGraph’s ecosystem
+
+While LangGraph can be used standalone, it also integrates seamlessly with any LangChain product, giving developers a full suite of tools for building agents. To improve your LLM application development, pair LangGraph with:
+
+- [LangSmith](http://www.langchain.com/langsmith) — Helpful for agent evals and observability. Debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and improve performance over time.
+- [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Deploy and scale agents effortlessly with a purpose-built deployment platform for long running, stateful workflows. Discover, reuse, configure, and share agents across teams — and iterate quickly with visual prototyping in [LangGraph Studio](https://docs.langchain.com/oss/python/langgraph/studio).
+- [LangChain](https://docs.langchain.com/oss/python/langchain/overview) – Provides integrations and composable components to streamline LLM application development.
+
+> [!NOTE]
+> Looking for the JS version of LangGraph? See the [JS repo](https://github.com/langchain-ai/langgraphjs) and the [JS docs](https://docs.langchain.com/oss/javascript/langgraph/overview).
+
+## Additional resources
+
+- [Guides](https://docs.langchain.com/oss/python/langgraph/guides): Quick, actionable code snippets for topics such as streaming, adding memory & persistence, and design patterns (e.g. branching, subgraphs, etc.).
+- [Reference](https://reference.langchain.com/python/langgraph/): Detailed reference on core classes, methods, how to use the graph and checkpointing APIs, and higher-level prebuilt components.
+- [Examples](https://docs.langchain.com/oss/python/langgraph/agentic-rag): Guided examples on getting started with LangGraph.
+- [LangChain Forum](https://forum.langchain.com/): Connect with the community and share all of your technical questions, ideas, and feedback.
+- [LangChain Academy](https://academy.langchain.com/courses/intro-to-langgraph): Learn the basics of LangGraph in our free, structured course.
+- [Case studies](https://www.langchain.com/built-with-langgraph): Hear how industry leaders use LangGraph to ship AI applications at scale.
+
+## Acknowledgements
+
+LangGraph is inspired by [Pregel](https://research.google/pubs/pub37252/) and [Apache Beam](https://beam.apache.org/). The public interface draws inspiration from [NetworkX](https://networkx.org/documentation/latest/). LangGraph is built by LangChain Inc, the creators of LangChain, but can be used without LangChain.
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+2026-05-13 22:20:20.844 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:20:23.355 | INFO     | Model API request cost info: input_tokens=1909, output_tokens=191, cost=0.000000
+2026-05-13 22:20:23.356 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:20:23.357 | INFO     | ******
+2026-05-13 22:20:23.357 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]
+- Environment setup:
+  - Install LangGraph package via pip:
+    - `pip install -U langgraph`
+- Dependencies and versions:
+  - langgraph (exact version not stated, but the badge and install method implies latest from PyPI)
+- Programming language:
+  - Python (code snippets and references imply Python usage)
+  - Exact Python version not specified
+- Commands for running tests:
+  - No explicit test commands or instructions provided in this README.
+  - No information about running the entire test suite or individual test files.
+- Additional notes:
+  - The README focuses on usage, benefits, and ecosystem, but does not cover prerequisites like Python version or testing commands.
+  - No environment variables or config files are mentioned.
+[/Key Information]
+2026-05-13 22:20:23.357 | INFO     | ******
+2026-05-13 22:20:23.357 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]\n- Environment setup:\n  - Install LangGraph package via pip:\n    - `pip install -U langgraph`\n- Dependencies and versions:\n  - langgraph (exact version not stated, but the badge and install method implies latest from PyPI)\n- Programming language:\n  - Python (code snippets and references imply Python usage)\n  - Exact Python version not specified\n- Commands for running tests:\n  - No explicit test commands or instructions provided in this README.\n  - No information about running the entire test suite or individual test files.\n- Additional notes:\n  - The README focuses on usage, benefits, and ecosystem, but does not cover prerequisites like Python version or testing commands.\n  - No environment variables or config files are mentioned.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:20:23.358 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/libs/prebuilt/tests. The browsing Depth is 1.\nStructure of this directory:\n\ncompose-postgres.yml\n\nmodel.py\n\nconftest_checkpointer.py\n\ntest_tool_node_interceptor_unregistered.py\n\nmemory_assert.py\n\n__init__.py\n\ncompose-redis.yml\n\nany_str.py\n\ntest_react_agent_graph.py\n\ntest_tool_node_validation_error_filtering.py\n\ntest_tool_node.py\n\nconftest_store.py\n\ntest_deprecation.py\n\nconftest.py\n\ntest_on_tool_call.py\n\nmessages.py\n\ntest_react_agent.py\n\ntest_validation_node.py\n\n__snapshots__/\n\n', 'folder structure collected', True)
+2026-05-13 22:20:30.073 | INFO     | Model API request cost info: input_tokens=2026, output_tokens=558, cost=0.000000
+2026-05-13 22:20:30.086 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:20:32.017 | INFO     | Model API request cost info: input_tokens=1156, output_tokens=137, cost=0.000000
+2026-05-13 22:20:32.018 | DEBUG    | {
+  "API_calls": [
+    "search_files_by_keyword(\"requirement\")",
+    "browse_folder(\".github/workflows\", \"1\")"
+  ],
+  "collected_information": {
+    "README.md": {
+      "environment_setup": "pip install -U langgraph",
+      "python_version": "not specified",
+      "test_commands": "none specified",
+      "environment_variables": "none mentioned"
+    },
+    "libs/prebuilt/tests": {
+      "files": [
+        "test_tool_node.py",
+        "conftest.py",
+        "other pytest-related files"
+      ]
+    }
+  },
+  "terminate": false
+}
+2026-05-13 22:20:32.018 | DEBUG    | Extracted a valid json
+2026-05-13 22:20:32.023 | DEBUG    | Result of dispatch_intent: ("Found 3 files containing the keyword 'requirement':\n\n- libs/langgraph/tests/example_app/requirements.txt\n- libs/cli/examples/graphs_reqs_a/requirements.txt\n- libs/cli/examples/graphs_reqs_b/requirements.txt", 'File search completed successfully', True)
+2026-05-13 22:20:32.023 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\n_test.yml\n\nuv_lock_ugprade.yml\n\nrelease.yml\n\n_test_release.yml\n\nbench.yml\n\npr_lint.yml\n\n_test_langgraph.yml\n\n_integration_test.yml\n\nbaseline.yml\n\n_lint.yml\n\nci.yml\n\n', 'folder structure collected', True)
+2026-05-13 22:20:40.981 | INFO     | Model API request cost info: input_tokens=3026, output_tokens=565, cost=0.000000
+2026-05-13 22:20:40.995 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:20:44.160 | INFO     | Model API request cost info: input_tokens=1163, output_tokens=282, cost=0.000000
+2026-05-13 22:20:44.161 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\".github/workflows/_test.yml\", \"environment setup and test running commands\")",
+    "browse_file_for_environment_info(\".github/workflows/_test_langgraph.yml\", \"environment setup and test running commands\")",
+    "browse_file_for_environment_info(\".github/workflows/_integration_test.yml\", \"environment setup and test running commands\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"test instructions\")"
+  ],
+  "collected_information": {
+    "environment_setup_summary": "README.md specifies only pip install of langgraph package, no Python version or test commands.",
+    "requirements_files": [
+      "libs/langgraph/tests/example_app/requirements.txt (example app specific)",
+      "libs/cli/examples/graphs_reqs_a/requirements.txt (CLI example specific)",
+      "libs/cli/examples/graphs_reqs_b/requirements.txt (CLI example specific)"
+    ],
+    "ci_workflows_present": [
+      ".github/workflows/_test.yml",
+      ".github/workflows/_test_langgraph.yml",
+      ".github/workflows/_integration_test.yml",
+      ".github/workflows/ci.yml"
+    ],
+    "next_step": "Browse relevant CI workflow files and CONTRIBUTING.md for environment setup and test running commands."
+  },
+  "terminate": false
+}
+2026-05-13 22:20:44.161 | DEBUG    | Extracted a valid json
+2026-05-13 22:20:44.164 | INFO     | entering browse
+2026-05-13 22:20:44.164 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test.yml ===
+name: test
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+        description: "From which folder this pipeline executes"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    name: "test #${{ matrix.python-version }}"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-suffix: test-${{ inputs.working-directory }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_RO_TOKEN }}
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: uv sync --frozen --group test --no-dev
+
+      - name: Run tests
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: make test
+
+      - name: Ensure the tests did not create any additional files
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          set -eu
+
+          STATUS="$(git status)"
+          echo "$STATUS"
+
+          # grep will exit non-zero if the target message isn't found,
+          # and `set -e` above will cause the step to fail.
+          echo "$STATUS" | grep 'nothing to commit, working tree clean'
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test.yml ===
+2026-05-13 22:20:44.165 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:20:48.656 | INFO     | Model API request cost info: input_tokens=1008, output_tokens=303, cost=0.000000
+2026-05-13 22:20:48.658 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:20:48.658 | INFO     | ******
+2026-05-13 22:20:48.658 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test.yml]
+- Environment Setup:
+  - Python Versions Tested: 3.10, 3.11, 3.12, 3.13, 3.14
+  - Python Setup Action: astral-sh/setup-uv@v7 with caching enabled
+  - Dependency Installation Command (run inside the specified working directory):
+    - `uv sync --frozen --group test --no-dev`
+- Test Running Commands:
+  - Tests are executed via Makefile command:
+    - `make test` (run inside the specified working directory)
+- Additional Details:
+  - The workflow runs on `ubuntu-latest` environment.
+  - Docker Hub login step if not a forked repository, with credentials from secrets.
+  - After tests, a git status check ensures no unintended file changes occurred.
+- Notes:
+  - The exact dependencies and versions are managed by `uv sync` with the `--frozen --group test --no-dev` flags, indicating usage of the 'uv' (possibly 'universal-venv') tool for dependency syncing with a frozen lockfile and test group.
+  - No explicit environment variables beyond those for Docker Hub login are set.
+  - The workflow accepts a dynamic `working-directory` input to target the project folder.
+[/Key Information]
+2026-05-13 22:20:48.658 | INFO     | ******
+2026-05-13 22:20:48.658 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test.yml]\n- Environment Setup:\n  - Python Versions Tested: 3.10, 3.11, 3.12, 3.13, 3.14\n  - Python Setup Action: astral-sh/setup-uv@v7 with caching enabled\n  - Dependency Installation Command (run inside the specified working directory):\n    - `uv sync --frozen --group test --no-dev`\n- Test Running Commands:\n  - Tests are executed via Makefile command:\n    - `make test` (run inside the specified working directory)\n- Additional Details:\n  - The workflow runs on `ubuntu-latest` environment.\n  - Docker Hub login step if not a forked repository, with credentials from secrets.\n  - After tests, a git status check ensures no unintended file changes occurred.\n- Notes:\n  - The exact dependencies and versions are managed by `uv sync` with the `--frozen --group test --no-dev` flags, indicating usage of the 'uv' (possibly 'universal-venv') tool for dependency syncing with a frozen lockfile and test group.\n  - No explicit environment variables beyond those for Docker Hub login are set.\n  - The workflow accepts a dynamic `working-directory` input to target the project folder.\n[/Key Information]", 'Get File Info', True)
+2026-05-13 22:20:48.659 | INFO     | entering browse
+2026-05-13 22:20:48.660 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test_langgraph.yml ===
+name: test
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    defaults:
+      run:
+        working-directory: libs/langgraph
+    name: "test #${{ matrix.python-version }}"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-suffix: "test-langgraph"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_RO_TOKEN }}
+
+      - name: Install dependencies
+        shell: bash
+        run: uv sync --frozen --group test --no-dev
+
+      - name: Run tests
+        shell: bash
+        run: make test_parallel
+
+      - name: Ensure the tests did not create any additional files
+        shell: bash
+        run: |
+          set -eu
+
+          STATUS="$(git status)"
+          echo "$STATUS"
+
+          # grep will exit non-zero if the target message isn't found,
+          # and `set -e` above will cause the step to fail.
+          echo "$STATUS" | grep 'nothing to commit, working tree clean'
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test_langgraph.yml ===
+2026-05-13 22:20:48.660 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:20:51.289 | INFO     | Model API request cost info: input_tokens=965, output_tokens=194, cost=0.000000
+2026-05-13 22:20:51.290 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:20:51.290 | INFO     | ******
+2026-05-13 22:20:51.291 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test_langgraph.yml]
+- Environment setup:
+  - Python versions tested: 3.10, 3.11, 3.12, 3.13, 3.14
+  - Python setup using action: astral-sh/setup-uv@v7 with caching enabled
+  - Dependencies installed via: `uv sync --frozen --group test --no-dev`
+- Test running commands:
+  - Tests run via: `make test_parallel`
+- Additional notes:
+  - Working directory is fixed to `libs/langgraph` for all runs.
+  - Docker Hub login step is included but conditional on event context.
+  - There is a post-test check to ensure the working directory is clean (no unintended file changes).
+[/Key Information]
+2026-05-13 22:20:51.291 | INFO     | ******
+2026-05-13 22:20:51.291 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_test_langgraph.yml]\n- Environment setup:\n  - Python versions tested: 3.10, 3.11, 3.12, 3.13, 3.14\n  - Python setup using action: astral-sh/setup-uv@v7 with caching enabled\n  - Dependencies installed via: `uv sync --frozen --group test --no-dev`\n- Test running commands:\n  - Tests run via: `make test_parallel`\n- Additional notes:\n  - Working directory is fixed to `libs/langgraph` for all runs.\n  - Docker Hub login step is included but conditional on event context.\n  - There is a post-test check to ensure the working directory is clean (no unintended file changes).\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:20:51.291 | INFO     | entering browse
+2026-05-13 22:20:51.291 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_integration_test.yml ===
+name: CLI integration test
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.14"
+        example:
+          - name: A
+            workdir: libs/cli/examples
+            tag: langgraph-test-a
+          - name: B
+            workdir: libs/cli/examples/graphs
+            tag: langgraph-test-b
+          - name: C
+            workdir: libs/cli/examples/graphs_reqs_a
+            tag: langgraph-test-c
+          - name: D
+            workdir: libs/cli/examples/graphs_reqs_b
+            tag: langgraph-test-d
+    name: "CLI integration test"
+    defaults:
+      run:
+        working-directory: libs/cli
+    steps:
+      - uses: actions/checkout@v6
+      - name: Get changed files
+        id: changed-files
+        uses: Ana06/get-changed-files@v2.3.0
+        with:
+          filter: "libs/cli/**"
+      - name: Set up Python ${{ matrix.python-version }}
+        if: steps.changed-files.outputs.all
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-suffix: "cli-integration-test"
+          ignore-nothing-to-cache: true
+      - name: Install cli globally
+        if: steps.changed-files.outputs.all
+        run: pip install -e .
+      - name: Build and test service ${{ matrix.example.name }}
+        if: steps.changed-files.outputs.all
+        working-directory: ${{ matrix.example.workdir }}
+        env:
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        run: |
+          # Build the image for this example
+          langgraph build -t ${{ matrix.example.tag }}
+          # Prepare environment file from local or parent example directory
+          if [ -f .env.example ]; then cp .env.example .env; elif [ -f ../.env.example ]; then cp ../.env.example .env && cp ../.env.example ../.env; fi
+          if [ -n "${{ secrets.LANGSMITH_API_KEY }}" ]; then echo "LANGSMITH_API_KEY=${{ secrets.LANGSMITH_API_KEY }}" >> .env; if [ -f ../.env ]; then echo "LANGSMITH_API_KEY=${{ secrets.LANGSMITH_API_KEY }}" >> ../.env; fi; fi
+          # Run the integration test using the built tag
+          # Compute repo root to reference the shared script robustly
+          REPO_ROOT=$(git rev-parse --show-toplevel)
+          timeout 60 python "$REPO_ROOT/.github/scripts/run_langgraph_cli_test.py" -t ${{ matrix.example.tag }}
+
+      - name: Build JS service
+        if: ${{ steps.changed-files.outputs.all && matrix.example.name == 'A' }}
+        working-directory: libs/cli/js-examples
+        run: |
+          langgraph build -t langgraph-test-e
+
+      - name: Build JS monorepo service
+        if: ${{ steps.changed-files.outputs.all && matrix.example.name == 'A' }}
+        working-directory: libs/cli/js-monorepo-example
+        run: |
+          langgraph build -t langgraph-test-f -c apps/agent/langgraph.json --build-command "yarn run turbo build" --install-command "yarn install"
+
+      - name: Build Python monorepo service
+        if: ${{ steps.changed-files.outputs.all && matrix.example.name == 'A' }}
+        working-directory: libs/cli/python-monorepo-example
+        run: |
+          langgraph build -t langgraph-test-g -c apps/agent/langgraph.json
+          cp apps/agent/.env.example apps/agent/.env
+          if [ -n "${{ secrets.LANGSMITH_API_KEY }}" ]; then echo "LANGSMITH_API_KEY=${{ secrets.LANGSMITH_API_KEY }}" >> apps/agent/.env; fi
+          timeout 60 python ../../../.github/scripts/run_langgraph_cli_test.py -t langgraph-test-g -c apps/agent/langgraph.json
+
+      - name: Build and test prerelease reqs service
+        if: ${{ steps.changed-files.outputs.all && matrix.example.name == 'A' }}
+        working-directory: libs/cli/examples/graph_prerelease_reqs
+        run: |
+          langgraph build -t langgraph-test-h
+          cp ../.env.example .env
+          if [ -n "${{ secrets.LANGSMITH_API_KEY }}" ]; then echo "LANGSMITH_API_KEY=${{ secrets.LANGSMITH_API_KEY }}" >> .env; fi
+          timeout 60 python ../../../../.github/scripts/run_langgraph_cli_test.py -t langgraph-test-h
+          echo "Finished starting up langgraph-test-h"
+          LANGGRAPH_VERSION=$(docker run --rm --entrypoint "" langgraph-test-h python -c "import sys; from importlib.metadata import version; v = version('langgraph'); print(v);")
+          if [ "$LANGGRAPH_VERSION" != "1.0.2" ]; then
+            echo "LANGGRAPH_VERSION != 1.0.2; $LANGGRAPH_VERSION"
+            exit 1
+          fi
+          LANGCHAIN_OPENAI_VERSION=$(docker run --rm --entrypoint "" langgraph-test-h python -c "import sys; from importlib.metadata import version; v = version('langchain-openai'); print(v);")
+          if [ "$LANGCHAIN_OPENAI_VERSION" != "1.0.1" ]; then
+            echo "LANGCHAIN_OPENAI_VERSION != 1.0.1; $LANGCHAIN_OPENAI_VERSION"
+            exit 1
+          fi
+          LANGCHAIN_ANTHROPIC_VERSION=$(docker run --rm --entrypoint "" langgraph-test-h python -c "import sys; from importlib.metadata import version; v = version('langchain-anthropic'); print(v);")
+          if [ "$LANGCHAIN_ANTHROPIC_VERSION" != "1.0.0a5" ]; then
+            echo "LANGCHAIN_ANTHROPIC_VERSION != 1.0.0a5; $LANGCHAIN_ANTHROPIC_VERSION"
+            exit 1
+          fi
+
+      - name: Build and test prerelease reqs fail service
+        if: ${{ steps.changed-files.outputs.all && matrix.example.name == 'A' }}
+        working-directory: libs/cli/examples/graph_prerelease_reqs_fail
+        run: |
+          langgraph build -t langgraph-test-i || [ $? -eq 1 ]
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_integration_test.yml ===
+2026-05-13 22:20:51.291 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:20:58.381 | INFO     | Model API request cost info: input_tokens=2021, output_tokens=594, cost=0.000000
+2026-05-13 22:20:58.383 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:20:58.383 | INFO     | ******
+2026-05-13 22:20:58.383 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_integration_test.yml]
+- Environment setup:
+  - Python versions used in matrix: 3.10, 3.14
+  - Python setup uses action: astral-sh/setup-uv@v7 with caching enabled
+  - CLI tool installed globally with: `pip install -e .` (inside `libs/cli`)
+  - Environment variables:
+    - `LANGSMITH_API_KEY` (from GitHub secrets)
+  - Prepares `.env` files from `.env.example` copies, appending `LANGSMITH_API_KEY` if available
+
+- Commands for building and testing:
+  - Build langgraph images:
+    - `langgraph build -t <tag>` (tag varies per test example)
+  - Run integration tests:
+    - `timeout 60 python "$REPO_ROOT/.github/scripts/run_langgraph_cli_test.py" -t <tag>`
+      - Located in repository root under `.github/scripts/run_langgraph_cli_test.py`
+      - Uses CLI image tag built earlier
+      - Timeout set to 60 seconds
+  - Optional additional build commands:
+    - JS monorepo build: `yarn run turbo build`, installs with `yarn install`
+    - Other builds copy `.env.example` to `.env` and append keys similarly
+
+- Test examples run under directories:
+  - `libs/cli/examples`
+  - `libs/cli/examples/graphs`
+  - `libs/cli/examples/graphs_reqs_a`
+  - `libs/cli/examples/graphs_reqs_b`
+  - Other specific example dirs for prerelease requirements testing
+
+- Version checks during tests:
+  - After build and run of prerelease reqs test (`langgraph-test-h`), verifies installed versions inside container:
+    - `langgraph == 1.0.2`
+    - `langchain-openai == 1.0.1`
+    - `langchain-anthropic == 1.0.0a5`
+
+- Notes on running individual tests:
+  - Tests integrate with environment variable `LANGSMITH_API_KEY` if set
+  - Per-example test run is via running `run_langgraph_cli_test.py` with `-t <tag>` for specific example
+  - Configuration files `-c <config.json>` can be passed to build and test commands for monorepo examples
+
+- Prerequisites:
+  - Must run on Linux environment (ubuntu-latest)
+  - Python and pip installed (3.10 or 3.14)
+  - `langgraph` CLI tool installed locally (editable install: `pip install -e .`)
+  - Docker available (used for image build and version check with `docker run`)
+
+[/Key Information]
+2026-05-13 22:20:58.383 | INFO     | ******
+2026-05-13 22:20:58.384 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/_integration_test.yml]\n- Environment setup:\n  - Python versions used in matrix: 3.10, 3.14\n  - Python setup uses action: astral-sh/setup-uv@v7 with caching enabled\n  - CLI tool installed globally with: `pip install -e .` (inside `libs/cli`)\n  - Environment variables:\n    - `LANGSMITH_API_KEY` (from GitHub secrets)\n  - Prepares `.env` files from `.env.example` copies, appending `LANGSMITH_API_KEY` if available\n\n- Commands for building and testing:\n  - Build langgraph images:\n    - `langgraph build -t <tag>` (tag varies per test example)\n  - Run integration tests:\n    - `timeout 60 python "$REPO_ROOT/.github/scripts/run_langgraph_cli_test.py" -t <tag>`\n      - Located in repository root under `.github/scripts/run_langgraph_cli_test.py`\n      - Uses CLI image tag built earlier\n      - Timeout set to 60 seconds\n  - Optional additional build commands:\n    - JS monorepo build: `yarn run turbo build`, installs with `yarn install`\n    - Other builds copy `.env.example` to `.env` and append keys similarly\n\n- Test examples run under directories:\n  - `libs/cli/examples`\n  - `libs/cli/examples/graphs`\n  - `libs/cli/examples/graphs_reqs_a`\n  - `libs/cli/examples/graphs_reqs_b`\n  - Other specific example dirs for prerelease requirements testing\n\n- Version checks during tests:\n  - After build and run of prerelease reqs test (`langgraph-test-h`), verifies installed versions inside container:\n    - `langgraph == 1.0.2`\n    - `langchain-openai == 1.0.1`\n    - `langchain-anthropic == 1.0.0a5`\n\n- Notes on running individual tests:\n  - Tests integrate with environment variable `LANGSMITH_API_KEY` if set\n  - Per-example test run is via running `run_langgraph_cli_test.py` with `-t <tag>` for specific example\n  - Configuration files `-c <config.json>` can be passed to build and test commands for monorepo examples\n\n- Prerequisites:\n  - Must run on Linux environment (ubuntu-latest)\n  - Python and pip installed (3.10 or 3.14)\n  - `langgraph` CLI tool installed locally (editable install: `pip install -e .`)\n  - Docker available (used for image build and version check with `docker run`)\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:20:58.384 | INFO     | entering browse
+2026-05-13 22:20:58.385 | INFO     | File not found: File not found: 'testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/CONTRIBUTING.md'
+2026-05-13 22:20:58.385 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-05-13 22:21:07.274 | INFO     | Model API request cost info: input_tokens=5026, output_tokens=775, cost=0.000000
+2026-05-13 22:21:07.294 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:21:11.518 | INFO     | Model API request cost info: input_tokens=1373, output_tokens=299, cost=0.000000
+2026-05-13 22:21:11.519 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "environment_setup": {
+      "python_versions": ["3.10", "3.11", "3.12", "3.13", "3.14"],
+      "python_setup_action": "astral-sh/setup-uv@v7 with caching",
+      "dependency_install_command": "uv sync --frozen --group test --no-dev",
+      "editable_install": "pip install -e . in libs/cli",
+      "docker_usage": "used for image builds and integration tests",
+      "environment_variables": ["LANGSMITH_API_KEY"],
+      "os": "ubuntu-latest (Linux)"
+    },
+    "test_run_commands": {
+      "unit_tests": "make test",
+      "parallel_tests": "make test_parallel (working directory: libs/langgraph)",
+      "integration_tests": [
+        "langgraph build -t <tag>",
+        "timeout 60 python .github/scripts/run_langgraph_cli_test.py -t <tag>"
+      ],
+      "test_coverage_note": "tests presumed to cover libs/prebuilt/tests/test_tool_node.py via make test"
+    },
+    "source_of_information": [
+      "README.md for package install instructions",
+      "_test.yml for unit/general test details",
+      "_test_langgraph.yml for parallel test details",
+      "_integration_test.yml for integration test details"
+    ]
+  },
+  "terminate": true
+}
+2026-05-13 22:21:11.519 | DEBUG    | Extracted a valid json
+2026-05-13 22:21:11.534 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 22:21:20.657 | INFO     | Model API request cost info: input_tokens=1975, output_tokens=542, cost=0.000000
+2026-05-13 22:21:20.661 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 22:21:20.678 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 22:21:23.762 | INFO     | Model API request cost info: input_tokens=2093, output_tokens=222, cost=0.000000
+2026-05-13 22:21:23.791 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 22:25:12.521 | DEBUG    | Result of dispatch_intent: ("Step 11/15 : RUN python3.10 -m venv /testbed/testbed-venv &&     source /testbed/testbed-venv/bin/activate &&     pip install --upgrade pip setuptools wheel &&     pip install uv &&     uv sync --frozen --group test --no-dev &&     cd libs/cli && pip install -e . && cd /testbed &&     pip install -e .\n ---> Running in b448356dfd5c\nRequirement already satisfied: pip in ./testbed-venv/lib/python3.10/site-packages (22.0.2)\nCollecting pip\n  Using cached pip-26.1.1-py3-none-any.whl (1.8 MB)\nRequirement already satisfied: setuptools in ./testbed-venv/lib/python3.10/site-packages (59.6.0)\nCollecting setuptools\n  Using cached setuptools-82.0.1-py3-none-any.whl (1.0 MB)\nCollecting wheel\n  Using cached wheel-0.47.0-py3-none-any.whl (32 kB)\nCollecting packaging>=24.0\n  Using cached packaging-26.2-py3-none-any.whl (100 kB)\nInstalling collected packages: setuptools, pip, packaging, wheel\n  Attempting uninstall: setuptools\n    Found existing installation: setuptools 59.6.0\n    Uninstalling setuptools-59.6.0:\n      Successfully uninstalled setuptools-59.6.0\n  Attempting uninstall: pip\n    Found existing installation: pip 22.0.2\n    Uninstalling pip-22.0.2:\n      Successfully uninstalled pip-22.0.2\nSuccessfully installed packaging-26.2 pip-26.1.1 setuptools-82.0.1 wheel-0.47.0\nCollecting uv\n  Downloading uv-0.11.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)\nDownloading uv-0.11.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (24.7 MB)\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.7/24.7 MB 26.1 MB/s  0:00:00\nInstalling collected packages: uv\nSuccessfully installed uv-0.11.14\nerror: No `pyproject.toml` found in current directory or any parent directory\n ---> Removed intermediate container b448356dfd5c\nError: The command '/bin/bash -c python3.10 -m venv /testbed/testbed-venv &&     source /testbed/testbed-venv/bin/activate &&     pip install --upgrade pip setuptools wheel &&     pip install uv &&     uv sync --frozen --group test --no-dev &&     cd libs/cli && pip install -e . && cd /testbed &&     pip install -e .' returned a non-zero code: 2", 'Failed to build Docker image.', False)
+2026-05-13 22:25:12.528 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:25:18.444 | INFO     | Model API request cost info: input_tokens=2587, output_tokens=544, cost=0.000000
+2026-05-13 22:25:18.464 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails at the step where you run \"uv sync --frozen --group test --no-dev\". The error message is: \"error: No `pyproject.toml` found in current directory or any parent directory\". This indicates that the \"uv\" tool, which expects a pyproject.toml file in the current or parent directory for syncing dependencies, cannot find it because the RUN command is executed in the /testbed directory (correct), but it seems the file is missing from the repository root at commit 5212369bd0791806083f183cb19ccce024db8790. This leads to build failure. To fix this, first verify if the repo root at that commit contains a pyproject.toml file. If it does not, either:\n- Remove the usage of \"uv sync\" from the Dockerfile and replace dependency installation with other means suited for the repo (e.g., pip install -r requirements.txt, or setup.py install). Or,\n- If the project uses pyproject.toml but it is located elsewhere, adjust the working directory before running \"uv sync\" to the directory containing pyproject.toml.\nIf the file is missing altogether, the Dockerfile must be changed to install dependencies according to the repo's existing method. Also check that the editable installs ('pip install -e .') are performed from correct directories and only after dependencies are installed.\nIn summary, the Dockerfile currently assumes a pyproject.toml exists for \"uv sync\", but the error shows it is missing, causing the build to fail. Modifications to dependency installation steps are needed to avoid using \"uv sync\" if pyproject.toml is not present.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "The Dockerfile build error suggests missing pyproject.toml in the repo root. Please retrieve from the repository at commit 5212369bd0791806083f183cb19ccce024db8790 the following files to clarify the dependency installation method:\n- pyproject.toml (to confirm existence or absence)\n- requirements.txt or requirements/*.txt (if any)\n- setup.py\n- Any documentation files such as README.md, CONTRIBUTING.md, or files under docs/ that describe setup and testing instructions\nAdditionally, if present, retrieve any files related to dependency management or testing instructions such as environment.yml or .github/workflows/*.yml. This will help clarify how dependencies and tests are expected to be installed and run."
+}
+2026-05-13 22:25:18.464 | DEBUG    | Extracted a valid json
+2026-05-13 22:25:21.810 | INFO     | Model API request cost info: input_tokens=1462, output_tokens=205, cost=0.000000
+2026-05-13 22:25:21.816 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:25:23.054 | INFO     | Model API request cost info: input_tokens=803, output_tokens=68, cost=0.000000
+2026-05-13 22:25:23.147 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"./\", \"2\")",
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_file_for_environment_info(\"README.md\", \"environment setup and test instructions\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-05-13 22:25:23.324 | DEBUG    | Extracted a valid json
+2026-05-13 22:25:23.652 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14. The browsing Depth is 2.\nStructure of this directory:\n\nREADME.md\n\nCLAUDE.md\n\n.gitignore\n\nLICENSE\n\nMakefile\n\nAGENTS.md\n\nlibs/\n\n    langgraph/\n\n    cli/\n\n    sdk-py/\n\n    sdk-js/\n\n    prebuilt/\n\n    checkpoint-sqlite/\n\n    checkpoint-postgres/\n\n    checkpoint/\n\n.github/\n\n    CONTRIBUTING.md\n\n    PULL_REQUEST_TEMPLATE.md\n\n    dependabot.yml\n\n    scripts/\n\n    ISSUE_TEMPLATE/\n\n    workflows/\n\n.git/\n\n    config\n\n    HEAD\n\n    description\n\n    index\n\n    packed-refs\n\n    info/\n\n    hooks/\n\n    branches/\n\n    refs/\n\n    objects/\n\n    logs/\n\n', 'folder structure collected', True)
+2026-05-13 22:25:23.679 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\n_test.yml\n\nuv_lock_ugprade.yml\n\nrelease.yml\n\n_test_release.yml\n\nbench.yml\n\npr_lint.yml\n\n_test_langgraph.yml\n\n_integration_test.yml\n\nbaseline.yml\n\n_lint.yml\n\nci.yml\n\n', 'folder structure collected', True)
+2026-05-13 22:25:23.679 | INFO     | entering browse
+2026-05-13 22:25:23.867 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+<picture class="github-only">
+  <source media="(prefers-color-scheme: light)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_light.svg">
+  <img alt="LangGraph Logo" src="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg" width="80%">
+</picture>
+
+<div>
+<br>
+</div>
+
+[![Version](https://img.shields.io/pypi/v/langgraph.svg)](https://pypi.org/project/langgraph/)
+[![Downloads](https://static.pepy.tech/badge/langgraph/month)](https://pepy.tech/project/langgraph)
+[![Open Issues](https://img.shields.io/github/issues-raw/langchain-ai/langgraph)](https://github.com/langchain-ai/langgraph/issues)
+[![Docs](https://img.shields.io/badge/docs-latest-blue)](https://docs.langchain.com/oss/python/langgraph/overview)
+
+Trusted by companies shaping the future of agents – including Klarna, Replit, Elastic, and more – LangGraph is a low-level orchestration framework for building, managing, and deploying long-running, stateful agents.
+
+## Get started
+
+Install LangGraph:
+
+```
+pip install -U langgraph
+```
+
+Create a simple workflow:
+
+```python
+from langgraph.graph import START, StateGraph
+from typing_extensions import TypedDict
+
+
+class State(TypedDict):
+    text: str
+
+
+def node_a(state: State) -> dict:
+    return {"text": state["text"] + "a"}
+
+
+def node_b(state: State) -> dict:
+    return {"text": state["text"] + "b"}
+
+
+graph = StateGraph(State)
+graph.add_node("node_a", node_a)
+graph.add_node("node_b", node_b)
+graph.add_edge(START, "node_a")
+graph.add_edge("node_a", "node_b")
+
+print(graph.compile().invoke({"text": ""}))
+# {'text': 'ab'}
+```
+
+Get started with the [LangGraph Quickstart](https://docs.langchain.com/oss/python/langgraph/quickstart).
+
+To quickly build agents with LangChain's `create_agent` (built on LangGraph), see the [LangChain Agents documentation](https://docs.langchain.com/oss/python/langchain/agents).
+
+## Core benefits
+
+LangGraph provides low-level supporting infrastructure for *any* long-running, stateful workflow or agent. LangGraph does not abstract prompts or architecture, and provides the following central benefits:
+
+- [Durable execution](https://docs.langchain.com/oss/python/langgraph/durable-execution): Build agents that persist through failures and can run for extended periods, automatically resuming from exactly where they left off.
+- [Human-in-the-loop](https://docs.langchain.com/oss/python/langgraph/interrupts): Seamlessly incorporate human oversight by inspecting and modifying agent state at any point during execution.
+- [Comprehensive memory](https://docs.langchain.com/oss/python/langgraph/memory): Create truly stateful agents with both short-term working memory for ongoing reasoning and long-term persistent memory across sessions.
+- [Debugging with LangSmith](http://www.langchain.com/langsmith): Gain deep visibility into complex agent behavior with visualization tools that trace execution paths, capture state transitions, and provide detailed runtime metrics.
+- [Production-ready deployment](https://docs.langchain.com/langsmith/app-development): Deploy sophisticated agent systems confidently with scalable infrastructure designed to handle the unique challenges of stateful, long-running workflows.
+
+## LangGraph’s ecosystem
+
+While LangGraph can be used standalone, it also integrates seamlessly with any LangChain product, giving developers a full suite of tools for building agents. To improve your LLM application development, pair LangGraph with:
+
+- [LangSmith](http://www.langchain.com/langsmith) — Helpful for agent evals and observability. Debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and improve performance over time.
+- [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Deploy and scale agents effortlessly with a purpose-built deployment platform for long running, stateful workflows. Discover, reuse, configure, and share agents across teams — and iterate quickly with visual prototyping in [LangGraph Studio](https://docs.langchain.com/oss/python/langgraph/studio).
+- [LangChain](https://docs.langchain.com/oss/python/langchain/overview) – Provides integrations and composable components to streamline LLM application development.
+
+> [!NOTE]
+> Looking for the JS version of LangGraph? See the [JS repo](https://github.com/langchain-ai/langgraphjs) and the [JS docs](https://docs.langchain.com/oss/javascript/langgraph/overview).
+
+## Additional resources
+
+- [Guides](https://docs.langchain.com/oss/python/langgraph/guides): Quick, actionable code snippets for topics such as streaming, adding memory & persistence, and design patterns (e.g. branching, subgraphs, etc.).
+- [Reference](https://reference.langchain.com/python/langgraph/): Detailed reference on core classes, methods, how to use the graph and checkpointing APIs, and higher-level prebuilt components.
+- [Examples](https://docs.langchain.com/oss/python/langgraph/agentic-rag): Guided examples on getting started with LangGraph.
+- [LangChain Forum](https://forum.langchain.com/): Connect with the community and share all of your technical questions, ideas, and feedback.
+- [LangChain Academy](https://academy.langchain.com/courses/intro-to-langgraph): Learn the basics of LangGraph in our free, structured course.
+- [Case studies](https://www.langchain.com/built-with-langgraph): Hear how industry leaders use LangGraph to ship AI applications at scale.
+
+## Acknowledgements
+
+LangGraph is inspired by [Pregel](https://research.google/pubs/pub37252/) and [Apache Beam](https://beam.apache.org/). The public interface draws inspiration from [NetworkX](https://networkx.org/documentation/latest/). LangGraph is built by LangChain Inc, the creators of LangChain, but can be used without LangChain.
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+2026-05-13 22:25:23.867 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:25:26.439 | INFO     | Model API request cost info: input_tokens=1895, output_tokens=202, cost=0.000000
+2026-05-13 22:25:26.494 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:25:26.494 | INFO     | ******
+2026-05-13 22:25:26.494 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]
+- Installation:
+  - Install LangGraph via pip:
+    - `pip install -U langgraph`
+- Libraries:
+  - langgraph (no specific version pinned, installs latest from PyPI)
+- Runtime:
+  - Python (implicit, as installation is via pip and usage in Python)
+- Test instructions:
+  - No explicit test commands or test suite instructions provided in README.
+  - No mention of test framework or how to run tests, including individual test files.
+- Environment variables or configuration:
+  - None mentioned.
+- Additional Notes:
+  - LangGraph integrates with LangChain and other tools from LangChain ecosystem but can be used standalone.
+  - Documentation and code examples are provided via links for getting started, guides, and reference.
+  - No prerequisites like OS packages mentioned.
+[/Key Information]
+2026-05-13 22:25:26.494 | INFO     | ******
+2026-05-13 22:25:26.495 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]\n- Installation:\n  - Install LangGraph via pip:\n    - `pip install -U langgraph`\n- Libraries:\n  - langgraph (no specific version pinned, installs latest from PyPI)\n- Runtime:\n  - Python (implicit, as installation is via pip and usage in Python)\n- Test instructions:\n  - No explicit test commands or test suite instructions provided in README.\n  - No mention of test framework or how to run tests, including individual test files.\n- Environment variables or configuration:\n  - None mentioned.\n- Additional Notes:\n  - LangGraph integrates with LangChain and other tools from LangChain ecosystem but can be used standalone.\n  - Documentation and code examples are provided via links for getting started, guides, and reference.\n  - No prerequisites like OS packages mentioned.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:25:32.128 | INFO     | Model API request cost info: input_tokens=2446, output_tokens=493, cost=0.000000
+2026-05-13 22:25:32.142 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:25:33.387 | INFO     | Model API request cost info: input_tokens=1091, output_tokens=73, cost=0.000000
+2026-05-13 22:25:33.389 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\".github/CONTRIBUTING.md\", \"environment setup and test instructions\")",
+    "browse_file_for_environment_info(\".github/workflows/ci.yml\", \"dependency installation and test commands\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-05-13 22:25:33.389 | DEBUG    | Extracted a valid json
+2026-05-13 22:25:33.394 | INFO     | entering browse
+2026-05-13 22:25:33.394 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/CONTRIBUTING.md ===
+# Contributing to LangGraph
+
+Hi there! Thank you for even being interested in contributing to LangGraph.
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether they involve new features, improved infrastructure, better documentation, or bug fixes.
+
+To learn how to contribute to LangGraph, please follow the [contribution guide here](https://docs.langchain.com/oss/python/contributing).
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/CONTRIBUTING.md ===
+2026-05-13 22:25:33.394 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:25:34.805 | INFO     | Model API request cost info: input_tokens=682, output_tokens=86, cost=0.000000
+2026-05-13 22:25:34.806 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:25:34.806 | INFO     | ******
+2026-05-13 22:25:34.806 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/CONTRIBUTING.md]
+- No direct environment setup or test instructions provided in this file.
+- It points to an external contribution guide for more detailed info: https://docs.langchain.com/oss/python/contributing
+[/Key Information]
+2026-05-13 22:25:34.806 | INFO     | ******
+2026-05-13 22:25:34.806 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/CONTRIBUTING.md]\n- No direct environment setup or test instructions provided in this file.\n- It points to an external contribution guide for more detailed info: https://docs.langchain.com/oss/python/contributing\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:25:34.806 | INFO     | entering browse
+2026-05-13 22:25:34.807 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/ci.yml ===
+---
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      deps: ${{ steps.filter.outputs.deps }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'libs/langgraph/**'
+              - 'libs/sdk-py/**'
+              - 'libs/cli/**'
+              - 'libs/checkpoint/**'
+              - 'libs/checkpoint-sqlite/**'
+              - 'libs/checkpoint-postgres/**'
+              - 'libs/prebuilt/**'
+            deps:
+              - '**/pyproject.toml'
+              - '**/uv.lock'
+
+  lint:
+    needs: changes
+    name: cd ${{ matrix.working-directory }}
+    strategy:
+      matrix:
+        working-directory:
+          [
+            "libs/langgraph",
+            "libs/sdk-py",
+            "libs/cli",
+            "libs/checkpoint",
+            "libs/checkpoint-sqlite",
+            "libs/checkpoint-postgres",
+
+            "libs/prebuilt",
+          ]
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.deps == 'true'
+    uses: ./.github/workflows/_lint.yml
+    with:
+      working-directory: ${{ matrix.working-directory }}
+    secrets: inherit
+
+  test:
+    needs: changes
+    name: cd ${{ matrix.working-directory }}
+    strategy:
+      matrix:
+        working-directory:
+          [
+            "libs/cli",
+            "libs/checkpoint",
+            "libs/checkpoint-sqlite",
+            "libs/checkpoint-postgres",
+            "libs/prebuilt",
+            "libs/sdk-py",
+          ]
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.deps == 'true'
+    uses: ./.github/workflows/_test.yml
+    with:
+      working-directory: ${{ matrix.working-directory }}
+    secrets: inherit
+
+  # NOTE: we're testing langgraph separately because it requires a different matrix
+  test-langgraph:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.deps == 'true'
+    name: "cd libs/langgraph"
+    uses: ./.github/workflows/_test_langgraph.yml
+    secrets: inherit
+
+  check-sdk-methods:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    name: "Check SDK methods matching"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Run check_sdk_methods script
+        run: python .github/scripts/check_sdk_methods.py
+
+  check-schema:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    name: "Check CLI schema hasn't changed #${{ matrix.python-version }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.13"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-suffix: "schema-check-cli"
+      - name: Install CLI dependencies
+        run: |
+          cd libs/cli
+          uv sync
+      - name: Generate schema and check for changes
+        run: |
+          cd libs/cli
+          # Create a temporary copy of the current schema
+          cp schemas/schema.json schemas/schema.current.json
+          # Generate new schema
+          uv run python generate_schema.py
+          # Compare the new schema with the original
+          if ! diff -q schemas/schema.json schemas/schema.current.json > /dev/null; then
+            echo "Error: Langgraph.json configuration schema has changed. Please run 'uv run python generate_schema.py' in the libs/cli directory and commit the changes."
+            diff schemas/schema.json schemas/schema.current.json
+            exit 1
+          fi
+          echo "Schema check passed - no changes detected"
+
+  integration-test:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.deps == 'true'
+    name: CLI integration test
+    uses: ./.github/workflows/_integration_test.yml
+    secrets: inherit
+
+  ci_success:
+    name: "CI Success"
+    needs:
+      [
+        lint,
+        test,
+        test-langgraph,
+        check-sdk-methods,
+        check-schema,
+        integration-test,
+      ]
+    if: |
+      always()
+    runs-on: ubuntu-latest
+    env:
+      JOBS_JSON: ${{ toJSON(needs) }}
+      RESULTS_JSON: ${{ toJSON(needs.*.result) }}
+      EXIT_CODE: ${{!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && '0' || '1'}}
+    steps:
+      - name: "CI Success"
+        run: |
+          echo $JOBS_JSON
+          echo $RESULTS_JSON
+          echo "Exiting with $EXIT_CODE"
+          exit $EXIT_CODE
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/ci.yml ===
+2026-05-13 22:25:34.807 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:25:40.783 | INFO     | Model API request cost info: input_tokens=1865, output_tokens=471, cost=0.000000
+2026-05-13 22:25:40.784 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:25:40.785 | INFO     | ******
+2026-05-13 22:25:40.785 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/ci.yml]
+- Dependency installation:
+  - For the CLI dependencies:
+    - run command:
+      ```
+      cd libs/cli
+      uv sync
+      ```
+    - This is done before schema checks with the "uv sync" command, which indicates a dependency manager or sync tool named "uv" (possibly uvicorn related or a custom tool).
+
+- Python version used:
+  - 3.11 in general setup steps (e.g. check-sdk-methods)
+  - 3.13 specifically for schema checking step
+
+- Test commands and environment:
+  - Testing uses GitHub workflows defined in separate files referenced via:
+    - `uses: ./.github/workflows/_test.yml` for general tests in:
+      - libs/cli
+      - libs/checkpoint
+      - libs/checkpoint-sqlite
+      - libs/checkpoint-postgres
+      - libs/prebuilt
+      - libs/sdk-py
+    - `uses: ./.github/workflows/_test_langgraph.yml` for langgraph-specific tests in libs/langgraph.
+  - There are no explicit test CLI commands inside this file, but these referenced workflows are responsible for running tests.
+  
+- No explicit single or specific file test commands are shown here, but the test runs are scoped per working-directory matrix in the "test" and "test-langgraph" jobs.
+
+- Environment variables:
+  - For CI success step:
+    - `JOBS_JSON`, `RESULTS_JSON`, `EXIT_CODE` passed in environment.
+  
+- Prerequisites:
+  - Ubuntu-latest runner on GitHub Actions.
+  - Python 3.11 and 3.13 via GitHub setup-actions in workflows.
+  - "uv" CLI tool used for dependency management and running scripts.
+
+Summary:
+- Dependency installation is done via `uv sync` inside relevant directories (e.g., libs/cli).
+- Test execution commands are delegated to reusable workflows: `_test.yml` and `_test_langgraph.yml`.
+- Python 3.11 / 3.13 is used.
+- No direct commands for running individual test files are present.
+
+[/Key Information]
+2026-05-13 22:25:40.785 | INFO     | ******
+2026-05-13 22:25:40.785 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/.github/workflows/ci.yml]\n- Dependency installation:\n  - For the CLI dependencies:\n    - run command:\n      ```\n      cd libs/cli\n      uv sync\n      ```\n    - This is done before schema checks with the "uv sync" command, which indicates a dependency manager or sync tool named "uv" (possibly uvicorn related or a custom tool).\n\n- Python version used:\n  - 3.11 in general setup steps (e.g. check-sdk-methods)\n  - 3.13 specifically for schema checking step\n\n- Test commands and environment:\n  - Testing uses GitHub workflows defined in separate files referenced via:\n    - `uses: ./.github/workflows/_test.yml` for general tests in:\n      - libs/cli\n      - libs/checkpoint\n      - libs/checkpoint-sqlite\n      - libs/checkpoint-postgres\n      - libs/prebuilt\n      - libs/sdk-py\n    - `uses: ./.github/workflows/_test_langgraph.yml` for langgraph-specific tests in libs/langgraph.\n  - There are no explicit test CLI commands inside this file, but these referenced workflows are responsible for running tests.\n  \n- No explicit single or specific file test commands are shown here, but the test runs are scoped per working-directory matrix in the "test" and "test-langgraph" jobs.\n\n- Environment variables:\n  - For CI success step:\n    - `JOBS_JSON`, `RESULTS_JSON`, `EXIT_CODE` passed in environment.\n  \n- Prerequisites:\n  - Ubuntu-latest runner on GitHub Actions.\n  - Python 3.11 and 3.13 via GitHub setup-actions in workflows.\n  - "uv" CLI tool used for dependency management and running scripts.\n\nSummary:\n- Dependency installation is done via `uv sync` inside relevant directories (e.g., libs/cli).\n- Test execution commands are delegated to reusable workflows: `_test.yml` and `_test_langgraph.yml`.\n- Python 3.11 / 3.13 is used.\n- No direct commands for running individual test files are present.\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:25:47.687 | INFO     | Model API request cost info: input_tokens=3796, output_tokens=613, cost=0.000000
+2026-05-13 22:25:47.700 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:25:51.157 | INFO     | Model API request cost info: input_tokens=1211, output_tokens=322, cost=0.000000
+2026-05-13 22:25:51.181 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "README.md": {
+      "Installation": "Install LangGraph via pip with `pip install -U langgraph`",
+      "Test": "No specific test dependencies or commands mentioned",
+      "Environment": "No environment variables or OS prerequisites documented"
+    },
+    ".github/CONTRIBUTING.md": {
+      "EnvironmentSetup": "No direct environment setup or test instructions",
+      "Notes": "Points to an external contribution guide: https://docs.langchain.com/oss/python/contributing"
+    },
+    ".github/workflows/ci.yml": {
+      "PythonVersions": ["3.11", "3.13"],
+      "DependencyInstallation": "Dependency installation via `uv sync` command run inside relevant subdirectories such as `cd libs/cli && uv sync`",
+      "TestExecution": "Tests are run using reusable GitHub workflow files `_test.yml` and `_test_langgraph.yml`. Tests run in scoped directories via separate jobs; no explicit test file commands found.",
+      "Environment": {
+        "Runner": "ubuntu-latest",
+        "EnvironmentVariables": ["JOBS_JSON", "RESULTS_JSON", "EXIT_CODE"]
+      }
+    },
+    "AbsentFiles": ["pyproject.toml", "requirements.txt", "setup.py"],
+    "Summary": "Dependency installation is managed by 'uv sync'; no direct CLI test commands; tests executed by reusable workflows; Python versions 3.11 and 3.13 used."
+  },
+  "terminate": true
+}
+2026-05-13 22:25:51.181 | DEBUG    | Extracted a valid json
+2026-05-13 22:25:51.201 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 22:26:02.696 | INFO     | Model API request cost info: input_tokens=3970, output_tokens=490, cost=0.000000
+2026-05-13 22:26:02.698 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 22:29:41.700 | DEBUG    | Result of dispatch_intent: ("Step 11/15 : RUN python3.11 -m venv /testbed/testbed-venv &&     source /testbed/testbed-venv/bin/activate &&     pip install --upgrade pip setuptools wheel &&     cd libs/cli && pip install -e . &&     cd /testbed &&     pip install -e .\n ---> Running in 6084855ac179\nRequirement already satisfied: pip in ./testbed-venv/lib/python3.11/site-packages (22.0.2)\nCollecting pip\n  Using cached pip-26.1.1-py3-none-any.whl (1.8 MB)\nRequirement already satisfied: setuptools in ./testbed-venv/lib/python3.11/site-packages (59.6.0)\nCollecting setuptools\n  Using cached setuptools-82.0.1-py3-none-any.whl (1.0 MB)\nCollecting wheel\n  Using cached wheel-0.47.0-py3-none-any.whl (32 kB)\nCollecting packaging>=24.0\n  Using cached packaging-26.2-py3-none-any.whl (100 kB)\nInstalling collected packages: setuptools, pip, packaging, wheel\n  Attempting uninstall: setuptools\n    Found existing installation: setuptools 59.6.0\n    Uninstalling setuptools-59.6.0:\n      Successfully uninstalled setuptools-59.6.0\n  Attempting uninstall: pip\n    Found existing installation: pip 22.0.2\n    Uninstalling pip-22.0.2:\n      Successfully uninstalled pip-22.0.2\nSuccessfully installed packaging-26.2 pip-26.1.1 setuptools-82.0.1 wheel-0.47.0\nObtaining file:///testbed/libs/cli\n  Installing build dependencies: started\n  Installing build dependencies: finished with status 'done'\n  Checking if build backend supports build_editable: started\n  Checking if build backend supports build_editable: finished with status 'done'\n  Getting requirements to build editable: started\n  Getting requirements to build editable: finished with status 'done'\n  Installing backend dependencies: started\n  Installing backend dependencies: finished with status 'done'\n  Preparing editable metadata (pyproject.toml): started\n  Preparing editable metadata (pyproject.toml): finished with status 'done'\nCollecting click>=8.1.7 (from langgraph-cli==0.4.11)\n  Downloading click-8.3.3-py3-none-any.whl.metadata (2.6 kB)\nCollecting langgraph-sdk>=0.1.0 (from langgraph-cli==0.4.11)\n  Downloading langgraph_sdk-0.3.14-py3-none-any.whl.metadata (1.7 kB)\nCollecting httpx>=0.25.2 (from langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)\nCollecting orjson>=3.11.5 (from langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading orjson-3.11.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)\nCollecting anyio (from httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)\nCollecting certifi (from httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading certifi-2026.4.22-py3-none-any.whl.metadata (2.5 kB)\nCollecting httpcore==1.* (from httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)\nCollecting idna (from httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading idna-3.15-py3-none-any.whl.metadata (7.7 kB)\nCollecting h11>=0.16 (from httpcore==1.*->httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)\nCollecting typing_extensions>=4.5 (from anyio->httpx>=0.25.2->langgraph-sdk>=0.1.0->langgraph-cli==0.4.11)\n  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)\nDownloading click-8.3.3-py3-none-any.whl (110 kB)\nDownloading langgraph_sdk-0.3.14-py3-none-any.whl (97 kB)\nDownloading httpx-0.28.1-py3-none-any.whl (73 kB)\nDownloading httpcore-1.0.9-py3-none-any.whl (78 kB)\nDownloading h11-0.16.0-py3-none-any.whl (37 kB)\nDownloading orjson-3.11.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (133 kB)\nDownloading anyio-4.13.0-py3-none-any.whl (114 kB)\nDownloading idna-3.15-py3-none-any.whl (72 kB)\nDownloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)\nDownloading certifi-2026.4.22-py3-none-any.whl (135 kB)\nBuilding wheels for collected packages: langgraph-cli\n  Building editable for langgraph-cli (pyproject.toml): started\n  Building editable for langgraph-cli (pyproject.toml): finished with status 'done'\n  Created wheel for langgraph-cli: filename=langgraph_cli-0.4.11-py3-none-any.whl size=3707 sha256=87f9147e82bb2e5257de5c1d5c10d960a58ef7f1e5a83ac48a8385e4ea94fdfc\n  Stored in directory: /tmp/pip-ephem-wheel-cache-qwj0b9bl/wheels/d5/c1/00/78c7396de05e2f903aa04f8f776b67496e2f33bc38ce537dca\nSuccessfully built langgraph-cli\nInstalling collected packages: typing_extensions, orjson, idna, h11, click, certifi, httpcore, anyio, httpx, langgraph-sdk, langgraph-cli\nSuccessfully installed anyio-4.13.0 certifi-2026.4.22 click-8.3.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.15 langgraph-cli-0.4.11 langgraph-sdk-0.3.14 orjson-3.11.9 typing_extensions-4.15.0\nObtaining file:///testbed\nERROR: file:///testbed does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.\n ---> Removed intermediate container 6084855ac179\nError: The command '/bin/bash -c python3.11 -m venv /testbed/testbed-venv &&     source /testbed/testbed-venv/bin/activate &&     pip install --upgrade pip setuptools wheel &&     cd libs/cli && pip install -e . &&     cd /testbed &&     pip install -e .' returned a non-zero code: 1", 'Failed to build Docker image.', False)
+2026-05-13 22:29:41.706 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:29:48.115 | INFO     | Model API request cost info: input_tokens=3665, output_tokens=503, cost=0.000000
+2026-05-13 22:29:48.117 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build failed at the step trying to install the root project in editable mode with pip install -e . due to missing setup.py or pyproject.toml in the root directory (/testbed). The error message is: 'ERROR: file:///testbed does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.' This indicates that the root project at the repository root does not have the standard Python packaging files required for 'pip install -e .' to work. The current Dockerfile attempts to run 'pip install -e .' in /testbed after installing libs/cli, but the repo root is missing these files. To fix this, one of the following approaches can be taken:\n1. Remove or skip the 'pip install -e .' command at the root if the root folder is not a Python package.\n2. Investigate if a subfolder contains the main python package to install (similar to libs/cli) and install it instead.\n3. Add logic to the Dockerfile to check the repository structure and only run pip install on folders that have the correct packaging files.\n\nPlease verify the project structure and adjust the Dockerfile to avoid trying to install the root directory directly when it lacks setup.py or pyproject.toml. This fix is essential to successfully build the environment and proceed with test execution.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "The Dockerfile build error is related to missing 'setup.py' or 'pyproject.toml' in the repo root, which is preventing installation of the root project using pip install -e .. To properly fix the Dockerfile, additional information about the repository packaging structure is needed. Please retrieve the following:\n- Check if there is any 'setup.py' or 'pyproject.toml' in the root or any other subfolder that should be installed (other than libs/cli).\n- If no packaging files exist at root, check the repository structure and documentation to identify which folders correspond to installable Python packages.\n- Collect files: 'setup.py', 'pyproject.toml' in root and subfolders, 'requirements.txt', and README.md or any docs mentioning installation or environment setup instructions.\nThis information will help determine the correct install steps for the Dockerfile."
+}
+2026-05-13 22:29:48.117 | DEBUG    | Extracted a valid json
+2026-05-13 22:29:51.132 | INFO     | Model API request cost info: input_tokens=1488, output_tokens=131, cost=0.000000
+2026-05-13 22:29:51.142 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:29:52.201 | INFO     | Model API request cost info: input_tokens=729, output_tokens=40, cost=0.000000
+2026-05-13 22:29:52.203 | DEBUG    | {
+  "API_calls": ["browse_folder(\"libs\", \"2\")", "browse_folder(\"\", \"1\")"],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 22:29:52.203 | DEBUG    | Extracted a valid json
+2026-05-13 22:29:52.208 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/libs. The browsing Depth is 2.\nStructure of this directory:\n\nlanggraph/\n\n    README.md\n\n    .gitignore\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    langgraph/\n\n    bench/\n\n    tests/\n\ncli/\n\n    generate_schema.py\n\n    README.md\n\n    .gitignore\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    js-monorepo-example/\n\n    js-examples/\n\n    langgraph_cli/\n\n    schemas/\n\n    tests/\n\n    examples/\n\n    python-monorepo-example/\n\nsdk-py/\n\n    README.md\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    tests/\n\n    langgraph_sdk/\n\nsdk-js/\n\n    README.md\n\nprebuilt/\n\n    README.md\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    langgraph/\n\n    tests/\n\n    .claude/\n\ncheckpoint-sqlite/\n\n    README.md\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    langgraph/\n\n    tests/\n\ncheckpoint-postgres/\n\n    README.md\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    langgraph/\n\n    tests/\n\ncheckpoint/\n\n    README.md\n\n    pyproject.toml\n\n    LICENSE\n\n    Makefile\n\n    uv.lock\n\n    langgraph/\n\n    tests/\n\n', 'folder structure collected', True)
+2026-05-13 22:29:52.209 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14. The browsing Depth is 1.\nStructure of this directory:\n\nREADME.md\n\nCLAUDE.md\n\n.gitignore\n\nLICENSE\n\nMakefile\n\nAGENTS.md\n\nlibs/\n\n.github/\n\n.git/\n\n', 'folder structure collected', True)
+2026-05-13 22:29:57.465 | INFO     | Model API request cost info: input_tokens=2313, output_tokens=396, cost=0.000000
+2026-05-13 22:29:57.478 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:29:59.002 | INFO     | Model API request cost info: input_tokens=994, output_tokens=112, cost=0.000000
+2026-05-13 22:29:59.004 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"README.md\", \"environment setup and test execution commands, python versions, dependencies versions, installation instructions\")"],
+  "collected_information": "Monorepo with multiple independent Python packages each having their own pyproject.toml under libs/. No root level setup.py or pyproject.toml. No requirements.txt found. uv.lock files present indicating Poetry usage. Root README.md and possibly libs/prebuilt/README.md pending review for environment setup and installation instructions.",
+  "terminate": false
+}
+2026-05-13 22:29:59.004 | DEBUG    | Extracted a valid json
+2026-05-13 22:29:59.009 | INFO     | entering browse
+2026-05-13 22:29:59.009 | INFO     | === FILE START: testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+<picture class="github-only">
+  <source media="(prefers-color-scheme: light)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://langchain-ai.github.io/langgraph/static/wordmark_light.svg">
+  <img alt="LangGraph Logo" src="https://langchain-ai.github.io/langgraph/static/wordmark_dark.svg" width="80%">
+</picture>
+
+<div>
+<br>
+</div>
+
+[![Version](https://img.shields.io/pypi/v/langgraph.svg)](https://pypi.org/project/langgraph/)
+[![Downloads](https://static.pepy.tech/badge/langgraph/month)](https://pepy.tech/project/langgraph)
+[![Open Issues](https://img.shields.io/github/issues-raw/langchain-ai/langgraph)](https://github.com/langchain-ai/langgraph/issues)
+[![Docs](https://img.shields.io/badge/docs-latest-blue)](https://docs.langchain.com/oss/python/langgraph/overview)
+
+Trusted by companies shaping the future of agents – including Klarna, Replit, Elastic, and more – LangGraph is a low-level orchestration framework for building, managing, and deploying long-running, stateful agents.
+
+## Get started
+
+Install LangGraph:
+
+```
+pip install -U langgraph
+```
+
+Create a simple workflow:
+
+```python
+from langgraph.graph import START, StateGraph
+from typing_extensions import TypedDict
+
+
+class State(TypedDict):
+    text: str
+
+
+def node_a(state: State) -> dict:
+    return {"text": state["text"] + "a"}
+
+
+def node_b(state: State) -> dict:
+    return {"text": state["text"] + "b"}
+
+
+graph = StateGraph(State)
+graph.add_node("node_a", node_a)
+graph.add_node("node_b", node_b)
+graph.add_edge(START, "node_a")
+graph.add_edge("node_a", "node_b")
+
+print(graph.compile().invoke({"text": ""}))
+# {'text': 'ab'}
+```
+
+Get started with the [LangGraph Quickstart](https://docs.langchain.com/oss/python/langgraph/quickstart).
+
+To quickly build agents with LangChain's `create_agent` (built on LangGraph), see the [LangChain Agents documentation](https://docs.langchain.com/oss/python/langchain/agents).
+
+## Core benefits
+
+LangGraph provides low-level supporting infrastructure for *any* long-running, stateful workflow or agent. LangGraph does not abstract prompts or architecture, and provides the following central benefits:
+
+- [Durable execution](https://docs.langchain.com/oss/python/langgraph/durable-execution): Build agents that persist through failures and can run for extended periods, automatically resuming from exactly where they left off.
+- [Human-in-the-loop](https://docs.langchain.com/oss/python/langgraph/interrupts): Seamlessly incorporate human oversight by inspecting and modifying agent state at any point during execution.
+- [Comprehensive memory](https://docs.langchain.com/oss/python/langgraph/memory): Create truly stateful agents with both short-term working memory for ongoing reasoning and long-term persistent memory across sessions.
+- [Debugging with LangSmith](http://www.langchain.com/langsmith): Gain deep visibility into complex agent behavior with visualization tools that trace execution paths, capture state transitions, and provide detailed runtime metrics.
+- [Production-ready deployment](https://docs.langchain.com/langsmith/app-development): Deploy sophisticated agent systems confidently with scalable infrastructure designed to handle the unique challenges of stateful, long-running workflows.
+
+## LangGraph’s ecosystem
+
+While LangGraph can be used standalone, it also integrates seamlessly with any LangChain product, giving developers a full suite of tools for building agents. To improve your LLM application development, pair LangGraph with:
+
+- [LangSmith](http://www.langchain.com/langsmith) — Helpful for agent evals and observability. Debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and improve performance over time.
+- [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Deploy and scale agents effortlessly with a purpose-built deployment platform for long running, stateful workflows. Discover, reuse, configure, and share agents across teams — and iterate quickly with visual prototyping in [LangGraph Studio](https://docs.langchain.com/oss/python/langgraph/studio).
+- [LangChain](https://docs.langchain.com/oss/python/langchain/overview) – Provides integrations and composable components to streamline LLM application development.
+
+> [!NOTE]
+> Looking for the JS version of LangGraph? See the [JS repo](https://github.com/langchain-ai/langgraphjs) and the [JS docs](https://docs.langchain.com/oss/javascript/langgraph/overview).
+
+## Additional resources
+
+- [Guides](https://docs.langchain.com/oss/python/langgraph/guides): Quick, actionable code snippets for topics such as streaming, adding memory & persistence, and design patterns (e.g. branching, subgraphs, etc.).
+- [Reference](https://reference.langchain.com/python/langgraph/): Detailed reference on core classes, methods, how to use the graph and checkpointing APIs, and higher-level prebuilt components.
+- [Examples](https://docs.langchain.com/oss/python/langgraph/agentic-rag): Guided examples on getting started with LangGraph.
+- [LangChain Forum](https://forum.langchain.com/): Connect with the community and share all of your technical questions, ideas, and feedback.
+- [LangChain Academy](https://academy.langchain.com/courses/intro-to-langgraph): Learn the basics of LangGraph in our free, structured course.
+- [Case studies](https://www.langchain.com/built-with-langgraph): Hear how industry leaders use LangGraph to ship AI applications at scale.
+
+## Acknowledgements
+
+LangGraph is inspired by [Pregel](https://research.google/pubs/pub37252/) and [Apache Beam](https://beam.apache.org/). The public interface draws inspiration from [NetworkX](https://networkx.org/documentation/latest/). LangGraph is built by LangChain Inc, the creators of LangChain, but can be used without LangChain.
+
+=== FILE END:   testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md ===
+2026-05-13 22:29:59.010 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 22:30:01.379 | INFO     | Model API request cost info: input_tokens=1905, output_tokens=220, cost=0.000000
+2026-05-13 22:30:01.380 | SUCCESS  | Successfully extracted environment config
+2026-05-13 22:30:01.380 | INFO     | ******
+2026-05-13 22:30:01.381 | INFO     | [Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]
+- Installation:
+  - Python package install command: `pip install -U langgraph`
+- Dependencies:
+  - Primary package: `langgraph` (version unspecified, but PyPI badge shows latest version available)
+- Python version:
+  - Not explicitly stated in README; typically requires a recent Python version compatible with typing_extensions and modern Python packages (likely Python 3.7+ or 3.8+)
+- Environment Setup:
+  - No specific environment variables or additional OS prerequisites mentioned
+- Testing:
+  - No explicit test commands or test suite instructions present
+  - No instructions for running specific or all tests provided
+- Additional resources for usage and learning:
+  - Official docs, guides, examples, forums, and courses linked for getting started and deeper usage
+- Notes:
+  - The README focuses on installation and usage examples rather than development or testing environment details
+
+[/Key Information]
+2026-05-13 22:30:01.381 | INFO     | ******
+2026-05-13 22:30:01.381 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14/README.md]\n- Installation:\n  - Python package install command: `pip install -U langgraph`\n- Dependencies:\n  - Primary package: `langgraph` (version unspecified, but PyPI badge shows latest version available)\n- Python version:\n  - Not explicitly stated in README; typically requires a recent Python version compatible with typing_extensions and modern Python packages (likely Python 3.7+ or 3.8+)\n- Environment Setup:\n  - No specific environment variables or additional OS prerequisites mentioned\n- Testing:\n  - No explicit test commands or test suite instructions present\n  - No instructions for running specific or all tests provided\n- Additional resources for usage and learning:\n  - Official docs, guides, examples, forums, and courses linked for getting started and deeper usage\n- Notes:\n  - The README focuses on installation and usage examples rather than development or testing environment details\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 22:30:09.037 | INFO     | Model API request cost info: input_tokens=3218, output_tokens=541, cost=0.000000
+2026-05-13 22:30:09.052 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 22:30:12.426 | INFO     | Model API request cost info: input_tokens=1139, output_tokens=261, cost=0.000000
+2026-05-13 22:30:12.428 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "packaging_structure": {
+      "root_setup_py": false,
+      "root_pyproject_toml": false,
+      "subpackages": [
+        "libs/langgraph/",
+        "libs/cli/",
+        "libs/sdk-py/",
+        "libs/prebuilt/",
+        "libs/checkpoint-sqlite/",
+        "libs/checkpoint-postgres/",
+        "libs/checkpoint/"
+      ],
+      "root_requirements_txt": false,
+      "notes": "Each subpackage appears to be managed separately for packaging and installation."
+    },
+    "environment_setup": {
+      "install_command": "pip install -U langgraph",
+      "python_version": "not explicitly stated, likely 3.7+ or 3.8+",
+      "environment_variables": "none documented",
+      "os_prerequisites": "none documented",
+      "test_instructions": "none documented at root README",
+      "focus": "installation and usage, not development or testing setup"
+    },
+    "summary_note": "Dockerfile fix should target specific subpackage installation via their pyproject.toml files. Tests located in subpackages correspond to those specific packages."
+  },
+  "terminate": true
+}
+2026-05-13 22:30:12.428 | DEBUG    | Extracted a valid json
+2026-05-13 22:30:12.437 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 22:30:24.769 | INFO     | Model API request cost info: input_tokens=5731, output_tokens=566, cost=0.000000
+2026-05-13 22:30:24.771 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 22:38:19.711 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 05b3431003032436a49fdf5d2f5b61610f6b07c876aa903ceef403ff46e35908 started.\nPatch applied successfully.\nNote: Git diff changed after test execution.\nFind test_output.txt! Waiting for analysis. ', 'Docker image langchain-ai__langgraph-6509-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nGit diff changed.\nObtain test results successfully.', True)
+2026-05-13 22:38:19.717 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:38:22.533 | INFO     | Model API request cost info: input_tokens=2466, output_tokens=181, cost=0.000000
+2026-05-13 22:38:22.536 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed because the evaluation script could not find the 'pytest' command within the activated Python virtual environment. The error message is: '/eval.sh: line 65: pytest: command not found'. This means that pytest was not installed in the /testbed/testbed-venv virtual environment at the time the tests ran. To fix this, revise the evaluation script or the Dockerfile installation steps to ensure 'pytest' is explicitly installed into the virtual environment during setup. A recommended fix is to add 'pip install pytest' or include pytest in the pip install commands within the Dockerfile after activating the virtual environment so that pytest is available when the eval script runs.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 22:38:22.536 | DEBUG    | Extracted a valid json
+2026-05-13 22:38:22.543 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 22:38:25.694 | INFO     | Model API request cost info: input_tokens=3718, output_tokens=234, cost=0.000000
+2026-05-13 22:38:25.696 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 22:44:30.119 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 644c217eaf2b20f9628906aa3dd4bbe9e59cd996805cfd91c6e2870939e9a9eb started.\nPatch applied successfully.\nNote: Git diff changed after test execution.\nFind test_output.txt! Waiting for analysis. ', 'Docker image langchain-ai__langgraph-6509-dockerfile4:latest built successfully.\nContainer started.\nPatch applied.\nGit diff changed.\nObtain test results successfully.', True)
+2026-05-13 22:44:30.124 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:44:33.705 | INFO     | Model API request cost info: input_tokens=2920, output_tokens=209, cost=0.000000
+2026-05-13 22:44:33.707 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed due to a missing Python module 'pytest_mock', as shown in the error:\n\nlibs/prebuilt/tests/conftest.py:8: in <module>\n    from pytest_mock import MockerFixture\nE   ModuleNotFoundError: No module named 'pytest_mock'\n\nThis indicates that the evaluation script does not install the 'pytest-mock' package within the activated virtual environment before running pytest.\n\nTo fix this, please update the eval script to include the installation of the 'pytest-mock' package along with pytest. For example, modify the pip install command from:\n\n    pip install pytest\n\nto:\n\n    pip install pytest pytest-mock\n\nThis will ensure that all required pytest plugins and dependencies are present when running the tests.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 22:44:33.707 | DEBUG    | Extracted a valid json
+2026-05-13 22:44:33.726 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 22:44:36.812 | INFO     | Model API request cost info: input_tokens=4866, output_tokens=241, cost=0.000000
+2026-05-13 22:44:36.814 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 22:50:54.084 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer fae285100271c90583f77a1e05c7114ac6815837316fc10b1a45af5bd5919565 started.\nPatch applied successfully.\nNote: Git diff changed after test execution.\nFind test_output.txt! Waiting for analysis. ', 'Docker image langchain-ai__langgraph-6509-dockerfile5:latest built successfully.\nContainer started.\nPatch applied.\nGit diff changed.\nObtain test results successfully.', True)
+2026-05-13 22:50:54.088 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:50:56.541 | INFO     | Model API request cost info: input_tokens=3291, output_tokens=209, cost=0.000000
+2026-05-13 22:50:56.542 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The test failed with ImportError related to psycopg, specifically 'no pq wrapper available', indicating the libpq library is missing in the environment. The error messages: 'No module named psycopg_c', 'No module named psycopg_binary', and 'libpq library not found' show that required native system dependencies for psycopg are not installed. To fix this, the Dockerfile must be updated to install the PostgreSQL client libraries (libpq-dev) and other related dependencies such as 'gcc' for compiling native extensions. Add 'libpq-dev' and 'gcc' to the apt-get install command in the Dockerfile before creating the python virtual environment. This will enable psycopg to find the libpq library and load its C extensions, thus resolving the ImportError during test execution.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 22:50:56.543 | DEBUG    | Extracted a valid json
+2026-05-13 22:50:56.554 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 22:51:09.861 | INFO     | Model API request cost info: input_tokens=7313, output_tokens=596, cost=0.000000
+2026-05-13 22:51:09.862 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 22:57:44.589 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 861d2ccb00993bf97e31571299c3d614b73506c1870b8ce8ab03c108a7435abf started.\nPatch applied successfully.\nNote: Git diff changed after test execution.\nFind test_output.txt! Waiting for analysis. ', 'Docker image langchain-ai__langgraph-6509-dockerfile6:latest built successfully.\nContainer started.\nPatch applied.\nGit diff changed.\nObtain test results successfully.', True)
+2026-05-13 22:57:44.597 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 22:57:46.470 | INFO     | Model API request cost info: input_tokens=4077, output_tokens=45, cost=0.000000
+2026-05-13 22:57:46.472 | DEBUG    | {
+  "is_finish": true,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 22:57:46.472 | DEBUG    | Extracted a valid json
+2026-05-13 22:57:46.572 | INFO     | Removed project repository at testbed/langchain-ai__langgraph-6509_2026-05-13_19-55-14
+2026-05-13 22:57:46.575 | INFO     | Task langchain-ai__langgraph-6509 completed successfully.

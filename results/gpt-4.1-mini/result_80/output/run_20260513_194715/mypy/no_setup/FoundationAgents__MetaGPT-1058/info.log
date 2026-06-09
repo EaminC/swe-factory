@@ -1,0 +1,1702 @@
+2026-05-13 19:56:24.076 | INFO     | Model API request cost info: input_tokens=1314, output_tokens=119, cost=0.000000
+2026-05-13 19:56:24.081 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 19:56:25.631 | INFO     | Model API request cost info: input_tokens=718, output_tokens=70, cost=0.000000
+2026-05-13 19:56:25.633 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"README.md\", \"environment setup, dependencies, language version, and test execution commands\")",
+    "browse_file_for_environment_info(\"requirements.txt\", \"list exact dependency names and versions\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 19:56:25.633 | DEBUG    | Extracted a valid json
+2026-05-13 19:56:25.641 | INFO     | entering browse
+2026-05-13 19:56:25.642 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+
+# MetaGPT: The Multi-Agent Framework
+
+<p align="center">
+<a href=""><img src="docs/resources/MetaGPT-new-log.png" alt="MetaGPT logo: Enable GPT to work in software company, collaborating to tackle more complex tasks." width="150px"></a>
+</p>
+
+<p align="center">
+<b>Assign different roles to GPTs to form a collaborative entity for complex tasks.</b>
+</p>
+
+<p align="center">
+<a href="docs/README_CN.md"><img src="https://img.shields.io/badge/文档-中文版-blue.svg" alt="CN doc"></a>
+<a href="README.md"><img src="https://img.shields.io/badge/document-English-blue.svg" alt="EN doc"></a>
+<a href="docs/README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-blue.svg" alt="JA doc"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+<a href="docs/ROADMAP.md"><img src="https://img.shields.io/badge/ROADMAP-路线图-blue" alt="roadmap"></a>
+<a href="https://discord.gg/DYn29wFk9z"><img src="https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat" alt="Discord Follow"></a>
+<a href="https://twitter.com/MetaGPT_"><img src="https://img.shields.io/twitter/follow/MetaGPT?style=social" alt="Twitter Follow"></a>
+</p>
+
+<p align="center">
+   <a href="https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/geekan/MetaGPT"><img src="https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode" alt="Open in Dev Containers"></a>
+   <a href="https://codespaces.new/geekan/MetaGPT"><img src="https://img.shields.io/badge/Github_Codespace-Open-blue?logo=github" alt="Open in GitHub Codespaces"></a>
+   <a href="https://huggingface.co/spaces/deepwisdom/MetaGPT" target="_blank"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20-Hugging%20Face-blue?color=blue&logoColor=white" /></a>
+</p>
+
+## News
+🚀 Mar. 14, 2024: Our **Data Interpreter** paper is on [arxiv](https://arxiv.org/abs/2402.18679). Check the [example](https://docs.deepwisdom.ai/main/en/DataInterpreter/) and [code](https://github.com/geekan/MetaGPT/tree/main/examples/di)!
+
+🚀 Feb. 08, 2024: [v0.7.0](https://github.com/geekan/MetaGPT/releases/tag/v0.7.0) released, supporting assigning different LLMs to different Roles. We also introduced [Data Interpreter](https://github.com/geekan/MetaGPT/blob/main/examples/di/README.md), a powerful agent capable of solving a wide range of real-world problems.
+
+🚀 Jan. 16, 2024: Our paper [MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework
+](https://arxiv.org/abs/2308.00352) accepted for oral presentation **(top 1.2%)** at ICLR 2024, **ranking #1** in the LLM-based Agent category.
+
+🚀 Jan. 03, 2024: [v0.6.0](https://github.com/geekan/MetaGPT/releases/tag/v0.6.0) released, new features include serialization, upgraded OpenAI package and supported multiple LLM, provided [minimal example for debate](https://github.com/geekan/MetaGPT/blob/main/examples/debate_simple.py) etc.
+
+🚀 Dec. 15, 2023: [v0.5.0](https://github.com/geekan/MetaGPT/releases/tag/v0.5.0) released, introducing some experimental features such as **incremental development**, **multilingual**, **multiple programming languages**, etc.
+
+🔥 Nov. 08, 2023: MetaGPT is selected into [Open100: Top 100 Open Source achievements](https://www.benchcouncil.org/evaluation/opencs/annual.html).
+
+🔥 Sep. 01, 2023: MetaGPT tops GitHub Trending Monthly for the **17th time** in August 2023.
+
+🌟 Jun. 30, 2023: MetaGPT is now open source.
+
+🌟 Apr. 24, 2023: First line of MetaGPT code committed.
+
+## Software Company as Multi-Agent System
+
+1. MetaGPT takes a **one line requirement** as input and outputs **user stories / competitive analysis / requirements / data structures / APIs / documents, etc.**
+2. Internally, MetaGPT includes **product managers / architects / project managers / engineers.** It provides the entire process of a **software company along with carefully orchestrated SOPs.**
+   1. `Code = SOP(Team)` is the core philosophy. We materialize SOP and apply it to teams composed of LLMs.
+
+![A software company consists of LLM-based roles](docs/resources/software_company_cd.jpeg)
+
+<p align="center">Software Company Multi-Agent Schematic (Gradually Implementing)</p>
+
+## Get Started
+
+### Installation
+
+> Ensure that Python 3.9+ is installed on your system. You can check this by using: `python --version`.  
+> You can use conda like this: `conda create -n metagpt python=3.9 && conda activate metagpt`
+
+```bash
+pip install --upgrade metagpt
+# or `pip install --upgrade git+https://github.com/geekan/MetaGPT.git`
+# or `git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .`
+```
+
+For detailed installation guidance, please refer to [cli_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version)
+ or [docker_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker)
+
+### Configuration
+
+You can init the config of MetaGPT by running the following command, or manually create `~/.metagpt/config2.yaml` file:
+```bash
+# Check https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html for more details
+metagpt --init-config  # it will create ~/.metagpt/config2.yaml, just modify it to your needs
+```
+
+You can configure `~/.metagpt/config2.yaml` according to the [example](https://github.com/geekan/MetaGPT/blob/main/config/config2.example.yaml) and [doc](https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html):
+
+```yaml
+llm:
+  api_type: "openai"  # or azure / ollama / open_llm etc. Check LLMType for more options
+  model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+  base_url: "https://api.openai.com/v1"  # or forward url / other llm url
+  api_key: "YOUR_API_KEY"
+```
+
+### Usage
+
+After installation, you can use MetaGPT at CLI
+
+```bash
+metagpt "Create a 2048 game"  # this will create a repo in ./workspace
+```
+
+or use it as library
+
+```python
+from metagpt.software_company import generate_repo, ProjectRepo
+repo: ProjectRepo = generate_repo("Create a 2048 game")  # or ProjectRepo("<path>")
+print(repo)  # it will print the repo structure with files
+```
+
+You can also use its [Data Interpreter](https://github.com/geekan/MetaGPT/tree/main/examples/di)
+
+```python
+import asyncio
+from metagpt.roles.di.data_interpreter import DataInterpreter
+
+async def main():
+    di = DataInterpreter()
+    await di.run("Run data analysis on sklearn Iris dataset, include a plot")
+
+asyncio.run(main())  # or await main() in a jupyter notebook setting
+```
+
+
+### QuickStart & Demo Video
+- Try it on [MetaGPT Huggingface Space](https://huggingface.co/spaces/deepwisdom/MetaGPT)
+- [Matthew Berman: How To Install MetaGPT - Build A Startup With One Prompt!!](https://youtu.be/uT75J_KG_aY)
+- [Official Demo Video](https://github.com/geekan/MetaGPT/assets/2707039/5e8c1062-8c35-440f-bb20-2b0320f8d27d)
+
+https://github.com/geekan/MetaGPT/assets/34952977/34345016-5d13-489d-b9f9-b82ace413419
+
+## Tutorial
+
+- 🗒 [Online Document](https://docs.deepwisdom.ai/main/en/)
+- 💻 [Usage](https://docs.deepwisdom.ai/main/en/guide/get_started/quickstart.html)  
+- 🔎 [What can MetaGPT do?](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
+- 🛠 How to build your own agents? 
+  - [MetaGPT Usage & Development Guide | Agent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/agent_101.html)
+  - [MetaGPT Usage & Development Guide | MultiAgent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/multi_agent_101.html)
+- 🧑‍💻 Contribution
+  - [Develop Roadmap](docs/ROADMAP.md)
+- 🔖 Use Cases
+  - [Data Interpreter](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/interpreter/intro.html)
+  - [Debate](https://docs.deepwisdom.ai/main/en/guide/use_cases/multi_agent/debate.html)
+  - [Researcher](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/researcher.html)
+  - [Recepit Assistant](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/receipt_assistant.html)
+- ❓ [FAQs](https://docs.deepwisdom.ai/main/en/guide/faq.html)
+
+## Support
+
+### Discard Join US
+📢 Join Our [Discord Channel](https://discord.gg/ZRHeExS6xv)!
+
+Looking forward to seeing you there! 🎉
+
+### Contact Information
+
+If you have any questions or feedback about this project, please feel free to contact us. We highly appreciate your suggestions!
+
+- **Email:** alexanderwu@deepwisdom.ai
+- **GitHub Issues:** For more technical inquiries, you can also create a new issue in our [GitHub repository](https://github.com/geekan/metagpt/issues).
+
+We will respond to all questions within 2-3 business days.
+
+## Citation
+
+To stay updated with the latest research and development, follow [@MetaGPT_](https://twitter.com/MetaGPT_) on Twitter. 
+
+To cite [MetaGPT](https://arxiv.org/abs/2308.00352) or [Data Interpreter](https://arxiv.org/abs/2402.18679) in publications, please use the following BibTeX entries.
+
+```bibtex
+@misc{hong2023metagpt,
+      title={MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework}, 
+      author={Sirui Hong and Mingchen Zhuge and Jonathan Chen and Xiawu Zheng and Yuheng Cheng and Ceyao Zhang and Jinlin Wang and Zili Wang and Steven Ka Shing Yau and Zijuan Lin and Liyang Zhou and Chenyu Ran and Lingfeng Xiao and Chenglin Wu and Jürgen Schmidhuber},
+      year={2023},
+      eprint={2308.00352},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+@misc{hong2024data,
+      title={Data Interpreter: An LLM Agent For Data Science}, 
+      author={Sirui Hong and Yizhang Lin and Bang Liu and Bangbang Liu and Binhao Wu and Danyang Li and Jiaqi Chen and Jiayi Zhang and Jinlin Wang and Li Zhang and Lingyao Zhang and Min Yang and Mingchen Zhuge and Taicheng Guo and Tuo Zhou and Wei Tao and Wenyi Wang and Xiangru Tang and Xiangtao Lu and Xiawu Zheng and Xinbing Liang and Yaying Fei and Yuheng Cheng and Zongze Xu and Chenglin Wu},
+      year={2024},
+      eprint={2402.18679},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+
+```
+
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+2026-05-13 19:56:25.642 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 19:56:34.566 | INFO     | Model API request cost info: input_tokens=3405, output_tokens=501, cost=0.000000
+2026-05-13 19:56:34.568 | SUCCESS  | Successfully extracted environment config
+2026-05-13 19:56:34.568 | INFO     | ******
+2026-05-13 19:56:34.568 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]
+- Language and runtime requirements:
+  - Python 3.9+ is required.
+
+- Environment setup:
+  - Recommended to use conda for environment management:
+    - `conda create -n metagpt python=3.9 && conda activate metagpt`
+  - Installation commands:
+    - `pip install --upgrade metagpt`
+    - alternatively: `pip install --upgrade git+https://github.com/geekan/MetaGPT.git`
+    - or clone and install in editable mode:
+      - `git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .`
+
+- Configuration:
+  - Initialize config with command: `metagpt --init-config`
+  - This creates config file at `~/.metagpt/config2.yaml` for API key and LLM model settings.
+  - Example config snippet:
+    ```yaml
+    llm:
+      api_type: "openai"  # or azure / ollama / open_llm etc.
+      model: "gpt-4-turbo-preview" # or other available models
+      base_url: "https://api.openai.com/v1"
+      api_key: "YOUR_API_KEY"
+    ```
+
+- Dependencies:
+  - The package installed via pip is named `metagpt`.
+  - Specific versions of dependencies are not listed in this README.
+  - Presumably dependencies are managed within the `metagpt` package.
+
+- Testing:
+  - No explicit test framework or test command is mentioned in the README.
+  - No commands for running tests or individual test files are documented.
+  - The focus is on usage as CLI or Python library; testing instructions may be located elsewhere.
+
+- Usage examples:
+  - CLI: `metagpt "Create a 2048 game"` to generate project code.
+  - Python library example provided:
+    ```python
+    from metagpt.software_company import generate_repo, ProjectRepo
+    repo: ProjectRepo = generate_repo("Create a 2048 game")
+    print(repo)
+    ```
+
+- Additional notes:
+  - For detailed installation or Docker setup refer to official docs links provided.
+  - No environment variables explicitly listed except API key inside config YAML.
+[/Key Information]
+2026-05-13 19:56:34.568 | INFO     | ******
+2026-05-13 19:56:34.568 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]\n- Language and runtime requirements:\n  - Python 3.9+ is required.\n\n- Environment setup:\n  - Recommended to use conda for environment management:\n    - `conda create -n metagpt python=3.9 && conda activate metagpt`\n  - Installation commands:\n    - `pip install --upgrade metagpt`\n    - alternatively: `pip install --upgrade git+https://github.com/geekan/MetaGPT.git`\n    - or clone and install in editable mode:\n      - `git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .`\n\n- Configuration:\n  - Initialize config with command: `metagpt --init-config`\n  - This creates config file at `~/.metagpt/config2.yaml` for API key and LLM model settings.\n  - Example config snippet:\n    ```yaml\n    llm:\n      api_type: "openai"  # or azure / ollama / open_llm etc.\n      model: "gpt-4-turbo-preview" # or other available models\n      base_url: "https://api.openai.com/v1"\n      api_key: "YOUR_API_KEY"\n    ```\n\n- Dependencies:\n  - The package installed via pip is named `metagpt`.\n  - Specific versions of dependencies are not listed in this README.\n  - Presumably dependencies are managed within the `metagpt` package.\n\n- Testing:\n  - No explicit test framework or test command is mentioned in the README.\n  - No commands for running tests or individual test files are documented.\n  - The focus is on usage as CLI or Python library; testing instructions may be located elsewhere.\n\n- Usage examples:\n  - CLI: `metagpt "Create a 2048 game"` to generate project code.\n  - Python library example provided:\n    ```python\n    from metagpt.software_company import generate_repo, ProjectRepo\n    repo: ProjectRepo = generate_repo("Create a 2048 game")\n    print(repo)\n    ```\n\n- Additional notes:\n  - For detailed installation or Docker setup refer to official docs links provided.\n  - No environment variables explicitly listed except API key inside config YAML.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 19:56:34.569 | INFO     | entering browse
+2026-05-13 19:56:34.570 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/requirements.txt ===
+aiohttp==3.8.6
+#azure_storage==0.37.0
+channels==4.0.0
+# Django==4.1.5
+# docx==0.2.4
+#faiss==1.5.3
+faiss_cpu==1.7.4
+fire==0.4.0
+typer==0.9.0
+# godot==0.1.1
+# google_api_python_client==2.93.0  # Used by search_engine.py
+lancedb==0.4.0
+llama-index-core==0.10.15
+llama-index-embeddings-azure-openai==0.1.6
+llama-index-embeddings-openai==0.1.5
+llama-index-llms-azure-openai==0.1.4
+llama-index-readers-file==0.1.4
+llama-index-retrievers-bm25==0.1.3
+llama-index-vector-stores-faiss==0.1.1
+chromadb==0.4.23
+loguru==0.6.0
+meilisearch==0.21.0
+numpy==1.24.3
+openai==1.6.1
+openpyxl
+beautifulsoup4==4.12.3
+pandas==2.0.3
+pydantic==2.5.3
+#pygame==2.1.3
+#pymilvus==2.2.8
+# pytest==7.2.2 # test extras require
+python_docx==0.8.11
+PyYAML==6.0.1
+# sentence_transformers==2.2.2
+setuptools==65.6.3
+tenacity==8.2.3
+tiktoken==0.5.2
+tqdm==4.66.2
+#unstructured[local-inference]
+# selenium>4
+# webdriver_manager<3.9
+anthropic==0.18.1
+typing-inspect==0.8.0
+libcst==1.0.1
+qdrant-client==1.7.0
+# pytest-mock==3.11.1  # test extras require
+# open-interpreter==0.1.7; python_version>"3.9" # Conflict with openai 1.x
+ta==0.10.2
+semantic-kernel==0.4.3.dev0
+wrapt==1.15.0
+#aiohttp_jinja2
+# azure-cognitiveservices-speech~=1.31.0 # Used by metagpt/tools/azure_tts.py
+#aioboto3~=11.3.0  # Used by metagpt/utils/s3.py
+aioredis~=2.0.1 # Used by metagpt/utils/redis.py
+websocket-client==1.6.2
+aiofiles==23.2.1
+gitpython==3.1.40
+zhipuai==2.0.1
+rich==13.6.0
+nbclient==0.9.0
+nbformat==5.9.2
+ipython==8.17.2
+ipykernel==6.27.1
+scikit_learn==1.3.2
+typing-extensions==4.9.0
+socksio~=1.0.0
+gitignore-parser==0.1.9
+# connexion[uvicorn]~=3.0.5 # Used by metagpt/tools/openapi_v3_hello.py
+websockets~=11.0
+networkx~=3.2.1
+google-generativeai==0.3.2
+playwright>=1.26  # used at metagpt/tools/libs/web_scraping.py
+anytree
+ipywidgets==8.1.1
+Pillow
+imap_tools==1.5.0  # Used by metagpt/tools/libs/email_login.py
+qianfan==0.3.2
+dashscope==1.14.1
+rank-bm25==0.2.2  # for tool recommendation
+jieba==0.42.1  # for tool recommendation
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/requirements.txt ===
+2026-05-13 19:56:34.570 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 19:56:45.034 | INFO     | Model API request cost info: input_tokens=1482, output_tokens=718, cost=0.000000
+2026-05-13 19:56:45.036 | SUCCESS  | Successfully extracted environment config
+2026-05-13 19:56:45.036 | INFO     | ******
+2026-05-13 19:56:45.036 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/requirements.txt]
+- Exact dependencies and versions:
+  - aiohttp==3.8.6
+  - channels==4.0.0
+  - faiss_cpu==1.7.4
+  - fire==0.4.0
+  - typer==0.9.0
+  - lancedb==0.4.0
+  - llama-index-core==0.10.15
+  - llama-index-embeddings-azure-openai==0.1.6
+  - llama-index-embeddings-openai==0.1.5
+  - llama-index-llms-azure-openai==0.1.4
+  - llama-index-readers-file==0.1.4
+  - llama-index-retrievers-bm25==0.1.3
+  - llama-index-vector-stores-faiss==0.1.1
+  - chromadb==0.4.23
+  - loguru==0.6.0
+  - meilisearch==0.21.0
+  - numpy==1.24.3
+  - openai==1.6.1
+  - beautifulsoup4==4.12.3
+  - pandas==2.0.3
+  - pydantic==2.5.3
+  - python_docx==0.8.11
+  - PyYAML==6.0.1
+  - setuptools==65.6.3
+  - tenacity==8.2.3
+  - tiktoken==0.5.2
+  - tqdm==4.66.2
+  - anthropic==0.18.1
+  - typing-inspect==0.8.0
+  - libcst==1.0.1
+  - qdrant-client==1.7.0
+  - aioredis~=2.0.1
+  - websocket-client==1.6.2
+  - aiofiles==23.2.1
+  - gitpython==3.1.40
+  - zhipuai==2.0.1
+  - rich==13.6.0
+  - nbclient==0.9.0
+  - nbformat==5.9.2
+  - ipython==8.17.2
+  - ipykernel==6.27.1
+  - scikit_learn==1.3.2
+  - typing-extensions==4.9.0
+  - socksio~=1.0.0
+  - gitignore-parser==0.1.9
+  - websockets~=11.0
+  - networkx~=3.2.1
+  - google-generativeai==0.3.2
+  - playwright>=1.26
+  - anytree (version not pinned)
+  - ipywidgets==8.1.1
+  - Pillow (version not pinned)
+  - imap_tools==1.5.0
+  - qianfan==0.3.2
+  - dashscope==1.14.1
+  - rank-bm25==0.2.2
+  - jieba==0.42.1
+[/Key Information]
+2026-05-13 19:56:45.036 | INFO     | ******
+2026-05-13 19:56:45.036 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/requirements.txt]\n- Exact dependencies and versions:\n  - aiohttp==3.8.6\n  - channels==4.0.0\n  - faiss_cpu==1.7.4\n  - fire==0.4.0\n  - typer==0.9.0\n  - lancedb==0.4.0\n  - llama-index-core==0.10.15\n  - llama-index-embeddings-azure-openai==0.1.6\n  - llama-index-embeddings-openai==0.1.5\n  - llama-index-llms-azure-openai==0.1.4\n  - llama-index-readers-file==0.1.4\n  - llama-index-retrievers-bm25==0.1.3\n  - llama-index-vector-stores-faiss==0.1.1\n  - chromadb==0.4.23\n  - loguru==0.6.0\n  - meilisearch==0.21.0\n  - numpy==1.24.3\n  - openai==1.6.1\n  - beautifulsoup4==4.12.3\n  - pandas==2.0.3\n  - pydantic==2.5.3\n  - python_docx==0.8.11\n  - PyYAML==6.0.1\n  - setuptools==65.6.3\n  - tenacity==8.2.3\n  - tiktoken==0.5.2\n  - tqdm==4.66.2\n  - anthropic==0.18.1\n  - typing-inspect==0.8.0\n  - libcst==1.0.1\n  - qdrant-client==1.7.0\n  - aioredis~=2.0.1\n  - websocket-client==1.6.2\n  - aiofiles==23.2.1\n  - gitpython==3.1.40\n  - zhipuai==2.0.1\n  - rich==13.6.0\n  - nbclient==0.9.0\n  - nbformat==5.9.2\n  - ipython==8.17.2\n  - ipykernel==6.27.1\n  - scikit_learn==1.3.2\n  - typing-extensions==4.9.0\n  - socksio~=1.0.0\n  - gitignore-parser==0.1.9\n  - websockets~=11.0\n  - networkx~=3.2.1\n  - google-generativeai==0.3.2\n  - playwright>=1.26\n  - anytree (version not pinned)\n  - ipywidgets==8.1.1\n  - Pillow (version not pinned)\n  - imap_tools==1.5.0\n  - qianfan==0.3.2\n  - dashscope==1.14.1\n  - rank-bm25==0.2.2\n  - jieba==0.42.1\n[/Key Information]', 'Get File Info', True)
+2026-05-13 19:56:51.613 | INFO     | Model API request cost info: input_tokens=2951, output_tokens=434, cost=0.000000
+2026-05-13 19:56:51.627 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 19:56:54.997 | INFO     | Model API request cost info: input_tokens=1032, output_tokens=207, cost=0.000000
+2026-05-13 19:56:54.999 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"tests\", \"1\")",
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_folder(\".\", \"1\")"
+  ],
+  "collected_information": {
+    "environment": {
+      "python_version": "3.9+",
+      "setup_recommended": "conda",
+      "installation_methods": ["pip", "editable mode"],
+      "configuration": "initialization command with example config snippet",
+      "dependencies": "from requirements.txt with exact versions"
+    },
+    "tests_info": {
+      "missing": "No explicit test instructions or framework found yet",
+      "next_steps": [
+        "check tests/README.md for test running instructions",
+        "check CONTRIBUTING.md for guidance",
+        "check CI workflows in .github/workflows/ for test commands"
+      ],
+      "target_test_file": "tests/mock/mock_llm.py"
+    }
+  },
+  "terminate": false
+}
+2026-05-13 19:56:54.999 | DEBUG    | Extracted a valid json
+2026-05-13 19:56:55.005 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests. The browsing Depth is 1.\nStructure of this directory:\n\n__init__.py\n\nconftest.py\n\nconfig2.yaml\n\nmetagpt/\n\nscripts/\n\nmock/\n\ndata/\n\n', 'folder structure collected', True)
+2026-05-13 19:56:55.005 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\nfulltest.yaml\n\nbuild-package.yaml\n\npre-commit.yaml\n\nunittest.yaml\n\n', 'folder structure collected', True)
+2026-05-13 19:56:55.006 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03. The browsing Depth is 1.\nStructure of this directory:\n\nSECURITY.md\n\nREADME.md\n\nsetup.py\n\n.gitignore\n\nDockerfile\n\nLICENSE\n\n.dockerignore\n\nruff.toml\n\n.pre-commit-config.yaml\n\nrequirements.txt\n\n.gitattributes\n\nconfig/\n\ndocs/\n\n.devcontainer/\n\nmetagpt/\n\ntests/\n\nexamples/\n\n.github/\n\n.git/\n\n', 'folder structure collected', True)
+2026-05-13 19:57:01.169 | INFO     | Model API request cost info: input_tokens=3941, output_tokens=319, cost=0.000000
+2026-05-13 19:57:01.178 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 19:57:02.393 | INFO     | Model API request cost info: input_tokens=918, output_tokens=51, cost=0.000000
+2026-05-13 19:57:02.395 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\".github/workflows/unittest.yaml\", \"test execution commands, test environment setup, test tools and versions\")"],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 19:57:02.395 | DEBUG    | Extracted a valid json
+2026-05-13 19:57:02.400 | INFO     | entering browse
+2026-05-13 19:57:02.400 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/.github/workflows/unittest.yaml ===
+name: Unit Tests
+
+on:
+  pull_request_target:
+  push: 
+    branches:
+      - 'main'
+      - 'dev'
+      - '*-release'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9']
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        sh tests/scripts/run_install_deps.sh
+    - name: Test with pytest
+      run: |
+        export ALLOW_OPENAI_API_CALL=0
+        mkdir -p ~/.metagpt && cp tests/config2.yaml ~/.metagpt/config2.yaml
+        pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt
+    - name: Show coverage report
+      run: |
+        coverage report -m
+    - name: Show failed tests and overall summary
+      run: |
+        grep -E "FAILED tests|ERROR tests|[0-9]+ passed," unittest.txt
+        failed_count=$(grep -E "FAILED|ERROR" unittest.txt | wc -l)
+        if [[ "$failed_count" -gt 0 ]]; then
+          echo "$failed_count failed lines found! Task failed."
+          exit 1
+        fi
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: |
+          ./unittest.txt
+          ./htmlcov/
+          ./tests/data/rsp_cache_new.json
+        retention-days: 3
+      if: ${{ always() }}
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: ${{ always() }}
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/.github/workflows/unittest.yaml ===
+2026-05-13 19:57:02.400 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 19:57:10.604 | INFO     | Model API request cost info: input_tokens=1090, output_tokens=442, cost=0.000000
+2026-05-13 19:57:10.606 | SUCCESS  | Successfully extracted environment config
+2026-05-13 19:57:10.606 | INFO     | ******
+2026-05-13 19:57:10.606 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/.github/workflows/unittest.yaml]
+- Runtime Environment:
+  - OS: ubuntu-latest (GitHub Actions CI environment)
+  - Python version: 3.9 (matrix tested version, others commented out: 3.10, 3.11)
+- Setup and Dependency Installation:
+  - Uses actions/setup-python@v4 with python-version 3.9
+  - Dependencies installed via custom shell script: `sh tests/scripts/run_install_deps.sh`
+- Environment Variables:
+  - `ALLOW_OPENAI_API_CALL=0` (set before test execution)
+- Test Tools:
+  - pytest (invoked directly; version not specified but installed in run_install_deps.sh or environment)
+  - coverage (used to report coverage post-test)
+- Test Execution Command:
+  - `pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt`
+    - Runs tests under `tests/` directory
+    - Includes doctest modules
+    - Measures coverage for the `metagpt` module/directory
+    - Outputs coverage reports in XML and HTML formats
+    - Reports top 20 slowest tests (`--durations=20`)
+    - Captures output to `unittest.txt`
+- Test Result Handling:
+  - Parses `unittest.txt` to show failed/error test lines and summary
+  - Fails job if any failure or error present
+- Artifacts and Coverage Upload:
+  - Uploads test results and coverage reports as artifacts (`unittest.txt`, `htmlcov/`, and cache JSON)
+  - Uploads coverage to Codecov with a secret token
+- Notes:
+  - No explicit versions of pytest or coverage mentioned in YAML
+  - The dependency installation script likely controls exact package versions
+  - No direct command shown for running individual test files; general invocation through pytest targeting tests/ directory
+[/Key Information]
+2026-05-13 19:57:10.607 | INFO     | ******
+2026-05-13 19:57:10.607 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/.github/workflows/unittest.yaml]\n- Runtime Environment:\n  - OS: ubuntu-latest (GitHub Actions CI environment)\n  - Python version: 3.9 (matrix tested version, others commented out: 3.10, 3.11)\n- Setup and Dependency Installation:\n  - Uses actions/setup-python@v4 with python-version 3.9\n  - Dependencies installed via custom shell script: `sh tests/scripts/run_install_deps.sh`\n- Environment Variables:\n  - `ALLOW_OPENAI_API_CALL=0` (set before test execution)\n- Test Tools:\n  - pytest (invoked directly; version not specified but installed in run_install_deps.sh or environment)\n  - coverage (used to report coverage post-test)\n- Test Execution Command:\n  - `pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt`\n    - Runs tests under `tests/` directory\n    - Includes doctest modules\n    - Measures coverage for the `metagpt` module/directory\n    - Outputs coverage reports in XML and HTML formats\n    - Reports top 20 slowest tests (`--durations=20`)\n    - Captures output to `unittest.txt`\n- Test Result Handling:\n  - Parses `unittest.txt` to show failed/error test lines and summary\n  - Fails job if any failure or error present\n- Artifacts and Coverage Upload:\n  - Uploads test results and coverage reports as artifacts (`unittest.txt`, `htmlcov/`, and cache JSON)\n  - Uploads coverage to Codecov with a secret token\n- Notes:\n  - No explicit versions of pytest or coverage mentioned in YAML\n  - The dependency installation script likely controls exact package versions\n  - No direct command shown for running individual test files; general invocation through pytest targeting tests/ directory\n[/Key Information]', 'Get File Info', True)
+2026-05-13 19:57:36.119 | INFO     | Model API request cost info: input_tokens=4992, output_tokens=1524, cost=0.000000
+2026-05-13 19:57:36.187 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 19:57:53.098 | INFO     | Model API request cost info: input_tokens=2122, output_tokens=1206, cost=0.000000
+2026-05-13 19:57:53.100 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Environment Setup and Usage from README.md": {
+      "Python_version": "3.9+",
+      "Conda_setup": "conda create -n metagpt python=3.9 && conda activate metagpt",
+      "Package_installation": [
+        "pip install --upgrade metagpt",
+        "pip install --upgrade git+https://github.com/geekan/MetaGPT.git",
+        "git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e ."
+      ],
+      "Initialization_command": "metagpt --init-config",
+      "Config_file": "~/.metagpt/config2.yaml",
+      "Config_contents_example": {
+        "llm": {
+          "api_type": "openai",
+          "model": "gpt-4-turbo-preview",
+          "base_url": "https://api.openai.com/v1",
+          "api_key": "YOUR_API_KEY"
+        }
+      },
+      "Test_instructions": "No explicit test instructions in README.md"
+    },
+    "Dependencies and Versions from requirements.txt": [
+      "aiohttp==3.8.6",
+      "channels==4.0.0",
+      "faiss_cpu==1.7.4",
+      "fire==0.4.0",
+      "typer==0.9.0",
+      "lancedb==0.4.0",
+      "llama-index-core==0.10.15",
+      "llama-index-embeddings-azure-openai==0.1.6",
+      "llama-index-embeddings-openai==0.1.5",
+      "llama-index-llms-azure-openai==0.1.4",
+      "llama-index-readers-file==0.1.4",
+      "llama-index-retrievers-bm25==0.1.3",
+      "llama-index-vector-stores-faiss==0.1.1",
+      "chromadb==0.4.23",
+      "loguru==0.6.0",
+      "meilisearch==0.21.0",
+      "numpy==1.24.3",
+      "openai==1.6.1",
+      "beautifulsoup4==4.12.3",
+      "pandas==2.0.3",
+      "pydantic==2.5.3",
+      "python_docx==0.8.11",
+      "PyYAML==6.0.1",
+      "setuptools==65.6.3",
+      "tenacity==8.2.3",
+      "tiktoken==0.5.2",
+      "tqdm==4.66.2",
+      "anthropic==0.18.1",
+      "typing-inspect==0.8.0",
+      "libcst==1.0.1",
+      "qdrant-client==1.7.0",
+      "aioredis~=2.0.1",
+      "websocket-client==1.6.2",
+      "aiofiles==23.2.1",
+      "gitpython==3.1.40",
+      "zhipuai==2.0.1",
+      "rich==13.6.0",
+      "nbclient==0.9.0",
+      "nbformat==5.9.2",
+      "ipython==8.17.2",
+      "ipykernel==6.27.1",
+      "scikit_learn==1.3.2",
+      "typing-extensions==4.9.0",
+      "socksio~=1.0.0",
+      "gitignore-parser==0.1.9",
+      "websockets~=11.0",
+      "networkx~=3.2.1",
+      "google-generativeai==0.3.2",
+      "playwright>=1.26",
+      "anytree (version not pinned)",
+      "ipywidgets==8.1.1",
+      "Pillow (version not pinned)",
+      "imap_tools==1.5.0",
+      "qianfan==0.3.2",
+      "dashscope==1.14.1",
+      "rank-bm25==0.2.2",
+      "jieba==0.42.1"
+    ],
+    "Test Execution from .github/workflows/unittest.yaml": {
+      "CI_environment": "ubuntu-latest, Python 3.9",
+      "Python_setup": "actions/setup-python@v4 with python-version 3.9",
+      "Dependencies_install_script": "sh tests/scripts/run_install_deps.sh",
+      "Environment_variable": "ALLOW_OPENAI_API_CALL=0",
+      "Test_framework": "pytest (installed via install script)",
+      "Coverage_tool": "coverage",
+      "Test_command": "pytest tests/ --doctest-modules --cov=./metagpt/ --cov-report=xml:cov.xml --cov-report=html:htmlcov --durations=20 | tee unittest.txt",
+      "Test_scope": "Runs tests recursively in tests/ including doctests",
+      "Coverage_reports": "xml and html",
+      "Slow_tests_reported": "Top 20 slowest tests",
+      "Output_capture": "unittest.txt for CI parsing",
+      "CI_artifacts": "Uploads coverage and test reports",
+      "Single_test_run": "No explicit command but pytest supports it if run manually"
+    },
+    "Notes": "No requirements-test.txt found; test dependencies included in main requirements.txt; no further test framework details"
+  },
+  "terminate": true
+}
+2026-05-13 19:57:53.100 | DEBUG    | Extracted a valid json
+2026-05-13 19:57:53.124 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 19:58:01.866 | INFO     | Model API request cost info: input_tokens=2807, output_tokens=555, cost=0.000000
+2026-05-13 19:58:01.868 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 19:58:01.905 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 19:58:06.339 | INFO     | Model API request cost info: input_tokens=2944, output_tokens=255, cost=0.000000
+2026-05-13 19:58:06.340 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 19:58:23.581 | DEBUG    | Result of dispatch_intent: ("Step 5/12 : RUN apt update && apt install -y     wget     git     build-essential     libffi-dev     libssl-dev     python3.9     python3.9-venv     python3.9-distutils     python3-pip     curl     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*\n ---> Running in 57cc8a537ffc\nWARNING: apt does not have a stable CLI interface. Use with caution in scripts.\nGet:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]\nGet:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]\nGet:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]\nGet:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]\nGet:5 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]\nGet:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]\nGet:7 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]\nGet:8 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [61.6 kB]\nGet:9 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1295 kB]\nGet:10 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]\nGet:11 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [7004 kB]\nGet:12 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [86.0 kB]\nGet:13 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [3915 kB]\nGet:14 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4247 kB]\nGet:15 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1602 kB]\nGet:16 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [7251 kB]\nGet:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]\nGet:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.8 kB]\nFetched 45.9 MB in 3s (14.6 MB/s)\nReading package lists...\nBuilding dependency tree...\nReading state information...\n2 packages can be upgraded. Run 'apt list --upgradable' to see them.\nWARNING: apt does not have a stable CLI interface. Use with caution in scripts.\nReading package lists...\nBuilding dependency tree...\nReading state information...\nE: Unable to locate package python3.9\nE: Couldn't find any package by glob 'python3.9'\nE: Unable to locate package python3.9-venv\nE: Couldn't find any package by glob 'python3.9-venv'\nE: Unable to locate package python3.9-distutils\nE: Couldn't find any package by glob 'python3.9-distutils'\n ---> Removed intermediate container 57cc8a537ffc\nError: The command '/bin/bash -c apt update && apt install -y     wget     git     build-essential     libffi-dev     libssl-dev     python3.9     python3.9-venv     python3.9-distutils     python3-pip     curl     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100", 'Failed to build Docker image.', False)
+2026-05-13 19:58:23.583 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 19:58:29.223 | INFO     | Model API request cost info: input_tokens=2789, output_tokens=302, cost=0.000000
+2026-05-13 19:58:29.256 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile fails at Step 5/12 during the 'apt install' command with errors: 'E: Unable to locate package python3.9', 'E: Couldn't find any package by glob python3.9-venv', and 'E: Unable to locate package python3.9-distutils'. This indicates that Ubuntu 22.04 (jammy) default package repositories do not directly offer Python 3.9 packages, likely due to the OS shipping with Python 3.10 by default. To fix this, update the Dockerfile to either use 'python3' packages corresponding to the OS default Python version (Python 3.10) or explicitly add a PPA or source where Python 3.9 packages can be obtained. Alternatively, consider installing Python 3.9 entirely via Miniconda environment and omit system Python packages. Adjust the Dockerfile apt install command to remove the python3.9, python3.9-venv, python3.9-distutils, and python3-pip packages from apt install to avoid the failure. The Miniconda environment already creates a Python 3.9 environment. Ensure pip is installed inside the conda environment separately as currently done. Rebuild the Dockerfile after these changes.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 19:58:29.257 | DEBUG    | Extracted a valid json
+2026-05-13 19:58:29.308 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 19:58:37.182 | INFO     | Model API request cost info: input_tokens=4460, output_tokens=526, cost=0.000000
+2026-05-13 19:58:37.184 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 20:08:03.700 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 8e744472d11cb2b70a921c6391b0c3e9885896841ee733ed663da9cf66fdba89 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 20:08:03.705 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:08:06.666 | INFO     | Model API request cost info: input_tokens=3296, output_tokens=177, cost=0.000000
+2026-05-13 20:08:06.668 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed because the command 'pytest' was not found, resulting in '/eval.sh: line 39: pytest: command not found' and exit code 127. This indicates that the pytest package is not installed in the conda 'testbed' environment or it is not available in the PATH at runtime. Please modify the eval script or Dockerfile to ensure pytest is installed and accessible in the environment used for testing. Specifically, add `pip install pytest` (or the proper method to install pytest) during the Dockerfile environment setup within the 'testbed' conda environment, so that it is available when the eval script runs pytest.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 20:08:06.668 | DEBUG    | Extracted a valid json
+2026-05-13 20:08:06.709 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:08:10.894 | INFO     | Model API request cost info: input_tokens=4061, output_tokens=268, cost=0.000000
+2026-05-13 20:08:10.896 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 20:17:58.947 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 927986169d40fa725a7afdd0e9dba199ad103284a24fe6fa188543231717e4ff started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 20:17:58.953 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:18:06.241 | INFO     | Model API request cost info: input_tokens=4168, output_tokens=434, cost=0.000000
+2026-05-13 20:18:06.242 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test run failed with the error message: \"pydantic_core._pydantic_core.ValidationError: 1 validation error for Config\\nllm.api_key\\nValue error, Please set your API key in config2.yaml [type=value_error, input_value='YOUR_API_KEY', input_type=str]\". This indicates that the test requires a valid API key to be set in the configuration file 'config2.yaml' before the tests can run successfully.\n\nTo fix this, modify the eval script to either provide a valid API key configuration or to mock/override this configuration before invoking pytest. The current test execution does not bypass or set this environment/configuration variable, causing the pydantic configuration validation to fail and tests to error out.\n\nSpecifically, steps to add to the eval script can include:\n- Provide a valid 'config2.yaml' with the API key set, or\n- Programmatically patch or mock the config within the test environment to avoid this validation error.\n\nThis fix is required so that the tests in 'tests/mock/mock_llm.py' can run without configuration validation errors, ensuring the tests actually execute.",
+  "guidance_for_context_retrieval_agent": "Please retrieve the following files and documentation from the repository at commit 'adb42f44d65a3fd9468c2919a1557e1c3751759d':\n- config2.yaml or any configuration files related to setting the 'llm.api_key' or containing API keys\n- Documentation files like README.md, CONTRIBUTING.md, and any docs or notes that explain required environment variables or API keys for running the tests\n- Any test setup or config files like pytest.ini, conftest.py, or test-related scripts that might explain how to provide or mock API keys or credentials during tests\n\nThis information is necessary to understand how to properly configure or mock the required API key to get the tests to run successfully."
+}
+2026-05-13 20:18:06.243 | DEBUG    | Extracted a valid json
+2026-05-13 20:18:09.929 | INFO     | Model API request cost info: input_tokens=1497, output_tokens=146, cost=0.000000
+2026-05-13 20:18:09.938 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:18:12.554 | INFO     | Model API request cost info: input_tokens=744, output_tokens=155, cost=0.000000
+2026-05-13 20:18:12.556 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"config\", \"1\")",
+    "browse_file_for_environment_info(\"README.md\", \"environment variables, API key configuration\")",
+    "search_files_by_keyword(\"CONTRIBUTING\")",
+    "browse_folder(\"docs\", \"1\")",
+    "browse_file_for_environment_info(\"pytest.ini\", \"test setup\")",
+    "browse_file_for_environment_info(\"conftest.py\", \"test setup\")",
+    "browse_folder(\"tests\", \"1\")"
+  ],
+  "collected_information": "No specific data collected yet; initial steps to locate config files, environment variable info, API keys, and test setup files have been planned but not executed.",
+  "terminate": false
+}
+2026-05-13 20:18:12.557 | DEBUG    | Extracted a valid json
+2026-05-13 20:18:12.565 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/config. The browsing Depth is 1.\nStructure of this directory:\n\nconfig2.example.yaml\n\npuppeteer-config.json\n\nconfig2.yaml\n\n', 'folder structure collected', True)
+2026-05-13 20:18:12.565 | INFO     | entering browse
+2026-05-13 20:18:12.566 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+
+# MetaGPT: The Multi-Agent Framework
+
+<p align="center">
+<a href=""><img src="docs/resources/MetaGPT-new-log.png" alt="MetaGPT logo: Enable GPT to work in software company, collaborating to tackle more complex tasks." width="150px"></a>
+</p>
+
+<p align="center">
+<b>Assign different roles to GPTs to form a collaborative entity for complex tasks.</b>
+</p>
+
+<p align="center">
+<a href="docs/README_CN.md"><img src="https://img.shields.io/badge/文档-中文版-blue.svg" alt="CN doc"></a>
+<a href="README.md"><img src="https://img.shields.io/badge/document-English-blue.svg" alt="EN doc"></a>
+<a href="docs/README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-blue.svg" alt="JA doc"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+<a href="docs/ROADMAP.md"><img src="https://img.shields.io/badge/ROADMAP-路线图-blue" alt="roadmap"></a>
+<a href="https://discord.gg/DYn29wFk9z"><img src="https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat" alt="Discord Follow"></a>
+<a href="https://twitter.com/MetaGPT_"><img src="https://img.shields.io/twitter/follow/MetaGPT?style=social" alt="Twitter Follow"></a>
+</p>
+
+<p align="center">
+   <a href="https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/geekan/MetaGPT"><img src="https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode" alt="Open in Dev Containers"></a>
+   <a href="https://codespaces.new/geekan/MetaGPT"><img src="https://img.shields.io/badge/Github_Codespace-Open-blue?logo=github" alt="Open in GitHub Codespaces"></a>
+   <a href="https://huggingface.co/spaces/deepwisdom/MetaGPT" target="_blank"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20-Hugging%20Face-blue?color=blue&logoColor=white" /></a>
+</p>
+
+## News
+🚀 Mar. 14, 2024: Our **Data Interpreter** paper is on [arxiv](https://arxiv.org/abs/2402.18679). Check the [example](https://docs.deepwisdom.ai/main/en/DataInterpreter/) and [code](https://github.com/geekan/MetaGPT/tree/main/examples/di)!
+
+🚀 Feb. 08, 2024: [v0.7.0](https://github.com/geekan/MetaGPT/releases/tag/v0.7.0) released, supporting assigning different LLMs to different Roles. We also introduced [Data Interpreter](https://github.com/geekan/MetaGPT/blob/main/examples/di/README.md), a powerful agent capable of solving a wide range of real-world problems.
+
+🚀 Jan. 16, 2024: Our paper [MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework
+](https://arxiv.org/abs/2308.00352) accepted for oral presentation **(top 1.2%)** at ICLR 2024, **ranking #1** in the LLM-based Agent category.
+
+🚀 Jan. 03, 2024: [v0.6.0](https://github.com/geekan/MetaGPT/releases/tag/v0.6.0) released, new features include serialization, upgraded OpenAI package and supported multiple LLM, provided [minimal example for debate](https://github.com/geekan/MetaGPT/blob/main/examples/debate_simple.py) etc.
+
+🚀 Dec. 15, 2023: [v0.5.0](https://github.com/geekan/MetaGPT/releases/tag/v0.5.0) released, introducing some experimental features such as **incremental development**, **multilingual**, **multiple programming languages**, etc.
+
+🔥 Nov. 08, 2023: MetaGPT is selected into [Open100: Top 100 Open Source achievements](https://www.benchcouncil.org/evaluation/opencs/annual.html).
+
+🔥 Sep. 01, 2023: MetaGPT tops GitHub Trending Monthly for the **17th time** in August 2023.
+
+🌟 Jun. 30, 2023: MetaGPT is now open source.
+
+🌟 Apr. 24, 2023: First line of MetaGPT code committed.
+
+## Software Company as Multi-Agent System
+
+1. MetaGPT takes a **one line requirement** as input and outputs **user stories / competitive analysis / requirements / data structures / APIs / documents, etc.**
+2. Internally, MetaGPT includes **product managers / architects / project managers / engineers.** It provides the entire process of a **software company along with carefully orchestrated SOPs.**
+   1. `Code = SOP(Team)` is the core philosophy. We materialize SOP and apply it to teams composed of LLMs.
+
+![A software company consists of LLM-based roles](docs/resources/software_company_cd.jpeg)
+
+<p align="center">Software Company Multi-Agent Schematic (Gradually Implementing)</p>
+
+## Get Started
+
+### Installation
+
+> Ensure that Python 3.9+ is installed on your system. You can check this by using: `python --version`.  
+> You can use conda like this: `conda create -n metagpt python=3.9 && conda activate metagpt`
+
+```bash
+pip install --upgrade metagpt
+# or `pip install --upgrade git+https://github.com/geekan/MetaGPT.git`
+# or `git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .`
+```
+
+For detailed installation guidance, please refer to [cli_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version)
+ or [docker_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker)
+
+### Configuration
+
+You can init the config of MetaGPT by running the following command, or manually create `~/.metagpt/config2.yaml` file:
+```bash
+# Check https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html for more details
+metagpt --init-config  # it will create ~/.metagpt/config2.yaml, just modify it to your needs
+```
+
+You can configure `~/.metagpt/config2.yaml` according to the [example](https://github.com/geekan/MetaGPT/blob/main/config/config2.example.yaml) and [doc](https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html):
+
+```yaml
+llm:
+  api_type: "openai"  # or azure / ollama / open_llm etc. Check LLMType for more options
+  model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+  base_url: "https://api.openai.com/v1"  # or forward url / other llm url
+  api_key: "YOUR_API_KEY"
+```
+
+### Usage
+
+After installation, you can use MetaGPT at CLI
+
+```bash
+metagpt "Create a 2048 game"  # this will create a repo in ./workspace
+```
+
+or use it as library
+
+```python
+from metagpt.software_company import generate_repo, ProjectRepo
+repo: ProjectRepo = generate_repo("Create a 2048 game")  # or ProjectRepo("<path>")
+print(repo)  # it will print the repo structure with files
+```
+
+You can also use its [Data Interpreter](https://github.com/geekan/MetaGPT/tree/main/examples/di)
+
+```python
+import asyncio
+from metagpt.roles.di.data_interpreter import DataInterpreter
+
+async def main():
+    di = DataInterpreter()
+    await di.run("Run data analysis on sklearn Iris dataset, include a plot")
+
+asyncio.run(main())  # or await main() in a jupyter notebook setting
+```
+
+
+### QuickStart & Demo Video
+- Try it on [MetaGPT Huggingface Space](https://huggingface.co/spaces/deepwisdom/MetaGPT)
+- [Matthew Berman: How To Install MetaGPT - Build A Startup With One Prompt!!](https://youtu.be/uT75J_KG_aY)
+- [Official Demo Video](https://github.com/geekan/MetaGPT/assets/2707039/5e8c1062-8c35-440f-bb20-2b0320f8d27d)
+
+https://github.com/geekan/MetaGPT/assets/34952977/34345016-5d13-489d-b9f9-b82ace413419
+
+## Tutorial
+
+- 🗒 [Online Document](https://docs.deepwisdom.ai/main/en/)
+- 💻 [Usage](https://docs.deepwisdom.ai/main/en/guide/get_started/quickstart.html)  
+- 🔎 [What can MetaGPT do?](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
+- 🛠 How to build your own agents? 
+  - [MetaGPT Usage & Development Guide | Agent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/agent_101.html)
+  - [MetaGPT Usage & Development Guide | MultiAgent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/multi_agent_101.html)
+- 🧑‍💻 Contribution
+  - [Develop Roadmap](docs/ROADMAP.md)
+- 🔖 Use Cases
+  - [Data Interpreter](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/interpreter/intro.html)
+  - [Debate](https://docs.deepwisdom.ai/main/en/guide/use_cases/multi_agent/debate.html)
+  - [Researcher](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/researcher.html)
+  - [Recepit Assistant](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/receipt_assistant.html)
+- ❓ [FAQs](https://docs.deepwisdom.ai/main/en/guide/faq.html)
+
+## Support
+
+### Discard Join US
+📢 Join Our [Discord Channel](https://discord.gg/ZRHeExS6xv)!
+
+Looking forward to seeing you there! 🎉
+
+### Contact Information
+
+If you have any questions or feedback about this project, please feel free to contact us. We highly appreciate your suggestions!
+
+- **Email:** alexanderwu@deepwisdom.ai
+- **GitHub Issues:** For more technical inquiries, you can also create a new issue in our [GitHub repository](https://github.com/geekan/metagpt/issues).
+
+We will respond to all questions within 2-3 business days.
+
+## Citation
+
+To stay updated with the latest research and development, follow [@MetaGPT_](https://twitter.com/MetaGPT_) on Twitter. 
+
+To cite [MetaGPT](https://arxiv.org/abs/2308.00352) or [Data Interpreter](https://arxiv.org/abs/2402.18679) in publications, please use the following BibTeX entries.
+
+```bibtex
+@misc{hong2023metagpt,
+      title={MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework}, 
+      author={Sirui Hong and Mingchen Zhuge and Jonathan Chen and Xiawu Zheng and Yuheng Cheng and Ceyao Zhang and Jinlin Wang and Zili Wang and Steven Ka Shing Yau and Zijuan Lin and Liyang Zhou and Chenyu Ran and Lingfeng Xiao and Chenglin Wu and Jürgen Schmidhuber},
+      year={2023},
+      eprint={2308.00352},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+@misc{hong2024data,
+      title={Data Interpreter: An LLM Agent For Data Science}, 
+      author={Sirui Hong and Yizhang Lin and Bang Liu and Bangbang Liu and Binhao Wu and Danyang Li and Jiaqi Chen and Jiayi Zhang and Jinlin Wang and Li Zhang and Lingyao Zhang and Min Yang and Mingchen Zhuge and Taicheng Guo and Tuo Zhou and Wei Tao and Wenyi Wang and Xiangru Tang and Xiangtao Lu and Xiawu Zheng and Xinbing Liang and Yaying Fei and Yuheng Cheng and Zongze Xu and Chenglin Wu},
+      year={2024},
+      eprint={2402.18679},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+
+```
+
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+2026-05-13 20:18:12.567 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:18:18.161 | INFO     | Model API request cost info: input_tokens=3399, output_tokens=244, cost=0.000000
+2026-05-13 20:18:18.162 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:18:18.163 | INFO     | ******
+2026-05-13 20:18:18.163 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]
+- Environment Variables / API Key Configuration:
+  - MetaGPT requires configuration in the file `~/.metagpt/config2.yaml`.
+  - You can generate this file by running: `metagpt --init-config`
+  - The config file includes an LLM section where you set API-related details:
+    ```yaml
+    llm:
+      api_type: "openai"  # options: openai / azure / ollama / open_llm etc.
+      model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+      base_url: "https://api.openai.com/v1"  # or other LLM URL
+      api_key: "YOUR_API_KEY"
+    ```
+  - Replace `"YOUR_API_KEY"` with your actual API key.
+  - See https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html for detailed configuration guidance.
+[/Key Information]
+2026-05-13 20:18:18.163 | INFO     | ******
+2026-05-13 20:18:18.164 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]\n- Environment Variables / API Key Configuration:\n  - MetaGPT requires configuration in the file `~/.metagpt/config2.yaml`.\n  - You can generate this file by running: `metagpt --init-config`\n  - The config file includes an LLM section where you set API-related details:\n    ```yaml\n    llm:\n      api_type: "openai"  # options: openai / azure / ollama / open_llm etc.\n      model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview\n      base_url: "https://api.openai.com/v1"  # or other LLM URL\n      api_key: "YOUR_API_KEY"\n    ```\n  - Replace `"YOUR_API_KEY"` with your actual API key.\n  - See https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html for detailed configuration guidance.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:18:18.167 | DEBUG    | Result of dispatch_intent: ("No files found containing the keyword 'CONTRIBUTING'.", 'No matching files found', True)
+2026-05-13 20:18:18.168 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/docs. The browsing Depth is 1.\nStructure of this directory:\n\n.pylintrc\n\nREADME_CN.md\n\nFAQ-EN.md\n\n.agent-store-config.yaml.example\n\nREADME_JA.md\n\nROADMAP.md\n\ninstall/\n\ntutorial/\n\nresources/\n\n.well-known/\n\nscripts/\n\n', 'folder structure collected', True)
+2026-05-13 20:18:18.168 | INFO     | entering browse
+2026-05-13 20:18:18.169 | INFO     | File not found: File not found: 'testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/pytest.ini'
+2026-05-13 20:18:18.169 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-05-13 20:18:18.170 | INFO     | entering browse
+2026-05-13 20:18:18.171 | INFO     | File not found: File not found: 'testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/conftest.py'
+2026-05-13 20:18:18.171 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-05-13 20:18:18.172 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests. The browsing Depth is 1.\nStructure of this directory:\n\n__init__.py\n\nconftest.py\n\nconfig2.yaml\n\nmetagpt/\n\nscripts/\n\nmock/\n\ndata/\n\n', 'folder structure collected', True)
+2026-05-13 20:18:32.086 | INFO     | Model API request cost info: input_tokens=2502, output_tokens=851, cost=0.000000
+2026-05-13 20:18:32.119 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:18:35.350 | INFO     | Model API request cost info: input_tokens=1449, output_tokens=256, cost=0.000000
+2026-05-13 20:18:35.355 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"tests/conftest.py\", \"test setup, API keys, environment variable mocking\")"
+  ],
+  "collected_information": {
+    "environment_setup_summary": {
+      "README.md": {
+        "config_file_location": "~/.metagpt/config2.yaml",
+        "config_generation_command": "metagpt --init-config",
+        "config_example": {
+          "llm": {
+            "api_type": "openai",
+            "model": "gpt-4-turbo-preview",
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "YOUR_API_KEY"
+          }
+        },
+        "more_info_url": "https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html"
+      },
+      "configuration_files": [
+        "config/config2.yaml",
+        "config/config2.example.yaml",
+        "tests/config2.yaml"
+      ]
+    },
+    "test_setup": {
+      "notes": "No explicit pytest.ini found, conftest.py located under tests/ but not yet analyzed, mock/ directory mentioned but not explored yet."
+    }
+  },
+  "terminate": false
+}
+2026-05-13 20:18:35.355 | DEBUG    | Extracted a valid json
+2026-05-13 20:18:35.357 | INFO     | entering browse
+2026-05-13 20:18:35.357 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests/conftest.py ===
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+@Time    : 2023/5/1 12:10
+@Author  : alexanderwu
+@File    : conftest.py
+"""
+
+import asyncio
+import json
+import logging
+import os
+import re
+import uuid
+from pathlib import Path
+from typing import Callable
+
+import aiohttp.web
+import pytest
+
+from metagpt.const import DEFAULT_WORKSPACE_ROOT, TEST_DATA_PATH
+from metagpt.context import Context as MetagptContext
+from metagpt.llm import LLM
+from metagpt.logs import logger
+from metagpt.utils.git_repository import GitRepository
+from metagpt.utils.project_repo import ProjectRepo
+from tests.mock.mock_aiohttp import MockAioResponse
+from tests.mock.mock_curl_cffi import MockCurlCffiResponse
+from tests.mock.mock_httplib2 import MockHttplib2Response
+from tests.mock.mock_llm import MockLLM
+
+RSP_CACHE_NEW = {}  # used globally for producing new and useful only response cache
+ALLOW_OPENAI_API_CALL = int(
+    os.environ.get("ALLOW_OPENAI_API_CALL", 1)
+)  # NOTE: should change to default 0 (False) once mock is complete
+
+
+@pytest.fixture(scope="session")
+def rsp_cache():
+    rsp_cache_file_path = TEST_DATA_PATH / "rsp_cache.json"  # read repo-provided
+    new_rsp_cache_file_path = TEST_DATA_PATH / "rsp_cache_new.json"  # exporting a new copy
+    if os.path.exists(rsp_cache_file_path):
+        with open(rsp_cache_file_path, "r", encoding="utf-8") as f1:
+            rsp_cache_json = json.load(f1)
+    else:
+        rsp_cache_json = {}
+    yield rsp_cache_json
+    with open(rsp_cache_file_path, "w", encoding="utf-8") as f2:
+        json.dump(rsp_cache_json, f2, indent=4, ensure_ascii=False)
+    with open(new_rsp_cache_file_path, "w", encoding="utf-8") as f2:
+        json.dump(RSP_CACHE_NEW, f2, indent=4, ensure_ascii=False)
+
+
+# Hook to capture the test result
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    if rep.when == "call":
+        item.test_outcome = rep
+
+
+@pytest.fixture(scope="function", autouse=True)
+def llm_mock(rsp_cache, mocker, request):
+    llm = MockLLM(allow_open_api_call=ALLOW_OPENAI_API_CALL)
+    llm.rsp_cache = rsp_cache
+    mocker.patch("metagpt.provider.base_llm.BaseLLM.aask", llm.aask)
+    mocker.patch("metagpt.provider.base_llm.BaseLLM.aask_batch", llm.aask_batch)
+    mocker.patch("metagpt.provider.openai_api.OpenAILLM.aask_code", llm.aask_code)
+    yield mocker
+    if hasattr(request.node, "test_outcome") and request.node.test_outcome.passed:
+        if llm.rsp_candidates:
+            for rsp_candidate in llm.rsp_candidates:
+                cand_key = list(rsp_candidate.keys())[0]
+                cand_value = list(rsp_candidate.values())[0]
+                if cand_key not in llm.rsp_cache:
+                    logger.info(f"Added '{cand_key[:100]} ... -> {str(cand_value)[:20]} ...' to response cache")
+                    llm.rsp_cache.update(rsp_candidate)
+                RSP_CACHE_NEW.update(rsp_candidate)
+
+
+class Context:
+    def __init__(self):
+        self._llm_ui = None
+        self._llm_api = LLM()
+
+    @property
+    def llm_api(self):
+        # 1. 初始化llm，带有缓存结果
+        # 2. 如果缓存query，那么直接返回缓存结果
+        # 3. 如果没有缓存query，那么调用llm_api，返回结果
+        # 4. 如果有缓存query，那么更新缓存结果
+        return self._llm_api
+
+
+@pytest.fixture(scope="package")
+def llm_api():
+    logger.info("Setting up the test")
+    g_context = Context()
+
+    yield g_context.llm_api
+
+    logger.info("Tearing down the test")
+
+
+@pytest.fixture
+def proxy():
+    pattern = re.compile(
+        rb"(?P<method>[a-zA-Z]+) (?P<uri>(\w+://)?(?P<host>[^\s\'\"<>\[\]{}|/:]+)(:(?P<port>\d+))?[^\s\'\"<>\[\]{}|]*) "
+    )
+
+    async def pipe(reader, writer):
+        while not reader.at_eof():
+            writer.write(await reader.read(2048))
+        writer.close()
+
+    async def handle_client(reader, writer):
+        data = await reader.readuntil(b"\r\n\r\n")
+        print(f"Proxy: {data}")  # checking with capfd fixture
+        infos = pattern.match(data)
+        host, port = infos.group("host"), infos.group("port")
+        port = int(port) if port else 80
+        remote_reader, remote_writer = await asyncio.open_connection(host, port)
+        if data.startswith(b"CONNECT"):
+            writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
+        else:
+            remote_writer.write(data)
+        await asyncio.gather(pipe(reader, remote_writer), pipe(remote_reader, writer))
+
+    async def proxy_func():
+        server = await asyncio.start_server(handle_client, "127.0.0.1", 0)
+        return server, "http://{}:{}".format(*server.sockets[0].getsockname())
+
+    return proxy_func
+
+
+# see https://github.com/Delgan/loguru/issues/59#issuecomment-466591978
+@pytest.fixture
+def loguru_caplog(caplog):
+    class PropogateHandler(logging.Handler):
+        def emit(self, record):
+            logging.getLogger(record.name).handle(record)
+
+    logger.add(PropogateHandler(), format="{message}")
+    yield caplog
+
+
+@pytest.fixture(scope="function")
+def context(request):
+    ctx = MetagptContext()
+    ctx.git_repo = GitRepository(local_path=DEFAULT_WORKSPACE_ROOT / f"unittest/{uuid.uuid4().hex}")
+    ctx.repo = ProjectRepo(ctx.git_repo)
+
+    # Destroy git repo at the end of the test session.
+    def fin():
+        if ctx.git_repo:
+            ctx.git_repo.delete_repository()
+
+    # Register the function for destroying the environment.
+    request.addfinalizer(fin)
+    return ctx
+
+
+@pytest.fixture(scope="session", autouse=True)
+def init_config():
+    pass
+
+
+@pytest.fixture(scope="function")
+def new_filename(mocker):
+    # NOTE: Mock new filename to make reproducible llm aask, should consider changing after implementing requirement segmentation
+    mocker.patch("metagpt.utils.file_repository.FileRepository.new_filename", lambda: "20240101")
+    yield mocker
+
+
+def _rsp_cache(name):
+    rsp_cache_file_path = TEST_DATA_PATH / f"{name}.json"  # read repo-provided
+    if os.path.exists(rsp_cache_file_path):
+        with open(rsp_cache_file_path, "r") as f1:
+            rsp_cache_json = json.load(f1)
+    else:
+        rsp_cache_json = {}
+    yield rsp_cache_json
+    with open(rsp_cache_file_path, "w") as f2:
+        json.dump(rsp_cache_json, f2, indent=4, ensure_ascii=False)
+
+
+@pytest.fixture(scope="session")
+def search_rsp_cache():
+    yield from _rsp_cache("search_rsp_cache")
+
+
+@pytest.fixture(scope="session")
+def mermaid_rsp_cache():
+    yield from _rsp_cache("mermaid_rsp_cache")
+
+
+@pytest.fixture
+def aiohttp_mocker(mocker):
+    MockResponse = type("MockResponse", (MockAioResponse,), {})
+
+    def wrap(method):
+        def run(self, url, **kwargs):
+            return MockResponse(self, method, url, **kwargs)
+
+        return run
+
+    mocker.patch("aiohttp.ClientSession.request", MockResponse)
+    for i in ["get", "post", "delete", "patch"]:
+        mocker.patch(f"aiohttp.ClientSession.{i}", wrap(i))
+    yield MockResponse
+
+
+@pytest.fixture
+def curl_cffi_mocker(mocker):
+    MockResponse = type("MockResponse", (MockCurlCffiResponse,), {})
+
+    def request(self, *args, **kwargs):
+        return MockResponse(self, *args, **kwargs)
+
+    mocker.patch("curl_cffi.requests.Session.request", request)
+    yield MockResponse
+
+
+@pytest.fixture
+def httplib2_mocker(mocker):
+    MockResponse = type("MockResponse", (MockHttplib2Response,), {})
+
+    def request(self, *args, **kwargs):
+        return MockResponse(self, *args, **kwargs)
+
+    mocker.patch("httplib2.Http.request", request)
+    yield MockResponse
+
+
+@pytest.fixture
+def search_engine_mocker(aiohttp_mocker, curl_cffi_mocker, httplib2_mocker, search_rsp_cache):
+    # aiohttp_mocker: serpapi/serper
+    # httplib2_mocker: google
+    # curl_cffi_mocker: ddg
+    check_funcs: dict[tuple[str, str], Callable[[dict], str]] = {}
+    aiohttp_mocker.rsp_cache = httplib2_mocker.rsp_cache = curl_cffi_mocker.rsp_cache = search_rsp_cache
+    aiohttp_mocker.check_funcs = httplib2_mocker.check_funcs = curl_cffi_mocker.check_funcs = check_funcs
+    yield check_funcs
+
+
+@pytest.fixture
+def http_server():
+    async def handler(request):
+        return aiohttp.web.Response(
+            text="""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+            <title>MetaGPT</title></head><body><h1>MetaGPT</h1></body></html>""",
+            content_type="text/html",
+        )
+
+    async def start():
+        server = aiohttp.web.Server(handler)
+        runner = aiohttp.web.ServerRunner(server)
+        await runner.setup()
+        site = aiohttp.web.TCPSite(runner, "localhost", 0)
+        await site.start()
+        host, port = site._server.sockets[0].getsockname()
+        return site, f"http://{host}:{port}"
+
+    return start
+
+
+@pytest.fixture
+def mermaid_mocker(aiohttp_mocker, mermaid_rsp_cache):
+    check_funcs: dict[tuple[str, str], Callable[[dict], str]] = {}
+    aiohttp_mocker.rsp_cache = mermaid_rsp_cache
+    aiohttp_mocker.check_funcs = check_funcs
+    yield check_funcs
+
+
+@pytest.fixture
+def git_dir():
+    """Fixture to get the unittest directory."""
+    git_dir = Path(__file__).parent / f"unittest/{uuid.uuid4().hex}"
+    git_dir.mkdir(parents=True, exist_ok=True)
+    return git_dir
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests/conftest.py ===
+2026-05-13 20:18:35.358 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:18:48.972 | INFO     | Model API request cost info: input_tokens=2938, output_tokens=803, cost=0.000000
+2026-05-13 20:18:48.974 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:18:48.975 | INFO     | ******
+2026-05-13 20:18:48.975 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests/conftest.py]
+- Environment variables:
+  - ALLOW_OPENAI_API_CALL: Controls if OpenAI API calls are allowed during tests. Default is 1 (allowed), recommended to change to 0 (disallowed) once mocks are complete.
+    - Usage: `ALLOW_OPENAI_API_CALL = int(os.environ.get("ALLOW_OPENAI_API_CALL", 1))`
+- Test setup fixtures:
+  - `rsp_cache`: Session-scoped fixture loading and saving a response cache JSON file from `TEST_DATA_PATH/rsp_cache.json` and exporting a new cache to `rsp_cache_new.json`.
+  - `llm_mock`: Function-scoped, auto-used fixture mocking LLM calls with `MockLLM`:
+    - Mocks methods `aask`, `aask_batch`, and `aask_code` on BaseLLM and OpenAILLM classes.
+    - Updates response cache on test success.
+  - `llm_api`: Package-scoped fixture initializing an LLM API context (`Context` class with a cache-enabled `LLM` instance).
+  - `proxy`: Fixture to create an asynchronous HTTP proxy server for test networking.
+  - `loguru_caplog`: Fixture to integrate `loguru` logger capture with `pytest`'s `caplog`.
+  - `context`: Function-scoped fixture creating a `MetagptContext` with isolated git repo in a unique unittest directory, automatically cleans up on test finalization.
+  - `new_filename`: Function-scoped fixture mocking new filenames generated by `FileRepository.new_filename` to a fixed value `"20240101"` for reproducible tests.
+  - Response cache fixtures for specific purposes:
+    - `search_rsp_cache`, `mermaid_rsp_cache`: Session-scoped fixtures loading respective response cache JSON files for search and mermaid mocks.
+  - HTTP client mocking fixtures:
+    - `aiohttp_mocker`: Mocks `aiohttp.ClientSession` methods (`get`, `post`, `delete`, `patch`, and generic `request`) with `MockAioResponse`.
+    - `curl_cffi_mocker`: Mocks `curl_cffi.requests.Session.request` with `MockCurlCffiResponse`.
+    - `httplib2_mocker`: Mocks `httplib2.Http.request` with `MockHttplib2Response`.
+  - `search_engine_mocker`: Combines the above HTTP mocks to collectively mock different search engine clients and uses `search_rsp_cache`.
+  - `http_server`: Sets up an aiohttp web server fixture responding with a simple HTML page.
+  - `mermaid_mocker`: Uses `aiohttp_mocker` with `mermaid_rsp_cache` to mock Mermaid generation calls.
+  - `git_dir`: Fixture creating a temporary git directory under unittest path for isolated tests.
+- API Keys:
+  - No explicit API keys are set or mocked in this file.
+  - However, OpenAI API calls are conditionally allowed based on the environment variable `ALLOW_OPENAI_API_CALL`.
+- Notes on environment variable mocking:
+  - The file relies on external environment variable `ALLOW_OPENAI_API_CALL` to toggle real API calls vs mock responses.
+  - No other environment variables or API keys are explicitly mentioned or mocked.
+- Test running context and requirements (inferred):
+  - Python environment with access to `pytest`, `mocker` plugin, and supporting libraries like `aiohttp`, `loguru`.
+  - Tests depend on presence of JSON cache files under `TEST_DATA_PATH` (likely a constant defined in `metagpt.const`).
+  - The LLM and network-related calls are heavily mocked to avoid real HTTP or OpenAI API calls unless explicitly enabled.
+  - Cleanup of git repos and temp dirs occurs automatically via fixtures.
+  
+[/Key Information]
+2026-05-13 20:18:48.975 | INFO     | ******
+2026-05-13 20:18:48.976 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/tests/conftest.py]\n- Environment variables:\n  - ALLOW_OPENAI_API_CALL: Controls if OpenAI API calls are allowed during tests. Default is 1 (allowed), recommended to change to 0 (disallowed) once mocks are complete.\n    - Usage: `ALLOW_OPENAI_API_CALL = int(os.environ.get("ALLOW_OPENAI_API_CALL", 1))`\n- Test setup fixtures:\n  - `rsp_cache`: Session-scoped fixture loading and saving a response cache JSON file from `TEST_DATA_PATH/rsp_cache.json` and exporting a new cache to `rsp_cache_new.json`.\n  - `llm_mock`: Function-scoped, auto-used fixture mocking LLM calls with `MockLLM`:\n    - Mocks methods `aask`, `aask_batch`, and `aask_code` on BaseLLM and OpenAILLM classes.\n    - Updates response cache on test success.\n  - `llm_api`: Package-scoped fixture initializing an LLM API context (`Context` class with a cache-enabled `LLM` instance).\n  - `proxy`: Fixture to create an asynchronous HTTP proxy server for test networking.\n  - `loguru_caplog`: Fixture to integrate `loguru` logger capture with `pytest`\'s `caplog`.\n  - `context`: Function-scoped fixture creating a `MetagptContext` with isolated git repo in a unique unittest directory, automatically cleans up on test finalization.\n  - `new_filename`: Function-scoped fixture mocking new filenames generated by `FileRepository.new_filename` to a fixed value `"20240101"` for reproducible tests.\n  - Response cache fixtures for specific purposes:\n    - `search_rsp_cache`, `mermaid_rsp_cache`: Session-scoped fixtures loading respective response cache JSON files for search and mermaid mocks.\n  - HTTP client mocking fixtures:\n    - `aiohttp_mocker`: Mocks `aiohttp.ClientSession` methods (`get`, `post`, `delete`, `patch`, and generic `request`) with `MockAioResponse`.\n    - `curl_cffi_mocker`: Mocks `curl_cffi.requests.Session.request` with `MockCurlCffiResponse`.\n    - `httplib2_mocker`: Mocks `httplib2.Http.request` with `MockHttplib2Response`.\n  - `search_engine_mocker`: Combines the above HTTP mocks to collectively mock different search engine clients and uses `search_rsp_cache`.\n  - `http_server`: Sets up an aiohttp web server fixture responding with a simple HTML page.\n  - `mermaid_mocker`: Uses `aiohttp_mocker` with `mermaid_rsp_cache` to mock Mermaid generation calls.\n  - `git_dir`: Fixture creating a temporary git directory under unittest path for isolated tests.\n- API Keys:\n  - No explicit API keys are set or mocked in this file.\n  - However, OpenAI API calls are conditionally allowed based on the environment variable `ALLOW_OPENAI_API_CALL`.\n- Notes on environment variable mocking:\n  - The file relies on external environment variable `ALLOW_OPENAI_API_CALL` to toggle real API calls vs mock responses.\n  - No other environment variables or API keys are explicitly mentioned or mocked.\n- Test running context and requirements (inferred):\n  - Python environment with access to `pytest`, `mocker` plugin, and supporting libraries like `aiohttp`, `loguru`.\n  - Tests depend on presence of JSON cache files under `TEST_DATA_PATH` (likely a constant defined in `metagpt.const`).\n  - The LLM and network-related calls are heavily mocked to avoid real HTTP or OpenAI API calls unless explicitly enabled.\n  - Cleanup of git repos and temp dirs occurs automatically via fixtures.\n  \n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:19:02.908 | INFO     | Model API request cost info: input_tokens=4442, output_tokens=848, cost=0.000000
+2026-05-13 20:19:02.926 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:19:08.021 | INFO     | Model API request cost info: input_tokens=1446, output_tokens=332, cost=0.000000
+2026-05-13 20:19:08.023 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Environment Setup from README.md": {
+      "config_file": "~/.metagpt/config2.yaml",
+      "init_command": "metagpt --init-config",
+      "config_llm_section_example": {
+        "api_type": "openai",
+        "model": "gpt-4-turbo-preview",
+        "base_url": "https://api.openai.com/v1",
+        "api_key": "YOUR_API_KEY"
+      },
+      "configuration_documentation_url": "https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html"
+    },
+    "Configuration files related to API keys": [
+      "config/config2.yaml",
+      "config/config2.example.yaml",
+      "tests/config2.yaml"
+    ],
+    "Test setup and API key mocking from tests/conftest.py": {
+      "environment_variable": "ALLOW_OPENAI_API_CALL controls real API call allowance",
+      "mocking": {
+        "llm_calls": ["aask", "aask_batch", "aask_code"] ,
+        "mock_class": "MockLLM",
+        "http_clients_mocked": true,
+        "response_caches": "stored in JSON files"
+      },
+      "test_framework": "pytest with plugins like mocker, aiohttp",
+      "test_fixture_features": [
+        "isolated git repo contexts",
+        "mock filenames for deterministic behavior",
+        "async HTTP proxies"
+      ],
+      "no_hardcoded_api_keys": true
+    }
+  },
+  "terminate": true
+}
+2026-05-13 20:19:08.023 | DEBUG    | Extracted a valid json
+2026-05-13 20:19:08.027 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:19:12.091 | INFO     | Model API request cost info: input_tokens=5560, output_tokens=283, cost=0.000000
+2026-05-13 20:19:12.093 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 20:29:07.978 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 33760cfc288cbec26c12b01427243495464f90d235c1cf938338127ccb34a5f8 started.\nPatch applied successfully.\nNote: Git diff changed after test execution.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile4:latest built successfully.\nContainer started.\nPatch applied.\nGit diff changed.\nObtain test results successfully.', True)
+2026-05-13 20:29:07.982 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:29:14.458 | INFO     | Model API request cost info: input_tokens=4224, output_tokens=480, cost=0.000000
+2026-05-13 20:29:14.459 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test run failed due to an ImportError rooted in a pydantic validation error caused by a missing or placeholder API key configuration: \"pydantic_core._pydantic_core.ValidationError: 1 validation error for Config - llm.api_key: Value error, Please set your API key in config2.yaml [type=value_error, input_value='YOUR_API_KEY']\". This indicates that the evaluation script does not set or provide a valid API key value expected by the repository's configuration during import of metagpt.config2 module. To fix this, modify the evaluation script to either:\n1) Provide a proper config2.yaml file with a valid API key or\n2) Override or mock the llm.api_key configuration prior to running pytest, for example by setting environment variables or patching config files so that it does not trigger this validation error.\nAdditionally, ensure that the checkout command in the eval script resets \"tests/mock/mock_llm.py\" at the end with the correct SHA (current checkout command has a typo: 'adb42f44d65a3fd9468c2919a1557e1d' vs checkout command earlier 'adb42f44d65a3fd9468c2919a1557e1c3751759d').\n\nPlease revise the evaluation script to address these configuration and checkout issues. The error message to consider:\n\"pydantic_core._pydantic_core.ValidationError: 1 validation error for Config - llm.api_key: Value error, Please set your API key in config2.yaml [type=value_error, input_value='YOUR_API_KEY']\".",
+  "guidance_for_context_retrieval_agent": "To resolve the pydantic validation error about the missing API key, please retrieve and provide relevant configuration files or documentation that explain how to set the API key for the MetaGPT repository. Specifically, search for config2.yaml, config files in the repository root or config/ directory, and readme or contributing instructions that mention API key setup or environment variable requirements related to llm.api_key or OpenAI API keys. This will help incorporate the proper configuration into the evaluation script or Docker environment."
+}
+2026-05-13 20:29:14.459 | DEBUG    | Extracted a valid json
+2026-05-13 20:29:16.994 | INFO     | Model API request cost info: input_tokens=1446, output_tokens=155, cost=0.000000
+2026-05-13 20:29:17.000 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:29:18.668 | INFO     | Model API request cost info: input_tokens=753, output_tokens=71, cost=0.000000
+2026-05-13 20:29:18.670 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"config\", \"1\")",
+    "search_files_by_keyword(\"config2.yaml\")",
+    "browse_file_for_environment_info(\"README.md\", \"llm.api_key OpenAI API key environment variables\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 20:29:18.670 | DEBUG    | Extracted a valid json
+2026-05-13 20:29:18.673 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/config. The browsing Depth is 1.\nStructure of this directory:\n\nconfig2.example.yaml\n\npuppeteer-config.json\n\nconfig2.yaml\n\n', 'folder structure collected', True)
+2026-05-13 20:29:18.674 | DEBUG    | Result of dispatch_intent: ("Found 2 files containing the keyword 'config2.yaml':\n\n- config/config2.yaml\n- tests/config2.yaml", 'File search completed successfully', True)
+2026-05-13 20:29:18.674 | INFO     | entering browse
+2026-05-13 20:29:18.674 | INFO     | === FILE START: testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+
+# MetaGPT: The Multi-Agent Framework
+
+<p align="center">
+<a href=""><img src="docs/resources/MetaGPT-new-log.png" alt="MetaGPT logo: Enable GPT to work in software company, collaborating to tackle more complex tasks." width="150px"></a>
+</p>
+
+<p align="center">
+<b>Assign different roles to GPTs to form a collaborative entity for complex tasks.</b>
+</p>
+
+<p align="center">
+<a href="docs/README_CN.md"><img src="https://img.shields.io/badge/文档-中文版-blue.svg" alt="CN doc"></a>
+<a href="README.md"><img src="https://img.shields.io/badge/document-English-blue.svg" alt="EN doc"></a>
+<a href="docs/README_JA.md"><img src="https://img.shields.io/badge/ドキュメント-日本語-blue.svg" alt="JA doc"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+<a href="docs/ROADMAP.md"><img src="https://img.shields.io/badge/ROADMAP-路线图-blue" alt="roadmap"></a>
+<a href="https://discord.gg/DYn29wFk9z"><img src="https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat" alt="Discord Follow"></a>
+<a href="https://twitter.com/MetaGPT_"><img src="https://img.shields.io/twitter/follow/MetaGPT?style=social" alt="Twitter Follow"></a>
+</p>
+
+<p align="center">
+   <a href="https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/geekan/MetaGPT"><img src="https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode" alt="Open in Dev Containers"></a>
+   <a href="https://codespaces.new/geekan/MetaGPT"><img src="https://img.shields.io/badge/Github_Codespace-Open-blue?logo=github" alt="Open in GitHub Codespaces"></a>
+   <a href="https://huggingface.co/spaces/deepwisdom/MetaGPT" target="_blank"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20-Hugging%20Face-blue?color=blue&logoColor=white" /></a>
+</p>
+
+## News
+🚀 Mar. 14, 2024: Our **Data Interpreter** paper is on [arxiv](https://arxiv.org/abs/2402.18679). Check the [example](https://docs.deepwisdom.ai/main/en/DataInterpreter/) and [code](https://github.com/geekan/MetaGPT/tree/main/examples/di)!
+
+🚀 Feb. 08, 2024: [v0.7.0](https://github.com/geekan/MetaGPT/releases/tag/v0.7.0) released, supporting assigning different LLMs to different Roles. We also introduced [Data Interpreter](https://github.com/geekan/MetaGPT/blob/main/examples/di/README.md), a powerful agent capable of solving a wide range of real-world problems.
+
+🚀 Jan. 16, 2024: Our paper [MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework
+](https://arxiv.org/abs/2308.00352) accepted for oral presentation **(top 1.2%)** at ICLR 2024, **ranking #1** in the LLM-based Agent category.
+
+🚀 Jan. 03, 2024: [v0.6.0](https://github.com/geekan/MetaGPT/releases/tag/v0.6.0) released, new features include serialization, upgraded OpenAI package and supported multiple LLM, provided [minimal example for debate](https://github.com/geekan/MetaGPT/blob/main/examples/debate_simple.py) etc.
+
+🚀 Dec. 15, 2023: [v0.5.0](https://github.com/geekan/MetaGPT/releases/tag/v0.5.0) released, introducing some experimental features such as **incremental development**, **multilingual**, **multiple programming languages**, etc.
+
+🔥 Nov. 08, 2023: MetaGPT is selected into [Open100: Top 100 Open Source achievements](https://www.benchcouncil.org/evaluation/opencs/annual.html).
+
+🔥 Sep. 01, 2023: MetaGPT tops GitHub Trending Monthly for the **17th time** in August 2023.
+
+🌟 Jun. 30, 2023: MetaGPT is now open source.
+
+🌟 Apr. 24, 2023: First line of MetaGPT code committed.
+
+## Software Company as Multi-Agent System
+
+1. MetaGPT takes a **one line requirement** as input and outputs **user stories / competitive analysis / requirements / data structures / APIs / documents, etc.**
+2. Internally, MetaGPT includes **product managers / architects / project managers / engineers.** It provides the entire process of a **software company along with carefully orchestrated SOPs.**
+   1. `Code = SOP(Team)` is the core philosophy. We materialize SOP and apply it to teams composed of LLMs.
+
+![A software company consists of LLM-based roles](docs/resources/software_company_cd.jpeg)
+
+<p align="center">Software Company Multi-Agent Schematic (Gradually Implementing)</p>
+
+## Get Started
+
+### Installation
+
+> Ensure that Python 3.9+ is installed on your system. You can check this by using: `python --version`.  
+> You can use conda like this: `conda create -n metagpt python=3.9 && conda activate metagpt`
+
+```bash
+pip install --upgrade metagpt
+# or `pip install --upgrade git+https://github.com/geekan/MetaGPT.git`
+# or `git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .`
+```
+
+For detailed installation guidance, please refer to [cli_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-stable-version)
+ or [docker_install](https://docs.deepwisdom.ai/main/en/guide/get_started/installation.html#install-with-docker)
+
+### Configuration
+
+You can init the config of MetaGPT by running the following command, or manually create `~/.metagpt/config2.yaml` file:
+```bash
+# Check https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html for more details
+metagpt --init-config  # it will create ~/.metagpt/config2.yaml, just modify it to your needs
+```
+
+You can configure `~/.metagpt/config2.yaml` according to the [example](https://github.com/geekan/MetaGPT/blob/main/config/config2.example.yaml) and [doc](https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html):
+
+```yaml
+llm:
+  api_type: "openai"  # or azure / ollama / open_llm etc. Check LLMType for more options
+  model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+  base_url: "https://api.openai.com/v1"  # or forward url / other llm url
+  api_key: "YOUR_API_KEY"
+```
+
+### Usage
+
+After installation, you can use MetaGPT at CLI
+
+```bash
+metagpt "Create a 2048 game"  # this will create a repo in ./workspace
+```
+
+or use it as library
+
+```python
+from metagpt.software_company import generate_repo, ProjectRepo
+repo: ProjectRepo = generate_repo("Create a 2048 game")  # or ProjectRepo("<path>")
+print(repo)  # it will print the repo structure with files
+```
+
+You can also use its [Data Interpreter](https://github.com/geekan/MetaGPT/tree/main/examples/di)
+
+```python
+import asyncio
+from metagpt.roles.di.data_interpreter import DataInterpreter
+
+async def main():
+    di = DataInterpreter()
+    await di.run("Run data analysis on sklearn Iris dataset, include a plot")
+
+asyncio.run(main())  # or await main() in a jupyter notebook setting
+```
+
+
+### QuickStart & Demo Video
+- Try it on [MetaGPT Huggingface Space](https://huggingface.co/spaces/deepwisdom/MetaGPT)
+- [Matthew Berman: How To Install MetaGPT - Build A Startup With One Prompt!!](https://youtu.be/uT75J_KG_aY)
+- [Official Demo Video](https://github.com/geekan/MetaGPT/assets/2707039/5e8c1062-8c35-440f-bb20-2b0320f8d27d)
+
+https://github.com/geekan/MetaGPT/assets/34952977/34345016-5d13-489d-b9f9-b82ace413419
+
+## Tutorial
+
+- 🗒 [Online Document](https://docs.deepwisdom.ai/main/en/)
+- 💻 [Usage](https://docs.deepwisdom.ai/main/en/guide/get_started/quickstart.html)  
+- 🔎 [What can MetaGPT do?](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
+- 🛠 How to build your own agents? 
+  - [MetaGPT Usage & Development Guide | Agent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/agent_101.html)
+  - [MetaGPT Usage & Development Guide | MultiAgent 101](https://docs.deepwisdom.ai/main/en/guide/tutorials/multi_agent_101.html)
+- 🧑‍💻 Contribution
+  - [Develop Roadmap](docs/ROADMAP.md)
+- 🔖 Use Cases
+  - [Data Interpreter](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/interpreter/intro.html)
+  - [Debate](https://docs.deepwisdom.ai/main/en/guide/use_cases/multi_agent/debate.html)
+  - [Researcher](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/researcher.html)
+  - [Recepit Assistant](https://docs.deepwisdom.ai/main/en/guide/use_cases/agent/receipt_assistant.html)
+- ❓ [FAQs](https://docs.deepwisdom.ai/main/en/guide/faq.html)
+
+## Support
+
+### Discard Join US
+📢 Join Our [Discord Channel](https://discord.gg/ZRHeExS6xv)!
+
+Looking forward to seeing you there! 🎉
+
+### Contact Information
+
+If you have any questions or feedback about this project, please feel free to contact us. We highly appreciate your suggestions!
+
+- **Email:** alexanderwu@deepwisdom.ai
+- **GitHub Issues:** For more technical inquiries, you can also create a new issue in our [GitHub repository](https://github.com/geekan/metagpt/issues).
+
+We will respond to all questions within 2-3 business days.
+
+## Citation
+
+To stay updated with the latest research and development, follow [@MetaGPT_](https://twitter.com/MetaGPT_) on Twitter. 
+
+To cite [MetaGPT](https://arxiv.org/abs/2308.00352) or [Data Interpreter](https://arxiv.org/abs/2402.18679) in publications, please use the following BibTeX entries.
+
+```bibtex
+@misc{hong2023metagpt,
+      title={MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework}, 
+      author={Sirui Hong and Mingchen Zhuge and Jonathan Chen and Xiawu Zheng and Yuheng Cheng and Ceyao Zhang and Jinlin Wang and Zili Wang and Steven Ka Shing Yau and Zijuan Lin and Liyang Zhou and Chenyu Ran and Lingfeng Xiao and Chenglin Wu and Jürgen Schmidhuber},
+      year={2023},
+      eprint={2308.00352},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+@misc{hong2024data,
+      title={Data Interpreter: An LLM Agent For Data Science}, 
+      author={Sirui Hong and Yizhang Lin and Bang Liu and Bangbang Liu and Binhao Wu and Danyang Li and Jiaqi Chen and Jiayi Zhang and Jinlin Wang and Li Zhang and Lingyao Zhang and Min Yang and Mingchen Zhuge and Taicheng Guo and Tuo Zhou and Wei Tao and Wenyi Wang and Xiangru Tang and Xiangtao Lu and Xiawu Zheng and Xinbing Liang and Yaying Fei and Yuheng Cheng and Zongze Xu and Chenglin Wu},
+      year={2024},
+      eprint={2402.18679},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+
+```
+
+
+=== FILE END:   testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md ===
+2026-05-13 20:29:18.674 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:29:26.779 | INFO     | Model API request cost info: input_tokens=3403, output_tokens=511, cost=0.000000
+2026-05-13 20:29:26.780 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:29:26.780 | INFO     | ******
+2026-05-13 20:29:26.780 | INFO     | [Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]
+- Requirements:
+  - Python >= 3.9 (recommended via conda environment)
+- Installation:
+  - pip install --upgrade metagpt
+  - Alternative: pip install --upgrade git+https://github.com/geekan/MetaGPT.git
+  - Alternative: git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .
+- Configuration:
+  - MetaGPT config file location: `~/.metagpt/config2.yaml`
+  - Template snippet for LLM section in config2.yaml:
+    ```yaml
+    llm:
+      api_type: "openai"               # or azure / ollama / open_llm etc.
+      model: "gpt-4-turbo-preview"    # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+      base_url: "https://api.openai.com/v1"  # or other LLM endpoint
+      api_key: "YOUR_API_KEY"          # <-- OpenAI API key must be specified here
+    ```
+  - The `api_key` field must contain your OpenAI API key.
+  - You can initialize the config file with:
+    ```bash
+    metagpt --init-config
+    ```
+    This creates the default `~/.metagpt/config2.yaml` to be modified manually.
+- OpenAI API key environment variables:
+  - The README does not explicitly mention environment variable names for OpenAI API keys.
+  - Instead, it points to specifying the key inside the config file `~/.metagpt/config2.yaml` under `llm.api_key`.
+- Testing:
+  - No explicit test commands or testing instructions found in this README.
+- Usage:
+  - CLI usage example:
+    ```bash
+    metagpt "Create a 2048 game"
+    ```
+  - Programmatic usage example:
+    ```python
+    from metagpt.software_company import generate_repo, ProjectRepo
+    repo: ProjectRepo = generate_repo("Create a 2048 game")
+    print(repo)
+    ```
+- Other environment variables or prerequisites:
+  - None explicitly mentioned.
+  - Python runtime is a prerequisite.
+- No commands or flags specifically for running tests or partial test files are documented here.
+[/Key Information]
+2026-05-13 20:29:26.780 | INFO     | ******
+2026-05-13 20:29:26.781 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/FoundationAgents__MetaGPT-1058_2026-05-13_19-55-03/README.md]\n- Requirements:\n  - Python >= 3.9 (recommended via conda environment)\n- Installation:\n  - pip install --upgrade metagpt\n  - Alternative: pip install --upgrade git+https://github.com/geekan/MetaGPT.git\n  - Alternative: git clone https://github.com/geekan/MetaGPT && cd MetaGPT && pip install --upgrade -e .\n- Configuration:\n  - MetaGPT config file location: `~/.metagpt/config2.yaml`\n  - Template snippet for LLM section in config2.yaml:\n    ```yaml\n    llm:\n      api_type: "openai"               # or azure / ollama / open_llm etc.\n      model: "gpt-4-turbo-preview"    # or gpt-3.5-turbo-1106 / gpt-4-1106-preview\n      base_url: "https://api.openai.com/v1"  # or other LLM endpoint\n      api_key: "YOUR_API_KEY"          # <-- OpenAI API key must be specified here\n    ```\n  - The `api_key` field must contain your OpenAI API key.\n  - You can initialize the config file with:\n    ```bash\n    metagpt --init-config\n    ```\n    This creates the default `~/.metagpt/config2.yaml` to be modified manually.\n- OpenAI API key environment variables:\n  - The README does not explicitly mention environment variable names for OpenAI API keys.\n  - Instead, it points to specifying the key inside the config file `~/.metagpt/config2.yaml` under `llm.api_key`.\n- Testing:\n  - No explicit test commands or testing instructions found in this README.\n- Usage:\n  - CLI usage example:\n    ```bash\n    metagpt "Create a 2048 game"\n    ```\n  - Programmatic usage example:\n    ```python\n    from metagpt.software_company import generate_repo, ProjectRepo\n    repo: ProjectRepo = generate_repo("Create a 2048 game")\n    print(repo)\n    ```\n- Other environment variables or prerequisites:\n  - None explicitly mentioned.\n  - Python runtime is a prerequisite.\n- No commands or flags specifically for running tests or partial test files are documented here.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:29:38.146 | INFO     | Model API request cost info: input_tokens=2509, output_tokens=691, cost=0.000000
+2026-05-13 20:29:38.167 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:29:41.895 | INFO     | Model API request cost info: input_tokens=1289, output_tokens=303, cost=0.000000
+2026-05-13 20:29:41.897 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "environment_setup": {
+      "python_version": ">= 3.9 (recommended via conda)",
+      "installation_commands": [
+        "pip install --upgrade metagpt",
+        "pip install --upgrade git+https://github.com/geekan/MetaGPT.git",
+        "git clone https://github.com/geekan/MetaGPT",
+        "cd MetaGPT",
+        "pip install --upgrade -e ."
+      ]
+    },
+    "configuration": {
+      "config_file_path": "~/.metagpt/config2.yaml",
+      "config_template_llm_section": {
+        "api_type": "openai",
+        "model": "gpt-4-turbo-preview",
+        "base_url": "https://api.openai.com/v1",
+        "api_key": "YOUR_API_KEY"
+      },
+      "init_command": "metagpt --init-config",
+      "api_key_setup": "The API key must be explicitly set inside the config2.yaml file. No environment variable usage is indicated."
+    },
+    "config_files_in_repo": [
+      "config/config2.yaml",
+      "config/config2.example.yaml",
+      "tests/config2.yaml"
+    ],
+    "notes": "The API key validation error issue is resolved by the above config file setup. No additional environment variables or test setup instructions are required at this point."
+  },
+  "terminate": true
+}
+2026-05-13 20:29:41.897 | DEBUG    | Extracted a valid json
+2026-05-13 20:29:41.940 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:29:47.175 | INFO     | Model API request cost info: input_tokens=7159, output_tokens=353, cost=0.000000
+2026-05-13 20:29:47.177 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 20:40:54.791 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 662457153e58326f989b76bbba3391d8ae1dbdbd7f456f1f4a47595c3694f5e6 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile5:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 20:40:54.798 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:40:59.627 | INFO     | Model API request cost info: input_tokens=4161, output_tokens=257, cost=0.000000
+2026-05-13 20:40:59.629 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test run failed because of a missing Python module: 'ModuleNotFoundError: No module named 'curl_cffi'' when loading 'tests/conftest.py'. This indicates that the 'curl_cffi' package is not installed in the test environment. The eval script currently installs pytest but does not ensure installation of this required dependency. Please revise the eval script to install all required dependencies before running the tests, or verify that the Dockerfile installs all required Python packages listed in requirements.txt and any additional dependencies needed by tests/conftest.py such as 'curl_cffi'. The error occurs during import in the test setup, which prevents any tests from running. Ensure 'pip install -r requirements.txt' is successful and possibly add an explicit 'pip install curl_cffi' in the eval script to avoid missing dependencies. Also confirm that the eval script correctly installs the repo in editable mode after dependencies are installed to allow local imports. Finally, keep the current logic to emit 'OMNIGRIL_EXIT_CODE' with the exit code after pytest runs.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 20:40:59.629 | DEBUG    | Extracted a valid json
+2026-05-13 20:40:59.633 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:41:04.957 | INFO     | Model API request cost info: input_tokens=8454, output_tokens=387, cost=0.000000
+2026-05-13 20:41:04.963 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 20:51:12.719 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer e1d127f45bc528039c0b7259b9d8400cefe5d02803264b0e3d819b12ea4c931d started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile6:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 20:51:12.724 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:51:19.098 | INFO     | Model API request cost info: input_tokens=21513, output_tokens=225, cost=0.000000
+2026-05-13 20:51:19.104 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test run failed with the error message: \"ModuleNotFoundError: No module named 'httplib2'\" while importing 'httplib2' in 'tests/mock/mock_httplib2.py' during pytest execution of 'tests/mock/mock_llm.py'. This indicates that the required Python package 'httplib2' is missing from the environment. Since the Dockerfile installs dependencies only via 'pip install -r requirements.txt' and the editable package, it seems 'httplib2' is not included in requirements.txt or otherwise installed. To fix this, the eval script should be modified to also explicitly pip install 'httplib2' before running pytest, similar to how it installs 'pytest' and 'curl_cffi'. This ensures the test dependencies are fully met and prevents import errors during testing. Please add `pip install httplib2` in the eval script before pytest invocation.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 20:51:19.104 | DEBUG    | Extracted a valid json
+2026-05-13 20:51:19.109 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:51:25.302 | INFO     | Model API request cost info: input_tokens=9750, output_tokens=395, cost=0.000000
+2026-05-13 20:51:25.330 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 21:02:38.001 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer ebe3f08adf38842d7459cdceac512c7e3854daf8ad4170182009c6881503827a started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile7:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 21:02:38.013 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 21:02:42.941 | INFO     | Model API request cost info: input_tokens=22012, output_tokens=248, cost=0.000000
+2026-05-13 21:02:42.943 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The pytest test execution ran but collected 0 tests from the specified test file 'tests/mock/mock_llm.py'. The test log line 390 states 'collected 0 items' and there is no actual test execution or pass/fail results. This means the tests in the targeted file were not discovered or run. Please revise the eval script to ensure that the tests inside 'tests/mock/mock_llm.py' are properly collected and executed by pytest. Suggestions include verifying the test file path correctness, checking that the test functions/classes in 'mock_llm.py' are properly defined and discoverable by pytest (e.g., test function names starting with 'test_'), and considering adding more verbose output or debug flags to pytest to understand why no tests are found. Also confirm that the patch application does not remove or block test discovery. The exit code 5 from pytest indicates 'No tests collected', which confirms the problem. Make sure the test file is not empty or that the patch did not inadvertently remove tests.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 21:02:42.944 | DEBUG    | Extracted a valid json
+2026-05-13 21:02:42.986 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 21:02:48.297 | INFO     | Model API request cost info: input_tokens=11078, output_tokens=369, cost=0.000000
+2026-05-13 21:02:48.299 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 21:16:13.533 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 2f118bff6f4b82707315058a16f7159dd68a0b79d4aea917bd9220b49e9d32d1 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image foundationagents__metagpt-1058-dockerfile8:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 21:16:13.540 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 21:16:21.014 | INFO     | Model API request cost info: input_tokens=21675, output_tokens=376, cost=0.000000
+2026-05-13 21:16:21.017 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The pytest run shows 'collected 0 items', indicating that no tests were found or executed in the target test file tests/mock/mock_llm.py despite the patch being applied and test file checked out correctly. The test command itself seems syntactically valid, but the absence of any collected test items suggests either the tests in that file are not discoverable by pytest in its current state or configuration, or the patch/test file content causes them not to be detected. The eval script should be revised to verify that the target tests are correctly recognized and run by pytest. Suggested fixes include:\n1. Confirm that the patched test file 'tests/mock/mock_llm.py' contains valid test functions following pytest naming conventions (functions named with prefix test_).\n2. Ensure there are no skip decorators or markers in the patched test file that prevent running.\n3. Consider running pytest with options to show discovered test files and debug collection, e.g., add --collect-only or more verbose output to understand why zero tests were found.\n4. Confirm the working directory and path correctness before running pytest to ensure it points exactly to the target test file.\n5. Add explicit logging or print statements in the eval script before running pytest to check the file content and confirm tests exist.\n6. Make sure the test patch applied actually adds or modifies test code to enable or fix test detection.\nCurrently, the pytest exit code is 5, which means \"No tests collected\". This indicates the test execution is not effective even though the environment and dependencies seem correctly installed. Fixing this in the eval script is needed so tests are recognized and run.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 21:16:21.017 | DEBUG    | Extracted a valid json
+2026-05-13 21:16:21.028 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 21:16:27.226 | INFO     | Model API request cost info: input_tokens=12500, output_tokens=410, cost=0.000000
+2026-05-13 21:16:27.227 | INFO     | Raw script and produced in try 1. Writing script into file.

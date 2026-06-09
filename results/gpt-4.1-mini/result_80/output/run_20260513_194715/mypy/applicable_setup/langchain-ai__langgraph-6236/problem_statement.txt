@@ -1,0 +1,240 @@
+A JSON serializable problem on PostgresSaver
+### Checked other resources
+
+- [x] This is a bug, not a usage question. For questions, please use the LangChain Forum (https://forum.langchain.com/).
+- [x] I added a clear and detailed title that summarizes the issue.
+- [x] I read what a minimal reproducible example is (https://stackoverflow.com/help/minimal-reproducible-example).
+- [x] I included a self-contained, minimal example that demonstrates the issue INCLUDING all the relevant imports. The code run AS IS to reproduce the issue.
+
+### Example Code
+
+```python
+from langchain.chat_models import init_chat_model
+from langgraph.graph import StateGraph, MessagesState, START
+from langgraph.checkpoint.postgres import PostgresSaver
+
+model = init_chat_model(model="anthropic:claude-3-5-haiku-latest")
+
+DB_URI = "postgresql://postgres:postgres@localhost:5442/postgres?sslmode=disable"
+with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
+    # checkpointer.setup()
+
+    def call_model(state: MessagesState):
+        response = model.invoke(state["messages"])
+        return {"messages": response}
+
+    builder = StateGraph(MessagesState)
+    builder.add_node(call_model)
+    builder.add_edge(START, "call_model")
+
+    graph = builder.compile(checkpointer=checkpointer)
+
+    config = {
+        "configurable": {
+            "thread_id": "1"
+        }
+    }
+
+    for chunk in graph.stream(
+        {"messages": [{"role": "user", "content": "hi! I'm bob"}]},
+        config,
+        stream_mode="values"
+    ):
+        chunk["messages"][-1].pretty_print()
+
+    for chunk in graph.stream(
+        {"messages": [{"role": "user", "content": "what's my name?"}]},
+        config,
+        stream_mode="values"
+    ):
+        chunk["messages"][-1].pretty_print()
+```
+
+### Error Message and Stack Trace (if applicable)
+
+```shell
+Traceback (most recent call last):
+  File "/Users/gaoshuo/Downloads/项目2_基于LangGraph实现智能分诊系统/L1-Project-2/apiTest.py", line 31, in <module>
+    for chunk in graph.stream(
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/pregel/__init__.py", line 1723, in stream
+    with SyncPregelLoop(
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/pregel/loop.py", line 959, in __exit__
+    return self.stack.__exit__(exc_type, exc_value, traceback)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/contextlib.py", line 601, in __exit__
+    raise exc_details[1]
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/contextlib.py", line 586, in __exit__
+    if cb(*exc_details):
+       ^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/pregel/executor.py", line 120, in __exit__
+    task.result()
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/pregel/executor.py", line 83, in done
+    task.result()
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/pregel/loop.py", line 886, in _checkpointer_put_after_previous
+    cast(BaseCheckpointSaver, self.checkpointer).put(
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/langgraph/checkpoint/postgres/__init__.py", line 323, in put
+    cur.execute(
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/cursor.py", line 93, in execute
+    self._conn.wait(
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/connection.py", line 414, in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/waiting.py", line 333, in wait_poll
+    s = next(gen)
+        ^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/_cursor_base.py", line 194, in _execute_gen
+    pgq = self._convert_query(query, params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/_cursor_base.py", line 453, in _convert_query
+    pgq.convert(query, params)
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/_queries.py", line 95, in convert
+    self.dump(vars)
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/_queries.py", line 106, in dump
+    self.params = self._tx.dump_sequence(params, self._want_formats)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/_py_transformer.py", line 193, in dump_sequence
+    out[i] = dumper.dump(param)
+             ^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/site-packages/psycopg/types/json.py", line 149, in dump
+    if isinstance((data := dumps(obj)), str):
+                           ^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/json/__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/gaoshuo/Downloads/miniconda3/envs/L1-Project-2/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type AIMessage is not JSON serializable
+```
+
+### Description
+
+I am developing an agent for financial report analysis using LangGraph and have run into a persistent issue.
+The problem arises when I try to run my workflow. I expect to see the output from the LLM, but instead, I encounter a **_TypeError: Object of type AIMessage is not JSON serializable._**
+After some debugging, I've narrowed down the cause to the PostgresSaver checkpointer. Specifically, the error occurs right after my generate node returns a message from the LLM (an AIMessage). If I use in-memory storage instead of PostgresSaver, the workflow runs without any issues.
+What's more puzzling is that this error does not occur after other nodes in the workflow return messages. It only appears when the final node completes its work and the very last message needs to be processed. I can confirm this from the print statements in my terminal, which show that the return values from intermediate nodes are being correctly outputted and seemingly saved.
+**_To validate my findings, I tried running the official LangGraph memory tutorial from the documentation (link: https://langchain-ai.github.io/langgraph/how-tos/memory/add-memory/?h=asyncpostgressaver#__tabbed_1_1). I used the code provided in the first tab for PostgresSaver. To my surprise, I encountered the exact same error， the TypeError is raised immediately after. This behavior is identical to what I'm experiencing in my own project.
+This issue has been troubling me for several days, and I'm unsure if it's a bug, a configuration mistake on my part, or something else entirely._**
+For context, here are some of the key dependencies in my project environment:
+pip install langgraph==0.2.74
+pip install langchain-openai==0.3.6
+
+pip install langchain-community==0.3.19
+pip install langchain-chroma==0.2.2
+pip install pdfminer
+pip install pdfminer.six
+pip install nltk==3.9.1
+pip install psycopg2==2.9.10
+pip install concurrent-log-handler==0.9.25
+
+pip install langgraph-checkpoint-postgres
+pip install psycopg psycopg-pool
+I would sincerely appreciate any help or insights someone could offer to resolve this.
+Thank you!
+
+### System Info
+
+System Information
+------------------
+> OS:  Darwin
+> OS Version:  Darwin Kernel Version 24.5.0: Tue Apr 22 19:54:43 PDT 2025; root:xnu-11417.121.6~2/RELEASE_ARM64_T8132
+> Python Version:  3.11.13 (main, Jun  5 2025, 08:21:08) [Clang 14.0.6 ]
+
+Package Information
+-------------------
+> langchain_core: 0.3.72
+> langchain: 0.3.27
+> langchain_community: 0.3.19
+> langsmith: 0.3.45
+> langchain_chroma: 0.2.2
+> langchain_openai: 0.3.6
+> langchain_text_splitters: 0.3.9
+> langgraph_sdk: 0.1.74
+
+Optional packages not installed
+-------------------------------
+> langserve
+
+Other Dependencies
+------------------
+> aiohttp<4.0.0,>=3.8.3: Installed. No version info available.
+> async-timeout<5.0.0,>=4.0.0;: Installed. No version info available.
+> chromadb!=0.5.10,!=0.5.11,!=0.5.12,!=0.5.4,!=0.5.5,!=0.5.7,!=0.5.9,<0.7.0,>=0.4.0: Installed. No version info available.
+> dataclasses-json<0.7,>=0.5.7: Installed. No version info available.
+> httpx: 0.28.1
+> httpx-sse<1.0.0,>=0.4.0: Installed. No version info available.
+> httpx>=0.25.2: Installed. No version info available.
+> jsonpatch<2.0,>=1.33: Installed. No version info available.
+> langchain-anthropic;: Installed. No version info available.
+> langchain-aws;: Installed. No version info available.
+> langchain-azure-ai;: Installed. No version info available.
+> langchain-cohere;: Installed. No version info available.
+> langchain-community;: Installed. No version info available.
+> langchain-core!=0.3.0,!=0.3.1,!=0.3.10,!=0.3.11,!=0.3.12,!=0.3.13,!=0.3.14,!=0.3.2,!=0.3.3,!=0.3.4,!=0.3.5,!=0.3.6,!=0.3.7,!=0.3.8,!=0.3.9,<0.4.0,>=0.2.43: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.35: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.41: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.72: Installed. No version info available.
+> langchain-deepseek;: Installed. No version info available.
+> langchain-fireworks;: Installed. No version info available.
+> langchain-google-genai;: Installed. No version info available.
+> langchain-google-vertexai;: Installed. No version info available.
+> langchain-groq;: Installed. No version info available.
+> langchain-huggingface;: Installed. No version info available.
+> langchain-mistralai;: Installed. No version info available.
+> langchain-ollama;: Installed. No version info available.
+> langchain-openai;: Installed. No version info available.
+> langchain-perplexity;: Installed. No version info available.
+> langchain-text-splitters<1.0.0,>=0.3.9: Installed. No version info available.
+> langchain-together;: Installed. No version info available.
+> langchain-xai;: Installed. No version info available.
+> langchain<1.0.0,>=0.3.20: Installed. No version info available.
+> langsmith-pyo3: Installed. No version info available.
+> langsmith<0.4,>=0.1.125: Installed. No version info available.
+> langsmith>=0.1.17: Installed. No version info available.
+> langsmith>=0.3.45: Installed. No version info available.
+> numpy<2.0.0,>=1.22.4;: Installed. No version info available.
+> numpy<2.0.0,>=1.26.2;: Installed. No version info available.
+> numpy<3,>=1.26.2: Installed. No version info available.
+> openai-agents: Installed. No version info available.
+> openai<2.0.0,>=1.58.1: Installed. No version info available.
+> opentelemetry-api: 1.36.0
+> opentelemetry-exporter-otlp-proto-http: Installed. No version info available.
+> opentelemetry-sdk: 1.36.0
+> orjson: 3.11.1
+> orjson>=3.10.1: Installed. No version info available.
+> packaging: 25.0
+> packaging>=23.2: Installed. No version info available.
+> pydantic: 2.11.7
+> pydantic-settings<3.0.0,>=2.4.0: Installed. No version info available.
+> pydantic<3.0.0,>=2.7.4: Installed. No version info available.
+> pydantic>=2.7.4: Installed. No version info available.
+> pytest: Installed. No version info available.
+> PyYAML>=5.3: Installed. No version info available.
+> requests: 2.32.4
+> requests-toolbelt: 1.0.0
+> requests<3,>=2: Installed. No version info available.
+> rich: 14.1.0
+> SQLAlchemy<3,>=1.4: Installed. No version info available.
+> tenacity!=8.4.0,<10,>=8.1.0: Installed. No version info available.
+> tenacity!=8.4.0,<10.0.0,>=8.1.0: Installed. No version info available.
+> tiktoken<1,>=0.7: Installed. No version info available.
+> typing-extensions>=4.7: Installed. No version info available.
+> zstandard: 0.23.0

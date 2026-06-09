@@ -1,0 +1,148 @@
+Returning `Command` with `goto` attribute in a graph with >= 3 total graph depth results in `langgraph.errors.ParentCommand` error
+### Checked other resources
+
+- [x] This is a bug, not a usage question. For questions, please use the LangChain Forum (https://forum.langchain.com/).
+- [x] I added a clear and detailed title that summarizes the issue.
+- [x] I read what a minimal reproducible example is (https://stackoverflow.com/help/minimal-reproducible-example).
+- [x] I included a self-contained, minimal example that demonstrates the issue INCLUDING all the relevant imports. The code run AS IS to reproduce the issue.
+
+### Example Code
+
+```python
+from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START
+from langgraph.types import Command
+from langgraph.graph.message import add_messages
+from typing import Annotated, TypedDict, Sequence
+
+class State(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+
+def sub_sub_child(state):
+    return Command(
+        graph=Command.PARENT,
+        goto="sub_child_3",
+        update={"messages": state["messages"] + ["sub_sub_child executed, going to sub_child_3"]},
+    )
+
+sub_sub_builder = StateGraph(State)
+sub_sub_builder.add_node("sub_sub_child", sub_sub_child)
+sub_sub_builder.add_edge(START, "sub_sub_child")
+sub_sub_graph = sub_sub_builder.compile(name="sub_sub_graph", checkpointer=True)
+
+def sub_child_1(state):
+    return {"messages": state["messages"] + ["sub_child_1 executed"]}
+
+def sub_child_3(state):
+    return {"messages": state["messages"] + ["sub_child_3 executed"]}
+
+sub_builder = StateGraph(State)
+sub_builder.add_node("sub_child_1", sub_child_1)
+sub_builder.add_node("sub_child_2", sub_sub_graph)
+sub_builder.add_node("sub_child_3", sub_child_3)
+sub_builder.add_edge(START, "sub_child_1")
+sub_builder.add_edge("sub_child_1", "sub_child_2")
+sub_graph = sub_builder.compile(name="sub_graph", checkpointer=True)
+
+def child_1(state):
+    return {"messages": state["messages"] + ["child_1 executed"]}
+
+builder = StateGraph(State)
+builder.add_node("child_1", child_1)
+builder.add_node("child_2", sub_graph)
+builder.add_edge(START, "child_1")
+builder.add_edge("child_1", "child_2")
+graph = builder.compile(name="main_graph", checkpointer=MemorySaver())
+
+result = graph.invoke({"messages":[]}, RunnableConfig(recursion_limit=100, configurable={"thread_id": 1}))
+```
+
+### Error Message and Stack Trace (if applicable)
+
+```shell
+langgraph.errors.ParentCommand: Command(graph='child_2|sub_child_2', update={'messages': [HumanMessage(content='child_1 executed', additional_kwargs={}, response_metadata={}, id='0d913850-1062-4395-a94b-1edccb9fc3e8'), HumanMessage(content='sub_child_1 executed', additional_kwargs={}, response_metadata={}, id='bce46bfc-5040-40e7-a080-04c735edcabe'), 'sub_sub_child executed, going to sub_child_3']}, goto='sub_child_3')
+```
+
+### Description
+
+I am working on a graph which has a sub-graph as one of its nodes. This sub-graph also has a sub-graph in it. So essentially, we have a parent graph (called `main_graph`), which has one sub-graph as its node (called `sub_graph`). This `sub_graph` also has a sub-graph as its node (called `sub_sub_graph`). Returning a `Command` from the `sub_sub_graph`'s one node that targets its parent (which should be `sub_graph`) results in an error.
+
+### System Info
+
+System Information
+------------------
+> OS:  Linux
+> OS Version:  #1 SMP PREEMPT_DYNAMIC Wed Jan 15 08:02:15 EST 2025
+> Python Version:  3.12.0 (main, Aug 26 2024, 03:18:57) [GCC 8.5.0 20210514 (Red Hat 8.5.0-4)]
+
+Package Information
+-------------------
+> langchain_core: 0.3.76
+> langchain: 0.3.27
+> langsmith: 0.4.4
+> langchain_openai: 0.3.27
+> langchain_text_splitters: 0.3.11
+> langgraph_sdk: 0.2.0
+> langgraph_supervisor: 0.0.29
+
+Optional packages not installed
+-------------------------------
+> langserve
+
+Other Dependencies
+------------------
+> async-timeout<5.0.0,>=4.0.0;: Installed. No version info available.
+> httpx: 0.28.1
+> httpx>=0.25.2: Installed. No version info available.
+> jsonpatch<2.0,>=1.33: Installed. No version info available.
+> langchain-anthropic;: Installed. No version info available.
+> langchain-aws;: Installed. No version info available.
+> langchain-azure-ai;: Installed. No version info available.
+> langchain-cohere;: Installed. No version info available.
+> langchain-community;: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.66: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.72: Installed. No version info available.
+> langchain-core<2.0.0,>=0.3.75: Installed. No version info available.
+> langchain-core>=0.3.40: Installed. No version info available.
+> langchain-deepseek;: Installed. No version info available.
+> langchain-fireworks;: Installed. No version info available.
+> langchain-google-genai;: Installed. No version info available.
+> langchain-google-vertexai;: Installed. No version info available.
+> langchain-groq;: Installed. No version info available.
+> langchain-huggingface;: Installed. No version info available.
+> langchain-mistralai;: Installed. No version info available.
+> langchain-ollama;: Installed. No version info available.
+> langchain-openai;: Installed. No version info available.
+> langchain-perplexity;: Installed. No version info available.
+> langchain-text-splitters<1.0.0,>=0.3.9: Installed. No version info available.
+> langchain-together;: Installed. No version info available.
+> langchain-xai;: Installed. No version info available.
+> langgraph<0.7.0,>=0.6.0: Installed. No version info available.
+> langsmith-pyo3: Installed. No version info available.
+> langsmith>=0.1.17: Installed. No version info available.
+> langsmith>=0.3.45: Installed. No version info available.
+> openai-agents: Installed. No version info available.
+> openai<2.0.0,>=1.86.0: Installed. No version info available.
+> opentelemetry-api: Installed. No version info available.
+> opentelemetry-exporter-otlp-proto-http: Installed. No version info available.
+> opentelemetry-sdk: Installed. No version info available.
+> orjson: 3.10.18
+> orjson>=3.10.1: Installed. No version info available.
+> packaging: 24.2
+> packaging>=23.2: Installed. No version info available.
+> pydantic: 2.10.6
+> pydantic<3.0.0,>=2.7.4: Installed. No version info available.
+> pydantic>=2.7.4: Installed. No version info available.
+> pytest: Installed. No version info available.
+> PyYAML>=5.3: Installed. No version info available.
+> requests: 2.32.4
+> requests-toolbelt: 1.0.0
+> requests<3,>=2: Installed. No version info available.
+> rich: 14.0.0
+> SQLAlchemy<3,>=1.4: Installed. No version info available.
+> tenacity!=8.4.0,<10.0.0,>=8.1.0: Installed. No version info available.
+> tiktoken<1,>=0.7: Installed. No version info available.
+> typing-extensions>=4.7: Installed. No version info available.
+> zstandard: 0.23.0

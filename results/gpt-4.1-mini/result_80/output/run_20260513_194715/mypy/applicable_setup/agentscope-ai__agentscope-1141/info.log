@@ -1,0 +1,2168 @@
+2026-05-13 20:23:31.578 | INFO     | Model API request cost info: input_tokens=1313, output_tokens=72, cost=0.000000
+2026-05-13 20:23:31.645 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:23:32.772 | INFO     | Model API request cost info: input_tokens=670, output_tokens=49, cost=0.000000
+2026-05-13 20:23:32.774 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"README.md\", \"environment setup, dependencies, python version, package versions, test running commands\")"],
+  "collected_information": null,
+  "terminate": false
+}
+2026-05-13 20:23:32.774 | DEBUG    | Extracted a valid json
+2026-05-13 20:23:32.780 | INFO     | entering browse
+2026-05-13 20:23:32.781 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/README.md ===
+[**中文主页**](https://github.com/agentscope-ai/agentscope/blob/main/README_zh.md) | [**Tutorial**](https://doc.agentscope.io/) | [**Roadmap**](https://github.com/agentscope-ai/agentscope/blob/main/docs/roadmap.md) | [**FAQ**](https://doc.agentscope.io/tutorial/faq.html)
+
+<p align="center">
+  <img
+    src="https://img.alicdn.com/imgextra/i1/O1CN01nTg6w21NqT5qFKH1u_!!6000000001621-55-tps-550-550.svg"
+    alt="AgentScope Logo"
+    width="200"
+  />
+</p>
+
+<h2 align="center">AgentScope: Agent-Oriented Programming for Building LLM Applications</h2>
+
+<p align="center">
+    <a href="https://arxiv.org/abs/2402.14034">
+        <img
+            src="https://img.shields.io/badge/cs.MA-2402.14034-B31C1C?logo=arxiv&logoColor=B31C1C"
+            alt="arxiv"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/python-3.10+-blue?logo=python"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fagentscope%2Fjson&query=%24.info.version&prefix=v&logo=pypi&label=version"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://doc.agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/Docs-English%7C%E4%B8%AD%E6%96%87-blue?logo=markdown"
+            alt="docs"
+        />
+    </a>
+    <a href="https://agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/GUI-AgentScope_Studio-blue?logo=look&logoColor=green&color=dark-green"
+            alt="workstation"
+        />
+    </a>
+    <a href="./LICENSE">
+        <img
+            src="https://img.shields.io/badge/license-Apache--2.0-black"
+            alt="license"
+        />
+    </a>
+</p>
+
+<p align="center">
+<img src="https://trendshift.io/api/badge/repositories/10079" alt="modelscope%2Fagentscope | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+</p>
+
+## 📢 News
+- **[2026-01]** Hi community, we are launching AgentScope Biweekly Meetings to share ecosystem updates and development plans - join us! [Details & Schedule](https://github.com/agentscope-ai/agentscope/discussions/1126)
+- **[2026-01]** AgentScope integrates [database support](https://doc.agentscope.io/tutorial/task_memory.html) in the memory module now, as well as the [memory compression](https://doc.agentscope.io/tutorial/task_agent.html) feature. Check our [example](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/short_term_memory/memory_compression) and [tutorial](https://doc.agentscope.io/tutorial/task_memory.html) for more details.
+- **[2025-12]** AgentScope supports [A2A(Agent-to-Agent) protocol](https://doc.agentscope.io/tutorial/task_a2a.html) now! Check our [example](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/a2a_agent) and [tutorial](https://doc.agentscope.io/tutorial/task_a2a.html) for more details.
+- **[2025-12]** AgentScope supports [TTS(Text-to-Speech)](https://doc.agentscope.io/tutorial/task_tts.html) now! Check our [example](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/tts) and [tutorial](https://doc.agentscope.io/tutorial/task_tts.html) for more details.
+- **[2025-11]** AgentScope supports [Anthropic Agent Skill](https://claude.com/blog/skills) now! Check our [example](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/agent_skill) and [tutorial](https://doc.agentscope.io/tutorial/task_agent_skill.html) for more details.
+- **[2025-11]** AgentScope open-sources [Alias-Agent](https://github.com/agentscope-ai/agentscope-samples/tree/main/alias) for diverse real-world tasks and [Data-Juicer Agent](https://github.com/agentscope-ai/agentscope-samples/tree/main/data_juicer_agent) for data processing.
+- **[2025-11]** AgentScope supports [Agentic RL](https://github.com/agentscope-ai/agentscope/tree/main/examples/tuner/react_agent) via integrating [Trinity-RFT](https://github.com/agentscope-ai/Trinity-RFT) library.
+- **[2025-11]** AgentScope integrates [ReMe](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/long_term_memory/reme) for enhanced long-term memory.
+- **[2025-11]** AgentScope launches [agentscope-samples](https://github.com/agentscope-ai/agentscope-samples) repository and upgrades [agentscope-runtime](https://github.com/agentscope-ai/agentscope-runtime) with Docker/K8s deployment and VNC-powered GUI sandboxes.
+- **[2025-11]** [Contributing Guide](./CONTRIBUTING.md) is online now! Welcome to contribute to AgentScope.
+- **[2025-09]** **RAG** module in AgentScope 1.0 is online now! Check our [tutorial](https://doc.agentscope.io/tutorial/task_rag.html) and [example](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/rag) for more details.
+- **[2025-09]** **Voice agent** is online! `ReActAgent` supports Qwen-Omni and GPT-Audio natively now, check our [new example](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/voice_agent) and [roadmap](https://github.com/agentscope-ai/agentscope/issues/773).
+- **[2025-09]** A new powerful 📋**Plan** module is online now! Check out the [tutorial](https://doc.agentscope.io/tutorial/task_plan.html) for more details.
+- **[2025-09]** **AgentScope Runtime** is open-sourced now! Enabling effective agent deployment with sandboxed tool execution for production-ready AI applications. Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-runtime).
+- **[2025-09]** **AgentScope Studio** is open-sourced now! Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-studio).
+- **[2025-08]** The new tutorial of v1 is online now! Check out the [tutorial](https://doc.agentscope.io) for more details.
+- **[2025-08]** 🎉🎉 AgentScope v1 is released now! This version fully embraces the asynchronous execution, providing many new features and improvements. Check out [changelog](https://github.com/agentscope-ai/agentscope/blob/main/docs/changelog.md) for detailed changes.
+
+
+## ✨ Why AgentScope?
+
+Easy for beginners, powerful for experts.
+
+<p align="center">
+<img src="./assets/images/agentscope_v1_0822.png" alt="AgentScope Framework" width="80%"/>
+</p>
+
+- **Transparent to Developers**: Transparent is our **FIRST principle**. Prompt engineering, API invocation, agent building, workflow orchestration, all are visible and controllable for developers. No deep encapsulation or implicit magic.
+- **[Realtime Steering](https://doc.agentscope.io/tutorial/task_agent.html#realtime-steering)**: Native support for realtime interruption and customized handling.
+- **More Agentic**: Support [agentic tools management](https://doc.agentscope.io/tutorial/task_tool.html), [agentic long-term memory control](https://doc.agentscope.io/tutorial/task_long_term_memory.html) and agentic RAG, etc.
+- **Model Agnostic**: Programming once, run with all models.
+- **LEGO-style Agent Building**: All components are **modular** and **independent**.
+- **Multi-Agent Oriented**: Designed for **multi-agent**, **explicit** message passing and workflow orchestration, NO deep encapsulation.
+- **Highly Customizable**: Tools, prompt, agent, workflow, third-party libs & visualization, customization is encouraged everywhere.
+
+Quick overview of important features in **AgentScope 1.0**:
+
+| Module     | Feature                                                                                                        | Tutorial                                                                |
+|------------|----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| model      | Support async invocation                                                                                       | [Model](https://doc.agentscope.io/tutorial/task_model.html)             |
+|            | Support reasoning model                                                                                        |                                                                         |
+|            | Support streaming/non-streaming returns                                                                        |                                                                         |
+| tool       | Support async/sync tool functions                                                                              | [Tool](https://doc.agentscope.io/tutorial/task_tool.html)               |
+|            | Support streaming/non-streaming returns                                                                        |                                                                         |
+|            | Support user interruption                                                                                      |                                                                         |
+|            | Support post-processing                                                                                        |                                                                         |
+|            | Support group-wise tools management                                                                            |                                                                         |
+|            | Support agentic tools management by meta tool                                                                  |                                                                         |
+| MCP        | Support streamable HTTP/SSE/StdIO transport                                                                    | [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)                 |
+|            | Support both **stateful** and **stateless** mode MCP Client                                                    |                                                                         |
+|            | Support client- & function-level fine-grained control                                                          |                                                                         |
+| agent      | Support async execution                                                                                        |                                                                         |
+|            | Support parallel tool calls                                                                                    |                                                                         |
+|            | Support realtime steering interruption and customized handling                                                 |                                                                         |
+|            | Support automatic state management                                                                             |                                                                         |
+|            | Support agent-controlled long-term memory                                                                      |                                                                         |
+|            | Support agent hooks                                                                                            |                                                                         |
+| tracing    | Support OpenTelemetry-based tracing in LLM, tools, agent and formatter                                         | [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)         |
+|            | Support connecting to third-party tracing platforms (e.g. Alibaba Cloud CloudMonitor, Arize-Phoenix, Langfuse) |                                                                         |
+| memory     | Support long-term memory                                                                                       | [Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html) |
+| session    | Provide session/application-level automatic state management                                                   | [Session](https://doc.agentscope.io/tutorial/task_state.html)           |
+| evaluation | Provide distributed and parallel evaluation                                                                    | [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)         |
+| formatter  | Support multi-agent prompt formatting with tools API                                                           | [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html) |
+|            | Support truncation-based formatter strategy                                                                    |                                                                         |
+| plan       | Support ReAct-based long-term planning                                                                         | [Plan](https://doc.agentscope.io/tutorial/task_plan.html)               |
+|            | Support manual plan specification                                                                              |                                                                         |
+| RAG        | Support agentic RAG                                                                                            | [RAG](https://doc.agentscope.io/tutorial/task_rag.html)                 |
+|            | Support multimodal RAG                                                                                         |                                                                         |
+| A2A        | Support A2A agent                                                                                              | [A2A](https://doc.agentscope.io/tutorial/task_a2a.html)                       |
+| ...        |                                                                                                                |                                                                         |
+
+
+## 💬 Contact
+
+Welcome to join our community on
+
+| [Discord](https://discord.gg/eYMpfnkG8h)                                                                                         | DingTalk                                                                  |
+|----------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| <img src="https://gw.alicdn.com/imgextra/i1/O1CN01hhD1mu1Dd3BWVUvxN_!!6000000000238-2-tps-400-400.png" width="100" height="100"> | <img src="./assets/images/dingtalk_qr_code.png" width="100" height="100"> |
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## 📑 Table of Contents
+
+- [🚀 Quickstart](#-quickstart)
+  - [💻 Installation](#-installation)
+    - [🛠️ From source](#-from-source)
+    - [🔄 Using uv (recommended for faster installs)](#-using-uv-recommended-for-faster-installs)
+    - [📦 From PyPi](#-from-pypi)
+- [📝 Example](#-example)
+  - [👋 Hello AgentScope!](#-hello-agentscope)
+  - [🎯 Realtime Steering](#-realtime-steering)
+  - [🛠️ Fine-Grained MCP Control](#-fine-grained-mcp-control)
+  - [🧑‍🤝‍🧑 Multi-Agent Conversation](#-multi-agent-conversation)
+  - [💻 AgentScope Studio](#-agentscope-studio)
+- [📖 Documentation](#-documentation)
+- [🤝 Contributing](#-contributing)
+- [⚖️ License](#-license)
+- [📚 Publications](#-publications)
+- [✨ Contributors](#-contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 🚀 Quickstart
+
+### 💻 Installation
+
+> AgentScope requires **Python 3.10** or higher.
+
+#### 🛠️ From source
+
+```bash
+# Pull the source code from GitHub
+git clone -b main https://github.com/agentscope-ai/agentscope.git
+
+# Install the package in editable mode
+cd agentscope
+pip install -e .
+```
+
+#### 🔄 Using uv (recommended for faster installs)
+
+[uv](https://github.com/astral-sh/uv) is a fast Python package installer and resolver, written in Rust.
+
+```bash
+# Clone the repository
+git clone -b main https://github.com/agentscope-ai/agentscope.git
+cd agentscope
+
+# Install with uv
+uv pip install -e .
+```
+
+#### 📦 From PyPi
+
+```bash
+pip install agentscope
+```
+
+Or with uv:
+
+```bash
+uv pip install agentscope
+```
+
+## 📝 Example
+
+### 👋 Hello AgentScope!
+
+Start with a conversation between user and a ReAct agent 🤖 named "Friday"!
+
+```python
+from agentscope.agent import ReActAgent, UserAgent
+from agentscope.model import DashScopeChatModel
+from agentscope.formatter import DashScopeChatFormatter
+from agentscope.memory import InMemoryMemory
+from agentscope.tool import Toolkit, execute_python_code, execute_shell_command
+import os, asyncio
+
+
+async def main():
+    toolkit = Toolkit()
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(execute_shell_command)
+
+    agent = ReActAgent(
+        name="Friday",
+        sys_prompt="You're a helpful assistant named Friday.",
+        model=DashScopeChatModel(
+            model_name="qwen-max",
+            api_key=os.environ["DASHSCOPE_API_KEY"],
+            stream=True,
+        ),
+        memory=InMemoryMemory(),
+        formatter=DashScopeChatFormatter(),
+        toolkit=toolkit,
+    )
+
+    user = UserAgent(name="user")
+
+    msg = None
+    while True:
+        msg = await agent(msg)
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+
+asyncio.run(main())
+```
+
+### 🎯 Realtime Steering
+
+Natively support **realtime interruption** in ``ReActAgent`` with robust memory preservation, and convert interruption into an **observable event** for agent to seamlessly resume conversations.
+
+<p align="center">
+  <img src="./assets/images/realtime_steering_zh.gif" alt="Realtime Steering" width="49%"/>
+  <img src="./assets/images/realtime_steering_en.gif" alt="Realtime Steering" width="49%"/>
+</p>
+
+### 🛠️ Fine-Grained MCP Control
+
+Developers can obtain the MCP tool as a **local callable function**, and use it anywhere (e.g. call directly, pass to agent, wrap into a more complex tool, etc.)
+
+```python
+from agentscope.mcp import HttpStatelessClient
+from agentscope.tool import Toolkit
+import os
+
+async def fine_grained_mcp_control():
+    # Initialize the MCP client
+    client = HttpStatelessClient(
+        name="gaode_mcp",
+        transport="streamable_http",
+        url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+    )
+
+    # Obtain the MCP tool as a **local callable function**, and use it anywhere
+    func = await client.get_callable_function(func_name="maps_geo")
+
+    # Option 1: Call directly
+    await func(address="Tiananmen Square", city="Beijing")
+
+    # Option 2: Pass to agent as a tool
+    toolkit = Toolkit()
+    toolkit.register_tool_function(func)
+    # ...
+
+    # Option 3: Wrap into a more complex tool
+    # ...
+```
+
+### 🧑‍🤝‍🧑 Multi-Agent Conversation
+
+AgentScope provides ``MsgHub`` and pipelines to streamline multi-agent conversations, offering efficient message routing and seamless information sharing
+
+```python
+from agentscope.pipeline import MsgHub, sequential_pipeline
+from agentscope.message import Msg
+import asyncio
+
+async def multi_agent_conversation():
+    # Create agents
+    agent1 = ...
+    agent2 = ...
+    agent3 = ...
+    agent4 = ...
+
+    # Create a message hub to manage multi-agent conversation
+    async with MsgHub(
+        participants=[agent1, agent2, agent3],
+        announcement=Msg("Host", "Introduce yourselves.", "assistant")
+    ) as hub:
+        # Speak in a sequential manner
+        await sequential_pipeline([agent1, agent2, agent3])
+        # Dynamic manage the participants
+        hub.add(agent4)
+        hub.delete(agent3)
+        await hub.broadcast(Msg("Host", "Goodbye!", "assistant"))
+
+asyncio.run(multi_agent_conversation())
+```
+
+### 💻 AgentScope Studio
+
+Use the following command to install and start AgentScope Studio, to trace and visualize your agent application.
+
+```bash
+npm install -g @agentscope/studio
+
+as_studio
+```
+
+<p align="center">
+    <img
+        src="https://img.alicdn.com/imgextra/i1/O1CN01PG2MdF1Zc44A1QM6N_!!6000000003214-1-tps-1971-1080.gif"
+        width="49%"
+        alt="home"
+    />
+    <img
+        src="https://img.alicdn.com/imgextra/i2/O1CN01pGHedL1L4ibmyPeiq_!!6000000001246-1-tps-1971-1080.gif"
+        width="49%"
+        alt="runtime"
+    />
+    <img
+        src="https://img.alicdn.com/imgextra/i1/O1CN01HfFhy928SSJAcWQ8c_!!6000000007931-1-tps-1971-1080.gif"
+        width="49%"
+        alt="traces"
+    />
+    <img
+        src="https://img.alicdn.com/imgextra/i1/O1CN01vovov821Arms9tEJ1_!!6000000006945-1-tps-1971-1080.gif"
+        width="49%"
+        alt="friday"
+    />
+</p>
+
+
+## 📖 Documentation
+
+- Tutorial
+  - [Installation](https://doc.agentscope.io/tutorial/quickstart_installation.html)
+  - [Key Concepts](https://doc.agentscope.io/tutorial/quickstart_key_concept.html)
+  - [Create Message](https://doc.agentscope.io/tutorial/quickstart_message.html)
+  - [ReAct Agent](https://doc.agentscope.io/tutorial/quickstart_agent.html)
+- Workflow
+  - [Conversation](https://doc.agentscope.io/tutorial/workflow_conversation.html)
+  - [Multi-Agent Debate](https://doc.agentscope.io/tutorial/workflow_multiagent_debate.html)
+  - [Concurrent Agents](https://doc.agentscope.io/tutorial/workflow_concurrent_agents.html)
+  - [Routing](https://doc.agentscope.io/tutorial/workflow_routing.html)
+  - [Handoffs](https://doc.agentscope.io/tutorial/workflow_handoffs.html)
+- FAQ
+  - [FAQ](https://doc.agentscope.io/tutorial/faq.html)
+- Task Guides
+  - [Model](https://doc.agentscope.io/tutorial/task_model.html)
+  - [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html)
+  - [Tool](https://doc.agentscope.io/tutorial/task_tool.html)
+  - [Memory](https://doc.agentscope.io/tutorial/task_memory.html)
+  - [Long-Term Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html)
+  - [Agent](https://doc.agentscope.io/tutorial/task_agent.html)
+  - [Pipeline](https://doc.agentscope.io/tutorial/task_pipeline.html)
+  - [Plan](https://doc.agentscope.io/tutorial/task_plan.html)
+  - [State/Session Management](https://doc.agentscope.io/tutorial/task_state.html)
+  - [Agent Hooks](https://doc.agentscope.io/tutorial/task_hook.html)
+  - [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)
+  - [AgentScope Studio](https://doc.agentscope.io/tutorial/task_studio.html)
+  - [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)
+  - [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)
+  - [Embedding](https://doc.agentscope.io/tutorial/task_embedding.html)
+  - [Token](https://doc.agentscope.io/tutorial/task_token.html)
+- API
+  - [API Docs](https://doc.agentscope.io/api/agentscope.html)
+- [Examples](https://github.com/agentscope-ai/agentscope/tree/main/examples)
+  - Functionality
+    - [MCP](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/mcp)
+    - [Anthropic Agent Skill](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/agent_skill)
+    - [Plan](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/plan)
+    - [Structured Output](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/structured_output)
+    - [RAG](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/rag)
+    - [Long-Term Memory](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/long_term_memory)
+    - [Session with SQLite](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/session_with_sqlite)
+    - [Stream Printing Messages](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/stream_printing_messages)
+    - [TTS](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/tts)
+    - [High-code Deployment](https://github.com/agentscope-ai/agentscope/tree/main/examples/deployment/planning_agent)
+    - [Memory Compression](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/short_term_memory/memory_compression)
+  - Agent
+    - [ReAct Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/react_agent)
+    - [Voice Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/voice_agent)
+    - [Deep Research Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/deep_research_agent)
+    - [Browser-use Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/browser_agent)
+    - [Meta Planner Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/meta_planner_agent)
+    - [A2A Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/agent/a2a_agent)
+  - Game
+    - [Nine-player Werewolves](https://github.com/agentscope-ai/agentscope/tree/main/examples/game/werewolves)
+  - Workflow
+    - [Multi-agent Debate](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_debate)
+    - [Multi-agent Conversation](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_conversation)
+    - [Multi-agent Concurrent](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_concurrent)
+  - Evaluation
+    - [ACEBench](https://github.com/agentscope-ai/agentscope/tree/main/examples/evaluation/ace_bench)
+  - Tuner
+    - [Tune ReAct Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/tuner/react_agent)
+
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Please refer to our [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines
+on how to contribute.
+
+## ⚖️ License
+
+AgentScope is released under Apache License 2.0.
+
+## 📚 Publications
+
+If you find our work helpful for your research or application, please cite our papers.
+
+- [AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications](https://arxiv.org/abs/2508.16279)
+
+- [AgentScope: A Flexible yet Robust Multi-Agent Platform](https://arxiv.org/abs/2402.14034)
+
+```
+@article{agentscope_v1,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Yuexiang Xie,
+        Weirui Kuang,
+        Liuyi Yao,
+        Bingchen Qian,
+        Zhijian Ma,
+        Yue Cui,
+        Haohao Luo,
+        Shen Li,
+        Lu Yi,
+        Yi Yu,
+        Shiqi He,
+        Zhiling Luo,
+        Wenmeng Zhou,
+        Zhicheng Zhang,
+        Xuguang He,
+        Ziqian Chen,
+        Weikai Liao,
+        Farruh Isakulovich Kushnazarov,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications},
+    journal = {CoRR},
+    volume  = {abs/2508.16279},
+    year    = {2025},
+}
+
+@article{agentscope,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Xuchen Pan,
+        Weirui Kuang,
+        Zhijian Ma,
+        Bingchen Qian,
+        Fei Wei,
+        Wenhao Zhang,
+        Yuexiang Xie,
+        Daoyuan Chen,
+        Liuyi Yao,
+        Hongyi Peng,
+        Zeyu Zhang,
+        Lin Zhu,
+        Chen Cheng,
+        Hongzhu Shi,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope: A Flexible yet Robust Multi-Agent Platform},
+    journal = {CoRR},
+    volume  = {abs/2402.14034},
+    year    = {2024},
+}
+```
+
+## ✨ Contributors
+
+All thanks to our contributors:
+
+<a href="https://github.com/agentscope-ai/agentscope/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=agentscope-ai/agentscope&max=999&columns=12&anon=1" />
+</a>
+
+=== FILE END:   testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/README.md ===
+2026-05-13 20:23:32.781 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:23:41.171 | INFO     | Model API request cost info: input_tokens=6748, output_tokens=461, cost=0.000000
+2026-05-13 20:23:41.173 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:23:41.173 | INFO     | ******
+2026-05-13 20:23:41.173 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/README.md]
+- Environment setup and dependencies:
+  - Requires Python 3.10 or higher.
+  - Installation methods:
+    - From source:
+      ```bash
+      git clone -b main https://github.com/agentscope-ai/agentscope.git
+      cd agentscope
+      pip install -e .
+      ```
+    - Using uv (a fast Python package installer written in Rust, recommended for faster installs):
+      ```bash
+      git clone -b main https://github.com/agentscope-ai/agentscope.git
+      cd agentscope
+      uv pip install -e .
+      ```
+    - From PyPi:
+      ```bash
+      pip install agentscope
+      ```
+      Or with uv:
+      ```bash
+      uv pip install agentscope
+      ```
+- Package versions:
+  - No exact version locks are mentioned here for `agentscope` or other dependencies.
+  - The shields indicate support for Python 3.10+.
+  - The PyPi link shows dynamic version badge; no explicit pinned version.
+- Test running commands:
+  - No explicit commands or scripts for running tests or test suites are included in this README.md.
+  - No mention of testing framework or running individual test files.
+- Additional notes:
+  - The README contains detailed examples for usage and advanced agent scenarios.
+  - Environment variables referenced in examples, e.g.:
+    - `DASHSCOPE_API_KEY` for the DashScopeChatModel API key.
+    - `GAODE_API_KEY` for MCP client calls.
+  - No explicit configuration files or environment setup files mentioned.
+  - The README points to extensive online tutorials and documentation links.
+  - No prerequisites beyond Python 3.10+ are mentioned (e.g., OS packages).
+
+Summary:
+- Set up Python 3.10+ environment.
+- Install agentscope via pip (or pip editable mode).
+- Export relevant API keys as environment variables before running examples (`DASHSCOPE_API_KEY`, `GAODE_API_KEY`, etc.).
+- No explicit test commands or dependency versions detailed in this README.
+
+[/Key Information]
+2026-05-13 20:23:41.173 | INFO     | ******
+2026-05-13 20:23:41.174 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/README.md]\n- Environment setup and dependencies:\n  - Requires Python 3.10 or higher.\n  - Installation methods:\n    - From source:\n      ```bash\n      git clone -b main https://github.com/agentscope-ai/agentscope.git\n      cd agentscope\n      pip install -e .\n      ```\n    - Using uv (a fast Python package installer written in Rust, recommended for faster installs):\n      ```bash\n      git clone -b main https://github.com/agentscope-ai/agentscope.git\n      cd agentscope\n      uv pip install -e .\n      ```\n    - From PyPi:\n      ```bash\n      pip install agentscope\n      ```\n      Or with uv:\n      ```bash\n      uv pip install agentscope\n      ```\n- Package versions:\n  - No exact version locks are mentioned here for `agentscope` or other dependencies.\n  - The shields indicate support for Python 3.10+.\n  - The PyPi link shows dynamic version badge; no explicit pinned version.\n- Test running commands:\n  - No explicit commands or scripts for running tests or test suites are included in this README.md.\n  - No mention of testing framework or running individual test files.\n- Additional notes:\n  - The README contains detailed examples for usage and advanced agent scenarios.\n  - Environment variables referenced in examples, e.g.:\n    - `DASHSCOPE_API_KEY` for the DashScopeChatModel API key.\n    - `GAODE_API_KEY` for MCP client calls.\n  - No explicit configuration files or environment setup files mentioned.\n  - The README points to extensive online tutorials and documentation links.\n  - No prerequisites beyond Python 3.10+ are mentioned (e.g., OS packages).\n\nSummary:\n- Set up Python 3.10+ environment.\n- Install agentscope via pip (or pip editable mode).\n- Export relevant API keys as environment variables before running examples (`DASHSCOPE_API_KEY`, `GAODE_API_KEY`, etc.).\n- No explicit test commands or dependency versions detailed in this README.\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:23:49.522 | INFO     | Model API request cost info: input_tokens=2134, output_tokens=371, cost=0.000000
+2026-05-13 20:23:49.534 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:23:52.475 | INFO     | Model API request cost info: input_tokens=970, output_tokens=74, cost=0.000000
+2026-05-13 20:23:52.477 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"environment setup and test execution commands, dependencies, python version\")",
+    "browse_folder(\"tests\", \"1\")",
+    "search_files_by_keyword(\"requirement\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 20:23:52.477 | DEBUG    | Extracted a valid json
+2026-05-13 20:23:52.481 | INFO     | entering browse
+2026-05-13 20:23:52.481 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/CONTRIBUTING.md ===
+# Contributing to AgentScope
+
+## Welcome! 🎉
+
+Thank you for your interest in contributing to AgentScope! As an open-source project, we warmly welcome and encourage
+contributions from the community. Whether you're fixing bugs, adding new features, improving documentation, or sharing
+ideas, your contributions help make AgentScope better for everyone.
+
+## How to Contribute
+
+To ensure smooth collaboration and maintain the quality of the project, please follow these guidelines when contributing:
+
+### 1. Check Existing Plans and Issues
+
+Before starting your contribution, please review our development roadmap:
+
+- **Check the [Projects](https://github.com/orgs/agentscope-ai/projects/2) page** and **[Issues with `roadmap` label](https://github.com/agentscope-ai/agentscope/issues?q=is%3Aissue%20state%3Aopen%20label%3ARoadmap)** to see our planned development tasks.
+
+  - **If a related issue exists** and is marked as unassigned or open:
+    - Please comment on the issue to express your interest in working on it
+    - This helps avoid duplicate efforts and allows us to coordinate development
+
+  - **If no related issue exists**:
+    - Please create a new issue describing your proposed changes or feature
+    - Our team will respond promptly to provide feedback and guidance
+    - This helps us maintain the project roadmap and coordinate community efforts
+
+### 2. Commit Message Format
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This leads to more readable
+commit history and enables automatic changelog generation.
+
+**Format:**
+```
+<type>(<scope>): <subject>
+```
+
+**Types:**
+- `feat:` A new feature
+- `fix:` A bug fix
+- `docs:` Documentation only changes
+- `style:` Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `refactor:` A code change that neither fixes a bug nor adds a feature
+- `perf:` A code change that improves performance
+- `ci:` Adding missing tests or correcting existing tests
+- `chore:` Changes to the build process or auxiliary tools and libraries
+
+**Examples:**
+```bash
+feat(models): add support for Claude-3 model
+fix(agent): resolve memory leak in ReActAgent
+docs(readme): update installation instructions
+refactor(formatter): simplify message formatting logic
+ci(models): add unit tests for OpenAI integration
+```
+
+### 3. Code Development Guidelines
+
+#### a. Pre-commit Checks
+
+Before submitting code, you must run pre-commit hooks to ensure code quality and consistency:
+
+**Installation:**
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+**Running pre-commit:**
+```bash
+# Run on all files
+pre-commit run --all-files
+
+# Pre-commit will automatically run on git commit after installation
+```
+
+#### b. Import Statement Guidelines
+
+AgentScope follows a **lazy import principle** to minimize resource loading:
+
+- **DO**: Import modules only when they are actually used
+  ```python
+  def some_function():
+      import openai
+      # Use openai library here
+  ```
+
+This approach ensures that `import agentscope` remains lightweight and doesn't load unnecessary dependencies.
+
+#### c. Unit Tests
+
+- All new features must include appropriate unit tests
+- Ensure existing tests pass before submitting your PR
+- Run tests using:
+  ```bash
+  pytest tests
+  ```
+
+#### d. Documentation
+
+- Update relevant documentation for new features
+- Include code examples where appropriate
+- Update the README.md if your changes affect user-facing functionality
+
+
+## Types of Contributions
+
+### Adding New Chat Models
+
+AgentScope currently supports the following API providers at the chat model level: **OpenAI**, **DashScope**,
+**Gemini**, **Anthropic**, and **Ollama**. These APIs are compatible with various service providers including vLLM,
+DeepSeek, SGLang, and others.
+
+**⚠️ Important Notice:**
+
+Adding a new chat model is not merely a model-level task. It involves multiple components including:
+- Message formatters
+- Token counters
+- Tools API integration
+
+This is a substantial amount of work. To better focus our efforts on agent capability development and maintenance,
+**the official development team currently does not plan to add support for new chat model APIs**. However, when there
+is a strong need from the developer community, we will do our best to accommodate these requirements.
+
+**If you wish to contribute a new chat model**, here are the components needed to be compatible with the
+existing `ReActAgent` in the repository:
+
+#### Required Components:
+
+1. **Chat Model Class** (under `agentscope.model`):
+   ```python
+   from agentscope.model import ChatModelBase
+
+
+   class YourChatModel(ChatModelBase):
+       """
+       The functionalities that you need to consider include:
+       - Tools API integration
+       - Both streaming and non-streaming modes (compatible with tools API)
+       - tool_choice argument
+       - reasoning models
+       """
+   ```
+
+2. **Formatter Class** (under `agentscope.formatter`):
+   ```python
+   from agentscope.formatter import FormatterBase
+
+   class YourModelFormatter(FormatterBase):
+       """
+       Convert `Msg` objects into the format required by your API provider.
+       If your API doesn't support multi-agent scenarios (e.g. doesn't support the name field in messages), you need to
+       implement two separate formatter classes for chatbot and multi-agent scenarios.
+       """
+   ```
+
+3. **Token Counter** (under `agentscope.token`, recommended):
+   ```python
+   from agentscope.token import TokenCounterBase
+
+   class YourTokenCounter(TokenCounterBase):
+       """
+       Implement token counting logic for your model.
+       This is recommended but not strictly required.
+       """
+   ```
+
+### Adding New Agents
+
+To achieve true modularity, the `agentscope.agent` module currently aims to maintain only the **`ReActAgent`** class
+as the core implementation. We ensure all functionalities in this class are **modular, detachable, and composable**.
+
+In AgentScope, we follow an examples-first development workflow: prototype new implementations in the `examples/`
+directory, then abstract and modularize the functionality, and finally integrate it into the core library.
+
+For specialized or domain-specific agents, we recommend contributing them to the **`examples/agents`** directory:
+
+```
+examples/
+└── agents/
+    ├── main.py
+    ├── README.md  # Explain the agent's purpose and usage
+    └── ... # The other scripts
+```
+
+### Adding New Examples
+
+We highly encourage contributions of new examples that showcase the capabilities of AgentScope! Your examples help others learn and get inspired.
+
+**📝 About the Examples Directory:**
+
+To maintain code quality and keep the repository accessible for everyone, we've designed the `examples/` directory in the main AgentScope repository to focus on **demonstrating AgentScope's functionalities**. Think of these as educational references and feature showcases that help developers quickly understand what AgentScope can do.
+
+**What makes a great example here:**
+- Clearly demonstrates specific AgentScope features or capabilities
+- Easy to understand and follow along
+- Serves as a learning material or reference implementation
+- Focused and concise
+
+**For More Complex Applications:**
+
+Have you built something amazing with AgentScope? Perhaps a more sophisticated, production-ready application? That's fantastic! 🎉
+
+We'd love to see your work in our **[agentscope-samples](https://github.com/agentscope-ai/agentscope-samples)** repository. This dedicated space is perfect for showcasing complete, real-world applications and sharing your AgentScope-based projects with the community. It's a great way to inspire others and demonstrate the full potential of the AgentScope ecosystem!
+
+**Example Organization:**
+
+Examples in the main repository are organized into subdirectories based on their type:
+
+- `examples/agent/` for specialized agents
+- `examples/functionality/` for showcasing specific functionalities of AgentScope
+- `examples/game/` for game-related examples
+- `examples/evaluation/` for evaluation scripts
+- `examples/workflows/` for workflow demonstrations
+- `examples/tuner/` for tuning-related examples
+
+An example structure could be:
+
+```
+examples/
+└── {example_type}/
+    └── {example_name}/
+        ├── main.py
+        ├── README.md  # Explain the example's purpose and usage
+        └── ... # The other scripts
+```
+
+### Adding New Memory Databases
+
+The memory module in AgentScope currently supports:
+
+- **In-memory storage**: For lightweight, temporary memory needs
+- **Relational databases via SQLAlchemy**: For persistent, structured data storage
+- **NoSQL databases**: For flexible schema requirements (e.g., Redis)
+
+**⚠️ Important Notice:**
+
+For **relational databases**, we use **SQLAlchemy** as a unified abstraction layer. SQLAlchemy already supports a wide
+range of SQL databases including PostgreSQL, MySQL, SQLite, Oracle, Microsoft SQL Server, and many others.
+
+**Therefore, we do not accept separate implementations for relational databases that are already supported by SQLAlchemy.**
+If you need support for a specific relational database, please ensure it works through the existing SQLAlchemy integration.
+
+**If you wish to contribute a new memory database implementation**, please consider:
+
+1. **For relational databases**: Use the existing SQLAlchemy integration.
+
+2. **For NoSQL databases**: If you're adding support for a new NoSQL database (e.g., MongoDB, Cassandra), please:
+   - Implement a new memory class that extends the appropriate base class
+   - Add comprehensive unit tests
+   - Update documentation accordingly
+
+
+## Do's and Don'ts
+
+### ✅ DO:
+
+- **Start small**: Begin with small, manageable contributions
+- **Communicate early**: Discuss major changes before implementing them
+- **Write tests**: Ensure your code is well-tested
+- **Document your code**: Help others understand your contributions
+- **Follow commit conventions**: Use conventional commit messages
+- **Be respectful**: Follow our Code of Conduct
+- **Ask questions**: If you're unsure about something, just ask!
+
+### ❌ DON'T:
+
+- **Don't surprise us with big pull requests**: Large, unexpected PRs are difficult to review and may not align with project goals. Always open an issue first to discuss major changes
+- **Don't ignore CI failures**: Fix any issues flagged by continuous integration
+- **Don't mix concerns**: Keep PRs focused on a single feature or fix
+- **Don't forget to update tests**: Changes in functionality should be reflected in tests
+- **Don't break existing APIs**: Maintain backward compatibility when possible, or clearly document breaking changes
+- **Don't add unnecessary dependencies**: Keep the core library lightweight
+- **Don't bypass the lazy import principle**: This keeps AgentScope fast to import
+
+## Getting Help
+
+If you need assistance or have questions:
+
+- 💬 Open a [Discussion](https://github.com/agentscope-ai/agentscope/discussions)
+- 🐛 Report bugs via [Issues](https://github.com/agentscope-ai/agentscope/issues)
+- 📧 Contact the maintainers at DingTalk or Discord (links in the README.md)
+
+
+---
+
+Thank you for contributing to AgentScope! Your efforts help build a better tool for the entire community. 🚀
+
+=== FILE END:   testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/CONTRIBUTING.md ===
+2026-05-13 20:23:52.481 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:23:56.739 | INFO     | Model API request cost info: input_tokens=2980, output_tokens=263, cost=0.000000
+2026-05-13 20:23:56.741 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:23:56.741 | INFO     | ******
+2026-05-13 20:23:56.741 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/CONTRIBUTING.md]
+- Environment Setup:
+  - Python environment is implied (no explicit version stated)
+  - Pre-commit hooks for code quality:
+    - Install: `pip install pre-commit`
+    - Setup: `pre-commit install`
+    - Run manually (optional): `pre-commit run --all-files`
+- Dependencies:
+  - No explicit packages listed in this file except usage of Python libraries like SQLAlchemy for relational DB support is mentioned as a dependency in the memory database context.
+  - Encouraged lazy imports to keep package lightweight (e.g. import `openai` within functions, not globally).
+- Testing:
+  - Run all tests with `pytest` command:
+    - `pytest tests`
+  - Tests must be included for new features.
+  - No explicit Python version given.
+- Additional Notes:
+  - Commit messages should follow Conventional Commits spec.
+  - No direct environment variables specified.
+  - No commands or instructions for running individual or specific test files beyond `pytest tests`.
+  - Repository uses standard Python tooling and pytest as the test framework.
+[/Key Information]
+2026-05-13 20:23:56.741 | INFO     | ******
+2026-05-13 20:23:56.742 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/CONTRIBUTING.md]\n- Environment Setup:\n  - Python environment is implied (no explicit version stated)\n  - Pre-commit hooks for code quality:\n    - Install: `pip install pre-commit`\n    - Setup: `pre-commit install`\n    - Run manually (optional): `pre-commit run --all-files`\n- Dependencies:\n  - No explicit packages listed in this file except usage of Python libraries like SQLAlchemy for relational DB support is mentioned as a dependency in the memory database context.\n  - Encouraged lazy imports to keep package lightweight (e.g. import `openai` within functions, not globally).\n- Testing:\n  - Run all tests with `pytest` command:\n    - `pytest tests`\n  - Tests must be included for new features.\n  - No explicit Python version given.\n- Additional Notes:\n  - Commit messages should follow Conventional Commits spec.\n  - No direct environment variables specified.\n  - No commands or instructions for running individual or specific test files beyond `pytest tests`.\n  - Repository uses standard Python tooling and pytest as the test framework.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:23:56.742 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/tests. The browsing Depth is 1.\nStructure of this directory:\n\nplan_test.py\n\ntest.xlsx\n\ntoolkit_basic_test.py\n\nformatter_deepseek_test.py\n\ntoken_openai_test.py\n\ntest.docx\n\ntool_test.py\n\na2a_resolver_test.py\n\nconfig_test.py\n\ntracing_converter_test.py\n\ntoken_anthropic_test.py\n\nmemory_reme_test.py\n\ntool_dashscope_test.py\n\nrag_knowledge_test.py\n\ntts_openai_test.py\n\ntool_openai_test.py\n\nevaluation_test.py\n\ntoolkit_meta_tool_test.py\n\ntracing_test.py\n\nformatter_dashscope_test.py\n\nhook_test.py\n\nmcp_streamable_http_client_test.py\n\ntts_gemini_test.py\n\nmodel_openai_test.py\n\nformatter_gemini_test.py\n\nmemory_test.py\n\nformatter_anthropic_test.py\n\nmodel_dashscope_test.py\n\nformatter_a2a_test.py\n\nformatter_openai_test.py\n\ntracing_utils_test.py\n\nformatter_ollama_test.py\n\nembedding_cache_test.py\n\nreact_agent_test.py\n\nmodel_ollama_test.py\n\nrag_reader_test.py\n\ntts_dashscope_test.py\n\na2a_agent_test.py\n\ntoken_char_test.py\n\nsession_test.py\n\nmodel_anthropic_test.py\n\nmemory_compression_test.py\n\nuser_input_test.py\n\nrag_store_test.py\n\ntuner_test.py\n\nmodel_gemini_test.py\n\npipeline_test.py\n\ntracing_extractor_test.py\n\nmcp_sse_client_test.py\n\n', 'folder structure collected', True)
+2026-05-13 20:23:56.745 | DEBUG    | Result of dispatch_intent: ("No files found containing the keyword 'requirement'.", 'No matching files found', True)
+2026-05-13 20:24:04.557 | INFO     | Model API request cost info: input_tokens=3426, output_tokens=428, cost=0.000000
+2026-05-13 20:24:04.571 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:24:09.398 | INFO     | Model API request cost info: input_tokens=1026, output_tokens=227, cost=0.000000
+2026-05-13 20:24:09.400 | DEBUG    | {
+  "API_calls": [
+    "browse_folder('.github/workflows', '1')",
+    "browse_file_for_environment_info('pyproject.toml', 'dependencies and test dependencies, python version, test framework versions')",
+    "browse_file_for_environment_info('tests/formatter_dashscope_test.py', 'test framework imports, test running code or comments')"
+  ],
+  "collected_information": {
+    "python_version": "3.10+ from README.md",
+    "installation": "pip install -e . or from PyPi from README.md",
+    "environment_variables": ["DASHSCOPE_API_KEY from README.md"],
+    "test_framework": "pytest from CONTRIBUTING.md",
+    "test_command": "pytest tests from CONTRIBUTING.md",
+    "test_files": ["tests/formatter_dashscope_test.py"],
+    "known_missing": [
+      "No requirements.txt or similar files found",
+      "No pinned dependency versions or exact test commands known yet",
+      "No CI config explored yet to confirm test environment or further commands"
+    ]
+  },
+  "terminate": false
+}
+2026-05-13 20:24:09.400 | DEBUG    | Extracted a valid json
+2026-05-13 20:24:09.406 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\npublish-pypi.yml\n\nsphinx_docs.yml\n\nunittest.yml\n\nstale.yml\n\ntoc.yml\n\npre-commit.yml\n\n', 'folder structure collected', True)
+2026-05-13 20:24:09.406 | INFO     | entering browse
+2026-05-13 20:24:09.407 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/pyproject.toml ===
+
+[project]
+name = "agentscope"
+dynamic = ["version"]
+description = "AgentScope: A Flexible yet Robust Multi-Agent Platform."
+readme = "README.md"
+authors = [
+    { name = "SysML team of Alibaba Tongyi Lab", email = "gaodawei.gdw@alibaba-inc.com" }
+]
+license = "Apache-2.0"
+keywords = ["deep-learning", "multi agents", "agents"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "aioitertools",
+    "anthropic",
+    "dashscope",
+    "docstring_parser",
+    "json5",
+    "json_repair",
+    "mcp>=1.13",
+    "numpy",
+    "openai",
+    "python-datauri",
+    "opentelemetry-api>=1.39.0",
+    "opentelemetry-sdk>=1.39.0",
+    "opentelemetry-exporter-otlp>=1.39.0",
+    "opentelemetry-semantic-conventions>=0.60b0",
+    "python-socketio",
+    "shortuuid",
+    "tiktoken",
+    "sounddevice",
+    "sqlalchemy",
+    "python-frontmatter",
+]
+
+[project.optional-dependencies]
+# ------------ A2A protocol ------------
+a2a = [
+    "a2a-sdk",
+    "httpx",
+    # TODO: split the card resolvers from the a2a dependency
+    "nacos-sdk-python>=3.0.0",
+]
+
+
+# ------------ Model APIs ------------
+gemini = ["google-genai"]
+ollama = ["ollama>=0.5.4"]
+models = [
+    "agentscope[ollama]",
+    "agentscope[gemini]",
+]
+
+# ------------ Tokenizers ------------
+tokens = [
+    "Pillow",
+    "transformers",
+    "jinja2",
+]
+
+# ------------ Memory ------------
+redis_memory = ["redis"]
+
+mem0ai = [
+    "mem0ai<=0.1.116",
+    "packaging"
+]
+reme = ["reme-ai>=0.2.0.3"]
+memory = [
+    "agentscope[redis_memory]",
+    "agentscope[mem0ai]",
+    "agentscope[reme]",
+]
+
+# ------------ RAG ------------
+# readers
+text-reader = ["nltk"]
+pdf-reader = [
+    "agentscope[text-reader]",
+    # TODO: the latest pypdf has some issues with parsing PDFs
+    #  (2026-01-13), so we fix the version here temporarily.
+    "pypdf<=6.5.0",
+]
+docx-reader = [
+    "agentscope[text-reader]",
+    "python-docx"
+]
+excel-reader = [
+    "pandas",
+    "openpyxl",
+]
+readers = [
+    "agentscope[text-reader]",
+    "agentscope[pdf-reader]",
+    "agentscope[docx-reader]",
+    "agentscope[excel-reader]",
+]
+
+# vdb
+# The qdrant-client >= 1.16.0 has conflicts with pymilvus, so we fix
+# the version to 1.15.1 here.
+qdrant = ["qdrant-client==1.15.1"]
+milvus = ["pymilvus[milvus_lite]"]
+ali_mysql = ["mysql-connector-python"]
+mongodb = ["pymongo"]
+vdbs = [
+    "agentscope[ali_mysql]",
+    "agentscope[qdrant]",
+    "agentscope[milvus]",
+    "agentscope[mongodb]",
+]
+
+
+rag = [
+    "agentscope[readers]",
+    "agentscope[vdbs]",
+]
+
+# ------------ Evaluation ------------
+evaluate = ["ray"]
+
+# ------------ Full ------------
+full = [
+    "agentscope[a2a]",
+    "agentscope[models]",
+    "agentscope[tokens]",
+    "agentscope[memory]",
+    "agentscope[rag]",
+    "agentscope[evaluate]",
+]
+
+# ------------ Development ------------
+dev = [
+    # Include full dependencies from local package
+    "agentscope[full]",
+    # Development tools
+    "pre-commit",
+    "pytest",
+    "pytest-forked",
+    "sphinx-gallery",
+    "furo",
+    "myst_parser",
+    "matplotlib",
+    # For unittests
+    # For mocking redis in unittests
+    "fakeredis",
+    "aiosqlite",
+    "greenlet",
+]
+
+[project.urls]
+Homepage = "https://github.com/agentscope-ai/agentscope"
+Documentation = "https://doc.agentscope.io/"
+Repository = "https://github.com/agentscope-ai/agentscope"
+
+[tool.setuptools]
+packages = { find = { where = ["src"] } }
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "agentscope._version.__version__"}
+
+=== FILE END:   testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/pyproject.toml ===
+2026-05-13 20:24:09.407 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:24:14.595 | INFO     | Model API request cost info: input_tokens=1721, output_tokens=349, cost=0.000000
+2026-05-13 20:24:14.618 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:24:14.663 | INFO     | ******
+2026-05-13 20:24:14.663 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/pyproject.toml]
+- Python version requirement:
+  - requires-python = ">=3.10"
+- Dependencies (main):
+  - aioitertools
+  - anthropic
+  - dashscope
+  - docstring_parser
+  - json5
+  - json_repair
+  - mcp >=1.13
+  - numpy
+  - openai
+  - python-datauri
+  - opentelemetry-api >=1.39.0
+  - opentelemetry-sdk >=1.39.0
+  - opentelemetry-exporter-otlp >=1.39.0
+  - opentelemetry-semantic-conventions >=0.60b0
+  - python-socketio
+  - shortuuid
+  - tiktoken
+  - sounddevice
+  - sqlalchemy
+  - python-frontmatter
+
+- Test and development dependencies (under "dev" extras):
+  - pre-commit
+  - pytest
+  - pytest-forked
+  - sphinx-gallery
+  - furo
+  - myst_parser
+  - matplotlib
+  - fakeredis (for mocking redis in unittests)
+  - aiosqlite
+  - greenlet
+
+- Test Frameworks and relevant packages:
+  - pytest (no explicit version pinned)
+  - pytest-forked (no explicit version pinned)
+
+- No explicit version numbers given for pytest or pytest-forked in this file.
+- No explicit test commands or scripts mentioned.
+
+[/Key Information]
+2026-05-13 20:24:14.664 | INFO     | ******
+2026-05-13 20:24:14.664 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/pyproject.toml]\n- Python version requirement:\n  - requires-python = ">=3.10"\n- Dependencies (main):\n  - aioitertools\n  - anthropic\n  - dashscope\n  - docstring_parser\n  - json5\n  - json_repair\n  - mcp >=1.13\n  - numpy\n  - openai\n  - python-datauri\n  - opentelemetry-api >=1.39.0\n  - opentelemetry-sdk >=1.39.0\n  - opentelemetry-exporter-otlp >=1.39.0\n  - opentelemetry-semantic-conventions >=0.60b0\n  - python-socketio\n  - shortuuid\n  - tiktoken\n  - sounddevice\n  - sqlalchemy\n  - python-frontmatter\n\n- Test and development dependencies (under "dev" extras):\n  - pre-commit\n  - pytest\n  - pytest-forked\n  - sphinx-gallery\n  - furo\n  - myst_parser\n  - matplotlib\n  - fakeredis (for mocking redis in unittests)\n  - aiosqlite\n  - greenlet\n\n- Test Frameworks and relevant packages:\n  - pytest (no explicit version pinned)\n  - pytest-forked (no explicit version pinned)\n\n- No explicit version numbers given for pytest or pytest-forked in this file.\n- No explicit test commands or scripts mentioned.\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:24:14.665 | INFO     | entering browse
+2026-05-13 20:24:14.665 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/tests/formatter_dashscope_test.py ===
+# -*- coding: utf-8 -*-
+"""The dashscope formatter unittests."""
+import os
+from unittest.async_case import IsolatedAsyncioTestCase
+from unittest.mock import patch, MagicMock
+
+from agentscope.formatter import (
+    DashScopeMultiAgentFormatter,
+    DashScopeChatFormatter,
+)
+from agentscope.message import (
+    Msg,
+    ToolUseBlock,
+    ToolResultBlock,
+    TextBlock,
+    ImageBlock,
+    AudioBlock,
+    VideoBlock,
+    URLSource,
+    Base64Source,
+)
+
+
+class TestDashScopeFormatter(IsolatedAsyncioTestCase):
+    """Unittest for the DashScopeFormatter."""
+
+    async def asyncSetUp(self) -> None:
+        """Set up the test environment."""
+        self.image_path = "./image.png"
+        with open(self.image_path, "wb") as f:
+            f.write(b"fake image content")
+
+        self.mock_audio_path = (
+            "/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.wav"
+        )
+        self.mock_video_path = (
+            "/var/folders/gf/krg8x_ws409cpw_46b2s6rjc0000gn/T/tmpfymnv2w9.mp4"
+        )
+
+        self.msgs_system = [
+            Msg(
+                "system",
+                "You're a helpful assistant.",
+                "system",
+            ),
+        ]
+        self.msgs_conversation = [
+            Msg(
+                "user",
+                [
+                    TextBlock(
+                        type="text",
+                        text="What is the capital of France?",
+                    ),
+                    ImageBlock(
+                        type="image",
+                        source=URLSource(
+                            type="url",
+                            url=self.image_path,
+                        ),
+                    ),
+                ],
+                "user",
+            ),
+            Msg(
+                "assistant",
+                "The capital of France is Paris.",
+                "assistant",
+            ),
+            Msg(
+                "user",
+                [
+                    TextBlock(
+                        type="text",
+                        text="What is the capital of Germany?",
+                    ),
+                    AudioBlock(
+                        type="audio",
+                        source=URLSource(
+                            type="url",
+                            url="https://example.com/audio1.mp3",
+                        ),
+                    ),
+                ],
+                "user",
+            ),
+            Msg(
+                "assistant",
+                "The capital of Germany is Berlin.",
+                "assistant",
+            ),
+            Msg(
+                "user",
+                "What is the capital of Japan?",
+                "user",
+            ),
+        ]
+
+        self.msgs_tools = [
+            Msg(
+                "assistant",
+                [
+                    ToolUseBlock(
+                        type="tool_use",
+                        id="1",
+                        name="get_capital",
+                        input={"country": "Japan"},
+                    ),
+                ],
+                "assistant",
+            ),
+            Msg(
+                "system",
+                [
+                    ToolResultBlock(
+                        type="tool_result",
+                        id="1",
+                        name="get_capital",
+                        output=[
+                            TextBlock(
+                                type="text",
+                                text="The capital of Japan is Tokyo.",
+                            ),
+                            ImageBlock(
+                                type="image",
+                                source=URLSource(
+                                    type="url",
+                                    url=self.image_path,
+                                ),
+                            ),
+                            AudioBlock(
+                                type="audio",
+                                source=Base64Source(
+                                    type="base64",
+                                    media_type="audio/wav",
+                                    data="ZmFrZSBhdWRpbyBjb250ZW50",
+                                ),
+                            ),
+                            VideoBlock(
+                                type="video",
+                                source=Base64Source(
+                                    type="base64",
+                                    media_type="video/mp4",
+                                    data="ZmFrZSB2aWRlbyBjb250ZW50",
+                                ),
+                            ),
+                        ],
+                    ),
+                ],
+                "system",
+            ),
+            Msg(
+                "assistant",
+                "The capital of Japan is Tokyo.",
+                "assistant",
+            ),
+        ]
+
+        self.msgs_conversation_2 = [
+            Msg(
+                "user",
+                "What is the capital of South Korea?",
+                "user",
+            ),
+        ]
+
+        self.msgs_tools_2 = [
+            Msg(
+                "assistant",
+                [
+                    ToolUseBlock(
+                        type="tool_use",
+                        id="1",
+                        name="get_capital",
+                        input={"country": "South Korea"},
+                    ),
+                ],
+                "assistant",
+            ),
+            Msg(
+                "system",
+                [
+                    ToolResultBlock(
+                        type="tool_result",
+                        id="2",
+                        name="get_capital",
+                        output=[
+                            TextBlock(
+                                type="text",
+                                text="The capital of South Korea is Seoul.",
+                            ),
+                            ImageBlock(
+                                type="image",
+                                source=URLSource(
+                                    type="url",
+                                    url=self.image_path,
+                                ),
+                            ),
+                            AudioBlock(
+                                type="audio",
+                                source=Base64Source(
+                                    type="base64",
+                                    media_type="audio/wav",
+                                    data="ZmFrZSBhdWRpbyBjb250ZW50",
+                                ),
+                            ),
+                        ],
+                    ),
+                ],
+                "system",
+            ),
+            Msg(
+                "assistant",
+                "The capital of South Korea is Seoul.",
+                "assistant",
+            ),
+        ]
+
+        self.ground_truth_chat = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "What is the capital of France?",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of France is Paris.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "What is the capital of Germany?",
+                    },
+                    {
+                        "audio": "https://example.com/audio1.mp3",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Germany is Berlin.",
+            },
+            {
+                "role": "user",
+                "content": "What is the capital of Japan?",
+            },
+            {
+                "role": "assistant",
+                "content": [{"text": None}],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n"
+                "- The returned image can be found at: ./image.png"
+                "\n- The returned audio can be found at: "
+                f"{self.mock_audio_path}"
+                f"\n- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Japan is Tokyo.",
+            },
+        ]
+
+        self.ground_truth_multiagent = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "# Conversation History\nThe content between"
+                        " <history></history> tags contains your"
+                        " conversation history\n<history>\nuser: What"
+                        " is the capital of France?",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                    {
+                        "text": "assistant: The capital of France is Paris."
+                        "\nuser: What is the capital of Germany?",
+                    },
+                    {
+                        "audio": "https://example.com/audio1.mp3",
+                    },
+                    {
+                        "text": "assistant: The capital of Germany is Berlin."
+                        "\nuser: What is the capital of Japan?"
+                        "\n</history>",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "text": None,
+                    },
+                ],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n- The returned"
+                " image can be found at: ./image.png\n- The"
+                " returned audio can be found at: "
+                f"{self.mock_audio_path}\n"
+                f"- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": "<history>\nassistant:"
+                " The capital of Japan is Tokyo.\n</history>",
+            },
+        ]
+
+        self.ground_truth_multiagent_without_first_conversation = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "text": None,
+                    },
+                ],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n- The returned"
+                " image can be found at: ./image.png\n- The"
+                " returned audio can be found at: "
+                f"{self.mock_audio_path}\n"
+                f"- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": "# Conversation History\nThe content between"
+                " <history></history> tags contains your"
+                " conversation history\n<history>\nassistant:"
+                " The capital of Japan is Tokyo.\n</history>",
+            },
+        ]
+
+        self.ground_truth_multiagent_2 = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "# Conversation History\nThe content between "
+                        "<history></history> tags contains your conversation "
+                        "history\n<history>\nuser: What is the capital of "
+                        "France?",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                    {
+                        "text": "assistant: The capital of France is Paris."
+                        "\nuser: What is the capital of Germany?",
+                    },
+                    {
+                        "audio": "https://example.com/audio1.mp3",
+                    },
+                    {
+                        "text": "assistant: The capital of Germany is Berlin."
+                        "\nuser: What is the capital of Japan?"
+                        "\n</history>",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "text": None,
+                    },
+                ],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n- The returned"
+                " image can be found at: ./image.png\n- The returned audio can"
+                f" be found at: {self.mock_audio_path}"
+                f"\n- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": "<history>\nassistant: The capital of Japan "
+                "is Tokyo.\nuser: What is the capital of South Korea?"
+                "\n</history>",
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "text": None,
+                    },
+                ],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "South Korea"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "2",
+                "content": "- The capital of South Korea is Seoul.\n- The "
+                "returned image can be found at: ./image.png\n- The returned"
+                " audio can be found at: "
+                f"{self.mock_audio_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": "<history>\nassistant: The capital of South"
+                " Korea is Seoul.\n</history>",
+            },
+        ]
+
+    def _mock_save_base64_data(
+        self,
+        media_type: str,
+        _base64_data: str,
+    ) -> str:
+        """Mock function for _save_base64_data that returns different paths
+        based on media_type.
+
+        Args:
+            media_type: The MIME type of the media (e.g., "audio/wav",
+            "video/mp4")
+            _base64_data: The base64 encoded data (not used in mock)
+
+        Returns:
+            The mock file path for the media type
+        """
+        if "audio" in media_type:
+            return self.mock_audio_path
+        elif "video" in media_type:
+            return self.mock_video_path
+        else:
+            return self.mock_audio_path  # fallback
+
+    @patch("agentscope.formatter._formatter_base._save_base64_data")
+    async def test_chat_formatter(
+        self,
+        mock_save_base64_data: MagicMock,
+    ) -> None:
+        """Test the chat formatter."""
+        mock_save_base64_data.side_effect = self._mock_save_base64_data
+
+        formatter = DashScopeChatFormatter()
+
+        # Full history
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_conversation, *self.msgs_tools],
+        )
+        self.assertListEqual(self.ground_truth_chat, res)
+
+        # Without system message
+        res = await formatter.format(
+            [*self.msgs_conversation, *self.msgs_tools],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_chat[1:],
+        )
+
+        # Without conversation messages
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_tools],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_chat[:1]
+            + self.ground_truth_chat[-len(self.msgs_tools) :],
+        )
+
+        # Without tool messages
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_conversation],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_chat[: -len(self.msgs_tools)],
+        )
+
+        # Empty messages
+        res = await formatter.format([])
+        self.assertListEqual(res, [])
+
+    @patch("agentscope.formatter._formatter_base._save_base64_data")
+    async def test_chat_formatter_with_extract_media_blocks(
+        self,
+        mock_save_base64_data: MagicMock,
+    ) -> None:
+        """Test the chat formatter with promote_tool_result_images=True."""
+        mock_save_base64_data.side_effect = self._mock_save_base64_data
+
+        formatter = DashScopeChatFormatter(
+            promote_tool_result_images=True,
+            promote_tool_result_audios=True,
+            promote_tool_result_videos=True,
+        )
+
+        # Test with tool result containing image blocks
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_conversation, *self.msgs_tools],
+        )
+
+        # Expected result: image blocks should be extracted and inserted
+        # as a separate user message after the tool result message
+        expected_result = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "What is the capital of France?",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of France is Paris.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "What is the capital of Germany?",
+                    },
+                    {
+                        "audio": "https://example.com/audio1.mp3",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Germany is Berlin.",
+            },
+            {
+                "role": "user",
+                "content": "What is the capital of Japan?",
+            },
+            {
+                "role": "assistant",
+                "content": [{"text": None}],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n"
+                "- The returned image can be found at: ./image.png"
+                "\n- The returned audio can be found at: "
+                f"{self.mock_audio_path}"
+                f"\n- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "<system-info>The following are "
+                        "the media contents from the tool "
+                        "result of 'get_capital':",
+                    },
+                    {
+                        "text": "\n- The image from './image.png': ",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                    {
+                        "text": "\n- The audio from "
+                        f"'{self.mock_audio_path}': ",
+                    },
+                    {
+                        "audio": self.mock_audio_path,
+                    },
+                    {
+                        "text": "\n- The video from "
+                        f"'{self.mock_video_path}': ",
+                    },
+                    {
+                        "video": self.mock_video_path,
+                    },
+                    {
+                        "text": "</system-info>",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Japan is Tokyo.",
+            },
+        ]
+
+        self.assertListEqual(expected_result, res)
+
+    @patch("agentscope.formatter._formatter_base._save_base64_data")
+    async def test_multiagent_formater(
+        self,
+        mock_save_base64_data: MagicMock,
+    ) -> None:
+        """Test the multi-agent formatter."""
+        mock_save_base64_data.side_effect = self._mock_save_base64_data
+
+        formatter = DashScopeMultiAgentFormatter()
+
+        # system + conversation + tools + conversation + tools
+        res = await formatter.format(
+            [
+                *self.msgs_system,
+                *self.msgs_conversation,
+                *self.msgs_tools,
+                *self.msgs_conversation_2,
+                *self.msgs_tools_2,
+            ],
+        )
+
+        self.assertListEqual(res, self.ground_truth_multiagent_2)
+
+        # system + conversation + tools + conversation
+        res = await formatter.format(
+            [
+                *self.msgs_system,
+                *self.msgs_conversation,
+                *self.msgs_tools,
+                *self.msgs_conversation_2,
+            ],
+        )
+
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent_2[: -len(self.msgs_tools_2)],
+        )
+
+        # system + conversation + tools
+        res = await formatter.format(
+            [
+                *self.msgs_system,
+                *self.msgs_conversation,
+                *self.msgs_tools,
+            ],
+        )
+
+        self.assertListEqual(res, self.ground_truth_multiagent)
+
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_conversation, *self.msgs_tools],
+        )
+        self.assertListEqual(res, self.ground_truth_multiagent)
+
+        # Without system message
+        res = await formatter.format(
+            [*self.msgs_conversation, *self.msgs_tools],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent[1:],
+        )
+
+        # Without conversation messages
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_tools],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent_without_first_conversation,
+        )
+
+        res = await formatter.format(
+            [*self.msgs_system, *self.msgs_conversation],
+        )
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent[:2],
+        )
+
+        # With only system message
+        res = await formatter.format(self.msgs_system)
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent[:1],
+        )
+
+        # With only conversation messages
+        res = await formatter.format(self.msgs_conversation)
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent[1 : -len(self.msgs_tools)],
+        )
+
+        # Without only tool messages
+        res = await formatter.format(self.msgs_tools)
+        self.assertListEqual(
+            res,
+            self.ground_truth_multiagent_without_first_conversation[1:],
+        )
+
+    @patch("agentscope.formatter._formatter_base._save_base64_data")
+    async def test_multiagent_formatter_with_promote_media_tool_result(
+        self,
+        mock_save_base64_data: MagicMock,
+    ) -> None:
+        """Test the multi-agent formatter with
+        promote_tool_result_images=True."""
+        mock_save_base64_data.side_effect = self._mock_save_base64_data
+
+        formatter = DashScopeMultiAgentFormatter(
+            promote_tool_result_images=True,
+            promote_tool_result_audios=True,
+            promote_tool_result_videos=True,
+        )
+
+        # Test with tool result containing image blocks
+        res = await formatter.format(
+            [
+                *self.msgs_system,
+                *self.msgs_conversation,
+                *self.msgs_tools,
+            ],
+        )
+
+        # Expected result: image blocks should be promoted and inserted
+        # as a separate user message after the tool result message
+        expected_result = [
+            {
+                "role": "system",
+                "content": "You're a helpful assistant.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "# Conversation History\nThe content between"
+                        " <history></history> tags contains your"
+                        " conversation history\n<history>\nuser: What"
+                        " is the capital of France?",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                    {
+                        "text": "assistant: The capital of France is Paris."
+                        "\nuser: What is the capital of Germany?",
+                    },
+                    {
+                        "audio": "https://example.com/audio1.mp3",
+                    },
+                    {
+                        "text": "assistant: The capital of Germany is Berlin."
+                        "\nuser: What is the capital of Japan?"
+                        "\n</history>",
+                    },
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "text": None,
+                    },
+                ],
+                "tool_calls": [
+                    {
+                        "id": "1",
+                        "type": "function",
+                        "function": {
+                            "name": "get_capital",
+                            "arguments": '{"country": "Japan"}',
+                        },
+                    },
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "1",
+                "content": "- The capital of Japan is Tokyo.\n- The returned"
+                " image can be found at: ./image.png\n- The"
+                " returned audio can be found at: "
+                f"{self.mock_audio_path}"
+                f"\n- The returned video can be found at: "
+                f"{self.mock_video_path}",
+                "name": "get_capital",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": "<system-info>The following are "
+                        "the media contents from the tool "
+                        "result of 'get_capital':",
+                    },
+                    {
+                        "text": "\n- The image from './image.png': ",
+                    },
+                    {
+                        "image": f"file://{os.path.abspath(self.image_path)}",
+                    },
+                    {
+                        "text": "\n- The audio from "
+                        f"'{self.mock_audio_path}': ",
+                    },
+                    {
+                        "audio": self.mock_audio_path,
+                    },
+                    {
+                        "text": "\n- The video from "
+                        f"'{self.mock_video_path}': ",
+                    },
+                    {
+                        "video": self.mock_video_path,
+                    },
+                    {
+                        "text": "</system-info>",
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": "<history>\nassistant:"
+                " The capital of Japan is Tokyo.\n</history>",
+            },
+        ]
+
+        self.maxDiff = None
+        self.assertListEqual(expected_result, res)
+
+    async def asyncTearDown(self) -> None:
+        """Clean up the test environment."""
+        if os.path.exists(self.image_path):
+            os.remove(self.image_path)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/tests/formatter_dashscope_test.py ===
+2026-05-13 20:24:14.666 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 20:24:20.152 | INFO     | Model API request cost info: input_tokens=6098, output_tokens=361, cost=0.000000
+2026-05-13 20:24:20.154 | SUCCESS  | Successfully extracted environment config
+2026-05-13 20:24:20.154 | INFO     | ******
+2026-05-13 20:24:20.155 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/tests/formatter_dashscope_test.py]
+- Test Framework Imports:
+  - Uses `unittest` standard library, specifically:
+    - `from unittest.async_case import IsolatedAsyncioTestCase`
+    - `from unittest.mock import patch, MagicMock`
+- Test Class:
+  - `TestDashScopeFormatter` inherits from `IsolatedAsyncioTestCase` indicating async unittest support.
+- Test Methods:
+  - Async test methods:
+    - `asyncSetUp` and `asyncTearDown` for setup/cleanup.
+    - `test_chat_formatter`
+    - `test_chat_formatter_with_extract_media_blocks`
+    - `test_multiagent_formater`
+    - `test_multiagent_formatter_with_promote_media_tool_result`
+  - Tests patch `_save_base64_data` method with mocks.
+  - Tests formatters `DashScopeChatFormatter` and `DashScopeMultiAgentFormatter` with various message scenarios and asserts equalities against expected results.
+- Comments: Provide detailed docstrings for classes and methods, e.g., "Unittest for the DashScopeFormatter," "Test the chat formatter," and explanation of mock functions.
+
+Note: No explicit commands or scripts for running tests are present in this file.
+- Given the usage of `unittest` and async tests, typical commands to run tests here would be:
+  - `python -m unittest tests/formatter_dashscope_test.py`
+  - Or using test discovery: `python -m unittest discover -s tests -p "formatter_dashscope_test.py"`
+- No special flags or environment variables mentioned in the test file.
+[/Key Information]
+2026-05-13 20:24:20.155 | INFO     | ******
+2026-05-13 20:24:20.155 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14/tests/formatter_dashscope_test.py]\n- Test Framework Imports:\n  - Uses `unittest` standard library, specifically:\n    - `from unittest.async_case import IsolatedAsyncioTestCase`\n    - `from unittest.mock import patch, MagicMock`\n- Test Class:\n  - `TestDashScopeFormatter` inherits from `IsolatedAsyncioTestCase` indicating async unittest support.\n- Test Methods:\n  - Async test methods:\n    - `asyncSetUp` and `asyncTearDown` for setup/cleanup.\n    - `test_chat_formatter`\n    - `test_chat_formatter_with_extract_media_blocks`\n    - `test_multiagent_formater`\n    - `test_multiagent_formatter_with_promote_media_tool_result`\n  - Tests patch `_save_base64_data` method with mocks.\n  - Tests formatters `DashScopeChatFormatter` and `DashScopeMultiAgentFormatter` with various message scenarios and asserts equalities against expected results.\n- Comments: Provide detailed docstrings for classes and methods, e.g., "Unittest for the DashScopeFormatter," "Test the chat formatter," and explanation of mock functions.\n\nNote: No explicit commands or scripts for running tests are present in this file.\n- Given the usage of `unittest` and async tests, typical commands to run tests here would be:\n  - `python -m unittest tests/formatter_dashscope_test.py`\n  - Or using test discovery: `python -m unittest discover -s tests -p "formatter_dashscope_test.py"`\n- No special flags or environment variables mentioned in the test file.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 20:24:32.809 | INFO     | Model API request cost info: input_tokens=4968, output_tokens=697, cost=0.000000
+2026-05-13 20:24:32.827 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 20:24:37.064 | INFO     | Model API request cost info: input_tokens=1295, output_tokens=251, cost=0.000000
+2026-05-13 20:24:37.065 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "python_version": "3.10+",
+    "installation_methods": [
+      "git clone -b main https://github.com/agentscope-ai/agentscope.git && cd agentscope && pip install -e .",
+      "pip install agentscope"
+    ],
+    "dependencies_source": "pyproject.toml",
+    "main_dependencies": [
+      "aioitertools", "anthropic", "dashscope", "openai", "sqlalchemy"
+    ],
+    "dev_dependencies": [
+      "pre-commit", "pytest", "pytest-forked", "sphinx-gallery", "matplotlib", "fakeredis", "aiosqlite", "greenlet"
+    ],
+    "test_frameworks": {
+      "default": "pytest",
+      "test_file_specific": "unittest with async support"
+    },
+    "test_file_run_command": "python -m unittest tests/formatter_dashscope_test.py",
+    "environment_variables": "Only for example usage, not required for tests",
+    "CI_workflows": "Exist but not necessary to explore further for local test execution"
+  },
+  "terminate": true
+}
+2026-05-13 20:24:37.066 | DEBUG    | Extracted a valid json
+2026-05-13 20:24:37.071 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 20:24:42.625 | INFO     | Model API request cost info: input_tokens=1930, output_tokens=414, cost=0.000000
+2026-05-13 20:24:42.627 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 20:24:42.647 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 20:24:46.235 | INFO     | Model API request cost info: input_tokens=1922, output_tokens=211, cost=0.000000
+2026-05-13 20:24:46.236 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 20:29:58.653 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 5e5842bbdc144cdd3a1e78ba2c4fd686523a620d3fba18d07df842303973b58c started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image agentscope-ai__agentscope-1141-dockerfile1:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-13 20:29:58.657 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 20:30:00.350 | INFO     | Model API request cost info: input_tokens=2292, output_tokens=45, cost=0.000000
+2026-05-13 20:30:00.351 | DEBUG    | {
+  "is_finish": true,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-13 20:30:00.352 | DEBUG    | Extracted a valid json
+2026-05-13 20:30:00.479 | INFO     | Removed project repository at testbed/agentscope-ai__agentscope-1141_2026-05-13_19-55-14
+2026-05-13 20:30:00.480 | INFO     | Task agentscope-ai__agentscope-1141 completed successfully.

@@ -1,0 +1,77 @@
+<dockerfile>
+# Base image specification. Defines the foundation OS and architecture for the container
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+# Avoid interactive dialogue during package installation
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation: essential tools and libraries for development and runtime
+RUN apt update && apt install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    # Remove conflicting older Node packages to avoid overwrite errors
+    && apt-get remove -y libnode-dev nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js version 22.x LTS and npm 10.9 as required
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm@10.9.0
+
+# Create work directory
+WORKDIR /testbed
+
+# Clone the repository and checkout the specific commit SHA (commit SHA passed as build-arg)
+ARG REPO_URL=https://github.com/langflow-ai/langflow.git
+ARG COMMIT_SHA=4ef4c93baccf30fc18936941ec9110b5f2fc2a59
+
+RUN git clone ${REPO_URL} /testbed && \
+    cd /testbed && \
+    git checkout ${COMMIT_SHA} && \
+    git remote remove origin
+
+# Setup Python virtual environment named 'testbed' using Python 3.11
+RUN python3.11 -m venv /testbed/venv
+
+# Upgrade pip inside the venv and install required Python packaging tools
+RUN /testbed/venv/bin/pip install --upgrade pip setuptools wheel
+
+# Install 'uv' package for 'uv run' commands as required (>=0.4)
+RUN /testbed/venv/bin/pip install uv>=0.4
+
+# Install the internal local workspace package langflow-base before langflow itself
+# langflow-base is located at src/backend/base – install it as editable package first
+RUN /testbed/venv/bin/pip install -e /testbed/src/backend/base
+
+# Then install the langflow project in editable/development mode, via pip -e .
+RUN /testbed/venv/bin/pip install -e /testbed
+
+# Run initial setup command 'make init' inside the venv environment
+# Including environment variable DO_NOT_TRACK=true to disable telemetry
+RUN /bin/bash -c "source /testbed/venv/bin/activate && export DO_NOT_TRACK=true && make init"
+
+# Install pre-commit hooks as specified
+RUN /bin/bash -c "source /testbed/venv/bin/activate && uv sync && uv run pre-commit install"
+
+# Set environment variables for all subsequent container sessions
+ENV DO_NOT_TRACK=true
+ENV PATH="/testbed/venv/bin:$PATH"
+
+# Set the default shell for container sessions
+ENV SHELL=/bin/bash
+
+# Set working directory
+WORKDIR /testbed
+</dockerfile>

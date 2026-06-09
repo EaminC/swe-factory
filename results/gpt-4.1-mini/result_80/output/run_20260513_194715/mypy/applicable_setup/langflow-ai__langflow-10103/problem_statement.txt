@@ -1,0 +1,46 @@
+Multi-Flow streaming performance is pretty bad (maybe related to large tool call messages)
+### Bug Description
+
+I have a multi-flow setup where an Agent is calling another flow (that has another agent) the called flow/agent is painfully slow. I can bring it up in the playground and it's streaming abnormally slow and I have noticed that there's a single python thread running at 100%. It seems like there's some sort of spin loop happening slowing everything down. 
+
+I'm not really able to figure out how to profile this. 
+
+A few more details:
+Flow A is primary flow with basic Chat Input, Agent and Chat Output and has Flow B connected as a tool
+Flow B has the same Chat Input, Agent and Chat Output with a Python based tool connected that does return a fair bit of data. 
+
+I thought I had seen in the process of looking at the API that while streaming it keeps streaming the same message over and over with additional data. If this includes the tool call message that message will be bigger and bigger and bigger and then when the agent starts adding to it, it's going to be humongous. 
+
+### Reproduction
+
+Create Flow "Tool" with Chat Input, Agent, Chat Output, connect a tool to Agent that returns a lot of data and agent instructions to parse the data
+Create Flow "Test" with Chat Input, Agent, Chat Output, connect Flow "Tool" as a Tool to that agent.
+Ask Flow Test about something related to tool data
+
+### Expected behavior
+
+It will work and be usable... 
+
+### Who can help?
+
+_No response_
+
+### Operating System
+
+Linux
+
+### Langflow Version
+
+1.5.0.post2 in Docker
+
+### Python Version
+
+None
+
+### Screenshot
+
+_No response_
+
+### Flow File
+
+_No response_

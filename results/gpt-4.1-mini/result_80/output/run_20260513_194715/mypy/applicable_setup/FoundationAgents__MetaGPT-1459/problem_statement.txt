@@ -1,0 +1,15 @@
+recovered role can't observe new message
+**Bug description**
+recovered为True时，msg_buffer中的消息不会再被pop，总是把latest_observed_msg当作新消息
+
+**Bug related code**
+    async def _observe(self, ignore_memory=False) -> int:
+        if self.recovered:
+            news = [self.latest_observed_msg] if self.latest_observed_msg else []
+        if not news:
+            news = self.rc.msg_buffer.pop_all()
+        ...
+        self.latest_observed_msg = self.rc.news[-1] if self.rc.news else None  # record the latest observed msg
+
+
+

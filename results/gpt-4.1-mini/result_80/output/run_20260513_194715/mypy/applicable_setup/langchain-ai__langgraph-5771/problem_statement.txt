@@ -1,0 +1,86 @@
+Add durability mode for invoke and ainvoke methods
+<open-swe-issue-content>We recently introduced a `durability` mode for `stream` and `astream`. I'd like to introduce that same mode for `invoke` and `ainvoke`.
+
+Also, we need better docs for this, preferably in the docs/concepts section on the persistence.md page. Please help me to implement this feature and add documentation!</open-swe-issue-content>
+<details>
+<summary>Agent Context</summary>
+
+
+
+
+<open-swe-do-not-edit-task-plan>
+{
+  "tasks": [
+    {
+      "id": "53ae5a01-a73b-4eb6-9356-a561201839dc",
+      "taskIndex": 0,
+      "request": "[original issue]\n**Add durability mode for invoke and ainvoke methods**\nWe recently introduced a `durability` mode for `stream` and `astream`. I'd like to introduce that same mode for `invoke` and `ainvoke`.\n\nAlso, we need better docs for this, preferably in the docs/concepts section on the persistence.md page. Please help me to implement this feature and add documentation!",
+      "title": "Add explicit durability parameter to invoke/ainvoke methods and improve documentation",
+      "createdAt": 1753901865755,
+      "completed": false,
+      "planRevisions": [
+        {
+          "revisionIndex": 0,
+          "plans": [
+            {
+              "index": 0,
+              "plan": "**Add explicit durability parameter to invoke method signature** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 2989 (after `interrupt_after` parameter), including the type annotation `durability: Durability | None = None,` and update the docstring to document the durability parameter with the same description used in the stream method (lines 2465-2468).",
+              "completed": true,
+              "summary": "Successfully added the explicit durability parameter to the invoke method signature and updated its docstring in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py`.\n\n**Changes made:**\n1. **Method signature update**: Added `durability: Durability | None = None,` parameter at line 2990, positioned after the `interrupt_after` parameter as specified.\n\n2. **Docstring update**: Added comprehensive durability parameter documentation at lines 3005-3008 with the exact same description used in the stream method:\n   - Explains the three durability modes: 'sync', 'async', 'exit'\n   - Describes when each mode is used\n   - Maintains consistency with existing stream method documentation\n\n**Technical approach:**\n- Used a Python script to modify the file due to file editing constraints\n- Applied regex-based replacements to ensure precise modifications\n- Verified the changes were applied correctly by viewing the updated method signature and docstring\n\nThe invoke method now has explicit durability parameter support matching the pattern established by the stream method, making the API more consistent and self-documenting."
+            },
+            {
+              "index": 1,
+              "plan": "**Add explicit durability parameter to ainvoke method signature** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3068 (after `interrupt_after` parameter), including the type annotation `durability: Durability | None = None,` and update the docstring to document the durability parameter with the same description used in the astream method (lines 2726-2729).",
+              "completed": true,
+              "summary": "Successfully added the explicit durability parameter to the ainvoke method signature and updated its docstring in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py`.\n\n**Changes made:**\n1. **Method signature update**: Added `durability: Durability | None = None,` parameter at line 3074, positioned after the `interrupt_after` parameter as specified.\n\n2. **Docstring update**: Added comprehensive durability parameter documentation at lines 3089-3092 with the exact same description used in the astream method:\n   - Explains the three durability modes: 'sync', 'async', 'exit'\n   - Describes when each mode is used\n   - Maintains consistency with existing astream method documentation\n\n**Technical approach:**\n- Used a Python script to modify the file due to file editing constraints\n- Applied regex-based replacements to ensure precise modifications\n- Verified the changes were applied correctly by viewing the updated method signature and docstring\n\nThe ainvoke method now has explicit durability parameter support matching the pattern established by the astream method, making the API more consistent and self-documenting. Both invoke and ainvoke methods now have explicit durability parameters in their signatures, completing the API consistency improvements."
+            },
+            {
+              "index": 2,
+              "plan": "**Update the invoke method implementation** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3027 to pass the durability parameter explicitly to the stream method call instead of relying on **kwargs, by adding `durability=durability,` before the **kwargs line.",
+              "completed": true,
+              "summary": "Updated the implementation of the `invoke` method in `/libs/langgraph/langgraph/pregel/main.py` to explicitly pass the `durability` parameter to the `stream` method call. The method now includes `durability=durability,` before `**kwargs` in the call to `self.stream`, ensuring the parameter is not passed implicitly via `**kwargs` but is instead explicit and clear in the code. This matches the new explicit signature and documentation for the method. The change was verified by inspecting the relevant lines in the file."
+            },
+            {
+              "index": 3,
+              "plan": "**Update the ainvoke method implementation** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3107 to pass the durability parameter explicitly to the astream method call instead of relying on **kwargs, by adding `durability=durability,` before the **kwargs line.",
+              "completed": false
+            },
+            {
+              "index": 4,
+              "plan": "**Add durability modes documentation section** to `/home/daytona/langgraph/docs/docs/concepts/persistence.md` after the Checkpoints section (around line 200), including a comprehensive explanation of the three durability modes ('sync', 'async', 'exit'), when to use each mode, and code examples showing how to use durability with invoke, ainvoke, stream, and astream methods.",
+              "completed": false
+            },
+            {
+              "index": 5,
+              "plan": "**Run formatting, linting, and tests** in the langgraph library directory by executing `make format`, `make lint`, and `make test` to ensure all changes are properly formatted and don't break existing functionality.",
+              "completed": false
+            }
+          ],
+          "createdAt": 1753901865755,
+          "createdBy": "agent"
+        }
+      ],
+      "activeRevisionIndex": 0,
+      "pullRequestNumber": 5742
+    }
+  ],
+  "activeTaskIndex": 0
+}
+</open-swe-do-not-edit-task-plan>
+
+
+
+
+<open-swe-do-not-edit-proposed-plan>
+[
+  "**Add explicit durability parameter to invoke method signature** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 2989 (after `interrupt_after` parameter), including the type annotation `durability: Durability | None = None,` and update the docstring to document the durability parameter with the same description used in the stream method (lines 2465-2468).",
+  "**Add explicit durability parameter to ainvoke method signature** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3068 (after `interrupt_after` parameter), including the type annotation `durability: Durability | None = None,` and update the docstring to document the durability parameter with the same description used in the astream method (lines 2726-2729).",
+  "**Update the invoke method implementation** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3027 to pass the durability parameter explicitly to the stream method call instead of relying on **kwargs, by adding `durability=durability,` before the **kwargs line.",
+  "**Update the ainvoke method implementation** in `/home/daytona/langgraph/libs/langgraph/langgraph/pregel/main.py` at line 3107 to pass the durability parameter explicitly to the astream method call instead of relying on **kwargs, by adding `durability=durability,` before the **kwargs line.",
+  "**Add durability modes documentation section** to `/home/daytona/langgraph/docs/docs/concepts/persistence.md` after the Checkpoints section (around line 200), including a comprehensive explanation of the three durability modes ('sync', 'async', 'exit'), when to use each mode, and code examples showing how to use durability with invoke, ainvoke, stream, and astream methods.",
+  "**Run formatting, linting, and tests** in the langgraph library directory by executing `make format`, `make lint`, and `make test` to ensure all changes are properly formatted and don't break existing functionality."
+]
+</open-swe-do-not-edit-proposed-plan>
+
+</details>
+</details>

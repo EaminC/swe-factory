@@ -1,0 +1,1770 @@
+2026-05-13 23:51:49.584 | INFO     | Model API request cost info: input_tokens=1306, output_tokens=161, cost=0.000000
+2026-05-13 23:51:49.590 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 23:51:50.761 | INFO     | Model API request cost info: input_tokens=760, output_tokens=77, cost=0.000000
+2026-05-13 23:51:50.833 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"README.md\", \"environment setup, dependencies versions, programming language version, test running commands\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"environment setup, dependencies versions, test running commands\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-05-13 23:51:50.834 | DEBUG    | Extracted a valid json
+2026-05-13 23:51:50.850 | INFO     | entering browse
+2026-05-13 23:51:50.851 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md ===
+<div align="center">
+  <div>
+    <a href="https://strandsagents.com">
+      <img src="https://strandsagents.com/latest/assets/logo-github.svg" alt="Strands Agents" width="55px" height="105px">
+    </a>
+  </div>
+
+  <h1>
+    Strands Agents
+  </h1>
+
+  <h2>
+    A model-driven approach to building AI agents in just a few lines of code.
+  </h2>
+
+  <div align="center">
+    <a href="https://github.com/strands-agents/sdk-python/graphs/commit-activity"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/issues"><img alt="GitHub open issues" src="https://img.shields.io/github/issues/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/pulls"><img alt="GitHub open pull requests" src="https://img.shields.io/github/issues-pr/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/strands-agents/sdk-python"/></a>
+    <a href="https://pypi.org/project/strands-agents/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/strands-agents"/></a>
+    <a href="https://python.org"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/strands-agents"/></a>
+  </div>
+  
+  <p>
+    <a href="https://strandsagents.com/">Documentation</a>
+    ◆ <a href="https://github.com/strands-agents/samples">Samples</a>
+    ◆ <a href="https://github.com/strands-agents/sdk-python">Python SDK</a>
+    ◆ <a href="https://github.com/strands-agents/tools">Tools</a>
+    ◆ <a href="https://github.com/strands-agents/agent-builder">Agent Builder</a>
+    ◆ <a href="https://github.com/strands-agents/mcp-server">MCP Server</a>
+  </p>
+</div>
+
+Strands Agents is a simple yet powerful SDK that takes a model-driven approach to building and running AI agents. From simple conversational assistants to complex autonomous workflows, from local development to production deployment, Strands Agents scales with your needs.
+
+## Feature Overview
+
+- **Lightweight & Flexible**: Simple agent loop that just works and is fully customizable
+- **Model Agnostic**: Support for Amazon Bedrock, Anthropic, Gemini, LiteLLM, Llama, Ollama, OpenAI, Writer, and custom providers
+- **Advanced Capabilities**: Multi-agent systems, autonomous agents, and streaming support
+- **Built-in MCP**: Native support for Model Context Protocol (MCP) servers, enabling access to thousands of pre-built tools
+
+## Quick Start
+
+```bash
+# Install Strands Agents
+pip install strands-agents strands-agents-tools
+```
+
+```python
+from strands import Agent
+from strands_tools import calculator
+agent = Agent(tools=[calculator])
+agent("What is the square root of 1764")
+```
+
+> **Note**: For the default Amazon Bedrock model provider, you'll need AWS credentials configured and model access enabled for Claude 4 Sonnet in the us-west-2 region. See the [Quickstart Guide](https://strandsagents.com/) for details on configuring other model providers.
+
+## Installation
+
+Ensure you have Python 3.10+ installed, then:
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+
+# Install Strands and tools
+pip install strands-agents strands-agents-tools
+```
+
+## Features at a Glance
+
+### Python-Based Tools
+
+Easily build tools using Python decorators:
+
+```python
+from strands import Agent, tool
+
+@tool
+def word_count(text: str) -> int:
+    """Count words in text.
+
+    This docstring is used by the LLM to understand the tool's purpose.
+    """
+    return len(text.split())
+
+agent = Agent(tools=[word_count])
+response = agent("How many words are in this sentence?")
+```
+
+**Hot Reloading from Directory:**
+Enable automatic tool loading and reloading from the `./tools/` directory:
+
+```python
+from strands import Agent
+
+# Agent will watch ./tools/ directory for changes
+agent = Agent(load_tools_from_directory=True)
+response = agent("Use any tools you find in the tools directory")
+```
+
+### MCP Support
+
+Seamlessly integrate Model Context Protocol (MCP) servers:
+
+```python
+from strands import Agent
+from strands.tools.mcp import MCPClient
+from mcp import stdio_client, StdioServerParameters
+
+aws_docs_client = MCPClient(
+    lambda: stdio_client(StdioServerParameters(command="uvx", args=["awslabs.aws-documentation-mcp-server@latest"]))
+)
+
+with aws_docs_client:
+   agent = Agent(tools=aws_docs_client.list_tools_sync())
+   response = agent("Tell me about Amazon Bedrock and how to use it with Python")
+```
+
+### Multiple Model Providers
+
+Support for various model providers:
+
+```python
+from strands import Agent
+from strands.models import BedrockModel
+from strands.models.ollama import OllamaModel
+from strands.models.llamaapi import LlamaAPIModel
+from strands.models.gemini import GeminiModel
+from strands.models.llamacpp import LlamaCppModel
+
+# Bedrock
+bedrock_model = BedrockModel(
+  model_id="us.amazon.nova-pro-v1:0",
+  temperature=0.3,
+  streaming=True, # Enable/disable streaming
+)
+agent = Agent(model=bedrock_model)
+agent("Tell me about Agentic AI")
+
+# Google Gemini
+gemini_model = GeminiModel(
+  client_args={
+    "api_key": "your_gemini_api_key",
+  },
+  model_id="gemini-2.5-flash",
+  params={"temperature": 0.7}
+)
+agent = Agent(model=gemini_model)
+agent("Tell me about Agentic AI")
+
+# Ollama
+ollama_model = OllamaModel(
+  host="http://localhost:11434",
+  model_id="llama3"
+)
+agent = Agent(model=ollama_model)
+agent("Tell me about Agentic AI")
+
+# Llama API
+llama_model = LlamaAPIModel(
+    model_id="Llama-4-Maverick-17B-128E-Instruct-FP8",
+)
+agent = Agent(model=llama_model)
+response = agent("Tell me about Agentic AI")
+```
+
+Built-in providers:
+ - [Amazon Bedrock](https://strandsagents.com/latest/user-guide/concepts/model-providers/amazon-bedrock/)
+ - [Anthropic](https://strandsagents.com/latest/user-guide/concepts/model-providers/anthropic/)
+ - [Gemini](https://strandsagents.com/latest/user-guide/concepts/model-providers/gemini/)
+ - [Cohere](https://strandsagents.com/latest/user-guide/concepts/model-providers/cohere/)
+ - [LiteLLM](https://strandsagents.com/latest/user-guide/concepts/model-providers/litellm/)
+ - [llama.cpp](https://strandsagents.com/latest/user-guide/concepts/model-providers/llamacpp/)
+ - [LlamaAPI](https://strandsagents.com/latest/user-guide/concepts/model-providers/llamaapi/)
+ - [MistralAI](https://strandsagents.com/latest/user-guide/concepts/model-providers/mistral/)
+ - [Ollama](https://strandsagents.com/latest/user-guide/concepts/model-providers/ollama/)
+ - [OpenAI](https://strandsagents.com/latest/user-guide/concepts/model-providers/openai/)
+ - [SageMaker](https://strandsagents.com/latest/user-guide/concepts/model-providers/sagemaker/)
+ - [Writer](https://strandsagents.com/latest/user-guide/concepts/model-providers/writer/)
+
+Custom providers can be implemented using [Custom Providers](https://strandsagents.com/latest/user-guide/concepts/model-providers/custom_model_provider/)
+
+### Example tools
+
+Strands offers an optional strands-agents-tools package with pre-built tools for quick experimentation:
+
+```python
+from strands import Agent
+from strands_tools import calculator
+agent = Agent(tools=[calculator])
+agent("What is the square root of 1764")
+```
+
+It's also available on GitHub via [strands-agents/tools](https://github.com/strands-agents/tools).
+
+## Documentation
+
+For detailed guidance & examples, explore our documentation:
+
+- [User Guide](https://strandsagents.com/)
+- [Quick Start Guide](https://strandsagents.com/latest/user-guide/quickstart/)
+- [Agent Loop](https://strandsagents.com/latest/user-guide/concepts/agents/agent-loop/)
+- [Examples](https://strandsagents.com/latest/examples/)
+- [API Reference](https://strandsagents.com/latest/api-reference/agent/)
+- [Production & Deployment Guide](https://strandsagents.com/latest/user-guide/deploy/operating-agents-in-production/)
+
+## Contributing ❤️
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Reporting bugs & features
+- Development setup
+- Contributing via Pull Requests
+- Code of Conduct
+- Reporting of security issues
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md ===
+2026-05-13 23:51:50.851 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:51:53.715 | INFO     | Model API request cost info: input_tokens=2714, output_tokens=271, cost=0.000000
+2026-05-13 23:51:53.717 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:51:53.717 | INFO     | ******
+2026-05-13 23:51:53.717 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md]
+- Programming Language:
+  - Python 3.10+ (exact minimum version specified)
+- Environment setup:
+  - Create and activate a virtual environment:
+    - `python -m venv .venv`
+    - `source .venv/bin/activate` (Unix/Linux/macOS)
+    - `.venv\Scripts\activate` (Windows)
+  - Install packages:
+    - `pip install strands-agents strands-agents-tools`
+- Dependencies:
+  - strands-agents (no explicit version pinned here; install latest from PyPI)
+  - strands-agents-tools (no explicit version pinned)
+- Test running commands:
+  - No specific test commands or test framework indications found.
+  - No commands for running individual or all tests provided.
+- Environment variables or configuration:
+  - For Amazon Bedrock model provider, AWS credentials must be configured with model access enabled for Claude 4 Sonnet in the us-west-2 region.
+- Custom user queries (focus):
+  - No explicit test-related commands or environment variable files mentioned in README.
+  - Setup focuses on SDK and tools installation and minimal environment activation.
+[/Key Information]
+2026-05-13 23:51:53.718 | INFO     | ******
+2026-05-13 23:51:53.718 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md]\n- Programming Language:\n  - Python 3.10+ (exact minimum version specified)\n- Environment setup:\n  - Create and activate a virtual environment:\n    - `python -m venv .venv`\n    - `source .venv/bin/activate` (Unix/Linux/macOS)\n    - `.venv\\Scripts\\activate` (Windows)\n  - Install packages:\n    - `pip install strands-agents strands-agents-tools`\n- Dependencies:\n  - strands-agents (no explicit version pinned here; install latest from PyPI)\n  - strands-agents-tools (no explicit version pinned)\n- Test running commands:\n  - No specific test commands or test framework indications found.\n  - No commands for running individual or all tests provided.\n- Environment variables or configuration:\n  - For Amazon Bedrock model provider, AWS credentials must be configured with model access enabled for Claude 4 Sonnet in the us-west-2 region.\n- Custom user queries (focus):\n  - No explicit test-related commands or environment variable files mentioned in README.\n  - Setup focuses on SDK and tools installation and minimal environment activation.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:51:53.719 | INFO     | entering browse
+2026-05-13 23:51:53.719 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md ===
+# Contributing Guidelines
+
+Thank you for your interest in contributing to our project. Whether it's a bug report, new feature, correction, or additional
+documentation, we greatly value feedback and contributions from our community.
+
+Please read through this document before submitting any issues or pull requests to ensure we have all the necessary
+information to effectively respond to your bug report or contribution.
+
+
+## Reporting Bugs/Feature Requests
+
+We welcome you to use the [Bug Reports](../../issues/new?template=bug_report.yml) file to report bugs or [Feature Requests](../../issues/new?template=feature_request.yml) to suggest features.
+
+For a list of known bugs and feature requests:
+- Check [Bug Reports](../../issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) for currently tracked issues
+- See [Feature Requests](../../issues?q=is%3Aissue%20state%3Aopen%20label%3Aenhancement) for requested enhancements
+
+When filing an issue, please check for already tracked items
+
+Please try to include as much information as you can. Details like these are incredibly useful:
+
+* A reproducible test case or series of steps
+* The version of our code being used (commit ID)
+* Any modifications you've made relevant to the bug
+* Anything unusual about your environment or deployment
+
+
+## Finding contributions to work on
+Looking at the existing issues is a great way to find something to contribute to. We label issues that are well-defined and ready for community contributions with the "ready for contribution" label.
+
+Check our [Ready for Contribution](../../issues?q=is%3Aissue%20state%3Aopen%20label%3A%22ready%20for%20contribution%22) issues for items you can work on.
+
+Before starting work on any issue:
+1. Check if someone is already assigned or working on it
+2. Comment on the issue to express your interest and ask any clarifying questions
+3. Wait for maintainer confirmation before beginning significant work
+
+
+## Development Environment
+
+This project uses [hatchling](https://hatch.pypa.io/latest/build/#hatchling) as the build backend and [hatch](https://hatch.pypa.io/latest/) for development workflow management.
+
+### Setting Up Your Development Environment
+
+1. Entering virtual environment using `hatch` (recommended), then launch your IDE in the new shell.
+   ```bash
+   hatch shell
+   ```
+
+
+2. Set up pre-commit hooks:
+   ```bash
+   pre-commit install -t pre-commit -t commit-msg
+   ```
+   This will automatically run formatters and conventional commit checks on your code before each commit.
+
+3. Run code formatters manually:
+   ```bash
+   hatch fmt --formatter
+   ```
+
+4. Run linters:
+   ```bash
+   hatch fmt --linter
+   ```
+
+5. Run unit tests:
+   ```bash
+   hatch test
+   ```
+   Or run them with coverage:
+   ```bash
+   hatch test -c
+   ```
+
+6. Run integration tests:
+   ```bash
+   hatch run test-integ
+   ```
+
+### Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com/) to automatically run quality checks before each commit. The hook will run `hatch run format`, `hatch run lint`, `hatch run test`, and `hatch run cz check` when you make a commit, ensuring code consistency.
+
+The pre-commit hook is installed with:
+
+```bash
+pre-commit install
+```
+
+You can also run the hooks manually on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+### Code Formatting and Style Guidelines
+
+We use the following tools to ensure code quality:
+1. **ruff** - For formatting and linting
+2. **mypy** - For static type checking
+
+These tools are configured in the [pyproject.toml](./pyproject.toml) file. Please ensure your code passes all linting and type checks before submitting a pull request:
+
+```bash
+# Run all checks
+hatch fmt --formatter
+hatch fmt --linter
+```
+
+If you're using an IDE like VS Code or PyCharm, consider configuring it to use these tools automatically.
+
+For additional details on styling, please see our dedicated [Style Guide](./STYLE_GUIDE.md).
+
+
+## Contributing via Pull Requests
+Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
+
+1. You are working against the latest source on the *main* branch.
+2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
+3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
+
+To send us a pull request, please:
+
+1. Create a branch.
+2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
+3. Format your code using `hatch fmt --formatter`.
+4. Run linting checks with `hatch fmt --linter`.
+5. Ensure local tests pass with `hatch test` and `hatch run test-integ`.
+6. Commit to your branch using clear commit messages following the [Conventional Commits](https://www.conventionalcommits.org) specification.
+7. Send us a pull request, answering any default questions in the pull request interface.
+8. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+
+
+## Code of Conduct
+This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct).
+For more information see the [Code of Conduct FAQ](https://aws.github.io/code-of-conduct-faq) or contact
+opensource-codeofconduct@amazon.com with any additional questions or comments.
+
+
+## Security issue notifications
+If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please do **not** create a public github issue.
+
+
+## Licensing
+
+See the [LICENSE](./LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md ===
+2026-05-13 23:51:53.719 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:51:57.325 | INFO     | Model API request cost info: input_tokens=1914, output_tokens=355, cost=0.000000
+2026-05-13 23:51:57.327 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:51:57.327 | INFO     | ******
+2026-05-13 23:51:57.328 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md]
+- Environment Setup:
+  - Use `hatch` for virtual environment and development workflow management.
+  - Enter virtual environment:
+    - `hatch shell`
+  - Set up pre-commit hooks:
+    - `pre-commit install -t pre-commit -t commit-msg`
+- Dependencies & Tools (versions not specified):
+  - `hatchling` as build backend
+  - `hatch` for workflow management
+  - `pre-commit` for Git hooks
+  - Code quality tools:
+    - `ruff` (formatter and linter)
+    - `mypy` (static type checker)
+- Test Running Commands:
+  - Run all unit tests:
+    - `hatch test`
+  - Run unit tests with coverage:
+    - `hatch test -c`
+  - Run integration tests:
+    - `hatch run test-integ`
+- Additional commands related to code quality:
+  - Run code formatters manually:
+    - `hatch fmt --formatter`
+  - Run linters:
+    - `hatch fmt --linter`
+  - Run all pre-commit hooks manually on all files:
+    - `pre-commit run --all-files`
+- Notes:
+  - Tests can be run generally via `hatch test`; no separate commands for running individual or specific test files are explicitly provided.
+  - Python runtime version or OS/package prerequisites are not specified in this document.
+  - Configuration for formatters and linters is contained in `pyproject.toml`.
+[/Key Information]
+2026-05-13 23:51:57.328 | INFO     | ******
+2026-05-13 23:51:57.328 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md]\n- Environment Setup:\n  - Use `hatch` for virtual environment and development workflow management.\n  - Enter virtual environment:\n    - `hatch shell`\n  - Set up pre-commit hooks:\n    - `pre-commit install -t pre-commit -t commit-msg`\n- Dependencies & Tools (versions not specified):\n  - `hatchling` as build backend\n  - `hatch` for workflow management\n  - `pre-commit` for Git hooks\n  - Code quality tools:\n    - `ruff` (formatter and linter)\n    - `mypy` (static type checker)\n- Test Running Commands:\n  - Run all unit tests:\n    - `hatch test`\n  - Run unit tests with coverage:\n    - `hatch test -c`\n  - Run integration tests:\n    - `hatch run test-integ`\n- Additional commands related to code quality:\n  - Run code formatters manually:\n    - `hatch fmt --formatter`\n  - Run linters:\n    - `hatch fmt --linter`\n  - Run all pre-commit hooks manually on all files:\n    - `pre-commit run --all-files`\n- Notes:\n  - Tests can be run generally via `hatch test`; no separate commands for running individual or specific test files are explicitly provided.\n  - Python runtime version or OS/package prerequisites are not specified in this document.\n  - Configuration for formatters and linters is contained in `pyproject.toml`.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:52:03.393 | INFO     | Model API request cost info: input_tokens=2399, output_tokens=662, cost=0.000000
+2026-05-13 23:52:03.408 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 23:52:06.369 | INFO     | Model API request cost info: input_tokens=1261, output_tokens=200, cost=0.000000
+2026-05-13 23:52:06.371 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"pyproject.toml\", \"python version, dependencies, testing tools and versions, test commands\")"],
+  "collected_information": {
+    "programming_language": "Python 3.10+ (from README.md)",
+    "environment_setup": {
+      "virtualenv_creation_and_activation": "documented in README.md",
+      "package_installation": "pip install strands-agents strands-agents-tools",
+      "tooling": "hatch for virtualenv and test workflows"
+    },
+    "dependencies": "Not pinned or detailed in README.md or CONTRIBUTING.md",
+    "test_commands": {
+      "generic": ["hatch test", "hatch test -c", "hatch run test-integ"],
+      "specific_file_test_commands": "Not found in current files"
+    },
+    "notes": "AWS environment variables mentioned but no explicit details"
+  },
+  "terminate": false
+}
+2026-05-13 23:52:06.371 | DEBUG    | Extracted a valid json
+2026-05-13 23:52:06.376 | INFO     | entering browse
+2026-05-13 23:52:06.376 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml ===
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "strands-agents"
+dynamic = ["version"]  # Version determined by git tags
+description = "A model-driven approach to building AI agents in just a few lines of code"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "AWS", email = "opensource@amazon.com"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "boto3>=1.26.0,<2.0.0",
+    "botocore>=1.29.0,<2.0.0",
+    "docstring_parser>=0.15,<1.0",
+    "mcp>=1.11.0,<2.0.0",
+    "pydantic>=2.4.0,<3.0.0",
+    "typing-extensions>=4.13.2,<5.0.0",
+    "watchdog>=6.0.0,<7.0.0",
+    "opentelemetry-api>=1.30.0,<2.0.0",
+    "opentelemetry-sdk>=1.30.0,<2.0.0",
+    "opentelemetry-instrumentation-threading>=0.51b0,<1.00b0",
+]
+
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.21.0,<1.0.0"]
+gemini = ["google-genai>=1.32.0,<2.0.0"]
+litellm = ["litellm>=1.75.9,<2.0.0", "openai>=1.68.0,<1.110.0"]
+llamaapi = ["llama-api-client>=0.1.0,<1.0.0"]
+mistral = ["mistralai>=1.8.2"]
+ollama = ["ollama>=0.4.8,<1.0.0"]
+openai = ["openai>=1.68.0,<2.0.0"]
+writer = ["writer-sdk>=2.2.0,<3.0.0"]
+sagemaker = [
+    "boto3-stubs[sagemaker-runtime]>=1.26.0,<2.0.0",
+    "openai>=1.68.0,<2.0.0",  # SageMaker uses OpenAI-compatible interface
+]
+otel = ["opentelemetry-exporter-otlp-proto-http>=1.30.0,<2.0.0"]
+docs = [
+    "sphinx>=5.0.0,<9.0.0",
+    "sphinx-rtd-theme>=1.0.0,<2.0.0",
+    "sphinx-autodoc-typehints>=1.12.0,<4.0.0",
+]
+
+a2a = [
+    "a2a-sdk>=0.3.0,<0.4.0",
+    "a2a-sdk[sql]>=0.3.0,<0.4.0",
+    "uvicorn>=0.34.2,<1.0.0",
+    "httpx>=0.28.1,<1.0.0",
+    "fastapi>=0.115.12,<1.0.0",
+    "starlette>=0.46.2,<1.0.0",
+]
+all = ["strands-agents[a2a,anthropic,docs,gemini,litellm,llamaapi,mistral,ollama,openai,writer,sagemaker,otel]"]
+
+dev = [
+    "commitizen>=4.4.0,<5.0.0",
+    "hatch>=1.0.0,<2.0.0",
+    "moto>=5.1.0,<6.0.0",
+    "mypy>=1.15.0,<2.0.0",
+    "pre-commit>=3.2.0,<4.4.0",
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-asyncio>=1.0.0,<1.3.0",
+    "pytest-xdist>=3.0.0,<4.0.0",
+    "ruff>=0.13.0,<0.14.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/strands-agents/sdk-python"
+"Bug Tracker" = "https://github.com/strands-agents/sdk-python/issues"
+Documentation = "https://strandsagents.com"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strands"]
+
+
+[tool.hatch.version]
+source = "vcs"  # Use git tags for versioning
+
+
+[tool.hatch.envs.hatch-static-analysis]
+installer = "uv"
+features = ["all"]
+dependencies = [
+  "mypy>=1.15.0,<2.0.0",
+  "ruff>=0.13.0,<0.14.0",
+  # Include required pacakge dependencies for mypy
+  "strands-agents @ {root:uri}",
+]
+
+# Define static-analysis scripts so we can include mypy as part of the linting check
+[tool.hatch.envs.hatch-static-analysis.scripts]
+format-check = [
+    "ruff format --check"
+]
+format-fix = [
+    "ruff format"
+]
+lint-check = [
+    "ruff check",
+    "mypy -p src"
+]
+lint-fix = [
+    "ruff check --fix"
+]
+
+
+[tool.hatch.envs.hatch-test]
+installer = "uv"
+features = ["all"]
+extra-args = ["-n", "auto", "-vv"]
+dependencies = [
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-asyncio>=1.0.0,<1.3.0",
+    "pytest-xdist>=3.0.0,<4.0.0",
+    "moto>=5.1.0,<6.0.0",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.13", "3.12", "3.11", "3.10"]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = "pytest{env:HATCH_TEST_ARGS:} {args}" # Run with: hatch test
+run-cov = "pytest{env:HATCH_TEST_ARGS:} {args} --cov --cov-config=pyproject.toml --cov-report html --cov-report xml {args}" # Run with: hatch test -c
+cov-combine = []
+cov-report = []
+
+
+[tool.hatch.envs.default]
+installer = "uv"
+dev-mode = true
+features = ["all"]
+dependencies = [
+    "commitizen>=4.4.0,<5.0.0",
+    "hatch>=1.0.0,<2.0.0",
+    "pre-commit>=3.2.0,<4.4.0",
+]
+
+
+[tool.hatch.envs.default.scripts]
+list = "echo 'Scripts commands available for default env:'; hatch env show --json | jq --raw-output '.default.scripts | keys[]'"
+
+format = "hatch fmt --formatter"
+test-format = "hatch fmt --formatter --check"
+
+lint = "hatch fmt --linter"
+test-lint = "hatch fmt --linter --check"
+
+test = "hatch test {args}"
+test-integ = "hatch test tests_integ {args}"
+
+prepare = [
+    "hatch run format",
+    "hatch run lint",
+    "hatch run test-lint",
+    "hatch test --all"
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+follow_untyped_imports = true
+ignore_missing_imports = false
+
+
+[tool.ruff]
+line-length = 120
+include = ["examples/**/*.py", "src/**/*.py", "tests/**/*.py", "tests_integ/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+  "B",   # flake8-bugbear
+  "D",   # pydocstyle
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "G",   # logging format
+  "I",   # isort
+  "LOG", # logging
+]
+
+[tool.ruff.lint.per-file-ignores]
+"!src/**/*.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+context = "thread"
+parallel = true
+concurrency = ["thread", "multiprocessing"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.coverage.html]
+directory = "build/coverage/html"
+
+[tool.coverage.xml]
+output = "build/coverage/coverage.xml"
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+bump_message = "chore(release): bump version $current_version -> $new_version"
+version_files = ["pyproject.toml:version"]
+update_changelog_on_bump = true
+style = [
+    ["qmark", "fg:#ff9d00 bold"],
+    ["question", "bold"],
+    ["answer", "fg:#ff9d00 bold"],
+    ["pointer", "fg:#ff9d00 bold"],
+    ["highlighted", "fg:#ff9d00 bold"],
+    ["selected", "fg:#cc5454"],
+    ["separator", "fg:#cc5454"],
+    ["instruction", ""],
+    ["text", ""],
+    ["disabled", "fg:#858585 italic"]
+]
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml ===
+2026-05-13 23:52:06.376 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:52:14.517 | INFO     | Model API request cost info: input_tokens=2947, output_tokens=782, cost=0.000000
+2026-05-13 23:52:14.519 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:52:14.519 | INFO     | ******
+2026-05-13 23:52:14.519 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml]
+- Python version:
+  - Requires Python >=3.10
+  - Test matrix includes Python 3.10, 3.11, 3.12, 3.13
+  
+- Dependencies (main exact versions or ranges):
+  - boto3 >=1.26.0,<2.0.0
+  - botocore >=1.29.0,<2.0.0
+  - docstring_parser >=0.15,<1.0
+  - mcp >=1.11.0,<2.0.0
+  - pydantic >=2.4.0,<3.0.0
+  - typing-extensions >=4.13.2,<5.0.0
+  - watchdog >=6.0.0,<7.0.0
+  - opentelemetry-api >=1.30.0,<2.0.0
+  - opentelemetry-sdk >=1.30.0,<2.0.0
+  - opentelemetry-instrumentation-threading >=0.51b0,<1.00b0
+
+- Development dependencies:
+  - commitizen >=4.4.0,<5.0.0
+  - hatch >=1.0.0,<2.0.0
+  - moto >=5.1.0,<6.0.0
+  - mypy >=1.15.0,<2.0.0
+  - pre-commit >=3.2.0,<4.4.0
+  - pytest >=8.0.0,<9.0.0
+  - pytest-cov >=7.0.0,<8.0.0
+  - pytest-asyncio >=1.0.0,<1.3.0
+  - pytest-xdist >=3.0.0,<4.0.0
+  - ruff >=0.13.0,<0.14.0
+
+- Testing tools and versions:
+  - pytest 8.x
+  - pytest-cov 7.x
+  - pytest-asyncio 1.x
+  - pytest-xdist 3.x
+  - moto 5.x (for AWS mocking in tests)
+  
+- Test commands:
+  - General test run:
+    - `hatch test`
+    - Internally runs: `pytest{env:HATCH_TEST_ARGS:} {args}`
+  - Run tests with coverage:
+    - `hatch test -c`
+    - Internally runs: `pytest{env:HATCH_TEST_ARGS:} {args} --cov --cov-config=pyproject.toml --cov-report html --cov-report xml {args}`
+  - Run tests on integration folder specifically:
+    - `hatch test tests_integ {args}`
+  - To run an individual or specific test file:
+    - Use `hatch test <test_file_path>`
+    - This is implied by the `{args}` placeholder allowing to pass specific test paths or files to pytest
+   
+- Additional testing configuration:
+  - Tests located under "tests"
+  - pytest asyncio default fixture uses "function" scope
+  - Coverage configured to measure branches, run in parallel, support threading and multiprocessing concurrency
+  - Coverage reports generated in `build/coverage/html` (HTML) and `build/coverage/coverage.xml` (XML)
+
+- Environment variables/configurations:
+  - Can use `HATCH_TEST_ARGS` env var to pass additional pytest arguments
+
+- Runtime requirements:
+  - Python >=3.10
+  - OS Independent (no explicit OS dependencies noted)
+
+[/Key Information]
+2026-05-13 23:52:14.520 | INFO     | ******
+2026-05-13 23:52:14.520 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml]\n- Python version:\n  - Requires Python >=3.10\n  - Test matrix includes Python 3.10, 3.11, 3.12, 3.13\n  \n- Dependencies (main exact versions or ranges):\n  - boto3 >=1.26.0,<2.0.0\n  - botocore >=1.29.0,<2.0.0\n  - docstring_parser >=0.15,<1.0\n  - mcp >=1.11.0,<2.0.0\n  - pydantic >=2.4.0,<3.0.0\n  - typing-extensions >=4.13.2,<5.0.0\n  - watchdog >=6.0.0,<7.0.0\n  - opentelemetry-api >=1.30.0,<2.0.0\n  - opentelemetry-sdk >=1.30.0,<2.0.0\n  - opentelemetry-instrumentation-threading >=0.51b0,<1.00b0\n\n- Development dependencies:\n  - commitizen >=4.4.0,<5.0.0\n  - hatch >=1.0.0,<2.0.0\n  - moto >=5.1.0,<6.0.0\n  - mypy >=1.15.0,<2.0.0\n  - pre-commit >=3.2.0,<4.4.0\n  - pytest >=8.0.0,<9.0.0\n  - pytest-cov >=7.0.0,<8.0.0\n  - pytest-asyncio >=1.0.0,<1.3.0\n  - pytest-xdist >=3.0.0,<4.0.0\n  - ruff >=0.13.0,<0.14.0\n\n- Testing tools and versions:\n  - pytest 8.x\n  - pytest-cov 7.x\n  - pytest-asyncio 1.x\n  - pytest-xdist 3.x\n  - moto 5.x (for AWS mocking in tests)\n  \n- Test commands:\n  - General test run:\n    - `hatch test`\n    - Internally runs: `pytest{env:HATCH_TEST_ARGS:} {args}`\n  - Run tests with coverage:\n    - `hatch test -c`\n    - Internally runs: `pytest{env:HATCH_TEST_ARGS:} {args} --cov --cov-config=pyproject.toml --cov-report html --cov-report xml {args}`\n  - Run tests on integration folder specifically:\n    - `hatch test tests_integ {args}`\n  - To run an individual or specific test file:\n    - Use `hatch test <test_file_path>`\n    - This is implied by the `{args}` placeholder allowing to pass specific test paths or files to pytest\n   \n- Additional testing configuration:\n  - Tests located under "tests"\n  - pytest asyncio default fixture uses "function" scope\n  - Coverage configured to measure branches, run in parallel, support threading and multiprocessing concurrency\n  - Coverage reports generated in `build/coverage/html` (HTML) and `build/coverage/coverage.xml` (XML)\n\n- Environment variables/configurations:\n  - Can use `HATCH_TEST_ARGS` env var to pass additional pytest arguments\n\n- Runtime requirements:\n  - Python >=3.10\n  - OS Independent (no explicit OS dependencies noted)\n\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:52:25.483 | INFO     | Model API request cost info: input_tokens=4131, output_tokens=1086, cost=0.000000
+2026-05-13 23:52:25.502 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 23:52:30.131 | INFO     | Model API request cost info: input_tokens=1684, output_tokens=553, cost=0.000000
+2026-05-13 23:52:30.133 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Python_version": ">=3.10 (supports 3.10 through 3.13)",
+    "Environment_setup": {
+      "README.md": {
+        "Create_activate_venv": [
+          "python -m venv .venv",
+          "source .venv/bin/activate (Unix/Linux/macOS)",
+          ".venv\\Scripts\\activate (Windows)"
+        ],
+        "Install_packages": "pip install strands-agents strands-agents-tools",
+        "AWS_credentials_note": "May be needed for some integrations"
+      },
+      "CONTRIBUTING.md": {
+        "Use_hatch_for_env_management": true,
+        "Enter_virtual_env": "hatch shell",
+        "Pre-commit_hooks": "pre-commit install -t pre-commit -t commit-msg",
+        "Additional_commands": "linting and formatting managed via hatch"
+      }
+    },
+    "Dependencies": {
+      "Main": [
+        "boto3",
+        "botocore",
+        "docstring_parser",
+        "mcp",
+        "pydantic",
+        "typing-extensions",
+        "watchdog",
+        "opentelemetry-api",
+        "opentelemetry-sdk"
+      ],
+      "Development": [
+        "pytest >=8.0.0,<9.0.0",
+        "pytest-cov >=7.0.0,<8.0.0",
+        "pytest-asyncio >=1.0.0,<1.3.0",
+        "pytest-xdist >=3.0.0,<4.0.0",
+        "moto",
+        "commitizen",
+        "hatch",
+        "pre-commit",
+        "mypy",
+        "ruff"
+      ]
+    },
+    "Test_commands": {
+      "Run_all_tests": "hatch test",
+      "Run_tests_with_coverage": "hatch test -c",
+      "Run_integration_tests": "hatch run test-integ",
+      "Run_specific_test_file": "hatch test <test_file_path>",
+      "Example_test_file": "hatch test tests/strands/models/test_litellm.py",
+      "Env_var_for_pytest_args": "HATCH_TEST_ARGS"
+    },
+    "Test_config": {
+      "pytest_asyncio_fixtures_scope": "function",
+      "Coverage": {
+        "Measures_branches": true,
+        "Supports_concurrency": true,
+        "Output_dir": "build/coverage/",
+        "Formats": ["html", "xml"]
+      }
+    }
+  },
+  "terminate": true
+}
+2026-05-13 23:52:30.133 | DEBUG    | Extracted a valid json
+2026-05-13 23:52:30.140 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 23:52:34.726 | INFO     | Model API request cost info: input_tokens=2190, output_tokens=554, cost=0.000000
+2026-05-13 23:52:34.864 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-13 23:52:34.897 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-05-13 23:52:38.560 | INFO     | Model API request cost info: input_tokens=2334, output_tokens=255, cost=0.000000
+2026-05-13 23:52:38.562 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-05-13 23:58:09.146 | DEBUG    | Result of dispatch_intent: ("Step 11/14 : RUN git clone https://github.com/strands-project/strands-agents-sdk-python.git /testbed/ &&     git reset --hard 776fd93751cc26e3d535776b17612c2e3068cc2b\n ---> Running in ab0ff3577a13\nCloning into '/testbed'...\nfatal: could not read Username for 'https://github.com': No such device or address\n ---> Removed intermediate container ab0ff3577a13\nError: The command '/bin/bash -c git clone https://github.com/strands-project/strands-agents-sdk-python.git /testbed/ &&     git reset --hard 776fd93751cc26e3d535776b17612c2e3068cc2b' returned a non-zero code: 128", 'Failed to build Docker image.', False)
+2026-05-13 23:58:09.151 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-13 23:58:13.978 | INFO     | Model API request cost info: input_tokens=2166, output_tokens=543, cost=0.000000
+2026-05-13 23:58:13.980 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The docker build fails when trying to clone the repository with the following error: 'fatal: could not read Username for 'https://github.com': No such device or address'. This indicates an authentication or permission issue with the git clone command over HTTPS in the Docker build environment. To fix this, consider using the public repository url if it is public (which the repo https://github.com/strands-project/strands-agents-sdk-python appears to be), or switch to cloning over the git protocol rather than HTTPS. For example, replace 'git clone https://github.com/strands-project/strands-agents-sdk-python.git /testbed/' with 'git clone --depth 1 https://github.com/strands-project/strands-agents-sdk-python.git /testbed/' to reduce depth, or try 'git clone git@github.com:strands-project/strands-agents-sdk-python.git /testbed/' if SSH keys and agents are configured (unlikely in docker build). Also, consider splitting the clone step and the git reset step into two separate RUN commands for clarity and easier debugging. If the repository is private, credentials need to be injected via build arguments or secrets, but since no such instruction is given, most likely the issue is caused by cloning a repo that doesn't allow unauthenticated HTTPS clone, or a transient network issue. Please also verify the repository URL spelling in the Dockerfile (the user gave 'strands-agents-sdk-python' but the repo seems to be 'strands-agents/sdk-python') - this might be the root cause.The error suggests the docker build context might not have network access or has misconfigured git credential helper. Hence, fix the Dockerfile by correcting the git clone URL to the right repository URL https://github.com/strands-project/strands-agents-sdk-python.git if exists or to https://github.com/strands-project/strands-agents/sdk-python.git, which fits better the indicated target repository name. Then test the clone step separately before continuing build.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "Please verify the exact repository URL. Collect the following files from the target repository: 'README.md', 'pyproject.toml' (to confirm dependencies and project structure), 'hatch.toml' or 'setup.cfg' if any, and verify instructions for cloning and environment setup. Also, check if the repository is public or private to troubleshoot access issues during clone. This information will help confirm the correct git clone URL and required dependencies."
+}
+2026-05-13 23:58:13.981 | DEBUG    | Extracted a valid json
+2026-05-13 23:58:16.885 | INFO     | Model API request cost info: input_tokens=1428, output_tokens=171, cost=0.000000
+2026-05-13 23:58:16.895 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 23:58:18.523 | INFO     | Model API request cost info: input_tokens=769, output_tokens=103, cost=0.000000
+2026-05-13 23:58:18.525 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"/\", \"1\")",
+    "browse_file_for_environment_info(\"README.md\", \"repository URL, cloning instructions, environment setup\")",
+    "browse_file_for_environment_info(\"pyproject.toml\", \"project dependencies, Python version\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"repository URL, cloning instructions, environment setup\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-05-13 23:58:18.525 | DEBUG    | Extracted a valid json
+2026-05-13 23:58:18.532 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /home/cc/swe-factory/testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20. The browsing Depth is 1.\nStructure of this directory:\n\nNOTICE\n\nSTYLE_GUIDE.md\n\nREADME.md\n\n.gitignore\n\nCONTRIBUTING.md\n\npyproject.toml\n\nLICENSE\n\n.pre-commit-config.yaml\n\ntests_integ/\n\nsrc/\n\ntests/\n\n.github/\n\n.git/\n\n', 'folder structure collected', True)
+2026-05-13 23:58:18.532 | INFO     | entering browse
+2026-05-13 23:58:18.532 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md ===
+<div align="center">
+  <div>
+    <a href="https://strandsagents.com">
+      <img src="https://strandsagents.com/latest/assets/logo-github.svg" alt="Strands Agents" width="55px" height="105px">
+    </a>
+  </div>
+
+  <h1>
+    Strands Agents
+  </h1>
+
+  <h2>
+    A model-driven approach to building AI agents in just a few lines of code.
+  </h2>
+
+  <div align="center">
+    <a href="https://github.com/strands-agents/sdk-python/graphs/commit-activity"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/issues"><img alt="GitHub open issues" src="https://img.shields.io/github/issues/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/pulls"><img alt="GitHub open pull requests" src="https://img.shields.io/github/issues-pr/strands-agents/sdk-python"/></a>
+    <a href="https://github.com/strands-agents/sdk-python/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/strands-agents/sdk-python"/></a>
+    <a href="https://pypi.org/project/strands-agents/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/strands-agents"/></a>
+    <a href="https://python.org"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/strands-agents"/></a>
+  </div>
+  
+  <p>
+    <a href="https://strandsagents.com/">Documentation</a>
+    ◆ <a href="https://github.com/strands-agents/samples">Samples</a>
+    ◆ <a href="https://github.com/strands-agents/sdk-python">Python SDK</a>
+    ◆ <a href="https://github.com/strands-agents/tools">Tools</a>
+    ◆ <a href="https://github.com/strands-agents/agent-builder">Agent Builder</a>
+    ◆ <a href="https://github.com/strands-agents/mcp-server">MCP Server</a>
+  </p>
+</div>
+
+Strands Agents is a simple yet powerful SDK that takes a model-driven approach to building and running AI agents. From simple conversational assistants to complex autonomous workflows, from local development to production deployment, Strands Agents scales with your needs.
+
+## Feature Overview
+
+- **Lightweight & Flexible**: Simple agent loop that just works and is fully customizable
+- **Model Agnostic**: Support for Amazon Bedrock, Anthropic, Gemini, LiteLLM, Llama, Ollama, OpenAI, Writer, and custom providers
+- **Advanced Capabilities**: Multi-agent systems, autonomous agents, and streaming support
+- **Built-in MCP**: Native support for Model Context Protocol (MCP) servers, enabling access to thousands of pre-built tools
+
+## Quick Start
+
+```bash
+# Install Strands Agents
+pip install strands-agents strands-agents-tools
+```
+
+```python
+from strands import Agent
+from strands_tools import calculator
+agent = Agent(tools=[calculator])
+agent("What is the square root of 1764")
+```
+
+> **Note**: For the default Amazon Bedrock model provider, you'll need AWS credentials configured and model access enabled for Claude 4 Sonnet in the us-west-2 region. See the [Quickstart Guide](https://strandsagents.com/) for details on configuring other model providers.
+
+## Installation
+
+Ensure you have Python 3.10+ installed, then:
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+
+# Install Strands and tools
+pip install strands-agents strands-agents-tools
+```
+
+## Features at a Glance
+
+### Python-Based Tools
+
+Easily build tools using Python decorators:
+
+```python
+from strands import Agent, tool
+
+@tool
+def word_count(text: str) -> int:
+    """Count words in text.
+
+    This docstring is used by the LLM to understand the tool's purpose.
+    """
+    return len(text.split())
+
+agent = Agent(tools=[word_count])
+response = agent("How many words are in this sentence?")
+```
+
+**Hot Reloading from Directory:**
+Enable automatic tool loading and reloading from the `./tools/` directory:
+
+```python
+from strands import Agent
+
+# Agent will watch ./tools/ directory for changes
+agent = Agent(load_tools_from_directory=True)
+response = agent("Use any tools you find in the tools directory")
+```
+
+### MCP Support
+
+Seamlessly integrate Model Context Protocol (MCP) servers:
+
+```python
+from strands import Agent
+from strands.tools.mcp import MCPClient
+from mcp import stdio_client, StdioServerParameters
+
+aws_docs_client = MCPClient(
+    lambda: stdio_client(StdioServerParameters(command="uvx", args=["awslabs.aws-documentation-mcp-server@latest"]))
+)
+
+with aws_docs_client:
+   agent = Agent(tools=aws_docs_client.list_tools_sync())
+   response = agent("Tell me about Amazon Bedrock and how to use it with Python")
+```
+
+### Multiple Model Providers
+
+Support for various model providers:
+
+```python
+from strands import Agent
+from strands.models import BedrockModel
+from strands.models.ollama import OllamaModel
+from strands.models.llamaapi import LlamaAPIModel
+from strands.models.gemini import GeminiModel
+from strands.models.llamacpp import LlamaCppModel
+
+# Bedrock
+bedrock_model = BedrockModel(
+  model_id="us.amazon.nova-pro-v1:0",
+  temperature=0.3,
+  streaming=True, # Enable/disable streaming
+)
+agent = Agent(model=bedrock_model)
+agent("Tell me about Agentic AI")
+
+# Google Gemini
+gemini_model = GeminiModel(
+  client_args={
+    "api_key": "your_gemini_api_key",
+  },
+  model_id="gemini-2.5-flash",
+  params={"temperature": 0.7}
+)
+agent = Agent(model=gemini_model)
+agent("Tell me about Agentic AI")
+
+# Ollama
+ollama_model = OllamaModel(
+  host="http://localhost:11434",
+  model_id="llama3"
+)
+agent = Agent(model=ollama_model)
+agent("Tell me about Agentic AI")
+
+# Llama API
+llama_model = LlamaAPIModel(
+    model_id="Llama-4-Maverick-17B-128E-Instruct-FP8",
+)
+agent = Agent(model=llama_model)
+response = agent("Tell me about Agentic AI")
+```
+
+Built-in providers:
+ - [Amazon Bedrock](https://strandsagents.com/latest/user-guide/concepts/model-providers/amazon-bedrock/)
+ - [Anthropic](https://strandsagents.com/latest/user-guide/concepts/model-providers/anthropic/)
+ - [Gemini](https://strandsagents.com/latest/user-guide/concepts/model-providers/gemini/)
+ - [Cohere](https://strandsagents.com/latest/user-guide/concepts/model-providers/cohere/)
+ - [LiteLLM](https://strandsagents.com/latest/user-guide/concepts/model-providers/litellm/)
+ - [llama.cpp](https://strandsagents.com/latest/user-guide/concepts/model-providers/llamacpp/)
+ - [LlamaAPI](https://strandsagents.com/latest/user-guide/concepts/model-providers/llamaapi/)
+ - [MistralAI](https://strandsagents.com/latest/user-guide/concepts/model-providers/mistral/)
+ - [Ollama](https://strandsagents.com/latest/user-guide/concepts/model-providers/ollama/)
+ - [OpenAI](https://strandsagents.com/latest/user-guide/concepts/model-providers/openai/)
+ - [SageMaker](https://strandsagents.com/latest/user-guide/concepts/model-providers/sagemaker/)
+ - [Writer](https://strandsagents.com/latest/user-guide/concepts/model-providers/writer/)
+
+Custom providers can be implemented using [Custom Providers](https://strandsagents.com/latest/user-guide/concepts/model-providers/custom_model_provider/)
+
+### Example tools
+
+Strands offers an optional strands-agents-tools package with pre-built tools for quick experimentation:
+
+```python
+from strands import Agent
+from strands_tools import calculator
+agent = Agent(tools=[calculator])
+agent("What is the square root of 1764")
+```
+
+It's also available on GitHub via [strands-agents/tools](https://github.com/strands-agents/tools).
+
+## Documentation
+
+For detailed guidance & examples, explore our documentation:
+
+- [User Guide](https://strandsagents.com/)
+- [Quick Start Guide](https://strandsagents.com/latest/user-guide/quickstart/)
+- [Agent Loop](https://strandsagents.com/latest/user-guide/concepts/agents/agent-loop/)
+- [Examples](https://strandsagents.com/latest/examples/)
+- [API Reference](https://strandsagents.com/latest/api-reference/agent/)
+- [Production & Deployment Guide](https://strandsagents.com/latest/user-guide/deploy/operating-agents-in-production/)
+
+## Contributing ❤️
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Reporting bugs & features
+- Development setup
+- Contributing via Pull Requests
+- Code of Conduct
+- Reporting of security issues
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md ===
+2026-05-13 23:58:18.532 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:58:21.208 | INFO     | Model API request cost info: input_tokens=2709, output_tokens=264, cost=0.000000
+2026-05-13 23:58:21.210 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:58:21.210 | INFO     | ******
+2026-05-13 23:58:21.210 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md]
+- Repository URL:
+  - https://github.com/strands-agents/sdk-python
+
+- Cloning instructions:
+  - (Not explicitly present in the README, but standard git clone applies)
+  - Example command:  
+    git clone https://github.com/strands-agents/sdk-python.git
+
+- Environment setup:
+  - Requires Python 3.10 or higher
+  - Create and activate a Python virtual environment:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+    ```
+  - Install required packages:
+    ```bash
+    pip install strands-agents strands-agents-tools
+    ```
+
+- Notes on usage:
+  - For using the default Amazon Bedrock model provider, AWS credentials must be configured with model access enabled for Claude 4 Sonnet in the us-west-2 region (refer to the Quickstart Guide on https://strandsagents.com/ for details)
+
+- No explicit test running commands or environment variable requirements detailed in the README.
+[/Key Information]
+2026-05-13 23:58:21.210 | INFO     | ******
+2026-05-13 23:58:21.210 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/README.md]\n- Repository URL:\n  - https://github.com/strands-agents/sdk-python\n\n- Cloning instructions:\n  - (Not explicitly present in the README, but standard git clone applies)\n  - Example command:  \n    git clone https://github.com/strands-agents/sdk-python.git\n\n- Environment setup:\n  - Requires Python 3.10 or higher\n  - Create and activate a Python virtual environment:\n    ```bash\n    python -m venv .venv\n    source .venv/bin/activate  # On Windows use: .venv\\Scripts\\activate\n    ```\n  - Install required packages:\n    ```bash\n    pip install strands-agents strands-agents-tools\n    ```\n\n- Notes on usage:\n  - For using the default Amazon Bedrock model provider, AWS credentials must be configured with model access enabled for Claude 4 Sonnet in the us-west-2 region (refer to the Quickstart Guide on https://strandsagents.com/ for details)\n\n- No explicit test running commands or environment variable requirements detailed in the README.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:58:21.211 | INFO     | entering browse
+2026-05-13 23:58:21.211 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml ===
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "strands-agents"
+dynamic = ["version"]  # Version determined by git tags
+description = "A model-driven approach to building AI agents in just a few lines of code"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "AWS", email = "opensource@amazon.com"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "boto3>=1.26.0,<2.0.0",
+    "botocore>=1.29.0,<2.0.0",
+    "docstring_parser>=0.15,<1.0",
+    "mcp>=1.11.0,<2.0.0",
+    "pydantic>=2.4.0,<3.0.0",
+    "typing-extensions>=4.13.2,<5.0.0",
+    "watchdog>=6.0.0,<7.0.0",
+    "opentelemetry-api>=1.30.0,<2.0.0",
+    "opentelemetry-sdk>=1.30.0,<2.0.0",
+    "opentelemetry-instrumentation-threading>=0.51b0,<1.00b0",
+]
+
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.21.0,<1.0.0"]
+gemini = ["google-genai>=1.32.0,<2.0.0"]
+litellm = ["litellm>=1.75.9,<2.0.0", "openai>=1.68.0,<1.110.0"]
+llamaapi = ["llama-api-client>=0.1.0,<1.0.0"]
+mistral = ["mistralai>=1.8.2"]
+ollama = ["ollama>=0.4.8,<1.0.0"]
+openai = ["openai>=1.68.0,<2.0.0"]
+writer = ["writer-sdk>=2.2.0,<3.0.0"]
+sagemaker = [
+    "boto3-stubs[sagemaker-runtime]>=1.26.0,<2.0.0",
+    "openai>=1.68.0,<2.0.0",  # SageMaker uses OpenAI-compatible interface
+]
+otel = ["opentelemetry-exporter-otlp-proto-http>=1.30.0,<2.0.0"]
+docs = [
+    "sphinx>=5.0.0,<9.0.0",
+    "sphinx-rtd-theme>=1.0.0,<2.0.0",
+    "sphinx-autodoc-typehints>=1.12.0,<4.0.0",
+]
+
+a2a = [
+    "a2a-sdk>=0.3.0,<0.4.0",
+    "a2a-sdk[sql]>=0.3.0,<0.4.0",
+    "uvicorn>=0.34.2,<1.0.0",
+    "httpx>=0.28.1,<1.0.0",
+    "fastapi>=0.115.12,<1.0.0",
+    "starlette>=0.46.2,<1.0.0",
+]
+all = ["strands-agents[a2a,anthropic,docs,gemini,litellm,llamaapi,mistral,ollama,openai,writer,sagemaker,otel]"]
+
+dev = [
+    "commitizen>=4.4.0,<5.0.0",
+    "hatch>=1.0.0,<2.0.0",
+    "moto>=5.1.0,<6.0.0",
+    "mypy>=1.15.0,<2.0.0",
+    "pre-commit>=3.2.0,<4.4.0",
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-asyncio>=1.0.0,<1.3.0",
+    "pytest-xdist>=3.0.0,<4.0.0",
+    "ruff>=0.13.0,<0.14.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/strands-agents/sdk-python"
+"Bug Tracker" = "https://github.com/strands-agents/sdk-python/issues"
+Documentation = "https://strandsagents.com"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strands"]
+
+
+[tool.hatch.version]
+source = "vcs"  # Use git tags for versioning
+
+
+[tool.hatch.envs.hatch-static-analysis]
+installer = "uv"
+features = ["all"]
+dependencies = [
+  "mypy>=1.15.0,<2.0.0",
+  "ruff>=0.13.0,<0.14.0",
+  # Include required pacakge dependencies for mypy
+  "strands-agents @ {root:uri}",
+]
+
+# Define static-analysis scripts so we can include mypy as part of the linting check
+[tool.hatch.envs.hatch-static-analysis.scripts]
+format-check = [
+    "ruff format --check"
+]
+format-fix = [
+    "ruff format"
+]
+lint-check = [
+    "ruff check",
+    "mypy -p src"
+]
+lint-fix = [
+    "ruff check --fix"
+]
+
+
+[tool.hatch.envs.hatch-test]
+installer = "uv"
+features = ["all"]
+extra-args = ["-n", "auto", "-vv"]
+dependencies = [
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-asyncio>=1.0.0,<1.3.0",
+    "pytest-xdist>=3.0.0,<4.0.0",
+    "moto>=5.1.0,<6.0.0",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.13", "3.12", "3.11", "3.10"]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = "pytest{env:HATCH_TEST_ARGS:} {args}" # Run with: hatch test
+run-cov = "pytest{env:HATCH_TEST_ARGS:} {args} --cov --cov-config=pyproject.toml --cov-report html --cov-report xml {args}" # Run with: hatch test -c
+cov-combine = []
+cov-report = []
+
+
+[tool.hatch.envs.default]
+installer = "uv"
+dev-mode = true
+features = ["all"]
+dependencies = [
+    "commitizen>=4.4.0,<5.0.0",
+    "hatch>=1.0.0,<2.0.0",
+    "pre-commit>=3.2.0,<4.4.0",
+]
+
+
+[tool.hatch.envs.default.scripts]
+list = "echo 'Scripts commands available for default env:'; hatch env show --json | jq --raw-output '.default.scripts | keys[]'"
+
+format = "hatch fmt --formatter"
+test-format = "hatch fmt --formatter --check"
+
+lint = "hatch fmt --linter"
+test-lint = "hatch fmt --linter --check"
+
+test = "hatch test {args}"
+test-integ = "hatch test tests_integ {args}"
+
+prepare = [
+    "hatch run format",
+    "hatch run lint",
+    "hatch run test-lint",
+    "hatch test --all"
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+follow_untyped_imports = true
+ignore_missing_imports = false
+
+
+[tool.ruff]
+line-length = 120
+include = ["examples/**/*.py", "src/**/*.py", "tests/**/*.py", "tests_integ/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+  "B",   # flake8-bugbear
+  "D",   # pydocstyle
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "G",   # logging format
+  "I",   # isort
+  "LOG", # logging
+]
+
+[tool.ruff.lint.per-file-ignores]
+"!src/**/*.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+context = "thread"
+parallel = true
+concurrency = ["thread", "multiprocessing"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.coverage.html]
+directory = "build/coverage/html"
+
+[tool.coverage.xml]
+output = "build/coverage/coverage.xml"
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+bump_message = "chore(release): bump version $current_version -> $new_version"
+version_files = ["pyproject.toml:version"]
+update_changelog_on_bump = true
+style = [
+    ["qmark", "fg:#ff9d00 bold"],
+    ["question", "bold"],
+    ["answer", "fg:#ff9d00 bold"],
+    ["pointer", "fg:#ff9d00 bold"],
+    ["highlighted", "fg:#ff9d00 bold"],
+    ["selected", "fg:#cc5454"],
+    ["separator", "fg:#cc5454"],
+    ["instruction", ""],
+    ["text", ""],
+    ["disabled", "fg:#858585 italic"]
+]
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml ===
+2026-05-13 23:58:21.212 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:58:27.570 | INFO     | Model API request cost info: input_tokens=2940, output_tokens=737, cost=0.000000
+2026-05-13 23:58:27.571 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:58:27.571 | INFO     | ******
+2026-05-13 23:58:27.572 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml]
+- Python runtime requirement:
+  - Requires Python version >=3.10
+  - Supported Python versions in test matrix: 3.10, 3.11, 3.12, 3.13
+
+- Project main dependencies (with version ranges):
+  - boto3 >=1.26.0,<2.0.0
+  - botocore >=1.29.0,<2.0.0
+  - docstring_parser >=0.15,<1.0
+  - mcp >=1.11.0,<2.0.0
+  - pydantic >=2.4.0,<3.0.0
+  - typing-extensions >=4.13.2,<5.0.0
+  - watchdog >=6.0.0,<7.0.0
+  - opentelemetry-api >=1.30.0,<2.0.0
+  - opentelemetry-sdk >=1.30.0,<2.0.0
+  - opentelemetry-instrumentation-threading >=0.51b0,<1.00b0
+
+- Optional dependency groups examples:
+  - anthropic: anthropic >=0.21.0,<1.0.0
+  - gemini: google-genai >=1.32.0,<2.0.0
+  - litellm: litellm >=1.75.9,<2.0.0, openai >=1.68.0,<1.110.0
+  - openai: openai >=1.68.0,<2.0.0
+  - sagemaker: boto3-stubs[sagemaker-runtime] >=1.26.0,<2.0.0, openai >=1.68.0,<2.0.0
+  - otel: opentelemetry-exporter-otlp-proto-http >=1.30.0,<2.0.0
+  - a2a: a2a-sdk >=0.3.0,<0.4.0, a2a-sdk[sql] >=0.3.0,<0.4.0, uvicorn >=0.34.2,<1.0.0, httpx >=0.28.1,<1.0.0, fastapi >=0.115.12,<1.0.0, starlette >=0.46.2,<1.0.0
+
+- Development dependencies:
+  - commitizen >=4.4.0,<5.0.0
+  - hatch >=1.0.0,<2.0.0
+  - moto >=5.1.0,<6.0.0
+  - mypy >=1.15.0,<2.0.0
+  - pre-commit >=3.2.0,<4.4.0
+  - pytest >=8.0.0,<9.0.0
+  - pytest-cov >=7.0.0,<8.0.0
+  - pytest-asyncio >=1.0.0,<1.3.0
+  - pytest-xdist >=3.0.0,<4.0.0
+  - ruff >=0.13.0,<0.14.0
+[/Key Information]
+2026-05-13 23:58:27.572 | INFO     | ******
+2026-05-13 23:58:27.572 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/pyproject.toml]\n- Python runtime requirement:\n  - Requires Python version >=3.10\n  - Supported Python versions in test matrix: 3.10, 3.11, 3.12, 3.13\n\n- Project main dependencies (with version ranges):\n  - boto3 >=1.26.0,<2.0.0\n  - botocore >=1.29.0,<2.0.0\n  - docstring_parser >=0.15,<1.0\n  - mcp >=1.11.0,<2.0.0\n  - pydantic >=2.4.0,<3.0.0\n  - typing-extensions >=4.13.2,<5.0.0\n  - watchdog >=6.0.0,<7.0.0\n  - opentelemetry-api >=1.30.0,<2.0.0\n  - opentelemetry-sdk >=1.30.0,<2.0.0\n  - opentelemetry-instrumentation-threading >=0.51b0,<1.00b0\n\n- Optional dependency groups examples:\n  - anthropic: anthropic >=0.21.0,<1.0.0\n  - gemini: google-genai >=1.32.0,<2.0.0\n  - litellm: litellm >=1.75.9,<2.0.0, openai >=1.68.0,<1.110.0\n  - openai: openai >=1.68.0,<2.0.0\n  - sagemaker: boto3-stubs[sagemaker-runtime] >=1.26.0,<2.0.0, openai >=1.68.0,<2.0.0\n  - otel: opentelemetry-exporter-otlp-proto-http >=1.30.0,<2.0.0\n  - a2a: a2a-sdk >=0.3.0,<0.4.0, a2a-sdk[sql] >=0.3.0,<0.4.0, uvicorn >=0.34.2,<1.0.0, httpx >=0.28.1,<1.0.0, fastapi >=0.115.12,<1.0.0, starlette >=0.46.2,<1.0.0\n\n- Development dependencies:\n  - commitizen >=4.4.0,<5.0.0\n  - hatch >=1.0.0,<2.0.0\n  - moto >=5.1.0,<6.0.0\n  - mypy >=1.15.0,<2.0.0\n  - pre-commit >=3.2.0,<4.4.0\n  - pytest >=8.0.0,<9.0.0\n  - pytest-cov >=7.0.0,<8.0.0\n  - pytest-asyncio >=1.0.0,<1.3.0\n  - pytest-xdist >=3.0.0,<4.0.0\n  - ruff >=0.13.0,<0.14.0\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:58:27.572 | INFO     | entering browse
+2026-05-13 23:58:27.573 | INFO     | === FILE START: testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md ===
+# Contributing Guidelines
+
+Thank you for your interest in contributing to our project. Whether it's a bug report, new feature, correction, or additional
+documentation, we greatly value feedback and contributions from our community.
+
+Please read through this document before submitting any issues or pull requests to ensure we have all the necessary
+information to effectively respond to your bug report or contribution.
+
+
+## Reporting Bugs/Feature Requests
+
+We welcome you to use the [Bug Reports](../../issues/new?template=bug_report.yml) file to report bugs or [Feature Requests](../../issues/new?template=feature_request.yml) to suggest features.
+
+For a list of known bugs and feature requests:
+- Check [Bug Reports](../../issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) for currently tracked issues
+- See [Feature Requests](../../issues?q=is%3Aissue%20state%3Aopen%20label%3Aenhancement) for requested enhancements
+
+When filing an issue, please check for already tracked items
+
+Please try to include as much information as you can. Details like these are incredibly useful:
+
+* A reproducible test case or series of steps
+* The version of our code being used (commit ID)
+* Any modifications you've made relevant to the bug
+* Anything unusual about your environment or deployment
+
+
+## Finding contributions to work on
+Looking at the existing issues is a great way to find something to contribute to. We label issues that are well-defined and ready for community contributions with the "ready for contribution" label.
+
+Check our [Ready for Contribution](../../issues?q=is%3Aissue%20state%3Aopen%20label%3A%22ready%20for%20contribution%22) issues for items you can work on.
+
+Before starting work on any issue:
+1. Check if someone is already assigned or working on it
+2. Comment on the issue to express your interest and ask any clarifying questions
+3. Wait for maintainer confirmation before beginning significant work
+
+
+## Development Environment
+
+This project uses [hatchling](https://hatch.pypa.io/latest/build/#hatchling) as the build backend and [hatch](https://hatch.pypa.io/latest/) for development workflow management.
+
+### Setting Up Your Development Environment
+
+1. Entering virtual environment using `hatch` (recommended), then launch your IDE in the new shell.
+   ```bash
+   hatch shell
+   ```
+
+
+2. Set up pre-commit hooks:
+   ```bash
+   pre-commit install -t pre-commit -t commit-msg
+   ```
+   This will automatically run formatters and conventional commit checks on your code before each commit.
+
+3. Run code formatters manually:
+   ```bash
+   hatch fmt --formatter
+   ```
+
+4. Run linters:
+   ```bash
+   hatch fmt --linter
+   ```
+
+5. Run unit tests:
+   ```bash
+   hatch test
+   ```
+   Or run them with coverage:
+   ```bash
+   hatch test -c
+   ```
+
+6. Run integration tests:
+   ```bash
+   hatch run test-integ
+   ```
+
+### Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com/) to automatically run quality checks before each commit. The hook will run `hatch run format`, `hatch run lint`, `hatch run test`, and `hatch run cz check` when you make a commit, ensuring code consistency.
+
+The pre-commit hook is installed with:
+
+```bash
+pre-commit install
+```
+
+You can also run the hooks manually on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+### Code Formatting and Style Guidelines
+
+We use the following tools to ensure code quality:
+1. **ruff** - For formatting and linting
+2. **mypy** - For static type checking
+
+These tools are configured in the [pyproject.toml](./pyproject.toml) file. Please ensure your code passes all linting and type checks before submitting a pull request:
+
+```bash
+# Run all checks
+hatch fmt --formatter
+hatch fmt --linter
+```
+
+If you're using an IDE like VS Code or PyCharm, consider configuring it to use these tools automatically.
+
+For additional details on styling, please see our dedicated [Style Guide](./STYLE_GUIDE.md).
+
+
+## Contributing via Pull Requests
+Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
+
+1. You are working against the latest source on the *main* branch.
+2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
+3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
+
+To send us a pull request, please:
+
+1. Create a branch.
+2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
+3. Format your code using `hatch fmt --formatter`.
+4. Run linting checks with `hatch fmt --linter`.
+5. Ensure local tests pass with `hatch test` and `hatch run test-integ`.
+6. Commit to your branch using clear commit messages following the [Conventional Commits](https://www.conventionalcommits.org) specification.
+7. Send us a pull request, answering any default questions in the pull request interface.
+8. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+
+
+## Code of Conduct
+This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct).
+For more information see the [Code of Conduct FAQ](https://aws.github.io/code-of-conduct-faq) or contact
+opensource-codeofconduct@amazon.com with any additional questions or comments.
+
+
+## Security issue notifications
+If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please do **not** create a public github issue.
+
+
+## Licensing
+
+See the [LICENSE](./LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
+
+=== FILE END:   testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md ===
+2026-05-13 23:58:27.573 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-05-13 23:58:30.683 | INFO     | Model API request cost info: input_tokens=1913, output_tokens=315, cost=0.000000
+2026-05-13 23:58:30.684 | SUCCESS  | Successfully extracted environment config
+2026-05-13 23:58:30.685 | INFO     | ******
+2026-05-13 23:58:30.685 | INFO     | [Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md]
+- Repository URL: Not explicitly provided in this file.
+- Cloning Instructions: Not explicitly provided in this file.
+- Environment setup:
+  - Uses hatchling as build backend and hatch for development workflow management.
+  - Recommended to enter virtual environment using:
+    ```bash
+    hatch shell
+    ```
+  - Set up pre-commit Git hooks:
+    ```bash
+    pre-commit install -t pre-commit -t commit-msg
+    ```
+  - Run code formatters manually:
+    ```bash
+    hatch fmt --formatter
+    ```
+  - Run linters:
+    ```bash
+    hatch fmt --linter
+    ```
+  - Run unit tests:
+    ```bash
+    hatch test
+    ```
+    Or with coverage:
+    ```bash
+    hatch test -c
+    ```
+  - Run integration tests:
+    ```bash
+    hatch run test-integ
+    ```
+- Additional notes:
+  - Pre-commit hooks for quality checks run `hatch run format`, `hatch run lint`, `hatch run test`, `hatch run cz check`.
+  - The code formatting and linting use ruff and mypy configured in pyproject.toml.
+  - Conventional Commits spec used for commit messages.
+  - No explicit instructions about cloning or repository URL in this file.
+[/Key Information]
+2026-05-13 23:58:30.685 | INFO     | ******
+2026-05-13 23:58:30.685 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20/CONTRIBUTING.md]\n- Repository URL: Not explicitly provided in this file.\n- Cloning Instructions: Not explicitly provided in this file.\n- Environment setup:\n  - Uses hatchling as build backend and hatch for development workflow management.\n  - Recommended to enter virtual environment using:\n    ```bash\n    hatch shell\n    ```\n  - Set up pre-commit Git hooks:\n    ```bash\n    pre-commit install -t pre-commit -t commit-msg\n    ```\n  - Run code formatters manually:\n    ```bash\n    hatch fmt --formatter\n    ```\n  - Run linters:\n    ```bash\n    hatch fmt --linter\n    ```\n  - Run unit tests:\n    ```bash\n    hatch test\n    ```\n    Or with coverage:\n    ```bash\n    hatch test -c\n    ```\n  - Run integration tests:\n    ```bash\n    hatch run test-integ\n    ```\n- Additional notes:\n  - Pre-commit hooks for quality checks run `hatch run format`, `hatch run lint`, `hatch run test`, `hatch run cz check`.\n  - The code formatting and linting use ruff and mypy configured in pyproject.toml.\n  - Conventional Commits spec used for commit messages.\n  - No explicit instructions about cloning or repository URL in this file.\n[/Key Information]', 'Get File Info', True)
+2026-05-13 23:58:50.379 | INFO     | Model API request cost info: input_tokens=3335, output_tokens=1892, cost=0.000000
+2026-05-13 23:58:50.410 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-05-13 23:59:00.976 | INFO     | Model API request cost info: input_tokens=2490, output_tokens=1268, cost=0.000000
+2026-05-13 23:59:00.979 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Repository URL and Cloning Instructions from README.md": {
+      "Repository URL": "https://github.com/strands-agents/sdk-python",
+      "Cloning instructions": "No explicit instructions, standard git clone applies: git clone https://github.com/strands-agents/sdk-python.git"
+    },
+    "Environment Setup from README.md": {
+      "Python requirement": "Requires Python 3.10 or higher",
+      "Virtual environment creation": "python -m venv .venv\nsource .venv/bin/activate  # On Windows use: .venv\\Scripts\\activate",
+      "Install packages": "pip install strands-agents strands-agents-tools",
+      "Notes": "For using the default Amazon Bedrock model provider, AWS credentials must be configured with model access enabled for Claude 4 Sonnet in the us-west-2 region (refer to the Quickstart Guide on https://strandsagents.com/)"
+    },
+    "Python Version and Dependencies from pyproject.toml": {
+      "Python runtime requirement": ">=3.10",
+      "Supported Python versions in test matrix": ["3.10", "3.11", "3.12", "3.13"],
+      "Main dependencies": {
+        "boto3": ">=1.26.0,<2.0.0",
+        "botocore": ">=1.29.0,<2.0.0",
+        "docstring_parser": ">=0.15,<1.0",
+        "mcp": ">=1.11.0,<2.0.0",
+        "pydantic": ">=2.4.0,<3.0.0",
+        "typing-extensions": ">=4.13.2,<5.0.0",
+        "watchdog": ">=6.0.0,<7.0.0",
+        "opentelemetry-api": ">=1.30.0,<2.0.0",
+        "opentelemetry-sdk": ">=1.30.0,<2.0.0",
+        "opentelemetry-instrumentation-threading": ">=0.51b0,<1.00b0"
+      },
+      "Optional dependency groups": {
+        "anthropic": "anthropic >=0.21.0,<1.0.0",
+        "gemini": "google-genai >=1.32.0,<2.0.0",
+        "litellm": "litellm >=1.75.9,<2.0.0, openai >=1.68.0,<1.110.0",
+        "openai": "openai >=1.68.0,<2.0.0",
+        "sagemaker": "boto3-stubs[sagemaker-runtime] >=1.26.0,<2.0.0, openai >=1.68.0,<2.0.0",
+        "otel": "opentelemetry-exporter-otlp-proto-http >=1.30.0,<2.0.0",
+        "a2a": "a2a-sdk >=0.3.0,<0.4.0, a2a-sdk[sql] >=0.3.0,<0.4.0, uvicorn >=0.34.2,<1.0.0, httpx >=0.28.1,<1.0.0, fastapi >=0.115.12,<1.0.0, starlette >=0.46.2,<1.0.0"
+      },
+      "Development dependencies": {
+        "commitizen": ">=4.4.0,<5.0.0",
+        "hatch": ">=1.0.0,<2.0.0",
+        "moto": ">=5.1.0,<6.0.0",
+        "mypy": ">=1.15.0,<2.0.0",
+        "pre-commit": ">=3.2.0,<4.4.0",
+        "pytest": ">=8.0.0,<9.0.0",
+        "pytest-cov": ">=7.0.0,<8.0.0",
+        "pytest-asyncio": ">=1.0.0,<1.3.0",
+        "pytest-xdist": ">=3.0.0,<4.0.0",
+        "ruff": ">=0.13.0,<0.14.0"
+      }
+    },
+    "Test Execution and Development Workflow from CONTRIBUTING.md": {
+      "Build backend and workflow": "Uses hatchling as build backend and hatch for development workflow",
+      "Development environment shell": "hatch shell",
+      "Pre-commit Git hooks setup": "pre-commit install -t pre-commit -t commit-msg",
+      "Run code formatters": "hatch fmt --formatter",
+      "Run linters": "hatch fmt --linter",
+      "Run unit tests": "hatch test",
+      "Run unit tests with coverage": "hatch test -c",
+      "Run integration tests": "hatch run test-integ",
+      "Pre-commit hooks": "Format, lint, test, commit message checks via hatch and commitizen",
+      "Formatting and linting tools": "The code uses ruff and mypy configured via pyproject.toml"
+    },
+    "Summary": {
+      "Repository Status": "Public repository located at https://github.com/strands-agents/sdk-python.git",
+      "Python version": "3.10 or later",
+      "Environment setup": "Virtual environment creation and installing dependencies via pip or hatch",
+      "Testing": "Using hatch commands with pytest and related tools declared in dev dependencies",
+      "No requirements-test.txt found": true,
+      "AWS credentials note": "Needed if using Amazon Bedrock model provider features"
+    }
+  },
+  "terminate": true
+}
+2026-05-13 23:59:00.979 | DEBUG    | Extracted a valid json
+2026-05-13 23:59:00.994 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-05-13 23:59:07.838 | INFO     | Model API request cost info: input_tokens=5169, output_tokens=757, cost=0.000000
+2026-05-13 23:59:07.840 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-05-14 00:06:50.701 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 2f91b62efcbea202efee74c0688008b1ed17804a7814ea80b4df11324be9576c started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image strands-agents__sdk-python-994-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-05-14 00:06:50.707 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-05-14 00:06:52.067 | INFO     | Model API request cost info: input_tokens=4774, output_tokens=45, cost=0.000000
+2026-05-14 00:06:52.069 | DEBUG    | {
+  "is_finish": true,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-05-14 00:06:52.069 | DEBUG    | Extracted a valid json
+2026-05-14 00:06:52.325 | INFO     | Removed project repository at testbed/strands-agents__sdk-python-994_2026-05-13_19-56-20
+2026-05-14 00:06:52.326 | INFO     | Task strands-agents__sdk-python-994 completed successfully.

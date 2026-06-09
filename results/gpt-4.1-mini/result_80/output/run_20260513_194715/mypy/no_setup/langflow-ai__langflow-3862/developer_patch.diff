@@ -1,0 +1,76 @@
+diff --git a/src/backend/base/langflow/graph/utils.py b/src/backend/base/langflow/graph/utils.py
+--- a/src/backend/base/langflow/graph/utils.py
++++ b/src/backend/base/langflow/graph/utils.py
+@@ -185,3 +185,19 @@ def log_vertex_build(
+             logger.debug(f"Logged vertex build: {inserted.build_id}")
+     except Exception as e:
+         logger.exception(f"Error logging vertex build: {e}")
++
++
++def rewrite_file_path(file_path: str):
++    file_path = file_path.replace("\\", "/")
++
++    if ":" in file_path:
++        file_path = file_path.split(":", 1)[-1]
++
++    file_path_split = [part for part in file_path.split("/") if part]
++
++    if len(file_path_split) >= 2:
++        consistent_file_path = f"{file_path_split[-2]}/{file_path_split[-1]}"
++    else:
++        consistent_file_path = "/".join(file_path_split)
++
++    return [consistent_file_path]
+diff --git a/src/backend/base/langflow/graph/vertex/types.py b/src/backend/base/langflow/graph/vertex/types.py
+--- a/src/backend/base/langflow/graph/vertex/types.py
++++ b/src/backend/base/langflow/graph/vertex/types.py
+@@ -8,7 +8,7 @@
+ from loguru import logger
+ 
+ from langflow.graph.schema import CHAT_COMPONENTS, RECORDS_COMPONENTS, InterfaceComponentTypes, ResultData
+-from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, serialize_field
++from langflow.graph.utils import UnbuiltObject, log_transaction, log_vertex_build, rewrite_file_path, serialize_field
+ from langflow.graph.vertex.base import Vertex
+ from langflow.graph.vertex.exceptions import NoComponentInstance
+ from langflow.graph.vertex.schema import NodeData
+@@ -256,6 +256,10 @@ def _process_chat_component(self):
+         sender = self.params.get("sender", None)
+         sender_name = self.params.get("sender_name", None)
+         message = self.params.get(INPUT_FIELD_NAME, None)
++        files = self.params.get("files", [])
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
+         files = [{"path": file} if isinstance(file, str) else file for file in self.params.get("files", [])]
+         if isinstance(message, str):
+             message = unescape_string(message)
+@@ -382,6 +386,12 @@ async def stream(self):
+                 yield message
+                 complete_message += message
+ 
++        files = self.params.get("files", [])
++
++        treat_file_path = files is not None and not isinstance(files, list) and isinstance(files, str)
++        if treat_file_path:
++            self.params["files"] = rewrite_file_path(files)
++
+         if hasattr(self.params.get("sender_name"), "get_text"):
+             sender_name = self.params.get("sender_name").get_text()
+         else:
+diff --git a/src/backend/base/langflow/services/database/models/message/model.py b/src/backend/base/langflow/services/database/models/message/model.py
+--- a/src/backend/base/langflow/services/database/models/message/model.py
++++ b/src/backend/base/langflow/services/database/models/message/model.py
+@@ -30,6 +30,13 @@ def from_message(cls, message: "Message", flow_id: str | UUID | None = None):
+         # first check if the record has all the required fields
+         if message.text is None or not message.sender or not message.sender_name:
+             raise ValueError("The message does not have the required fields (text, sender, sender_name).")
++        if message.files:
++            image_paths = []
++            for file in message.files:
++                if hasattr(file, "path") and hasattr(file, "url") and file.path:
++                    session_id = message.session_id
++                    image_paths.append(f"{session_id}{file.path.split(session_id)[1]}")
++            message.files = image_paths
+         if isinstance(message.timestamp, str):
+             timestamp = datetime.fromisoformat(message.timestamp)
+         else:

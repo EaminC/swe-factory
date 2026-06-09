@@ -1,0 +1,90 @@
+[BUG] Async task that errors keeps its thread alive
+### Description
+
+In the scenario in which a task is executed async and at the end it raises, the tread handling the execution never shuts down. 
+
+### Steps to Reproduce
+
+1. Create and run a task async
+2. Wait for it's result
+
+### Expected behavior
+
+The task/crew should finish with the raised exception
+
+### Screenshots/Code snippets
+```
+import asyncio
+from typing import Any
+
+from crewai import Task, TaskOutput, Crew, Agent
+from crewai.agents.agent_builder.base_agent import BaseAgent
+
+
+class MyErroneousTask(Task):
+    def _execute_core(
+        self,
+        agent: BaseAgent | None,
+        context: str | None,
+        tools: list[Any] | None,
+    ) -> TaskOutput:
+        raise ValueError("Something happened here")
+
+
+my_agent = Agent(
+    role="Agent's role", backstory="Agent's backstory", goal="Agent's goal"
+)
+my_crew = Crew(
+    agents=[my_agent],
+    tasks=[
+        MyErroneousTask(
+            description="Some task here, it doesn't matter",
+            expected_output="Nothing",
+            agent=my_agent,
+            async_execution=True,
+        )
+    ],
+)
+
+
+async def run():
+    await my_crew.kickoff_async()
+
+    # This is never reached as the task's thread never completes
+    print("I'm finished")
+
+
+asyncio.run(run())
+```
+
+### Operating System
+
+Ubuntu 20.04
+
+### Python Version
+
+3.11
+
+### crewAI Version
+
+main
+
+### crewAI Tools Version
+
+N/A
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+The code above exemplifies the issue.
+
+### Possible Solution
+
+Linked PR
+
+### Additional context
+
+N/A

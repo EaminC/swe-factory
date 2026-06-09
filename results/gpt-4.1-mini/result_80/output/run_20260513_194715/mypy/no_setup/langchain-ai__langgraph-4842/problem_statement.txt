@@ -1,0 +1,259 @@
+create_react_agent with post_model_hook will not inject state/store to tool calls
+### Checked other resources
+
+- [x] This is a bug, not a usage question. For questions, please use GitHub Discussions.
+- [x] I added a clear and detailed title that summarizes the issue.
+- [x] I read what a minimal reproducible example is (https://stackoverflow.com/help/minimal-reproducible-example).
+- [x] I included a self-contained, minimal example that demonstrates the issue INCLUDING all the relevant imports. The code run AS IS to reproduce the issue.
+
+### Example Code
+
+```python
+from typing import Annotated
+from langgraph.prebuilt import create_react_agent, InjectedState
+from langchain_core.tools import tool
+from langchain_core.language_models import FakeMessagesListChatModel
+from langchain_core.messages import AIMessage, ToolCall
+from langgraph.errors import GraphRecursionError
+from langgraph.checkpoint.memory import MemorySaver
+
+
+class FakeMessagesListChatModelWithToolCalls(FakeMessagesListChatModel):
+    def bind_tools(
+        self,
+        tools,
+        *,
+        tool_choice=None,
+        **kwargs,
+    ):
+        return self
+
+
+the_news = "News are boring."
+
+
+@tool("read_the_news", description="Read the news")
+def read_the_news(
+    state: Annotated[dict, InjectedState],
+):
+    return the_news
+
+
+model = FakeMessagesListChatModelWithToolCalls(
+    responses=[
+        AIMessage(
+            content="I will check the news.",
+            tool_calls=[ToolCall(name="read_the_news", args={}, id="1")],
+        )
+    ]
+)
+
+
+checkpointer = MemorySaver()
+
+agent_ok = create_react_agent(
+    model=model,
+    tools=[read_the_news],
+    checkpointer=checkpointer,
+)
+
+config = {"configurable": {"thread_id": "ok"}, "recursion_limit": 4}
+response = agent_ok.invoke({"messages": ["What's on the news?"]}, config)
+print("agent_ok:")
+print(response["messages"][-1].content == the_news)  # True
+
+
+def post_model_hook(state):
+    return
+
+
+agent = create_react_agent(
+    model=model,
+    tools=[read_the_news],
+    post_model_hook=post_model_hook, # <-- This makes the difference
+    checkpointer=checkpointer,
+)
+
+config = {"configurable": {"thread_id": "not_ok"}, "recursion_limit": 4}
+try:
+    response = agent.invoke({"messages": ["What's on the news?"]}, config)
+except GraphRecursionError as e:
+    messages_before_crash = agent.get_state(config).values["messages"]
+    print("agent_not_ok:")
+    print(messages_before_crash[-1].content)
+```
+
+### Error Message and Stack Trace (if applicable)
+
+```shell
+1 validation error for read_the_news
+state
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missingTraceback (most recent call last):
+
+
+  File "/Users/noap/lg_team/.venv/lib/python3.11/site-packages/langchain_core/tools/base.py", line 736, in run
+    tool_args, tool_kwargs = self._to_args_and_kwargs(
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  File "/Users/noap/lg_team/.venv/lib/python3.11/site-packages/langchain_core/tools/base.py", line 651, in _to_args_and_kwargs
+    tool_input = self._parse_input(tool_input, tool_call_id)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  File "/Users/noap/lg_team/.venv/lib/python3.11/site-packages/langchain_core/tools/base.py", line 570, in _parse_input
+    result = input_args.model_validate(tool_input)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  File "/Users/noap/lg_team/.venv/lib/python3.11/site-packages/pydantic/main.py", line 705, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+pydantic_core._pydantic_core.ValidationError: 1 validation error for upsert_kb_article
+state
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+```
+
+### Description
+
+When using the `post_model_hook` in `create_react_agent` the injection of state/store into the tool calls is not performed.
+Any reliance on state in a tool for such an agent will fail the pydantic input args validations.
+
+Cause of the problem is here:
+In langgraph/prebuilt/chat_agent_executor.py
+The code of [`post_model_hook_router`](https://github.com/langchain-ai/langgraph/blob/2553ae0b877c58beb8947db70336c008d7c7ea23/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py#L709) decides if a tool execution is required, and will use `Send` to route to the tool node like so:
+```python
+return [Send("tools", [tool_call]) for tool_call in pending_tool_calls]
+```
+
+Comparing that with the [`should_continue`](https://github.com/langchain-ai/langgraph/blob/2553ae0b877c58beb8947db70336c008d7c7ea23/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py#L632) implementation, When there is no "post_model_hook" setup it will `Send` to the tools node like so:
+```python
+tool_calls = [
+    tool_node.inject_tool_args(call, state, store)  # type: ignore[arg-type]
+    for call in last_message.tool_calls
+]
+return [Send("tools", [tool_call]) for tool_call in tool_calls]
+```
+
+So, when the hook is setup you get the flow:
+agent -> should_continue -> post_model_hook -> post_model_hook_router -> tools
+And without you get:
+agent -> should_continue -> tools
+
+The first, will neglect to inject a state/store and the latter will.
+I believe this is a bug.
+Ideally, there will be a single "send to tools" implementation which both routers should use.
+
+### System Info
+
+System Information
+------------------
+> OS:  Darwin
+> OS Version:  Darwin Kernel Version 24.3.0: Thu Jan  2 20:24:16 PST 2025; root:xnu-11215.81.4~3/RELEASE_ARM64_T6000
+> Python Version:  3.11.9 (main, Aug 14 2024, 04:17:21) [Clang 18.1.8 ]
+
+Package Information
+-------------------
+> langchain_core: 0.3.61
+> langchain: 0.3.25
+> langsmith: 0.3.42
+> langchain_google_genai: 2.1.4
+> langchain_text_splitters: 0.3.8
+> langgraph_api: 0.2.34
+> langgraph_cli: 0.2.10
+> langgraph_license: Installed. No version info available.
+> langgraph_runtime: Installed. No version info available.
+> langgraph_runtime_inmem: 0.2.0
+> langgraph_sdk: 0.1.70
+> langgraph_supervisor: 0.0.25
+
+Optional packages not installed
+-------------------------------
+> langserve
+
+Other Dependencies
+------------------
+> async-timeout<5.0.0,>=4.0.0;: Installed. No version info available.
+> blockbuster<2.0.0,>=1.5.24: Installed. No version info available.
+> click: 8.2.1
+> cloudpickle>=3.0.0: Installed. No version info available.
+> cryptography<45.0,>=42.0.0: Installed. No version info available.
+> filetype: 1.2.0
+> google-ai-generativelanguage: 0.6.18
+> httpx: 0.28.1
+> httpx>=0.25.0: Installed. No version info available.
+> httpx>=0.25.2: Installed. No version info available.
+> jsonpatch<2.0,>=1.33: Installed. No version info available.
+> jsonschema-rs<0.30,>=0.20.0: Installed. No version info available.
+> langchain-anthropic;: Installed. No version info available.
+> langchain-aws;: Installed. No version info available.
+> langchain-azure-ai;: Installed. No version info available.
+> langchain-cohere;: Installed. No version info available.
+> langchain-community;: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.51: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.58: Installed. No version info available.
+> langchain-core>=0.2.38: Installed. No version info available.
+> langchain-core>=0.3.40: Installed. No version info available.
+> langchain-deepseek;: Installed. No version info available.
+> langchain-fireworks;: Installed. No version info available.
+> langchain-google-genai;: Installed. No version info available.
+> langchain-google-vertexai;: Installed. No version info available.
+> langchain-groq;: Installed. No version info available.
+> langchain-huggingface;: Installed. No version info available.
+> langchain-mistralai;: Installed. No version info available.
+> langchain-ollama;: Installed. No version info available.
+> langchain-openai;: Installed. No version info available.
+> langchain-perplexity;: Installed. No version info available.
+> langchain-text-splitters<1.0.0,>=0.3.8: Installed. No version info available.
+> langchain-together;: Installed. No version info available.
+> langchain-xai;: Installed. No version info available.
+> langgraph-checkpoint>=2.0.23: Installed. No version info available.
+> langgraph-checkpoint>=2.0.25: Installed. No version info available.
+> langgraph-prebuilt>=0.1.7: Installed. No version info available.
+> langgraph-runtime-inmem<0.3,>=0.2.0: Installed. No version info available.
+> langgraph-sdk>=0.1.66: Installed. No version info available.
+> langgraph>=0.2: Installed. No version info available.
+> langgraph>=0.3.27: Installed. No version info available.
+> langgraph>=0.3.5: Installed. No version info available.
+> langsmith-pyo3: Installed. No version info available.
+> langsmith<0.4,>=0.1.126: Installed. No version info available.
+> langsmith<0.4,>=0.1.17: Installed. No version info available.
+> langsmith>=0.1.112: Installed. No version info available.
+> openai-agents: Installed. No version info available.
+> opentelemetry-api: Installed. No version info available.
+> opentelemetry-exporter-otlp-proto-http: Installed. No version info available.
+> opentelemetry-sdk: Installed. No version info available.
+> orjson: 3.10.18
+> orjson>=3.10.1: Installed. No version info available.
+> orjson>=3.9.7: Installed. No version info available.
+> packaging: 24.2
+> packaging<25,>=23.2: Installed. No version info available.
+> pydantic: 2.11.5
+> pydantic<3.0.0,>=2.7.4: Installed. No version info available.
+> pydantic>=2.7.4: Installed. No version info available.
+> pyjwt>=2.9.0: Installed. No version info available.
+> pytest: 8.3.5
+> python-dotenv: 1.1.0
+> PyYAML>=5.3: Installed. No version info available.
+> requests: 2.32.3
+> requests-toolbelt: 1.0.0
+> requests<3,>=2: Installed. No version info available.
+> rich: Installed. No version info available.
+> SQLAlchemy<3,>=1.4: Installed. No version info available.
+> sse-starlette<2.2.0,>=2.1.0: Installed. No version info available.
+> sse-starlette>=2: Installed. No version info available.
+> starlette>=0.37: Installed. No version info available.
+> starlette>=0.38.6: Installed. No version info available.
+> structlog<26,>=24.1.0: Installed. No version info available.
+> structlog>23: Installed. No version info available.
+> tenacity!=8.4.0,<10.0.0,>=8.1.0: Installed. No version info available.
+> tenacity>=8.0.0: Installed. No version info available.
+> truststore>=0.1: Installed. No version info available.
+> typing-extensions>=4.7: Installed. No version info available.
+> uvicorn>=0.26.0: Installed. No version info available.
+> watchfiles>=0.13: Installed. No version info available.
+> zstandard: 0.23.0
