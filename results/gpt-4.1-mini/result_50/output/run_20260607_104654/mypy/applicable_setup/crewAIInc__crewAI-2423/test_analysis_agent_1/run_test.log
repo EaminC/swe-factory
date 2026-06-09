@@ -1,0 +1,61 @@
+2026-06-07 11:49:42,807 - INFO - Checking if image crewaiinc__crewai-2423-dockerfile1:latest exists locally...
+2026-06-07 11:49:42,816 - INFO - Image crewaiinc__crewai-2423-dockerfile1:latest found locally.
+2026-06-07 11:49:42,823 - INFO - Creating container for crewaiinc__crewai-2423...
+2026-06-07 11:49:43,684 - INFO - Container for crewaiinc__crewai-2423 started: 4837e5483ba45d81d8e4c41a33683c0c46666f9e75530a5427cec3f8a354fe79
+2026-06-07 11:49:43,685 - INFO - Intermediate patch for crewaiinc__crewai-2423 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2423/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:49:44,047 - INFO - Apply patch success:
+/tmp/patch.diff:13: trailing whitespace.
+            raise ImportError( 
+Checking patch src/crewai/rag/embeddings/configurator.py...
+Applied patch src/crewai/rag/embeddings/configurator.py cleanly.
+warning: 1 line adds whitespace errors.
+
+2026-06-07 11:49:45,158 - INFO - Git diff before:
+diff --git a/src/crewai/rag/embeddings/configurator.py b/src/crewai/rag/embeddings/configurator.py
+index e523b60f0..ae2f120d8 100644
+--- a/src/crewai/rag/embeddings/configurator.py
++++ b/src/crewai/rag/embeddings/configurator.py
+@@ -38,7 +38,14 @@ class EmbeddingConfigurator:
+                 f"Unsupported embedding provider: {provider}, supported providers: {list(self.embedding_functions.keys())}"
+             )
+ 
+-        embedding_function = self.embedding_functions[provider]
++        try:
++            embedding_function = self.embedding_functions[provider]
++        except ImportError as e:
++            missing_package = str(e).split()[-1]
++            raise ImportError( 
++                f"{missing_package} is not installed. Please install it with: pip install {missing_package}"
++            )
++
+         return (
+             embedding_function(config)
+             if provider == "custom"
+2026-06-07 11:49:45,159 - INFO - Eval script for crewaiinc__crewai-2423 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2423/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:49:59,792 - INFO - Test output for crewaiinc__crewai-2423 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2423/test_analysis_agent_1/test_output.txt
+2026-06-07 11:49:59,902 - INFO - Git diff after:
+diff --git a/src/crewai/rag/embeddings/configurator.py b/src/crewai/rag/embeddings/configurator.py
+index e523b60f0..ae2f120d8 100644
+--- a/src/crewai/rag/embeddings/configurator.py
++++ b/src/crewai/rag/embeddings/configurator.py
+@@ -38,7 +38,14 @@ class EmbeddingConfigurator:
+                 f"Unsupported embedding provider: {provider}, supported providers: {list(self.embedding_functions.keys())}"
+             )
+ 
+-        embedding_function = self.embedding_functions[provider]
++        try:
++            embedding_function = self.embedding_functions[provider]
++        except ImportError as e:
++            missing_package = str(e).split()[-1]
++            raise ImportError( 
++                f"{missing_package} is not installed. Please install it with: pip install {missing_package}"
++            )
++
+         return (
+             embedding_function(config)
+             if provider == "custom"
+2026-06-07 11:49:59,902 - INFO - Attempting to stop container crewaiinc__crewai-2423-test1...
+2026-06-07 11:50:19,147 - INFO - Attempting to remove container crewaiinc__crewai-2423-test1...
+2026-06-07 11:50:19,372 - INFO - Container crewaiinc__crewai-2423-test1 removed.
+2026-06-07 11:50:19,372 - INFO - Attempting to remove image crewaiinc__crewai-2423-dockerfile1:latest...
+2026-06-07 11:50:47,771 - INFO - Image crewaiinc__crewai-2423-dockerfile1:latest removed.

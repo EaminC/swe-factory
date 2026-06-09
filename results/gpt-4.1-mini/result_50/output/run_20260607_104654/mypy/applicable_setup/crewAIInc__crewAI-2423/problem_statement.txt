@@ -1,0 +1,90 @@
+[BUG]
+### Description
+
+Whenever i wanted to my agent to product a pydantic model output by giving a pydantic model to output_pydantic parameter, it is working somtimes or failing most of the time by giving this message 
+Failed to add to long term memory: Failed to convert text into a Pydantic model due to error: No module named 'google.genai' irrespective of success or failure. Because of this i cannot use that task in the next flow.
+
+### Steps to Reproduce
+
+Create a simple agent and pydantic model and in agent , give that pydantic model as a output_pydantic, we can see the error
+
+### Expected behavior
+
+It should work without any error message and the next agent should understand that it is a pydantic model and the second agent should be able convert that into a string automatically and and work from there.  Or we should have the option of what key value pair from the pydantic model of the first agent can be given as a input to second agent. 
+
+### Screenshots/Code snippets
+
+class ResponseFormat(BaseModel):
+    string : str = Field(description = 'string needs to manitained')
+
+class FirstFlowCrew:
+
+    def first_crew(self, param):
+        first_agent = Agent(role = "role mentioned",
+                                goal = dedent( f"""Goals mentioned"""),
+                                backstory = dedent("""Back story mentioned"""),
+                                tools=[tool mentioned],
+                                verbose=True,
+                                allow_delegation=True,
+                                memory = True
+                            )
+
+       task_1 = Task(description = "Task description mentioned",
+                                   expected_output = "expected output mentioned.",
+                                   agent = first_agent
+                                )
+        
+
+        second_agent = Agent(role='role mentioned',
+                                   goal = dedent("""goal mentioned"""),
+                                    backstory= "back story mentioned",
+                                    
+                                )
+        
+        task_2 = Task(description = "task mentioned",
+                                 expected_output = "expected output metioned",
+                                 agent = second_agent,
+                                output_pydantic=ResponseFormat
+                                )
+
+        first_crew = Crew(agents = [first_agent, second_agent], 
+                    tasks = [task_1, task_2], 
+                    process = 'sequential',
+                    verbose = True,
+                    memory=True
+                    )
+        
+        result = first_crew.kickoff()
+        return result
+
+### Operating System
+
+Other (specify in additional context)
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.108.0
+
+### crewAI Tools Version
+
+0.38.1
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+![Image](https://github.com/user-attachments/assets/77095421-3c7f-4e0a-9904-72868397e8fb)
+
+### Possible Solution
+
+None
+
+### Additional context
+
+None

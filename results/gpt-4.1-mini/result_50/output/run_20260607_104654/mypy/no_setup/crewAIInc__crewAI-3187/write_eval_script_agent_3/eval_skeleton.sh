@@ -1,0 +1,36 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Checkout the specific commit version of the test file to ensure a clean state before applying patch
+git checkout 2ab79a7dd5623fe3adde03469afb61caefed528b tests/storage/test_mem0_storage.py
+
+# Apply test patch (placeholder content will be replaced during evaluation)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the Python virtual environment from the correct path
+source /testbed/.venv/bin/activate
+
+# Install pytest explicitly inside the virtual environment to ensure availability
+pip install pytest
+
+# Export required environment variables (set as empty placeholders here)
+export OPENAI_API_KEY=""
+export SERPER_API_KEY=""
+export OPTIONAL_OTEL_SDK_DISABLED=true
+export OPTIONAL_share_crew=true
+
+# Print installed packages for debugging module import issues
+pip list
+
+# Run only the specified test file with uv run pytest and concise output reporting
+uv run pytest tests/storage/test_mem0_storage.py --tb=short -rA --disable-warnings
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to discard patch changes and any test side effects
+git checkout 2ab79a7dd5623fe3adde03469afb61caefed528b tests/storage/test_mem0_storage.py

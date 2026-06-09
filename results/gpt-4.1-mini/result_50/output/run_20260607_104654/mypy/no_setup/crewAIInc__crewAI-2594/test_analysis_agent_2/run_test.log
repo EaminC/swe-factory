@@ -1,0 +1,62 @@
+2026-06-07 12:30:12,251 - INFO - Checking if image crewaiinc__crewai-2594-dockerfile2:latest exists locally...
+2026-06-07 12:30:12,255 - INFO - Image crewaiinc__crewai-2594-dockerfile2:latest found locally.
+2026-06-07 12:30:12,255 - INFO - Creating container for crewaiinc__crewai-2594...
+2026-06-07 12:30:13,257 - INFO - Container for crewaiinc__crewai-2594 started: bb161f89eb9cdf07530af09db6b257375427283400e249ae03d898fd1610c7d2
+2026-06-07 12:30:13,258 - INFO - Intermediate patch for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 12:30:13,633 - INFO - Apply patch success:
+Checking patch src/crewai/crew.py...
+Applied patch src/crewai/crew.py cleanly.
+
+2026-06-07 12:30:14,167 - INFO - Git diff before:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 6fab2cec5..5b6ca3570 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1214,6 +1214,17 @@ class Crew(BaseModel):
+ 
+         copied_data = self.model_dump(exclude=exclude)
+         copied_data = {k: v for k, v in copied_data.items() if v is not None}
++        if self.short_term_memory:
++            copied_data["short_term_memory"] = self.short_term_memory.model_copy(deep=True)
++        if self.long_term_memory:
++            copied_data["long_term_memory"] = self.long_term_memory.model_copy(deep=True)
++        if self.entity_memory:
++            copied_data["entity_memory"] = self.entity_memory.model_copy(deep=True)
++        if self.external_memory:
++            copied_data["external_memory"] = self.external_memory.model_copy(deep=True)
++        if self.user_memory:
++            copied_data["user_memory"] = self.user_memory.model_copy(deep=True)
++
+ 
+         copied_data.pop("agents", None)
+         copied_data.pop("tasks", None)
+2026-06-07 12:30:14,167 - INFO - Eval script for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 12:37:51,683 - INFO - Test output for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_2/test_output.txt
+2026-06-07 12:37:52,033 - INFO - Git diff after:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 6fab2cec5..5b6ca3570 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1214,6 +1214,17 @@ class Crew(BaseModel):
+ 
+         copied_data = self.model_dump(exclude=exclude)
+         copied_data = {k: v for k, v in copied_data.items() if v is not None}
++        if self.short_term_memory:
++            copied_data["short_term_memory"] = self.short_term_memory.model_copy(deep=True)
++        if self.long_term_memory:
++            copied_data["long_term_memory"] = self.long_term_memory.model_copy(deep=True)
++        if self.entity_memory:
++            copied_data["entity_memory"] = self.entity_memory.model_copy(deep=True)
++        if self.external_memory:
++            copied_data["external_memory"] = self.external_memory.model_copy(deep=True)
++        if self.user_memory:
++            copied_data["user_memory"] = self.user_memory.model_copy(deep=True)
++
+ 
+         copied_data.pop("agents", None)
+         copied_data.pop("tasks", None)
+2026-06-07 12:37:52,043 - INFO - Attempting to stop container crewaiinc__crewai-2594-test2...
+2026-06-07 12:38:22,222 - INFO - Attempting to remove container crewaiinc__crewai-2594-test2...
+2026-06-07 12:38:39,555 - INFO - Container crewaiinc__crewai-2594-test2 removed.
+2026-06-07 12:38:39,555 - INFO - Attempting to remove image crewaiinc__crewai-2594-dockerfile2:latest...
+2026-06-07 12:39:08,834 - INFO - Image crewaiinc__crewai-2594-dockerfile2:latest removed.

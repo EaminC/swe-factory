@@ -1,0 +1,1116 @@
+2026-06-07 11:00:45,629 - INFO - Checking if image agentscope-ai__agentscope-1097-dockerfile1:latest exists locally...
+2026-06-07 11:00:45,634 - INFO - Image agentscope-ai__agentscope-1097-dockerfile1:latest found locally.
+2026-06-07 11:00:45,635 - INFO - Creating container for agentscope-ai__agentscope-1097...
+2026-06-07 11:00:46,021 - INFO - Container for agentscope-ai__agentscope-1097 started: edfff57ccf53b7ec0676ab6e32012a182cf1cac52c3439e9a20e8b33e4fb86b7
+2026-06-07 11:00:46,022 - INFO - Intermediate patch for agentscope-ai__agentscope-1097 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1097/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:00:46,441 - INFO - Apply patch success:
+Checking patch src/agentscope/_utils/_common.py...
+Checking patch src/agentscope/message/_message_block.py...
+Checking patch src/agentscope/model/_anthropic_model.py...
+Checking patch src/agentscope/model/_dashscope_model.py...
+Checking patch src/agentscope/model/_gemini_model.py...
+Checking patch src/agentscope/model/_ollama_model.py...
+Checking patch src/agentscope/model/_openai_model.py...
+Applied patch src/agentscope/_utils/_common.py cleanly.
+Applied patch src/agentscope/message/_message_block.py cleanly.
+Applied patch src/agentscope/model/_anthropic_model.py cleanly.
+Applied patch src/agentscope/model/_dashscope_model.py cleanly.
+Applied patch src/agentscope/model/_gemini_model.py cleanly.
+Applied patch src/agentscope/model/_ollama_model.py cleanly.
+Applied patch src/agentscope/model/_openai_model.py cleanly.
+
+2026-06-07 11:00:46,846 - INFO - Git diff before:
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index 4123c99c..e43afd13 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -48,28 +48,23 @@ def _json_loads_with_repair(
+             Returns an empty dict if all repair attempts fail.
+     """
+     try:
+-        repaired = repair_json(json_str)
++        repaired = repair_json(json_str, stream_stable=True)
+         result = json.loads(repaired)
+         if isinstance(result, dict):
+             return result
++
+     except Exception:
+-        pass
++        if len(json_str) > 100:
++            log_str = json_str[:100] + "..."
++        else:
++            log_str = json_str
+ 
+-    for i in range(len(json_str) - 1, 0, -1):
+-        try:
+-            repaired = repair_json(json_str[:i])
+-            result = json.loads(repaired)
+-            if isinstance(result, dict):
+-                return result
+-        except Exception:
+-            continue
++        logger.warning(
++            "Failed to load JSON dict from string: %s. Returning empty dict "
++            "instead.",
++            log_str,
++        )
+ 
+-    logger.warning(
+-        "Failed to parse JSON string `%s`. "
+-        "All repair attempts (original + truncation) failed. "
+-        "Returning empty dict.",
+-        json_str,
+-    )
+     return {}
+ 
+ 
+diff --git a/src/agentscope/message/_message_block.py b/src/agentscope/message/_message_block.py
+index ed2f5903..2adb683e 100644
+--- a/src/agentscope/message/_message_block.py
++++ b/src/agentscope/message/_message_block.py
+@@ -87,6 +87,8 @@ class ToolUseBlock(TypedDict, total=False):
+     """The name of the tool"""
+     input: Required[dict[str, object]]
+     """The input of the tool"""
++    raw_input: str
++    """The raw string input of the tool from the model API"""
+ 
+ 
+ class ToolResultBlock(TypedDict, total=False):
+diff --git a/src/agentscope/model/_anthropic_model.py b/src/agentscope/model/_anthropic_model.py
+index 0120fb84..ec4269c4 100644
+--- a/src/agentscope/model/_anthropic_model.py
++++ b/src/agentscope/model/_anthropic_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches, too-many-statements
+ """The Anthropic API model classes."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -45,6 +47,7 @@ class AnthropicChatModel(ChatModelBase):
+         max_tokens: int = 2048,
+         stream: bool = True,
+         thinking: dict | None = None,
++        stream_tool_parsing: bool = True,
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         **kwargs: Any,
+@@ -71,6 +74,12 @@ class AnthropicChatModel(ChatModelBase):
+                         "budget_tokens": 1024
+                     }
+ 
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+              optional):
+                 The extra keyword arguments to initialize the Anthropic client.
+@@ -121,6 +130,7 @@ class AnthropicChatModel(ChatModelBase):
+         )
+         self.max_tokens = max_tokens
+         self.thinking = thinking
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -381,9 +391,13 @@ class AnthropicChatModel(ChatModelBase):
+         thinking_signature = ""
+         tool_calls = OrderedDict()
+         tool_call_buffers = {}
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         res = None
+         metadata = None
+ 
++        # Record the last yielded content to parse the tools' input
++        last_content = None
++
+         async for event in response:
+             content_changed = False
+             thinking_changed = False
+@@ -457,24 +471,38 @@ class AnthropicChatModel(ChatModelBase):
+                     )
+                 for block_index, tool_call in tool_calls.items():
+                     input_str = tool_call["input"]
+-                    try:
+-                        input_obj = _json_loads_with_repair(input_str or "{}")
+-                        if not isinstance(input_obj, dict):
+-                            input_obj = {}
+-
+-                    except Exception:
+-                        input_obj = {}
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        repaired_input = {}
+ 
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+                             id=tool_call["id"],
+                             name=tool_call["name"],
+-                            input=input_obj,
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
++
+                     if structured_model:
+-                        metadata = input_obj
++                        metadata = repaired_input
++
+                 if contents:
+                     res = ChatResponse(
+                         content=contents,
+@@ -482,6 +510,26 @@ class AnthropicChatModel(ChatModelBase):
+                         metadata=metadata,
+                     )
+                     yield res
++                    last_content = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and last_content and tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        block.get("raw_input") or "{}",
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _format_tools_json_schemas(
+         self,
+diff --git a/src/agentscope/model/_dashscope_model.py b/src/agentscope/model/_dashscope_model.py
+index ebbd45f0..799e99d4 100644
+--- a/src/agentscope/model/_dashscope_model.py
++++ b/src/agentscope/model/_dashscope_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """The dashscope API model classes."""
++import copy
+ import collections
+ import json
+ import os
+@@ -58,6 +59,7 @@ class DashScopeChatModel(ChatModelBase):
+         enable_thinking: bool | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         base_http_api_url: str | None = None,
++        stream_tool_parsing: bool = True,
+         **_kwargs: Any,
+     ) -> None:
+         """Initialize the DashScope chat model.
+@@ -81,6 +83,12 @@ class DashScopeChatModel(ChatModelBase):
+             base_http_api_url (`str | None`, optional):
+                 The base URL for DashScope API requests. If not provided,
+                 the default base URL from the DashScope SDK will be used.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON in streaming mode
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts (`{"a": "x"}`) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             **_kwargs (`Any`):
+                 Additional keyword arguments.
+         """
+@@ -96,6 +104,7 @@ class DashScopeChatModel(ChatModelBase):
+         self.api_key = api_key
+         self.enable_thinking = enable_thinking
+         self.generate_kwargs = generate_kwargs or {}
++        self.stream_tool_parsing = stream_tool_parsing
+ 
+         if base_http_api_url is not None:
+             import dashscope
+@@ -251,7 +260,7 @@ class DashScopeChatModel(ChatModelBase):
+ 
+         return parsed_response
+ 
+-    # pylint: disable=too-many-branches
++    # pylint: disable=too-many-branches, too-many-statements
+     async def _parse_dashscope_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -289,7 +298,10 @@ class DashScopeChatModel(ChatModelBase):
+         """
+         acc_content, acc_thinking_content = "", ""
+         acc_tool_calls = collections.defaultdict(dict)
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata = None
++        last_content = None
++        usage = None
+ 
+         async for chunk in giter(response):
+             if chunk.status_code != HTTPStatus.OK:
+@@ -336,8 +348,9 @@ class DashScopeChatModel(ChatModelBase):
+                             + func["arguments"]
+                         )
+ 
+-            # to content blocks
++            # Build content blocks (always include thinking and text)
+             content_blocks: list[TextBlock | ToolUseBlock | ThinkingBlock] = []
++
+             if acc_thinking_content:
+                 content_blocks.append(
+                     ThinkingBlock(
+@@ -355,26 +368,42 @@ class DashScopeChatModel(ChatModelBase):
+                 )
+ 
+             for tool_call in acc_tool_calls.values():
+-                repaired_input = _json_loads_with_repair(
+-                    tool_call.get("arguments", "{}") or "{}",
+-                )
+-
+-                if not isinstance(repaired_input, dict):
++                # Only add intermediate tool use blocks if
++                # stream_tool_parsing is True
++                tool_id = tool_call.get("id", "")
++                input_str = tool_call.get("arguments")
++
++                # If parsing the tool input in streaming mode
++                if self.stream_tool_parsing:
++                    repaired_input = _json_loads_with_repair(
++                        input_str or "{}",
++                    )
++                    # If the new repaired input is shorter than one in the last
++                    # chunk, use the last one to avoid regression
++                    last_input = last_input_objs.get(tool_id, {})
++                    if len(json.dumps(last_input)) > len(
++                        json.dumps(repaired_input),
++                    ):
++                        repaired_input = last_input
++                    last_input_objs[tool_id] = repaired_input
++
++                else:
++                    # Otherwise, keep input as empty dict until the final chunk
+                     repaired_input = {}
+ 
+                 content_blocks.append(
+                     ToolUseBlock(
+                         type="tool_use",
+-                        id=tool_call.get("id", ""),
++                        id=tool_id,
+                         name=tool_call.get("name", ""),
+                         input=repaired_input,
++                        raw_input=input_str,
+                     ),
+                 )
+ 
+                 if structured_model:
+                     metadata = repaired_input
+ 
+-            usage = None
+             if chunk.usage:
+                 usage = ChatUsage(
+                     input_tokens=chunk.usage.input_tokens,
+@@ -383,12 +412,34 @@ class DashScopeChatModel(ChatModelBase):
+                     metadata=chunk.usage,
+                 )
+ 
+-            parsed_chunk = ChatResponse(
+-                content=content_blocks,
++            if content_blocks:
++                parsed_chunk = ChatResponse(
++                    content=content_blocks,
++                    usage=usage,
++                    metadata=metadata,
++                )
++                yield parsed_chunk
++                last_content = copy.deepcopy(content_blocks)
++
++        # If stream_tool_parsing is False, we need to parse the final tool
++        # use inputs here
++        if not self.stream_tool_parsing and last_content and acc_tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
+                 usage=usage,
+                 metadata=metadata,
+             )
+-            yield parsed_chunk
+ 
+     async def _parse_dashscope_generation_response(
+         self,
+diff --git a/src/agentscope/model/_gemini_model.py b/src/agentscope/model/_gemini_model.py
+index f80c4ed3..635232aa 100644
+--- a/src/agentscope/model/_gemini_model.py
++++ b/src/agentscope/model/_gemini_model.py
+@@ -2,6 +2,7 @@
+ # mypy: disable-error-code="dict-item"
+ """The Google Gemini model in agentscope."""
+ import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -362,6 +363,7 @@ class GeminiChatModel(ChatModelBase):
+                             id=function_call.id,
+                             name=function_call.name,
+                             input=function_call.args or {},
++                            raw_input=json.dumps(function_call.args or {}),
+                         ),
+                     )
+ 
+@@ -460,6 +462,7 @@ class GeminiChatModel(ChatModelBase):
+                         id=tool_call.id,
+                         name=tool_call.name,
+                         input=tool_call.args or {},
++                        raw_input=json.dumps(tool_call.args or {}),
+                     ),
+                 )
+ 
+diff --git a/src/agentscope/model/_ollama_model.py b/src/agentscope/model/_ollama_model.py
+index 82d6cc03..d6606020 100644
+--- a/src/agentscope/model/_ollama_model.py
++++ b/src/agentscope/model/_ollama_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """Model wrapper for Ollama models."""
++import json
+ from datetime import datetime
+ from typing import (
+     Any,
+@@ -219,6 +220,7 @@ class OllamaChatModel(ChatModelBase):
+                     "id": tool_id,
+                     "name": function.name,
+                     "input": function.arguments,
++                    "raw_input": json.dumps(function.arguments),
+                 }
+             # Calculate usage statistics
+             current_time = (datetime.now() - start_datetime).total_seconds()
+@@ -325,6 +327,7 @@ class OllamaChatModel(ChatModelBase):
+                     id=f"{idx}_{tool_call.function.name}",
+                     name=tool_call.function.name,
+                     input=tool_call.function.arguments,
++                    raw_input=json.dumps(tool_call.function.arguments),
+                 ),
+             )
+ 
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index 1fe289fd..2ee9edcd 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches
+ """OpenAI Chat model class."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -73,6 +75,7 @@ class OpenAIChatModel(ChatModelBase):
+         stream: bool = True,
+         reasoning_effort: Literal["low", "medium", "high"] | None = None,
+         organization: str = None,
++        stream_tool_parsing: bool = True,
+         client_type: Literal["openai", "azure"] = "openai",
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+@@ -97,6 +100,12 @@ class OpenAIChatModel(ChatModelBase):
+             organization (`str`, default `None`):
+                 The organization ID for OpenAI API. If not specified, it will
+                 be read from the environment variable `OPENAI_ORGANIZATION`.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_type (`Literal["openai", "azure"]`, default `openai`):
+                 Selects which OpenAI-compatible client to initialize.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+@@ -156,6 +165,7 @@ class OpenAIChatModel(ChatModelBase):
+             )
+ 
+         self.reasoning_effort = reasoning_effort
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -294,6 +304,7 @@ class OpenAIChatModel(ChatModelBase):
+ 
+         return parsed_response
+ 
++    # pylint: disable=too-many-statements
+     async def _parse_openai_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -327,10 +338,12 @@ class OpenAIChatModel(ChatModelBase):
+         thinking = ""
+         audio = ""
+         tool_calls = OrderedDict()
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata: dict | None = None
+         contents: List[
+             TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
+         ] = []
++        last_contents = None
+ 
+         async with response as stream:
+             async for item in stream:
+@@ -432,26 +445,65 @@ class OpenAIChatModel(ChatModelBase):
+                         metadata = _json_loads_with_repair(text)
+ 
+                 for tool_call in tool_calls.values():
++                    input_str = tool_call["input"]
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        # Otherwise, keep input as empty dict until the final
++                        # chunk
++                        repaired_input = {}
++
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+-                            id=tool_call["id"],
++                            id=tool_id,
+                             name=tool_call["name"],
+-                            input=_json_loads_with_repair(
+-                                tool_call["input"] or "{}",
+-                            ),
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
+ 
+-                if not contents:
+-                    continue
++                if contents:
++                    res = ChatResponse(
++                        content=contents,
++                        usage=usage,
++                        metadata=metadata,
++                    )
++                    yield res
++                    last_contents = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and tool_calls and last_contents:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_contents:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
+ 
+-                res = ChatResponse(
+-                    content=contents,
+-                    usage=usage,
+-                    metadata=metadata,
+-                )
+-                yield res
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_contents,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _parse_openai_completion_response(
+         self,
+2026-06-07 11:00:46,846 - INFO - Eval script for agentscope-ai__agentscope-1097 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1097/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:00:53,066 - INFO - Test output for agentscope-ai__agentscope-1097 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1097/test_analysis_agent_1/test_output.txt
+2026-06-07 11:00:53,198 - INFO - Git diff after:
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index 4123c99c..e43afd13 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -48,28 +48,23 @@ def _json_loads_with_repair(
+             Returns an empty dict if all repair attempts fail.
+     """
+     try:
+-        repaired = repair_json(json_str)
++        repaired = repair_json(json_str, stream_stable=True)
+         result = json.loads(repaired)
+         if isinstance(result, dict):
+             return result
++
+     except Exception:
+-        pass
++        if len(json_str) > 100:
++            log_str = json_str[:100] + "..."
++        else:
++            log_str = json_str
+ 
+-    for i in range(len(json_str) - 1, 0, -1):
+-        try:
+-            repaired = repair_json(json_str[:i])
+-            result = json.loads(repaired)
+-            if isinstance(result, dict):
+-                return result
+-        except Exception:
+-            continue
++        logger.warning(
++            "Failed to load JSON dict from string: %s. Returning empty dict "
++            "instead.",
++            log_str,
++        )
+ 
+-    logger.warning(
+-        "Failed to parse JSON string `%s`. "
+-        "All repair attempts (original + truncation) failed. "
+-        "Returning empty dict.",
+-        json_str,
+-    )
+     return {}
+ 
+ 
+diff --git a/src/agentscope/message/_message_block.py b/src/agentscope/message/_message_block.py
+index ed2f5903..2adb683e 100644
+--- a/src/agentscope/message/_message_block.py
++++ b/src/agentscope/message/_message_block.py
+@@ -87,6 +87,8 @@ class ToolUseBlock(TypedDict, total=False):
+     """The name of the tool"""
+     input: Required[dict[str, object]]
+     """The input of the tool"""
++    raw_input: str
++    """The raw string input of the tool from the model API"""
+ 
+ 
+ class ToolResultBlock(TypedDict, total=False):
+diff --git a/src/agentscope/model/_anthropic_model.py b/src/agentscope/model/_anthropic_model.py
+index 0120fb84..ec4269c4 100644
+--- a/src/agentscope/model/_anthropic_model.py
++++ b/src/agentscope/model/_anthropic_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches, too-many-statements
+ """The Anthropic API model classes."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -45,6 +47,7 @@ class AnthropicChatModel(ChatModelBase):
+         max_tokens: int = 2048,
+         stream: bool = True,
+         thinking: dict | None = None,
++        stream_tool_parsing: bool = True,
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         **kwargs: Any,
+@@ -71,6 +74,12 @@ class AnthropicChatModel(ChatModelBase):
+                         "budget_tokens": 1024
+                     }
+ 
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+              optional):
+                 The extra keyword arguments to initialize the Anthropic client.
+@@ -121,6 +130,7 @@ class AnthropicChatModel(ChatModelBase):
+         )
+         self.max_tokens = max_tokens
+         self.thinking = thinking
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -381,9 +391,13 @@ class AnthropicChatModel(ChatModelBase):
+         thinking_signature = ""
+         tool_calls = OrderedDict()
+         tool_call_buffers = {}
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         res = None
+         metadata = None
+ 
++        # Record the last yielded content to parse the tools' input
++        last_content = None
++
+         async for event in response:
+             content_changed = False
+             thinking_changed = False
+@@ -457,24 +471,38 @@ class AnthropicChatModel(ChatModelBase):
+                     )
+                 for block_index, tool_call in tool_calls.items():
+                     input_str = tool_call["input"]
+-                    try:
+-                        input_obj = _json_loads_with_repair(input_str or "{}")
+-                        if not isinstance(input_obj, dict):
+-                            input_obj = {}
+-
+-                    except Exception:
+-                        input_obj = {}
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        repaired_input = {}
+ 
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+                             id=tool_call["id"],
+                             name=tool_call["name"],
+-                            input=input_obj,
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
++
+                     if structured_model:
+-                        metadata = input_obj
++                        metadata = repaired_input
++
+                 if contents:
+                     res = ChatResponse(
+                         content=contents,
+@@ -482,6 +510,26 @@ class AnthropicChatModel(ChatModelBase):
+                         metadata=metadata,
+                     )
+                     yield res
++                    last_content = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and last_content and tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        block.get("raw_input") or "{}",
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _format_tools_json_schemas(
+         self,
+diff --git a/src/agentscope/model/_dashscope_model.py b/src/agentscope/model/_dashscope_model.py
+index ebbd45f0..799e99d4 100644
+--- a/src/agentscope/model/_dashscope_model.py
++++ b/src/agentscope/model/_dashscope_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """The dashscope API model classes."""
++import copy
+ import collections
+ import json
+ import os
+@@ -58,6 +59,7 @@ class DashScopeChatModel(ChatModelBase):
+         enable_thinking: bool | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         base_http_api_url: str | None = None,
++        stream_tool_parsing: bool = True,
+         **_kwargs: Any,
+     ) -> None:
+         """Initialize the DashScope chat model.
+@@ -81,6 +83,12 @@ class DashScopeChatModel(ChatModelBase):
+             base_http_api_url (`str | None`, optional):
+                 The base URL for DashScope API requests. If not provided,
+                 the default base URL from the DashScope SDK will be used.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON in streaming mode
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts (`{"a": "x"}`) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             **_kwargs (`Any`):
+                 Additional keyword arguments.
+         """
+@@ -96,6 +104,7 @@ class DashScopeChatModel(ChatModelBase):
+         self.api_key = api_key
+         self.enable_thinking = enable_thinking
+         self.generate_kwargs = generate_kwargs or {}
++        self.stream_tool_parsing = stream_tool_parsing
+ 
+         if base_http_api_url is not None:
+             import dashscope
+@@ -251,7 +260,7 @@ class DashScopeChatModel(ChatModelBase):
+ 
+         return parsed_response
+ 
+-    # pylint: disable=too-many-branches
++    # pylint: disable=too-many-branches, too-many-statements
+     async def _parse_dashscope_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -289,7 +298,10 @@ class DashScopeChatModel(ChatModelBase):
+         """
+         acc_content, acc_thinking_content = "", ""
+         acc_tool_calls = collections.defaultdict(dict)
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata = None
++        last_content = None
++        usage = None
+ 
+         async for chunk in giter(response):
+             if chunk.status_code != HTTPStatus.OK:
+@@ -336,8 +348,9 @@ class DashScopeChatModel(ChatModelBase):
+                             + func["arguments"]
+                         )
+ 
+-            # to content blocks
++            # Build content blocks (always include thinking and text)
+             content_blocks: list[TextBlock | ToolUseBlock | ThinkingBlock] = []
++
+             if acc_thinking_content:
+                 content_blocks.append(
+                     ThinkingBlock(
+@@ -355,26 +368,42 @@ class DashScopeChatModel(ChatModelBase):
+                 )
+ 
+             for tool_call in acc_tool_calls.values():
+-                repaired_input = _json_loads_with_repair(
+-                    tool_call.get("arguments", "{}") or "{}",
+-                )
+-
+-                if not isinstance(repaired_input, dict):
++                # Only add intermediate tool use blocks if
++                # stream_tool_parsing is True
++                tool_id = tool_call.get("id", "")
++                input_str = tool_call.get("arguments")
++
++                # If parsing the tool input in streaming mode
++                if self.stream_tool_parsing:
++                    repaired_input = _json_loads_with_repair(
++                        input_str or "{}",
++                    )
++                    # If the new repaired input is shorter than one in the last
++                    # chunk, use the last one to avoid regression
++                    last_input = last_input_objs.get(tool_id, {})
++                    if len(json.dumps(last_input)) > len(
++                        json.dumps(repaired_input),
++                    ):
++                        repaired_input = last_input
++                    last_input_objs[tool_id] = repaired_input
++
++                else:
++                    # Otherwise, keep input as empty dict until the final chunk
+                     repaired_input = {}
+ 
+                 content_blocks.append(
+                     ToolUseBlock(
+                         type="tool_use",
+-                        id=tool_call.get("id", ""),
++                        id=tool_id,
+                         name=tool_call.get("name", ""),
+                         input=repaired_input,
++                        raw_input=input_str,
+                     ),
+                 )
+ 
+                 if structured_model:
+                     metadata = repaired_input
+ 
+-            usage = None
+             if chunk.usage:
+                 usage = ChatUsage(
+                     input_tokens=chunk.usage.input_tokens,
+@@ -383,12 +412,34 @@ class DashScopeChatModel(ChatModelBase):
+                     metadata=chunk.usage,
+                 )
+ 
+-            parsed_chunk = ChatResponse(
+-                content=content_blocks,
++            if content_blocks:
++                parsed_chunk = ChatResponse(
++                    content=content_blocks,
++                    usage=usage,
++                    metadata=metadata,
++                )
++                yield parsed_chunk
++                last_content = copy.deepcopy(content_blocks)
++
++        # If stream_tool_parsing is False, we need to parse the final tool
++        # use inputs here
++        if not self.stream_tool_parsing and last_content and acc_tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
+                 usage=usage,
+                 metadata=metadata,
+             )
+-            yield parsed_chunk
+ 
+     async def _parse_dashscope_generation_response(
+         self,
+diff --git a/src/agentscope/model/_gemini_model.py b/src/agentscope/model/_gemini_model.py
+index f80c4ed3..635232aa 100644
+--- a/src/agentscope/model/_gemini_model.py
++++ b/src/agentscope/model/_gemini_model.py
+@@ -2,6 +2,7 @@
+ # mypy: disable-error-code="dict-item"
+ """The Google Gemini model in agentscope."""
+ import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -362,6 +363,7 @@ class GeminiChatModel(ChatModelBase):
+                             id=function_call.id,
+                             name=function_call.name,
+                             input=function_call.args or {},
++                            raw_input=json.dumps(function_call.args or {}),
+                         ),
+                     )
+ 
+@@ -460,6 +462,7 @@ class GeminiChatModel(ChatModelBase):
+                         id=tool_call.id,
+                         name=tool_call.name,
+                         input=tool_call.args or {},
++                        raw_input=json.dumps(tool_call.args or {}),
+                     ),
+                 )
+ 
+diff --git a/src/agentscope/model/_ollama_model.py b/src/agentscope/model/_ollama_model.py
+index 82d6cc03..d6606020 100644
+--- a/src/agentscope/model/_ollama_model.py
++++ b/src/agentscope/model/_ollama_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """Model wrapper for Ollama models."""
++import json
+ from datetime import datetime
+ from typing import (
+     Any,
+@@ -219,6 +220,7 @@ class OllamaChatModel(ChatModelBase):
+                     "id": tool_id,
+                     "name": function.name,
+                     "input": function.arguments,
++                    "raw_input": json.dumps(function.arguments),
+                 }
+             # Calculate usage statistics
+             current_time = (datetime.now() - start_datetime).total_seconds()
+@@ -325,6 +327,7 @@ class OllamaChatModel(ChatModelBase):
+                     id=f"{idx}_{tool_call.function.name}",
+                     name=tool_call.function.name,
+                     input=tool_call.function.arguments,
++                    raw_input=json.dumps(tool_call.function.arguments),
+                 ),
+             )
+ 
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index 1fe289fd..2ee9edcd 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches
+ """OpenAI Chat model class."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -73,6 +75,7 @@ class OpenAIChatModel(ChatModelBase):
+         stream: bool = True,
+         reasoning_effort: Literal["low", "medium", "high"] | None = None,
+         organization: str = None,
++        stream_tool_parsing: bool = True,
+         client_type: Literal["openai", "azure"] = "openai",
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+@@ -97,6 +100,12 @@ class OpenAIChatModel(ChatModelBase):
+             organization (`str`, default `None`):
+                 The organization ID for OpenAI API. If not specified, it will
+                 be read from the environment variable `OPENAI_ORGANIZATION`.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_type (`Literal["openai", "azure"]`, default `openai`):
+                 Selects which OpenAI-compatible client to initialize.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+@@ -156,6 +165,7 @@ class OpenAIChatModel(ChatModelBase):
+             )
+ 
+         self.reasoning_effort = reasoning_effort
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -294,6 +304,7 @@ class OpenAIChatModel(ChatModelBase):
+ 
+         return parsed_response
+ 
++    # pylint: disable=too-many-statements
+     async def _parse_openai_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -327,10 +338,12 @@ class OpenAIChatModel(ChatModelBase):
+         thinking = ""
+         audio = ""
+         tool_calls = OrderedDict()
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata: dict | None = None
+         contents: List[
+             TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
+         ] = []
++        last_contents = None
+ 
+         async with response as stream:
+             async for item in stream:
+@@ -432,26 +445,65 @@ class OpenAIChatModel(ChatModelBase):
+                         metadata = _json_loads_with_repair(text)
+ 
+                 for tool_call in tool_calls.values():
++                    input_str = tool_call["input"]
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        # Otherwise, keep input as empty dict until the final
++                        # chunk
++                        repaired_input = {}
++
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+-                            id=tool_call["id"],
++                            id=tool_id,
+                             name=tool_call["name"],
+-                            input=_json_loads_with_repair(
+-                                tool_call["input"] or "{}",
+-                            ),
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
+ 
+-                if not contents:
+-                    continue
++                if contents:
++                    res = ChatResponse(
++                        content=contents,
++                        usage=usage,
++                        metadata=metadata,
++                    )
++                    yield res
++                    last_contents = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and tool_calls and last_contents:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_contents:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
+ 
+-                res = ChatResponse(
+-                    content=contents,
+-                    usage=usage,
+-                    metadata=metadata,
+-                )
+-                yield res
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_contents,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _parse_openai_completion_response(
+         self,
+2026-06-07 11:00:53,198 - INFO - Attempting to stop container agentscope-ai__agentscope-1097-test1...
+2026-06-07 11:01:24,515 - INFO - Attempting to remove container agentscope-ai__agentscope-1097-test1...
+2026-06-07 11:01:24,544 - INFO - Container agentscope-ai__agentscope-1097-test1 removed.
+2026-06-07 11:01:24,544 - INFO - Attempting to remove image agentscope-ai__agentscope-1097-dockerfile1:latest...
+2026-06-07 11:01:28,702 - INFO - Image agentscope-ai__agentscope-1097-dockerfile1:latest removed.

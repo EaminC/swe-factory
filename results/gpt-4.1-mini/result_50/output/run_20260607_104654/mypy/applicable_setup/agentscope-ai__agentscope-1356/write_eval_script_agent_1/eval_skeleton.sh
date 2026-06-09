@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset target test files before applying patch
+git checkout b35c1652c7b46a0af2785f988925d9910e3b7b70 "tests/model_anthropic_test.py" "tests/model_dashscope_test.py" "tests/model_openai_test.py"
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run the tests on the specified files using pytest with concise, informative output
+# Activate virtual environment explicitly for safety
+source /testbed/venv/bin/activate
+
+pytest --tb=short --disable-warnings -rA "tests/model_anthropic_test.py" "tests/model_dashscope_test.py" "tests/model_openai_test.py"
+rc=$?   # Save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Restore original state of the modified test files
+git checkout b35c1652c7b46a0af2785f988925d9910e3b7b70 "tests/model_anthropic_test.py" "tests/model_dashscope_test.py" "tests/model_openai_test.py"

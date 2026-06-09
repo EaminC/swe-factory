@@ -1,0 +1,141 @@
+2026-06-07 13:12:27,478 - INFO - Checking if image crewaiinc__crewai-2594-dockerfile6:latest exists locally...
+2026-06-07 13:12:27,482 - INFO - Image crewaiinc__crewai-2594-dockerfile6:latest found locally.
+2026-06-07 13:12:27,482 - INFO - Creating container for crewaiinc__crewai-2594...
+2026-06-07 13:12:27,933 - INFO - Container for crewaiinc__crewai-2594 started: bdc0793abecca1d8915805c9616810eab084da865ed34b95575b48fae96d236b
+2026-06-07 13:12:27,934 - INFO - Intermediate patch for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_6/patch.diff, now applying to container...
+2026-06-07 13:12:28,370 - INFO - Apply patch success:
+Checking patch src/crewai/crew.py...
+Applied patch src/crewai/crew.py cleanly.
+
+2026-06-07 13:12:28,849 - INFO - Git diff before:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 6fab2cec5..5b6ca3570 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1214,6 +1214,17 @@ class Crew(BaseModel):
+ 
+         copied_data = self.model_dump(exclude=exclude)
+         copied_data = {k: v for k, v in copied_data.items() if v is not None}
++        if self.short_term_memory:
++            copied_data["short_term_memory"] = self.short_term_memory.model_copy(deep=True)
++        if self.long_term_memory:
++            copied_data["long_term_memory"] = self.long_term_memory.model_copy(deep=True)
++        if self.entity_memory:
++            copied_data["entity_memory"] = self.entity_memory.model_copy(deep=True)
++        if self.external_memory:
++            copied_data["external_memory"] = self.external_memory.model_copy(deep=True)
++        if self.user_memory:
++            copied_data["user_memory"] = self.user_memory.model_copy(deep=True)
++
+ 
+         copied_data.pop("agents", None)
+         copied_data.pop("tasks", None)
+2026-06-07 13:12:28,849 - INFO - Eval script for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_6/patch.diff, now applying to container...
+2026-06-07 13:12:29,256 - INFO - Test output for crewaiinc__crewai-2594 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2594/test_analysis_agent_6/test_output.txt
+2026-06-07 13:12:29,335 - INFO - Git diff after:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 6fab2cec5..5b6ca3570 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1214,6 +1214,17 @@ class Crew(BaseModel):
+ 
+         copied_data = self.model_dump(exclude=exclude)
+         copied_data = {k: v for k, v in copied_data.items() if v is not None}
++        if self.short_term_memory:
++            copied_data["short_term_memory"] = self.short_term_memory.model_copy(deep=True)
++        if self.long_term_memory:
++            copied_data["long_term_memory"] = self.long_term_memory.model_copy(deep=True)
++        if self.entity_memory:
++            copied_data["entity_memory"] = self.entity_memory.model_copy(deep=True)
++        if self.external_memory:
++            copied_data["external_memory"] = self.external_memory.model_copy(deep=True)
++        if self.user_memory:
++            copied_data["user_memory"] = self.user_memory.model_copy(deep=True)
++
+ 
+         copied_data.pop("agents", None)
+         copied_data.pop("tasks", None)
+diff --git a/tests/crew_test.py b/tests/crew_test.py
+index d7e4740cd..d0eebe42e 100644
+--- a/tests/crew_test.py
++++ b/tests/crew_test.py
+@@ -3,6 +3,7 @@
+ import hashlib
+ import json
+ import os
++import tempfile
+ from concurrent.futures import Future
+ from unittest import mock
+ from unittest.mock import MagicMock, patch
+@@ -19,6 +20,7 @@ from crewai.crews.crew_output import CrewOutput
+ from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
+ from crewai.llm import LLM
+ from crewai.memory.contextual.contextual_memory import ContextualMemory
++from crewai.memory.short_term.short_term_memory import ShortTermMemory
+ from crewai.process import Process
+ from crewai.task import Task
+ from crewai.tasks.conditional_task import ConditionalTask
+@@ -4116,6 +4118,54 @@ def test_crew_kickoff_for_each_works_with_manager_agent_copy():
+     assert crew_copy.manager_agent.id != crew.manager_agent.id
+     assert crew_copy.manager_agent.role == crew.manager_agent.role
+     assert crew_copy.manager_agent.goal == crew.manager_agent.goal
+-    assert crew_copy.manager_agent.backstory == crew.manager_agent.backstory
+-    assert isinstance(crew_copy.manager_agent.agent_executor, CrewAgentExecutor)
+-    assert isinstance(crew_copy.manager_agent.cache_handler, CacheHandler)
++
++def test_crew_copy_with_memory():
++    """Test that copying a crew with memory enabled does not raise validation errors and copies memory correctly."""
++    agent = Agent(role="Test Agent", goal="Test Goal", backstory="Test Backstory")
++    task = Task(description="Test Task", expected_output="Test Output", agent=agent)
++    crew = Crew(agents=[agent], tasks=[task], memory=True)
++
++    original_short_term_id = id(crew._short_term_memory) if crew._short_term_memory else None
++    original_long_term_id = id(crew._long_term_memory) if crew._long_term_memory else None
++    original_entity_id = id(crew._entity_memory) if crew._entity_memory else None
++    original_external_id = id(crew._external_memory) if crew._external_memory else None
++    original_user_id = id(crew._user_memory) if crew._user_memory else None
++
++
++    try:
++        crew_copy = crew.copy()
++
++        assert hasattr(crew_copy, "_short_term_memory"), "Copied crew should have _short_term_memory"
++        assert crew_copy._short_term_memory is not None, "Copied _short_term_memory should not be None"
++        assert id(crew_copy._short_term_memory) != original_short_term_id, "Copied _short_term_memory should be a new object"
++
++        assert hasattr(crew_copy, "_long_term_memory"), "Copied crew should have _long_term_memory"
++        assert crew_copy._long_term_memory is not None, "Copied _long_term_memory should not be None"
++        assert id(crew_copy._long_term_memory) != original_long_term_id, "Copied _long_term_memory should be a new object"
++
++        assert hasattr(crew_copy, "_entity_memory"), "Copied crew should have _entity_memory"
++        assert crew_copy._entity_memory is not None, "Copied _entity_memory should not be None"
++        assert id(crew_copy._entity_memory) != original_entity_id, "Copied _entity_memory should be a new object"
++
++        if original_external_id:
++             assert hasattr(crew_copy, "_external_memory"), "Copied crew should have _external_memory"
++             assert crew_copy._external_memory is not None, "Copied _external_memory should not be None"
++             assert id(crew_copy._external_memory) != original_external_id, "Copied _external_memory should be a new object"
++        else:
++             assert not hasattr(crew_copy, "_external_memory") or crew_copy._external_memory is None, "Copied _external_memory should be None if not originally present"
++
++        if original_user_id:
++             assert hasattr(crew_copy, "_user_memory"), "Copied crew should have _user_memory"
++             assert crew_copy._user_memory is not None, "Copied _user_memory should not be None"
++             assert id(crew_copy._user_memory) != original_user_id, "Copied _user_memory should be a new object"
++        else:
++             assert not hasattr(crew_copy, "_user_memory") or crew_copy._user_memory is None, "Copied _user_memory should be None if not originally present"
++
++
++    except pydantic_core.ValidationError as e:
++         if "Input should be an instance of" in str(e) and ("Memory" in str(e)):
++              pytest.fail(f"Copying with memory raised Pydantic ValidationError, likely due to incorrect memory copy: {e}")
++         else:
++              raise e # Re-raise other validation errors
++    except Exception as e:
++        pytest.fail(f"Copying crew raised an unexpected exception: {e}")
+2026-06-07 13:12:29,335 - INFO - Git diff changed after running eval script
+2026-06-07 13:12:29,335 - INFO - Attempting to stop container crewaiinc__crewai-2594-test4...
+2026-06-07 13:13:07,337 - INFO - Attempting to remove container crewaiinc__crewai-2594-test4...
+2026-06-07 13:13:07,354 - INFO - Container crewaiinc__crewai-2594-test4 removed.
+2026-06-07 13:13:07,354 - INFO - Attempting to remove image crewaiinc__crewai-2594-dockerfile6:latest...
+2026-06-07 13:13:17,821 - INFO - Image crewaiinc__crewai-2594-dockerfile6:latest removed.

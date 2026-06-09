@@ -1,0 +1,66 @@
+2026-06-07 11:54:53,499 - INFO - Checking if image crewaiinc__crewai-2570-dockerfile1:latest exists locally...
+2026-06-07 11:54:53,501 - INFO - Image crewaiinc__crewai-2570-dockerfile1:latest found locally.
+2026-06-07 11:54:53,501 - INFO - Creating container for crewaiinc__crewai-2570...
+2026-06-07 11:54:54,278 - INFO - Container for crewaiinc__crewai-2570 started: c8ce4b154520d2a8d510477c1303590362db6c87a1190c60a3f362c8fa64d3ad
+2026-06-07 11:54:54,278 - INFO - Intermediate patch for crewaiinc__crewai-2570 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2570/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:54:54,739 - INFO - Apply patch success:
+Checking patch src/crewai/tools/base_tool.py...
+Applied patch src/crewai/tools/base_tool.py cleanly.
+
+2026-06-07 11:54:55,224 - INFO - Git diff before:
+diff --git a/src/crewai/tools/base_tool.py b/src/crewai/tools/base_tool.py
+index 2d6526266..0e8a7a22b 100644
+--- a/src/crewai/tools/base_tool.py
++++ b/src/crewai/tools/base_tool.py
+@@ -1,3 +1,4 @@
++import asyncio
+ import warnings
+ from abc import ABC, abstractmethod
+ from inspect import signature
+@@ -65,7 +66,13 @@ class BaseTool(BaseModel, ABC):
+         **kwargs: Any,
+     ) -> Any:
+         print(f"Using Tool: {self.name}")
+-        return self._run(*args, **kwargs)
++        result = self._run(*args, **kwargs)
++
++        # If _run is async, we safely run it
++        if asyncio.iscoroutine(result):
++            return asyncio.run(result)
++
++        return result
+ 
+     @abstractmethod
+     def _run(
+2026-06-07 11:54:55,225 - INFO - Eval script for crewaiinc__crewai-2570 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2570/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:57:26,200 - INFO - Test output for crewaiinc__crewai-2570 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2570/test_analysis_agent_1/test_output.txt
+2026-06-07 11:57:26,349 - INFO - Git diff after:
+diff --git a/src/crewai/tools/base_tool.py b/src/crewai/tools/base_tool.py
+index 2d6526266..0e8a7a22b 100644
+--- a/src/crewai/tools/base_tool.py
++++ b/src/crewai/tools/base_tool.py
+@@ -1,3 +1,4 @@
++import asyncio
+ import warnings
+ from abc import ABC, abstractmethod
+ from inspect import signature
+@@ -65,7 +66,13 @@ class BaseTool(BaseModel, ABC):
+         **kwargs: Any,
+     ) -> Any:
+         print(f"Using Tool: {self.name}")
+-        return self._run(*args, **kwargs)
++        result = self._run(*args, **kwargs)
++
++        # If _run is async, we safely run it
++        if asyncio.iscoroutine(result):
++            return asyncio.run(result)
++
++        return result
+ 
+     @abstractmethod
+     def _run(
+2026-06-07 11:57:26,349 - INFO - Attempting to stop container crewaiinc__crewai-2570-test1...
+2026-06-07 11:58:02,441 - INFO - Attempting to remove container crewaiinc__crewai-2570-test1...
+2026-06-07 11:58:07,402 - INFO - Container crewaiinc__crewai-2570-test1 removed.
+2026-06-07 11:58:07,627 - INFO - Attempting to remove image crewaiinc__crewai-2570-dockerfile1:latest...
+2026-06-07 11:58:23,730 - INFO - Image crewaiinc__crewai-2570-dockerfile1:latest removed.

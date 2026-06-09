@@ -1,0 +1,121 @@
+2026-06-07 12:07:31,737 - INFO - Checking if image crewaiinc__crewai-2553-dockerfile2:latest exists locally...
+2026-06-07 12:07:31,740 - INFO - Image crewaiinc__crewai-2553-dockerfile2:latest found locally.
+2026-06-07 12:07:31,741 - INFO - Creating container for crewaiinc__crewai-2553...
+2026-06-07 12:07:32,335 - INFO - Container for crewaiinc__crewai-2553 started: 0c10aebb819f40b84242577cbce565c9b219816611e72cec1b5cac00cbca0f29
+2026-06-07 12:07:32,335 - INFO - Intermediate patch for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 12:07:32,799 - INFO - Apply patch success:
+Checking patch src/crewai/memory/external/external_memory.py...
+Checking patch src/crewai/memory/memory.py...
+Applied patch src/crewai/memory/external/external_memory.py cleanly.
+Applied patch src/crewai/memory/memory.py cleanly.
+
+2026-06-07 12:07:33,272 - INFO - Git diff before:
+diff --git a/src/crewai/memory/external/external_memory.py b/src/crewai/memory/external/external_memory.py
+index 4ecf3d065..be35f513b 100644
+--- a/src/crewai/memory/external/external_memory.py
++++ b/src/crewai/memory/external/external_memory.py
+@@ -1,4 +1,4 @@
+-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
++from typing import TYPE_CHECKING, Any, Dict, Optional
+ 
+ from crewai.memory.external.external_memory_item import ExternalMemoryItem
+ from crewai.memory.memory import Memory
+@@ -52,7 +52,7 @@ class ExternalMemory(Memory):
+     def reset(self) -> None:
+         self.storage.reset()
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "ExternalMemory":
+         super().set_crew(crew)
+ 
+         if not self.storage:
+diff --git a/src/crewai/memory/memory.py b/src/crewai/memory/memory.py
+index ba8c10a29..20538a186 100644
+--- a/src/crewai/memory/memory.py
++++ b/src/crewai/memory/memory.py
+@@ -1,4 +1,4 @@
+-from typing import Any, Dict, List, Optional, Self
++from typing import Any, Dict, List, Optional
+ 
+ from pydantic import BaseModel
+ 
+@@ -38,6 +38,6 @@ class Memory(BaseModel):
+             query=query, limit=limit, score_threshold=score_threshold
+         )
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "Memory":
+         self.crew = crew
+         return self
+2026-06-07 12:07:33,273 - INFO - Eval script for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 12:09:35,975 - INFO - Test output for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_2/test_output.txt
+2026-06-07 12:09:36,081 - INFO - Git diff after:
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index f655dcc64..9ee0e999a 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -12,6 +12,9 @@ jobs:
+   tests:
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
++    strategy:
++      matrix:
++        python-version: ['3.10', '3.11', '3.12']
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+@@ -21,9 +24,8 @@ jobs:
+         with:
+           enable-cache: true
+ 
+-
+-      - name: Set up Python
+-        run: uv python install 3.12.8
++      - name: Set up Python ${{ matrix.python-version }}
++        run: uv python install ${{ matrix.python-version }}
+ 
+       - name: Install the project
+         run: uv sync --dev --all-extras
+diff --git a/src/crewai/memory/external/external_memory.py b/src/crewai/memory/external/external_memory.py
+index 4ecf3d065..be35f513b 100644
+--- a/src/crewai/memory/external/external_memory.py
++++ b/src/crewai/memory/external/external_memory.py
+@@ -1,4 +1,4 @@
+-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
++from typing import TYPE_CHECKING, Any, Dict, Optional
+ 
+ from crewai.memory.external.external_memory_item import ExternalMemoryItem
+ from crewai.memory.memory import Memory
+@@ -52,7 +52,7 @@ class ExternalMemory(Memory):
+     def reset(self) -> None:
+         self.storage.reset()
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "ExternalMemory":
+         super().set_crew(crew)
+ 
+         if not self.storage:
+diff --git a/src/crewai/memory/memory.py b/src/crewai/memory/memory.py
+index ba8c10a29..20538a186 100644
+--- a/src/crewai/memory/memory.py
++++ b/src/crewai/memory/memory.py
+@@ -1,4 +1,4 @@
+-from typing import Any, Dict, List, Optional, Self
++from typing import Any, Dict, List, Optional
+ 
+ from pydantic import BaseModel
+ 
+@@ -38,6 +38,6 @@ class Memory(BaseModel):
+             query=query, limit=limit, score_threshold=score_threshold
+         )
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "Memory":
+         self.crew = crew
+         return self
+2026-06-07 12:09:36,081 - INFO - Git diff changed after running eval script
+2026-06-07 12:09:36,081 - INFO - Attempting to stop container crewaiinc__crewai-2553-test2...
+2026-06-07 12:10:08,005 - INFO - Attempting to remove container crewaiinc__crewai-2553-test2...
+2026-06-07 12:10:10,183 - INFO - Container crewaiinc__crewai-2553-test2 removed.
+2026-06-07 12:10:10,184 - INFO - Attempting to remove image crewaiinc__crewai-2553-dockerfile2:latest...
+2026-06-07 12:10:39,686 - INFO - Image crewaiinc__crewai-2553-dockerfile2:latest removed.

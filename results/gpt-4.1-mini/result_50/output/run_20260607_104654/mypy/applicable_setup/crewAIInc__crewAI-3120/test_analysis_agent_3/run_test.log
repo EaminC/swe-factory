@@ -1,0 +1,200 @@
+2026-06-07 13:01:29,462 - INFO - Checking if image crewaiinc__crewai-3120-dockerfile3:latest exists locally...
+2026-06-07 13:01:29,470 - INFO - Image crewaiinc__crewai-3120-dockerfile3:latest found locally.
+2026-06-07 13:01:29,472 - INFO - Creating container for crewaiinc__crewai-3120...
+2026-06-07 13:01:30,849 - INFO - Container for crewaiinc__crewai-3120 started: 537cf7357aaedd66edd249441ddebc24db77fe8f420967bad76b82854efb0325
+2026-06-07 13:01:30,849 - INFO - Intermediate patch for crewaiinc__crewai-3120 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3120/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 13:01:31,314 - INFO - Apply patch success:
+Checking patch src/crewai/lite_agent.py...
+Checking patch src/crewai/tasks/llm_guardrail.py...
+Applied patch src/crewai/lite_agent.py cleanly.
+Applied patch src/crewai/tasks/llm_guardrail.py cleanly.
+
+2026-06-07 13:01:32,395 - INFO - Git diff before:
+diff --git a/src/crewai/lite_agent.py b/src/crewai/lite_agent.py
+index 53b6ab4c9..b768b9985 100644
+--- a/src/crewai/lite_agent.py
++++ b/src/crewai/lite_agent.py
+@@ -28,7 +28,7 @@ from pydantic import (
+     InstanceOf,
+     PrivateAttr,
+     model_validator,
+-    field_validator,
++    field_validator
+ )
+ 
+ from crewai.agents.agent_builder.base_agent import BaseAgent
+@@ -40,7 +40,7 @@ from crewai.agents.parser import (
+     OutputParserException,
+ )
+ from crewai.flow.flow_trackable import FlowTrackable
+-from crewai.llm import LLM
++from crewai.llm import LLM, BaseLLM
+ from crewai.tools.base_tool import BaseTool
+ from crewai.tools.structured_tool import CrewStructuredTool
+ from crewai.utilities import I18N
+@@ -135,7 +135,7 @@ class LiteAgent(FlowTrackable, BaseModel):
+     role: str = Field(description="Role of the agent")
+     goal: str = Field(description="Goal of the agent")
+     backstory: str = Field(description="Backstory of the agent")
+-    llm: Optional[Union[str, InstanceOf[LLM], Any]] = Field(
++    llm: Optional[Union[str, InstanceOf[BaseLLM], Any]] = Field(
+         default=None, description="Language model that will run the agent"
+     )
+     tools: List[BaseTool] = Field(
+@@ -209,8 +209,8 @@ class LiteAgent(FlowTrackable, BaseModel):
+     def setup_llm(self):
+         """Set up the LLM and other components after initialization."""
+         self.llm = create_llm(self.llm)
+-        if not isinstance(self.llm, LLM):
+-            raise ValueError("Unable to create LLM instance")
++        if not isinstance(self.llm, BaseLLM):
++            raise ValueError(f"Expected LLM instance of type BaseLLM, got {type(self.llm).__name__}")
+ 
+         # Initialize callbacks
+         token_callback = TokenCalcHandler(token_cost_process=self._token_process)
+@@ -232,7 +232,8 @@ class LiteAgent(FlowTrackable, BaseModel):
+         elif isinstance(self.guardrail, str):
+             from crewai.tasks.llm_guardrail import LLMGuardrail
+ 
+-            assert isinstance(self.llm, LLM)
++            if not isinstance(self.llm, BaseLLM):
++                raise TypeError(f"Guardrail requires LLM instance of type BaseLLM, got {type(self.llm).__name__}")
+ 
+             self._guardrail = LLMGuardrail(description=self.guardrail, llm=self.llm)
+ 
+@@ -620,4 +621,4 @@ class LiteAgent(FlowTrackable, BaseModel):
+ 
+     def _append_message(self, text: str, role: str = "assistant") -> None:
+         """Append a message to the message list with the given role."""
+-        self._messages.append(format_message_for_llm(text, role=role))
++        self._messages.append(format_message_for_llm(text, role=role))
+\ No newline at end of file
+diff --git a/src/crewai/tasks/llm_guardrail.py b/src/crewai/tasks/llm_guardrail.py
+index 2bb948075..65aea7cec 100644
+--- a/src/crewai/tasks/llm_guardrail.py
++++ b/src/crewai/tasks/llm_guardrail.py
+@@ -1,10 +1,9 @@
+-from typing import Any, Optional, Tuple
++from typing import Any, Tuple
+ 
+ from pydantic import BaseModel, Field
+ 
+ from crewai.agent import Agent, LiteAgentOutput
+-from crewai.llm import LLM
+-from crewai.task import Task
++from crewai.llm import BaseLLM
+ from crewai.tasks.task_output import TaskOutput
+ 
+ 
+@@ -32,11 +31,11 @@ class LLMGuardrail:
+     def __init__(
+         self,
+         description: str,
+-        llm: LLM,
++        llm: BaseLLM,
+     ):
+         self.description = description
+ 
+-        self.llm: LLM = llm
++        self.llm: BaseLLM = llm
+ 
+     def _validate_output(self, task_output: TaskOutput) -> LiteAgentOutput:
+         agent = Agent(
+2026-06-07 13:01:32,396 - INFO - Eval script for crewaiinc__crewai-3120 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3120/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 13:02:03,264 - INFO - Test output for crewaiinc__crewai-3120 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3120/test_analysis_agent_3/test_output.txt
+2026-06-07 13:02:03,439 - INFO - Git diff after:
+diff --git a/src/crewai/lite_agent.py b/src/crewai/lite_agent.py
+index 53b6ab4c9..b768b9985 100644
+--- a/src/crewai/lite_agent.py
++++ b/src/crewai/lite_agent.py
+@@ -28,7 +28,7 @@ from pydantic import (
+     InstanceOf,
+     PrivateAttr,
+     model_validator,
+-    field_validator,
++    field_validator
+ )
+ 
+ from crewai.agents.agent_builder.base_agent import BaseAgent
+@@ -40,7 +40,7 @@ from crewai.agents.parser import (
+     OutputParserException,
+ )
+ from crewai.flow.flow_trackable import FlowTrackable
+-from crewai.llm import LLM
++from crewai.llm import LLM, BaseLLM
+ from crewai.tools.base_tool import BaseTool
+ from crewai.tools.structured_tool import CrewStructuredTool
+ from crewai.utilities import I18N
+@@ -135,7 +135,7 @@ class LiteAgent(FlowTrackable, BaseModel):
+     role: str = Field(description="Role of the agent")
+     goal: str = Field(description="Goal of the agent")
+     backstory: str = Field(description="Backstory of the agent")
+-    llm: Optional[Union[str, InstanceOf[LLM], Any]] = Field(
++    llm: Optional[Union[str, InstanceOf[BaseLLM], Any]] = Field(
+         default=None, description="Language model that will run the agent"
+     )
+     tools: List[BaseTool] = Field(
+@@ -209,8 +209,8 @@ class LiteAgent(FlowTrackable, BaseModel):
+     def setup_llm(self):
+         """Set up the LLM and other components after initialization."""
+         self.llm = create_llm(self.llm)
+-        if not isinstance(self.llm, LLM):
+-            raise ValueError("Unable to create LLM instance")
++        if not isinstance(self.llm, BaseLLM):
++            raise ValueError(f"Expected LLM instance of type BaseLLM, got {type(self.llm).__name__}")
+ 
+         # Initialize callbacks
+         token_callback = TokenCalcHandler(token_cost_process=self._token_process)
+@@ -232,7 +232,8 @@ class LiteAgent(FlowTrackable, BaseModel):
+         elif isinstance(self.guardrail, str):
+             from crewai.tasks.llm_guardrail import LLMGuardrail
+ 
+-            assert isinstance(self.llm, LLM)
++            if not isinstance(self.llm, BaseLLM):
++                raise TypeError(f"Guardrail requires LLM instance of type BaseLLM, got {type(self.llm).__name__}")
+ 
+             self._guardrail = LLMGuardrail(description=self.guardrail, llm=self.llm)
+ 
+@@ -620,4 +621,4 @@ class LiteAgent(FlowTrackable, BaseModel):
+ 
+     def _append_message(self, text: str, role: str = "assistant") -> None:
+         """Append a message to the message list with the given role."""
+-        self._messages.append(format_message_for_llm(text, role=role))
++        self._messages.append(format_message_for_llm(text, role=role))
+\ No newline at end of file
+diff --git a/src/crewai/tasks/llm_guardrail.py b/src/crewai/tasks/llm_guardrail.py
+index 2bb948075..65aea7cec 100644
+--- a/src/crewai/tasks/llm_guardrail.py
++++ b/src/crewai/tasks/llm_guardrail.py
+@@ -1,10 +1,9 @@
+-from typing import Any, Optional, Tuple
++from typing import Any, Tuple
+ 
+ from pydantic import BaseModel, Field
+ 
+ from crewai.agent import Agent, LiteAgentOutput
+-from crewai.llm import LLM
+-from crewai.task import Task
++from crewai.llm import BaseLLM
+ from crewai.tasks.task_output import TaskOutput
+ 
+ 
+@@ -32,11 +31,11 @@ class LLMGuardrail:
+     def __init__(
+         self,
+         description: str,
+-        llm: LLM,
++        llm: BaseLLM,
+     ):
+         self.description = description
+ 
+-        self.llm: LLM = llm
++        self.llm: BaseLLM = llm
+ 
+     def _validate_output(self, task_output: TaskOutput) -> LiteAgentOutput:
+         agent = Agent(
+2026-06-07 13:02:03,440 - INFO - Attempting to stop container crewaiinc__crewai-3120-test1...
+2026-06-07 13:02:38,472 - INFO - Attempting to remove container crewaiinc__crewai-3120-test1...
+2026-06-07 13:02:43,294 - INFO - Container crewaiinc__crewai-3120-test1 removed.
+2026-06-07 13:02:43,295 - INFO - Attempting to remove image crewaiinc__crewai-3120-dockerfile3:latest...
+2026-06-07 13:02:48,006 - INFO - Image crewaiinc__crewai-3120-dockerfile3:latest removed.

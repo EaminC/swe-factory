@@ -1,0 +1,23 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Reset the target test files to the committed state before applying patch
+git checkout 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e "tests/test_project.py"
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment and run only the specified test file with pytest via uv run
+source /testbed/.venv/bin/activate
+uv run pytest -rA --tb=short --disable-warnings tests/test_project.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test files after running tests
+git checkout 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e "tests/test_project.py"
+</script>

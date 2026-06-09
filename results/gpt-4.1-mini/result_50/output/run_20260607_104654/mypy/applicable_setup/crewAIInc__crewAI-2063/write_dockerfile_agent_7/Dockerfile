@@ -1,0 +1,70 @@
+# Base image specification. Using ubuntu 22.04 for stability and bash availability
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install software-properties-common to add PPA
+RUN apt-get update && apt-get install -y software-properties-common
+
+# Add deadsnakes PPA to get python3.12 packages
+RUN add-apt-repository ppa:deadsnakes/ppa -y
+
+# Update apt and install required packages including python3.12 and its core components.
+# Note: python3.12-distutils package is not available; distutils is not detected as required from context.
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.12 \
+    python3.12-venv \
+    python3-distutils \
+    python3-pip \
+    python3.12-dev \
+    python3-setuptools \
+    ca-certificates \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 and python point to python3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+
+# Upgrade pip (distutils module required should be available in installed packages)
+RUN python3 -m pip install --upgrade pip
+
+# Set environment variables placeholders to be overridden externally
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=""
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the target repo and checkout specific commit
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed && \
+    cd /testbed && \
+    git reset --hard 6f4ad532e615a961ae7c5d57da48bb7209e3598b && \
+    git remote remove origin
+
+# Create python virtual environment named testbed-venv
+RUN python3 -m venv /testbed/testbed-venv
+
+# Activate the virtual env and install required dependencies and the repo itself in editable mode
+RUN /bin/bash -c "source /testbed/testbed-venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install pydantic>=2.4.2 openai>=1.13.3 litellm==1.60.2 instructor>=1.3.3 pdfplumber>=0.11.4 regex>=2024.9.11 \
+    opentelemetry-api>=1.22.0 opentelemetry-sdk>=1.22.0 opentelemetry-exporter-otlp-proto-http>=1.22.0 chromadb>=0.5.23 \
+    openpyxl>=3.1.5 pyvis>=0.3.2 auth0-python>=4.7.1 python-dotenv>=1.0.0 click>=8.1.7 appdirs>=1.4.4 jsonref>=1.1.0 json-repair>=0.25.2 uv>=0.4.25 tomli-w>=1.1.0 tomli>=2.0.2 blinker>=1.9.0 json5>=0.10.0 && \
+    pip install ruff>=0.8.2 mypy>=1.10.0 pre-commit>=3.6.0 pillow>=10.2.0 cairosvg>=2.7.1 pytest>=8.0.0 pytest-vcr>=1.0.2 pytest-asyncio>=0.23.7 pytest-subprocess>=1.5.2 && \
+    pip install -e ."
+
+# Export environment activation for interactive bash sessions
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set default shell explicitly to bash
+SHELL ["/bin/bash", "-c"]

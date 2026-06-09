@@ -1,0 +1,28 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Checkout the specific commit to ensure clean state
+git checkout 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e
+
+# Apply test patch (replace [CONTENT OF TEST PATCH] with actual patch content at runtime)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Export required environment variables
+export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
+export SERPER_API_KEY="${SERPER_API_KEY:-}"
+export OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}"
+export share_crew="True"
+
+# Activate the virtual environment and run the specified test file(s)
+source /testbed/.venv/bin/activate
+uv run pytest tests/test_project.py --tb=short -rA --disable-warnings
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset repository state to the original commit after tests
+git reset --hard 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e

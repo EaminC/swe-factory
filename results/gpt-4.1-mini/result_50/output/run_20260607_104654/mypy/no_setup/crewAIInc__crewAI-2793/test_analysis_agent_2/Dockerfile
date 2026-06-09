@@ -1,0 +1,70 @@
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip, setuptools and wheel for better dependency management
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv tool globally for dependency management, and pre-commit for hooks setup
+RUN python3 -m pip install uv pre-commit
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout specific commit SHA (commit SHA is provided as build arg)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=fed397f74590a3f1c3be3bfca96e4967fe38a3e1
+
+RUN git clone "$REPO" /testbed/ \
+    && cd /testbed/ \
+    && git reset --hard "$COMMIT_SHA" \
+    && git remote remove origin
+
+# Use uv tool to handle locking, syncing and virtual environment creation (clear any existing venv)
+RUN UV_VENV_CLEAR=1 uv lock && \
+    UV_VENV_CLEAR=1 uv sync && \
+    UV_VENV_CLEAR=1 uv venv
+
+# Activate the virtual environment and install 'crewai[tools]' and the repository itself in editable mode
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install 'crewai[tools]' && pip install -e ."
+
+# Install pre-commit hooks inside the virtual environment; ignore errors if pre-commit not configured
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pre-commit install || true"
+
+# Placeholders for API keys, to be set externally by user or CI
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Disable telemetry as recommended by environment notes
+ENV OTEL_SDK_DISABLED=true
+
+# Automatically activate virtual environment for root on bash shell start
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Confirm default working directory
+WORKDIR /testbed/

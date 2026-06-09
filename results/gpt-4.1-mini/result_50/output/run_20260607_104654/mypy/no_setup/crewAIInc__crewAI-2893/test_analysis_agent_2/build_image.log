@@ -1,0 +1,91 @@
+2026-06-07 12:43:01,465 - INFO - Building image crewaiinc__crewai-2893
+Using dockerfile:
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip, setuptools and wheel for better dependency management
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv tool globally for dependency and virtual environment management
+RUN python3 -m pip install uv
+
+# Set working directory
+WORKDIR /testbed/
+
+# Arguments to specify repository and commit SHA to checkout
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=9a6557395595f2491ea253048acf65442ed70418
+
+# Clone repository and checkout specified commit. Remove origin to prevent accidental pushes
+RUN git clone "$REPO" /testbed/ \
+    && cd /testbed/ \
+    && git reset --hard "$COMMIT_SHA" \
+    && git remote remove origin
+
+# Use uv tool to lock dependencies, sync (with all extras and dev), and create virtual environment
+RUN UV_VENV_CLEAR=1 uv lock && \
+    UV_VENV_CLEAR=1 uv sync --dev --all-extras && \
+    UV_VENV_CLEAR=1 uv venv
+
+# Activate virtual environment and install the local package in editable mode only (no pre-install from PyPI)
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install -e ."
+
+# Install pre-commit hooks inside the virtual environment, ignoring failure to avoid build failures
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pre-commit install || true"
+
+# Setup environment variables placeholders for required API keys and telemetry disabled flag
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=true
+
+# Add environment activation command to root bashrc for convenience in interactive sessions
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Confirm working directory
+WORKDIR /testbed/
+
+2026-06-07 12:43:01,471 - INFO - Do not find previous image, images list is clean.
+2026-06-07 12:43:01,536 - INFO - Step 1/20 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-07 12:43:11,057 - INFO -  ---> 86f1a8d7b38e
+2026-06-07 12:43:11,057 - INFO - Step 2/20 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-07 12:43:32,751 - INFO -  ---> Running in 637f058ecaac
+2026-06-07 12:43:37,577 - INFO -  ---> Removed intermediate container 637f058ecaac
+2026-06-07 12:43:37,577 - INFO -  ---> 286d34faffb8
+2026-06-07 12:43:37,577 - INFO - Step 3/20 : ENV TZ=Etc/UTC
+2026-06-07 12:43:59,866 - INFO -  ---> Running in da03adcdf4fd
+2026-06-07 12:44:03,258 - INFO -  ---> Removed intermediate container da03adcdf4fd
+2026-06-07 12:44:03,259 - INFO -  ---> a413145e30fe
+2026-06-07 12:44:03,259 - INFO - Step 4/20 : SHELL ["/bin/bash", "-c"]
+2026-06-07 12:44:08,494 - INFO -  ---> Running in 8eee431a497c
+2026-06-07 12:44:12,965 - INFO -  ---> Removed intermediate container 8eee431a497c
+2026-06-07 12:44:12,966 - INFO -  ---> f0146faafc23
+2026-06-07 12:44:12,966 - INFO - Step 5/20 : RUN apt-get update && apt-get install -y     git     wget     build-essential     curl     ca-certificates     locales     locales-all     tzdata     python3.11     python3.11-venv     python3.11-distutils     python3-pip     python3.11-dev     pkg-config     rustc     cargo     && rm -rf /var/lib/apt/lists/*
+2026-06-07 12:44:12,966 - ERROR - Error: No such image: sha256:f0146faafc23f4bf5439015478571c71fb94ecfd32a42c86e67fbea7c03b4d8d
+2026-06-07 12:44:12,966 - ERROR - No such image: sha256:f0146faafc23f4bf5439015478571c71fb94ecfd32a42c86e67fbea7c03b4d8d

@@ -1,0 +1,28 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the target test files to the specified commit to ensure a clean state
+git checkout 6f4ad532e615a961ae7c5d57da48bb7209e3598b "tests/llm_test.py"
+
+# Apply test patch (placeholder content to be replaced)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /testbed/testbed-venv/bin/activate
+
+# Run only the specified test file with detailed and concise output
+# Use pytest with verbose output and show each test file's results clearly
+uv run pytest -v --tb=short tests/llm_test.py
+
+rc=$?  # Capture the exit code immediately after test run
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to the original commit state after testing (clean up)
+git checkout 6f4ad532e615a961ae7c5d57da48bb7209e3598b "tests/llm_test.py"
+</script>

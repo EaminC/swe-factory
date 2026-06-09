@@ -1,0 +1,35 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Only checkout the existing test file to avoid pathspec errors
+git checkout 2ab79a7dd5623fe3adde03469afb61caefed528b "tests/storage/test_mem0_storage.py"
+
+# Apply test patch (replace [CONTENT OF TEST PATCH] with actual patch content at runtime)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Export required environment variables for the tests to pass
+export OPENAI_API_KEY=""
+export SERPER_API_KEY=""
+export OPTIONAL_OTEL_SDK_DISABLED=true
+export OPTIONAL_share_crew=true
+
+# Activate the virtual environment explicitly
+source /testbed/.venv/bin/activate
+
+# Ensure pytest is installed in the virtual environment before running tests
+pip install pytest
+
+# Run only the specified existing test file with uv run pytest
+uv run pytest tests/storage/test_mem0_storage.py --tb=short -rA --disable-warnings
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset modified test files to original state after testing
+git checkout 2ab79a7dd5623fe3adde03469afb61caefed528b "tests/storage/test_mem0_storage.py"
+</script>

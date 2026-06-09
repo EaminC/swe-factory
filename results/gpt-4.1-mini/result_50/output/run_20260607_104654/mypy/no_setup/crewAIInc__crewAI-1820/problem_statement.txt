@@ -1,0 +1,141 @@
+[BUG] Manager LLM doesn't seem to be working properly
+### Description
+
+When used process="Hierarchical" and set an llm manager, it seems to give completely wrong answers and does not seem to delegate the query to other agents.
+
+### Steps to Reproduce
+
+1. Use latest version of CrewAI
+2. Run following code
+
+### Expected behavior
+
+The system should correctly identify that the question is about Futel and delegate the task to the Futel Official Infopoint agent. The Futel Official Infopoint agent will then provide the appropriate answer to the user.
+
+### Screenshots/Code snippets
+
+```
+KiropAgent = Agent(
+      role='Kirop Official Infopoint',
+      goal='Your goal is to answer questions about Kirop. The current question is ```{question}```. If it is not about Kirop, do not answer.',
+      backstory="""Kirop Football Club is an Italian football club based in the city of Kububi. It plays in Serie A, the top division of the Kubenian championship.
+      Founded in 1897 by a group of local high school students, it is the second oldest professional club still active in the country.
+      Its president is Kubens dei Cubeni.""",
+      verbose=True,
+      allow_delegation=False,
+      llm=LLM(model=f"azure/{LLM_MODEL_NAME}"),
+      max_iter=2
+    )
+
+FutelAgent = Agent(
+      role='Futel Official Infopoint',
+      goal='Your goal is to answer questions about Futel. The current question is ```{question}```. If it is not about Futel, do not answer.',
+      backstory="""Futel, better known as AC Futel, is a football club from the city of Fuffizia.
+      It plays in Serie A, the top division of the Kubenian championship. The original club was founded in 1926 by Marquis Luigi Futtelli.
+      Since 2019, the club has been owned by the Italian-Kubenian entrepreneur Rocs Coms.""",
+      verbose=True,
+      allow_delegation=False,
+      llm=LLM(model=f"azure/{LLM_MODEL_NAME}"),
+      max_iter=2,
+      tools=[]
+
+    )
+
+my_manager_agent = Agent(
+      role='Manager Agent',
+      goal="""Your goal is to understand which agent to use to correctly answer the user’s question. 
+      The current question is ```{question}```.""",
+      backstory="""Expert in correctly answering questions by selecting the right agent.""",
+      verbose=True,
+      allow_delegation=True,
+      llm=LLM(model=f"azure/{LLM_MODEL_NAME}"),
+      max_iter=2
+    )
+
+    # Create tasks for your agents
+task1 = Task(
+      description="""Answer the user’s question: ```{question}```.
+      Use the Kirop Official Infopoint agent to answer questions about Kirop.
+      Use the Futel Official Infopoint agent to answer questions about Futel.""",
+      expected_output="Output to the user’s question",
+    )
+
+crew = Crew(
+      agents=[KiropAgent, FutelAgent],
+      tasks=[task1],
+      verbose=True,
+      process = Process.hierarchical,
+      manager_agent=my_manager_agent
+    )
+
+crew.kickoff(inputs={"question": "When was Futel founded?"})
+```
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.76.2
+
+### crewAI Tools Version
+
+0.13.2
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+
+This is the answer:
+
+```
+# Agent: Manager Agent
+## Task: Answer the user’s question: ```When was Futel founded?```.
+      Use the Kirop Official Infopoint agent to answer questions about Kirop.
+      Use the Futel Official Infopoint agent to answer questions about Futel.
+
+
+# Agent: Manager Agent
+## Thought: To answer the user's question about when Futel was founded, I need to ask the Futel Official Infopoint for this specific information, as it falls under their expertise.
+## Using tool: Ask question to coworker
+## Tool Input: 
+"{\"name\": \"Futel Official Infopoint\", \"question\": \"When was Futel founded?\", \"context\": \"\"}"
+## Tool Output: 
+
+Error executing tool. coworker mentioned not found, it must be one of the following options:
+- kirop official infopoint
+- futel official infopoint
+
+
+
+# Agent: Manager Agent
+## Thought: Thought: I need to rephrase the action to correctly reference "Futel Official Infopoint" in the appropriate format for the system.
+## Using tool: Ask question to coworker
+## Tool Input: 
+"{\"name\": \"Futel Official Infopoint\", \"question\": \"When was Futel founded?\", \"context\": \"\"}"
+## Tool Output: 
+I tried reusing the same input, I must stop using this action input. I'll try something else instead.
+
+
+
+
+# Agent: Manager Agent
+## Final Answer: 
+Futel was founded in 2016.
+```
+
+### Possible Solution
+
+None
+
+### Additional context
+
+Please, improve documentation and examples on manager llm, especially in tasks where collaboration between agents is required.

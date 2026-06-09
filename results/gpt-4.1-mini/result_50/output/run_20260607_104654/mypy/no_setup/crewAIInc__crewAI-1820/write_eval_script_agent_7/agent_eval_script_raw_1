@@ -1,0 +1,46 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Define the test files and determine which exist in the repository at the specific commit
+TEST_FILES=("tests/crew_test.py" "tests/test_manager_llm_delegation.py")
+EXISTING_TEST_FILES=()
+
+for file in "${TEST_FILES[@]}"; do
+  if git cat-file -e "73f328860b4a477a6d3736e646783d7493841cb4:$file" 2>/dev/null; then
+    EXISTING_TEST_FILES+=("$file")
+  fi
+done
+
+# Checkout only existing test files to avoid git errors
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi
+
+# Apply the test patch; replace [CONTENT OF TEST PATCH] with actual patch content at runtime
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment as configured in Dockerfile
+source /testbed/testbed_venv/bin/activate
+
+# Export required environment variables with placeholders; these MUST be set externally to valid keys
+export OPENAI_API_KEY="${OPENAI_API_KEY:-your_openai_api_key_here}"
+export SERPER_API_KEY="${SERPER_API_KEY:-your_serper_api_key_here}"
+export OTEL_SDK_DISABLED="true"
+export OPTIONAL_share_crew=true
+
+# Run tests only on the specified test files; include untracked files if present
+uv run pytest -rA --tb=short --disable-warnings "${TEST_FILES[@]}"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Revert any changes to existing test files to restore original state
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi
+</script>

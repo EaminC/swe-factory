@@ -1,0 +1,39 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Define test files and check existence in git at the commit
+TEST_FILES=("tests/crew_test.py" "tests/test_manager_llm_delegation.py")
+EXISTING_TEST_FILES=()
+
+for file in "${TEST_FILES[@]}"; do
+  if git cat-file -e "73f328860b4a477a6d3736e646783d7493841cb4:$file" 2>/dev/null; then
+    EXISTING_TEST_FILES+=("$file")
+  fi
+done
+
+# Checkout only existing test files, to avoid git errors
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment and run only the specified test files with pytest via uv
+source /testbed/testbed_venv/bin/activate
+
+# Run pytest only on the originally requested test files (even if some are missing in git, they might be in FS)
+uv run pytest -rA --tb=short --disable-warnings "${TEST_FILES[@]}"
+rc=$?            #Required, save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc" #Required, echo test status
+
+# Revert only files that existed in git to avoid errors
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi
+</script>

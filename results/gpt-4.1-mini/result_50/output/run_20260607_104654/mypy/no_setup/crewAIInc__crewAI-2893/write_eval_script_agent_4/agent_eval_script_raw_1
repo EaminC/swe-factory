@@ -1,0 +1,37 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the specified test file to the committed state before applying patch
+git checkout 9a6557395595f2491ea253048acf65442ed70418 "tests/storage/test_mem0_storage.py"
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Export required environment variables for the tests
+export OPENAI_API_KEY=""
+export SERPER_API_KEY=""
+export OTEL_SDK_DISABLED="true"
+
+# Activate virtual environment
+source /testbed/.venv/bin/activate
+
+# Verify that the 'mem0ai' package is installed and visible within the virtual environment
+pip list | tee /dev/stderr | grep -i 'mem0ai' || (echo "mem0ai package is not installed" >&2; exit 1)
+
+# Verify importability of mem0 module to catch import issues early
+python3 -c "import mem0" || (echo "Failed to import mem0 module" >&2; exit 1)
+
+# Run only the specified test file using uv run pytest with concise output showing per file status
+uv run pytest tests/storage/test_mem0_storage.py --tb=short -rA --disable-warnings
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to committed state after test run
+git checkout 9a6557395595f2491ea253048acf65442ed70418 "tests/storage/test_mem0_storage.py"
+</script>

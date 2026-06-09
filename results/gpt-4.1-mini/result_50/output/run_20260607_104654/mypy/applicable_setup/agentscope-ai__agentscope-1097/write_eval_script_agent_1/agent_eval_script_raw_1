@@ -1,0 +1,30 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Restore target test files to the committed state before patching
+git checkout f44b10fcf8d88b2be1cb4474598bf5875242d21d "tests/model_dashscope_test.py" "tests/model_gemini_test.py" "tests/model_ollama_test.py"
+
+# Apply the provided test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate python venv environment
+source /testbed/.venv/bin/activate
+
+# Run pytest only on the specified test files with concise output showing pass/fail/skip for each test file
+pytest -q --tb=short --disable-warnings \
+  tests/model_dashscope_test.py \
+  tests/model_gemini_test.py \
+  tests/model_ollama_test.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset target test files again to clean state after test run
+git checkout f44b10fcf8d88b2be1cb4474598bf5875242d21d "tests/model_dashscope_test.py" "tests/model_gemini_test.py" "tests/model_ollama_test.py"
+</script>

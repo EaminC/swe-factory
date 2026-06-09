@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The pytest command in the eval script attempts to run tests by specifying the file \"tests/config/agents.yaml\" which is a YAML file, not a Python test file or collected test directory. Pytest does not recognize YAML files as test files and therefore runs zero tests (see log line 45 \"collected 0 items\" and line 48 \"ERROR: not found: /testbed/tests/config/agents.yaml\"). Additionally, the error message \"ERROR: not found: /testbed/tests/config/agents.yaml (no match in any of [<Dir config>])\" indicates pytest cannot interpret this YAML file as test input. To fix this, revise the eval script to ensure pytest is only run on valid Python test files or directories containing tests. Since the target includes \"tests/config/agents.yaml\", it may not be a pytest test file but rather a configuration needed by tests. Instead, run pytest only on \"tests/project_test.py\" or on test directories with recognized test files. Also verify the correct command or test runner is used for any non-Python test files or configurations if they require separate handling. Finally, maintain the capturing of exit code and echoing OMNIGRIL_EXIT_CODE. Example correction: change the pytest command to run only on valid test files such as \"pytest -v -rA tests/project_test.py\" and do not include the YAML config file as a test target.",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": true
+}

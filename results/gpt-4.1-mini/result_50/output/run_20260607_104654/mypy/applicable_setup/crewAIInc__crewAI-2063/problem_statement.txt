@@ -1,0 +1,109 @@
+[BUG] Human feedback errors when using training
+### Description
+
+When trying to train, the following error occurs:
+
+`LiteLLM.Info: If you need to debug this error, use `litellm.set_verbose=True'.
+
+2025-01-09 14:07:54,742 - 8295578304 - llm.py-llm:187 - ERROR: LiteLLM call failed: litellm.BadRequestError: AnthropicException - Invalid first message=[]. Should always start with 'role'='user' for Anthropic. System prompt is sent separately for Anthropic. set 'litellm.modify_params = True' or 'litellm_settings:modify_params = True' on proxy, to insert a placeholder user message - '.' as the first message, 
+Received Messages=[]
+ Error during LLM call to classify human feedback: litellm.BadRequestError: AnthropicException - Invalid first message=[]. Should always start with 'role'='user' for Anthropic. System prompt is sent separately for Anthropic. set 'litellm.modify_params = True' or 'litellm_settings:modify_params = True' on proxy, to insert a placeholder user message - '.' as the first message, 
+Received Messages=[]. Retrying... (2/3)`
+
+### Steps to Reproduce
+
+Create crew and run with train, provide feedback on 'looks good'
+
+### Expected behavior
+
+Should store training
+
+### Screenshots/Code snippets
+
+`from crewai import Agent, Task, Crew, LLM
+from crewai_tools import (
+	DirectoryReadTool,
+	FileReadTool,
+	CodeInterpreterTool
+)
+from langchain_openai import ChatOpenAI
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+
+# Create an agent with code execution enabled
+coding_agent = Agent(
+    role="Python Data Analyst",
+    goal="Analyze the median Salary of participants. Must read the dataset.csv file from directory.",
+    backstory="You are an experienced data analyst with strong Python skills. Assume Python 3.12",
+    tools=[FileReadTool(), CodeInterpreterTool(), DirectoryReadTool(directory='./data')],
+    allow_code_execution=True,
+    max_retry_limit=3,
+    verbose=True,
+    llm=LLM(
+        model="anthropic/claude-3-5-sonnet-20240620",
+        temperature=0.1
+    ),
+)
+
+# Create a task that requires code execution
+data_analysis_task = Task(
+    description="""
+    Analyze the dataset.csv file and calculate the median salary of participants.
+    Important: When using f-strings in Python code, ensure all quotes are properly escaped.
+    Use triple quotes for multi-line strings to avoid syntax errors.
+    """,
+    human_input=False,
+    expected_output="A markdown table showing the median salary of participants.",
+    agent=coding_agent
+)
+
+# Create a crew with memory disabled to prevent loop persistence
+analysis_crew = Crew(
+    agents=[coding_agent],
+    tasks=[data_analysis_task],
+    manager_llm=ChatOpenAI(model="gpt-4"),
+    verbose=True,
+    memory=True
+)
+
+# Execute the crew
+result = analysis_crew.train(n_iterations=3, filename='./data/training.pkl')
+print(result)
+`
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.95.0
+
+### crewAI Tools Version
+
+0.25.8
+
+### Virtual Environment
+
+Poetry
+
+### Evidence
+
+![Screenshot 2025-01-09 at 2 14 40 pm](https://github.com/user-attachments/assets/f9960383-1b35-41ad-ad78-5e2aec02d00d)
+
+
+### Possible Solution
+
+No idea.
+
+### Additional context
+
+-

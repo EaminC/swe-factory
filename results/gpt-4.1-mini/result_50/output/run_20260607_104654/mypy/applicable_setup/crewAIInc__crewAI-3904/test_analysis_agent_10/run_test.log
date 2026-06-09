@@ -1,0 +1,152 @@
+2026-06-07 14:28:23,439 - INFO - Checking if image crewaiinc__crewai-3904-dockerfile10:latest exists locally...
+2026-06-07 14:28:23,443 - INFO - Image crewaiinc__crewai-3904-dockerfile10:latest found locally.
+2026-06-07 14:28:23,443 - INFO - Creating container for crewaiinc__crewai-3904...
+2026-06-07 14:28:24,008 - INFO - Container for crewaiinc__crewai-3904 started: d3db32effa806a472cf5bd7df27bcea01959f5069d5319c5b785c4573194f908
+2026-06-07 14:28:24,008 - INFO - Intermediate patch for crewaiinc__crewai-3904 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3904/test_analysis_agent_10/patch.diff, now applying to container...
+2026-06-07 14:28:24,294 - INFO - Apply patch success:
+Checking patch lib/crewai/src/crewai/a2a/config.py...
+Checking patch lib/crewai/src/crewai/a2a/wrapper.py...
+Applied patch lib/crewai/src/crewai/a2a/config.py cleanly.
+Applied patch lib/crewai/src/crewai/a2a/wrapper.py cleanly.
+
+2026-06-07 14:28:25,674 - INFO - Git diff before:
+diff --git a/lib/crewai/src/crewai/a2a/config.py b/lib/crewai/src/crewai/a2a/config.py
+index 0d7470dbf..c53602882 100644
+--- a/lib/crewai/src/crewai/a2a/config.py
++++ b/lib/crewai/src/crewai/a2a/config.py
+@@ -38,6 +38,7 @@ class A2AConfig(BaseModel):
+         max_turns: Maximum conversation turns with A2A agent (default: 10).
+         response_model: Optional Pydantic model for structured A2A agent responses.
+         fail_fast: If True, raise error when agent unreachable; if False, skip and continue (default: True).
++        trust_remote_completion_status: If True, return A2A agent's result directly when status is "completed"; if False, always ask server agent to respond (default: False).
+     """
+ 
+     endpoint: Url = Field(description="A2A agent endpoint URL")
+@@ -57,3 +58,7 @@ class A2AConfig(BaseModel):
+         default=True,
+         description="If True, raise an error immediately when the A2A agent is unreachable. If False, skip the A2A agent and continue execution.",
+     )
++    trust_remote_completion_status: bool = Field(
++        default=False,
++        description='If True, return the A2A agent\'s result directly when status is "completed" without asking the server agent to respond. If False, always ask the server agent to respond, allowing it to potentially delegate again.',
++    )
+diff --git a/lib/crewai/src/crewai/a2a/wrapper.py b/lib/crewai/src/crewai/a2a/wrapper.py
+index 3bbb0f8c7..82216233f 100644
+--- a/lib/crewai/src/crewai/a2a/wrapper.py
++++ b/lib/crewai/src/crewai/a2a/wrapper.py
+@@ -52,7 +52,7 @@ def wrap_agent_with_a2a_instance(agent: Agent) -> None:
+     Args:
+         agent: The agent instance to wrap
+     """
+-    original_execute_task = agent.execute_task.__func__
++    original_execute_task = agent.execute_task.__func__  # type: ignore[attr-defined]
+ 
+     @wraps(original_execute_task)
+     def execute_task_with_a2a(
+@@ -73,7 +73,7 @@ def wrap_agent_with_a2a_instance(agent: Agent) -> None:
+             Task execution result
+         """
+         if not self.a2a:
+-            return original_execute_task(self, task, context, tools)
++            return original_execute_task(self, task, context, tools)  # type: ignore[no-any-return]
+ 
+         a2a_agents, agent_response_model = get_a2a_agents_and_response_model(self.a2a)
+ 
+@@ -498,6 +498,23 @@ def _delegate_to_a2a(
+             conversation_history = a2a_result.get("history", [])
+ 
+             if a2a_result["status"] in ["completed", "input_required"]:
++                if (
++                    a2a_result["status"] == "completed"
++                    and agent_config.trust_remote_completion_status
++                ):
++                    result_text = a2a_result.get("result", "")
++                    final_turn_number = turn_num + 1
++                    crewai_event_bus.emit(
++                        None,
++                        A2AConversationCompletedEvent(
++                            status="completed",
++                            final_result=result_text,
++                            error=None,
++                            total_turns=final_turn_number,
++                        ),
++                    )
++                    return result_text  # type: ignore[no-any-return]
++
+                 final_result, next_request = _handle_agent_response_and_continue(
+                     self=self,
+                     a2a_result=a2a_result,
+2026-06-07 14:28:25,675 - INFO - Eval script for crewaiinc__crewai-3904 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3904/test_analysis_agent_10/patch.diff, now applying to container...
+2026-06-07 14:28:46,971 - INFO - Test output for crewaiinc__crewai-3904 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3904/test_analysis_agent_10/test_output.txt
+2026-06-07 14:28:47,096 - INFO - Git diff after:
+diff --git a/lib/crewai/src/crewai/a2a/config.py b/lib/crewai/src/crewai/a2a/config.py
+index 0d7470dbf..c53602882 100644
+--- a/lib/crewai/src/crewai/a2a/config.py
++++ b/lib/crewai/src/crewai/a2a/config.py
+@@ -38,6 +38,7 @@ class A2AConfig(BaseModel):
+         max_turns: Maximum conversation turns with A2A agent (default: 10).
+         response_model: Optional Pydantic model for structured A2A agent responses.
+         fail_fast: If True, raise error when agent unreachable; if False, skip and continue (default: True).
++        trust_remote_completion_status: If True, return A2A agent's result directly when status is "completed"; if False, always ask server agent to respond (default: False).
+     """
+ 
+     endpoint: Url = Field(description="A2A agent endpoint URL")
+@@ -57,3 +58,7 @@ class A2AConfig(BaseModel):
+         default=True,
+         description="If True, raise an error immediately when the A2A agent is unreachable. If False, skip the A2A agent and continue execution.",
+     )
++    trust_remote_completion_status: bool = Field(
++        default=False,
++        description='If True, return the A2A agent\'s result directly when status is "completed" without asking the server agent to respond. If False, always ask the server agent to respond, allowing it to potentially delegate again.',
++    )
+diff --git a/lib/crewai/src/crewai/a2a/wrapper.py b/lib/crewai/src/crewai/a2a/wrapper.py
+index 3bbb0f8c7..82216233f 100644
+--- a/lib/crewai/src/crewai/a2a/wrapper.py
++++ b/lib/crewai/src/crewai/a2a/wrapper.py
+@@ -52,7 +52,7 @@ def wrap_agent_with_a2a_instance(agent: Agent) -> None:
+     Args:
+         agent: The agent instance to wrap
+     """
+-    original_execute_task = agent.execute_task.__func__
++    original_execute_task = agent.execute_task.__func__  # type: ignore[attr-defined]
+ 
+     @wraps(original_execute_task)
+     def execute_task_with_a2a(
+@@ -73,7 +73,7 @@ def wrap_agent_with_a2a_instance(agent: Agent) -> None:
+             Task execution result
+         """
+         if not self.a2a:
+-            return original_execute_task(self, task, context, tools)
++            return original_execute_task(self, task, context, tools)  # type: ignore[no-any-return]
+ 
+         a2a_agents, agent_response_model = get_a2a_agents_and_response_model(self.a2a)
+ 
+@@ -498,6 +498,23 @@ def _delegate_to_a2a(
+             conversation_history = a2a_result.get("history", [])
+ 
+             if a2a_result["status"] in ["completed", "input_required"]:
++                if (
++                    a2a_result["status"] == "completed"
++                    and agent_config.trust_remote_completion_status
++                ):
++                    result_text = a2a_result.get("result", "")
++                    final_turn_number = turn_num + 1
++                    crewai_event_bus.emit(
++                        None,
++                        A2AConversationCompletedEvent(
++                            status="completed",
++                            final_result=result_text,
++                            error=None,
++                            total_turns=final_turn_number,
++                        ),
++                    )
++                    return result_text  # type: ignore[no-any-return]
++
+                 final_result, next_request = _handle_agent_response_and_continue(
+                     self=self,
+                     a2a_result=a2a_result,
+2026-06-07 14:28:47,096 - INFO - Attempting to stop container crewaiinc__crewai-3904-test9...
+2026-06-07 14:29:10,601 - INFO - Attempting to remove container crewaiinc__crewai-3904-test9...
+2026-06-07 14:29:11,365 - INFO - Container crewaiinc__crewai-3904-test9 removed.
+2026-06-07 14:29:11,365 - INFO - Attempting to remove image crewaiinc__crewai-3904-dockerfile10:latest...
+2026-06-07 14:29:15,044 - INFO - Image crewaiinc__crewai-3904-dockerfile10:latest removed.

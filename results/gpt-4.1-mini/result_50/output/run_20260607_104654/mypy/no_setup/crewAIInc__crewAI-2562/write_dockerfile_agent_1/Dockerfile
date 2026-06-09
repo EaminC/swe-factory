@@ -1,0 +1,63 @@
+# Base image for Linux Ubuntu 22.04 with bash and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies, tools, and Python 3.12 from deadsnakes PPA,
+# plus rust compiler for building dependencies that require cargo
+RUN apt-get update && apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get update && apt-get install -y \
+        git \
+        curl \
+        build-essential \
+        python3.12 \
+        python3.12-venv \
+        python3-distutils \
+        python3-pip \
+        python3.12-dev \
+        python3-setuptools \
+        ca-certificates \
+        locales \
+        locales-all \
+        tzdata \
+        rustc \
+        cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and setuptools for Python 3.12 environment
+RUN python3.12 -m pip install --upgrade pip setuptools
+
+# Ensure python3 and python commands use python3.12 explicitly
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+
+# Set environment variables placeholders (to be overridden at runtime)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=""
+
+# Set working directory inside container
+WORKDIR /testbed/
+
+# Clone specific commit of the repository and remove origin remote
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed && \
+    cd /testbed && \
+    git reset --hard 5780c3147afd2db9be5cd7eb88450a0f04f12977 && \
+    git remote remove origin
+
+# Create python virtual environment named 'testbed-venv' inside /testbed/
+RUN python3 -m venv /testbed/testbed-venv
+
+# Activate the virtual environment and install dependencies and the repo in editable mode
+RUN /bin/bash -c "source /testbed/testbed-venv/bin/activate && \
+    pip install --upgrade pip setuptools && \
+    pip install 'crewai[tools]' && \
+    pip install --prefer-binary tiktoken && \
+    pip install -e ."
+
+# Add activation of the virtual environment to root bashrc for interactive usage
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set bash as the default shell explicitly
+SHELL ["/bin/bash", "-c"]

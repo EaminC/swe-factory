@@ -1,0 +1,82 @@
+# Base image: Ubuntu 22.04 for stability and compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system tools and libraries:
+# git, curl, wget for downloads; build-essential and cmake for compilation;
+# rustc and cargo for Rust compiling dependencies; python3.11 and related tools;
+# locales and tzdata for localization support
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    rustc \
+    cargo \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate locale
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip, setuptools, and wheel globally
+RUN python3.11 -m pip install --upgrade pip setuptools wheel
+
+# Create and set working directory inside container
+RUN mkdir /testbed
+WORKDIR /testbed
+
+# Clone the repository and checkout the specific commit provided via build argument
+ARG COMMIT_SHA=5780c3147afd2db9be5cd7eb88450a0f04f12977
+RUN git clone https://github.com/crewAIInc/crewAI.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Build the project before creating virtual environment and installing dependencies to avoid packaging the virtual environment folder
+RUN python3.11 -m pip install uv && uv build
+
+# Create Python virtual environment OUTSIDE the /testbed directory to prevent including venv in packaging
+RUN python3.11 -m venv /testbed/testbed-venv
+
+# Activate virtual environment and update PATH accordingly
+ENV PATH="/testbed/testbed-venv/bin:$PATH"
+
+# Upgrade pip, setuptools, and wheel inside the virtual environment
+RUN pip install --upgrade pip setuptools wheel
+
+# Install UV package manager inside the virtual environment
+RUN pip install uv
+
+# Use uv to create uv virtual environment, lock dependencies, and sync within venv
+RUN uv venv && uv lock && uv sync
+
+# Install the repository itself in editable mode and required extras without installing from PyPI separately
+RUN pip install -e . \
+    && pip install 'crewai[tools]' \
+    && pip install 'crewai[embeddings]' \
+    && pip install tiktoken --prefer-binary
+
+# Install pre-commit hooks if available, but do not fail if pre-commit is missing
+RUN pre-commit install || echo "Skipping pre-commit install if not available"
+
+# Set environment variables placeholders, to be overridden at runtime by user
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=""
+
+# Add virtual environment activation to bashrc for interactive sessions
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set default shell command to bash for compatibility and testing
+CMD ["/bin/bash"]

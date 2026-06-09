@@ -1,0 +1,35 @@
+diff --git a/src/crewai/memory/external/external_memory.py b/src/crewai/memory/external/external_memory.py
+--- a/src/crewai/memory/external/external_memory.py
++++ b/src/crewai/memory/external/external_memory.py
+@@ -1,4 +1,4 @@
+-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
++from typing import TYPE_CHECKING, Any, Dict, Optional
+ 
+ from crewai.memory.external.external_memory_item import ExternalMemoryItem
+ from crewai.memory.memory import Memory
+@@ -52,7 +52,7 @@ def save(
+     def reset(self) -> None:
+         self.storage.reset()
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "ExternalMemory":
+         super().set_crew(crew)
+ 
+         if not self.storage:
+diff --git a/src/crewai/memory/memory.py b/src/crewai/memory/memory.py
+--- a/src/crewai/memory/memory.py
++++ b/src/crewai/memory/memory.py
+@@ -1,4 +1,4 @@
+-from typing import Any, Dict, List, Optional, Self
++from typing import Any, Dict, List, Optional
+ 
+ from pydantic import BaseModel
+ 
+@@ -38,6 +38,6 @@ def search(
+             query=query, limit=limit, score_threshold=score_threshold
+         )
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "Memory":
+         self.crew = crew
+         return self

@@ -1,0 +1,655 @@
++ cd /testbed
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 0 paths from 25e14e4ba
++ git apply -v -
+Checking patch tests/config/agents.yaml...
+Checking patch tests/project_test.py...
+Applied patch tests/config/agents.yaml cleanly.
+Applied patch tests/project_test.py cleanly.
++ source /testbed/testbed/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/testbed
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/testbed/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed) '
+++ export VIRTUAL_ENV_PROMPT
+++ hash -r
++ uv run pytest -v --tb=short tests/project_test.py
+warning: `VIRTUAL_ENV=testbed` does not match the project environment path `.venv` and will be ignored
+Using CPython 3.11.15 interpreter at: /usr/bin/python
+Creating virtual environment at: .venv
+Installed 188 packages in 1.89s
+/testbed/.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-8.3.3, pluggy-1.5.0 -- /testbed/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: subprocess-1.5.2, vcr-1.0.2, anyio-4.6.2.post1, asyncio-0.24.0
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 9 items
+
+tests/project_test.py::test_agent_memoization PASSED                     [ 11%]
+tests/project_test.py::test_task_memoization PASSED                      [ 22%]
+tests/project_test.py::test_crew_memoization PASSED                      [ 33%]
+tests/project_test.py::test_task_name PASSED                             [ 44%]
+tests/project_test.py::test_agent_function_calling_llm PASSED            [ 55%]
+tests/project_test.py::test_before_kickoff_modification FAILED           [ 66%]
+tests/project_test.py::test_after_kickoff_modification FAILED            [ 77%]
+tests/project_test.py::test_before_kickoff_with_none_input FAILED        [ 88%]
+tests/project_test.py::test_multiple_before_after_kickoff FAILED         [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_before_kickoff_modification _______________________
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:711: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:614: in completion
+    openai_client: OpenAI = self._get_openai_client(  # type: ignore
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:368: in _get_openai_client
+    _new_client = OpenAI(
+.venv/lib/python3.11/site-packages/openai/_client.py:114: in __init__
+    raise OpenAIError(
+E   openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+.venv/lib/python3.11/site-packages/litellm/main.py:1692: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/main.py:1665: in completion
+    response = openai_chat_completions.completion(
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:721: in completion
+    raise OpenAIError(
+E   litellm.llms.openai.common_utils.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+tests/project_test.py:142: in test_before_kickoff_modification
+    result = crew.crew().kickoff(inputs=inputs)
+src/crewai/crew.py:646: in kickoff
+    result = self._run_sequential_process()
+src/crewai/crew.py:758: in _run_sequential_process
+    return self._execute_tasks(self.tasks)
+src/crewai/crew.py:861: in _execute_tasks
+    task_output = task.execute_sync(
+src/crewai/task.py:328: in execute_sync
+    return self._execute_core(agent, context, tools)
+src/crewai/task.py:472: in _execute_core
+    raise e  # Re-raise the exception after emitting the event
+src/crewai/task.py:392: in _execute_core
+    result = agent.execute_task(
+src/crewai/agent.py:269: in execute_task
+    raise e
+src/crewai/agent.py:250: in execute_task
+    result = self.agent_executor.invoke(
+src/crewai/agents/crew_agent_executor.py:123: in invoke
+    raise e
+src/crewai/agents/crew_agent_executor.py:112: in invoke
+    formatted_answer = self._invoke_loop()
+src/crewai/agents/crew_agent_executor.py:208: in _invoke_loop
+    raise e
+src/crewai/agents/crew_agent_executor.py:155: in _invoke_loop
+    answer = get_llm_response(
+src/crewai/utilities/agent_utils.py:157: in get_llm_response
+    raise e
+src/crewai/utilities/agent_utils.py:148: in get_llm_response
+    answer = llm.call(
+src/crewai/llm.py:794: in call
+    return self._handle_non_streaming_response(
+src/crewai/llm.py:630: in _handle_non_streaming_response
+    response = litellm.completion(**params)
+.venv/lib/python3.11/site-packages/litellm/utils.py:1154: in wrapper
+    raise e
+.venv/lib/python3.11/site-packages/litellm/utils.py:1032: in wrapper
+    result = original_function(*args, **kwargs)
+.venv/lib/python3.11/site-packages/litellm/main.py:3068: in completion
+    raise exception_type(
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:2201: in exception_type
+    raise e
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:357: in exception_type
+    raise AuthenticationError(
+E   litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+----------------------------- Captured stdout call -----------------------------
+╭─────────────────────────── Crew Execution Started ───────────────────────────╮
+│                                                                              │
+│  Crew Execution Started                                                      │
+│  Name: crew                                                                  │
+│  ID: 7d903490-1019-4d8a-9ff2-f072a5def28d                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+🚀 Crew: crew
+└── 📋 Task: aba0d2ff-8e52-4b9c-9bd4-a0d95b549576
+       Status: Executing Task...
+
+🚀 Crew: crew
+└── 📋 Task: aba0d2ff-8e52-4b9c-9bd4-a0d95b549576
+       Status: Executing Task...
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+
+[1m[95m# Agent:[00m [1m[92mBicycles Senior Data Researcher[00m
+[95m## Task:[00m [92mConduct a thorough research about Bicycles Make sure you find any interesting and relevant information given the current year is 2025.
+[00m
+🤖 Agent: Bicycles Senior Data Researcher
+
+    Status: In Progress
+└── 🧠 Thinking...
+
+
+
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+🚀 Crew: crew
+└── 📋 Task: aba0d2ff-8e52-4b9c-9bd4-a0d95b549576
+       Status: Executing Task...
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+        └── ❌ LLM Failed
+
+╭───────────────────────────────── LLM Error ──────────────────────────────────╮
+│                                                                              │
+│  ❌ LLM Call Failed                                                          │
+│  Error: litellm.AuthenticationError: AuthenticationError: OpenAIException -  │
+│  The api_key client option must be set either by passing api_key to the      │
+│  client or by setting the OPENAI_API_KEY environment variable                │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+[91m Error during LLM call: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+[91m An unknown error occurred. Please check the details below.[00m
+[91m Error details: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+🚀 Crew: crew
+└── 📋 Task: aba0d2ff-8e52-4b9c-9bd4-a0d95b549576
+       Assigned to: Bicycles Senior Data Researcher
+    
+       Status: ❌ Failed
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+        └── ❌ LLM Failed
+╭──────────────────────────────── Task Failure ────────────────────────────────╮
+│                                                                              │
+│  Task Failed                                                                 │
+│  Name: aba0d2ff-8e52-4b9c-9bd4-a0d95b549576                                  │
+│  Agent: Bicycles Senior Data Researcher                                      │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────── Crew Failure ────────────────────────────────╮
+│                                                                              │
+│  Crew Execution Failed                                                       │
+│  Name: crew                                                                  │
+│  ID: 7d903490-1019-4d8a-9ff2-f072a5def28d                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+------------------------------ Captured log call -------------------------------
+ERROR    root:llm.py:806 LiteLLM call failed: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+_______________________ test_after_kickoff_modification ________________________
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:711: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:614: in completion
+    openai_client: OpenAI = self._get_openai_client(  # type: ignore
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:368: in _get_openai_client
+    _new_client = OpenAI(
+.venv/lib/python3.11/site-packages/openai/_client.py:114: in __init__
+    raise OpenAIError(
+E   openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+.venv/lib/python3.11/site-packages/litellm/main.py:1692: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/main.py:1665: in completion
+    response = openai_chat_completions.completion(
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:721: in completion
+    raise OpenAIError(
+E   litellm.llms.openai.common_utils.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+tests/project_test.py:150: in test_after_kickoff_modification
+    result = crew.crew().kickoff({"topic": "LLMs"})
+src/crewai/crew.py:646: in kickoff
+    result = self._run_sequential_process()
+src/crewai/crew.py:758: in _run_sequential_process
+    return self._execute_tasks(self.tasks)
+src/crewai/crew.py:861: in _execute_tasks
+    task_output = task.execute_sync(
+src/crewai/task.py:328: in execute_sync
+    return self._execute_core(agent, context, tools)
+src/crewai/task.py:472: in _execute_core
+    raise e  # Re-raise the exception after emitting the event
+src/crewai/task.py:392: in _execute_core
+    result = agent.execute_task(
+src/crewai/agent.py:269: in execute_task
+    raise e
+src/crewai/agent.py:250: in execute_task
+    result = self.agent_executor.invoke(
+src/crewai/agents/crew_agent_executor.py:123: in invoke
+    raise e
+src/crewai/agents/crew_agent_executor.py:112: in invoke
+    formatted_answer = self._invoke_loop()
+src/crewai/agents/crew_agent_executor.py:208: in _invoke_loop
+    raise e
+src/crewai/agents/crew_agent_executor.py:155: in _invoke_loop
+    answer = get_llm_response(
+src/crewai/utilities/agent_utils.py:157: in get_llm_response
+    raise e
+src/crewai/utilities/agent_utils.py:148: in get_llm_response
+    answer = llm.call(
+src/crewai/llm.py:794: in call
+    return self._handle_non_streaming_response(
+src/crewai/llm.py:630: in _handle_non_streaming_response
+    response = litellm.completion(**params)
+.venv/lib/python3.11/site-packages/litellm/utils.py:1154: in wrapper
+    raise e
+.venv/lib/python3.11/site-packages/litellm/utils.py:1032: in wrapper
+    result = original_function(*args, **kwargs)
+.venv/lib/python3.11/site-packages/litellm/main.py:3068: in completion
+    raise exception_type(
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:2201: in exception_type
+    raise e
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:357: in exception_type
+    raise AuthenticationError(
+E   litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+----------------------------- Captured stdout call -----------------------------
+╭─────────────────────────── Crew Execution Started ───────────────────────────╮
+│                                                                              │
+│  Crew Execution Started                                                      │
+│  Name: crew                                                                  │
+│  ID: f2ec0904-af36-4acb-9a6f-32057bf04405                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+🚀 Crew: crew
+└── 📋 Task: fbe0223a-00a1-423c-a149-5ecdf4cae876
+       Status: Executing Task...
+
+🚀 Crew: crew
+└── 📋 Task: fbe0223a-00a1-423c-a149-5ecdf4cae876
+       Status: Executing Task...
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+
+[1m[95m# Agent:[00m [1m[92mBicycles Senior Data Researcher[00m
+[95m## Task:[00m [92mConduct a thorough research about Bicycles Make sure you find any interesting and relevant information given the current year is 2025.
+[00m
+
+
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+🚀 Crew: crew
+└── 📋 Task: fbe0223a-00a1-423c-a149-5ecdf4cae876
+       Status: Executing Task...
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+
+╭───────────────────────────────── LLM Error ──────────────────────────────────╮
+│                                                                              │
+│  ❌ LLM Call Failed                                                          │
+│  Error: litellm.AuthenticationError: AuthenticationError: OpenAIException -  │
+│  The api_key client option must be set either by passing api_key to the      │
+│  client or by setting the OPENAI_API_KEY environment variable                │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+[91m Error during LLM call: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+[91m An unknown error occurred. Please check the details below.[00m
+[91m Error details: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+🚀 Crew: crew
+└── 📋 Task: fbe0223a-00a1-423c-a149-5ecdf4cae876
+       Assigned to: Bicycles Senior Data Researcher
+    
+       Status: ❌ Failed
+    └── 🤖 Agent: Bicycles Senior Data Researcher
+        
+            Status: In Progress
+╭──────────────────────────────── Task Failure ────────────────────────────────╮
+│                                                                              │
+│  Task Failed                                                                 │
+│  Name: fbe0223a-00a1-423c-a149-5ecdf4cae876                                  │
+│  Agent: Bicycles Senior Data Researcher                                      │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────── Crew Failure ────────────────────────────────╮
+│                                                                              │
+│  Crew Execution Failed                                                       │
+│  Name: crew                                                                  │
+│  ID: f2ec0904-af36-4acb-9a6f-32057bf04405                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+------------------------------ Captured log call -------------------------------
+ERROR    root:llm.py:806 LiteLLM call failed: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+_____________________ test_before_kickoff_with_none_input ______________________
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:711: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:614: in completion
+    openai_client: OpenAI = self._get_openai_client(  # type: ignore
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:368: in _get_openai_client
+    _new_client = OpenAI(
+.venv/lib/python3.11/site-packages/openai/_client.py:114: in __init__
+    raise OpenAIError(
+E   openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+.venv/lib/python3.11/site-packages/litellm/main.py:1692: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/main.py:1665: in completion
+    response = openai_chat_completions.completion(
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:721: in completion
+    raise OpenAIError(
+E   litellm.llms.openai.common_utils.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+tests/project_test.py:160: in test_before_kickoff_with_none_input
+    crew.crew().kickoff(None)
+src/crewai/crew.py:646: in kickoff
+    result = self._run_sequential_process()
+src/crewai/crew.py:758: in _run_sequential_process
+    return self._execute_tasks(self.tasks)
+src/crewai/crew.py:861: in _execute_tasks
+    task_output = task.execute_sync(
+src/crewai/task.py:328: in execute_sync
+    return self._execute_core(agent, context, tools)
+src/crewai/task.py:472: in _execute_core
+    raise e  # Re-raise the exception after emitting the event
+src/crewai/task.py:392: in _execute_core
+    result = agent.execute_task(
+src/crewai/agent.py:269: in execute_task
+    raise e
+src/crewai/agent.py:250: in execute_task
+    result = self.agent_executor.invoke(
+src/crewai/agents/crew_agent_executor.py:123: in invoke
+    raise e
+src/crewai/agents/crew_agent_executor.py:112: in invoke
+    formatted_answer = self._invoke_loop()
+src/crewai/agents/crew_agent_executor.py:208: in _invoke_loop
+    raise e
+src/crewai/agents/crew_agent_executor.py:155: in _invoke_loop
+    answer = get_llm_response(
+src/crewai/utilities/agent_utils.py:157: in get_llm_response
+    raise e
+src/crewai/utilities/agent_utils.py:148: in get_llm_response
+    answer = llm.call(
+src/crewai/llm.py:794: in call
+    return self._handle_non_streaming_response(
+src/crewai/llm.py:630: in _handle_non_streaming_response
+    response = litellm.completion(**params)
+.venv/lib/python3.11/site-packages/litellm/utils.py:1154: in wrapper
+    raise e
+.venv/lib/python3.11/site-packages/litellm/utils.py:1032: in wrapper
+    result = original_function(*args, **kwargs)
+.venv/lib/python3.11/site-packages/litellm/main.py:3068: in completion
+    raise exception_type(
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:2201: in exception_type
+    raise e
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:357: in exception_type
+    raise AuthenticationError(
+E   litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+----------------------------- Captured stdout call -----------------------------
+╭─────────────────────────── Crew Execution Started ───────────────────────────╮
+│                                                                              │
+│  Crew Execution Started                                                      │
+│  Name: crew                                                                  │
+│  ID: 0b27a3b7-a49e-49fe-a367-187baba27e7f                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+🚀 Crew: crew
+└── 📋 Task: 77423a0a-01b8-484f-93ed-53d4f2813347
+       Status: Executing Task...
+
+🚀 Crew: crew
+└── 📋 Task: 77423a0a-01b8-484f-93ed-53d4f2813347
+       Status: Executing Task...
+    └── 🤖 Agent: {topic} Senior Data Researcher
+        
+            Status: In Progress
+
+[1m[95m# Agent:[00m [1m[92m{topic} Senior Data Researcher[00m
+[95m## Task:[00m [92mConduct a thorough research about {topic} Make sure you find any interesting and relevant information given the current year is 2025.
+[00m
+
+
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+🚀 Crew: crew
+└── 📋 Task: 77423a0a-01b8-484f-93ed-53d4f2813347
+       Status: Executing Task...
+    └── 🤖 Agent: {topic} Senior Data Researcher
+        
+            Status: In Progress
+
+╭───────────────────────────────── LLM Error ──────────────────────────────────╮
+│                                                                              │
+│  ❌ LLM Call Failed                                                          │
+│  Error: litellm.AuthenticationError: AuthenticationError: OpenAIException -  │
+│  The api_key client option must be set either by passing api_key to the      │
+│  client or by setting the OPENAI_API_KEY environment variable                │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+[91m Error during LLM call: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+[91m An unknown error occurred. Please check the details below.[00m
+[91m Error details: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+🚀 Crew: crew
+└── 📋 Task: 77423a0a-01b8-484f-93ed-53d4f2813347
+       Assigned to: {topic} Senior Data Researcher
+    
+       Status: ❌ Failed
+    └── 🤖 Agent: {topic} Senior Data Researcher
+        
+            Status: In Progress
+╭──────────────────────────────── Task Failure ────────────────────────────────╮
+│                                                                              │
+│  Task Failed                                                                 │
+│  Name: 77423a0a-01b8-484f-93ed-53d4f2813347                                  │
+│  Agent: {topic} Senior Data Researcher                                       │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────── Crew Failure ────────────────────────────────╮
+│                                                                              │
+│  Crew Execution Failed                                                       │
+│  Name: crew                                                                  │
+│  ID: 0b27a3b7-a49e-49fe-a367-187baba27e7f                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+------------------------------ Captured log call -------------------------------
+ERROR    root:llm.py:806 LiteLLM call failed: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+______________________ test_multiple_before_after_kickoff ______________________
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:711: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:614: in completion
+    openai_client: OpenAI = self._get_openai_client(  # type: ignore
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:368: in _get_openai_client
+    _new_client = OpenAI(
+.venv/lib/python3.11/site-packages/openai/_client.py:114: in __init__
+    raise OpenAIError(
+E   openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+.venv/lib/python3.11/site-packages/litellm/main.py:1692: in completion
+    raise e
+.venv/lib/python3.11/site-packages/litellm/main.py:1665: in completion
+    response = openai_chat_completions.completion(
+.venv/lib/python3.11/site-packages/litellm/llms/openai/openai.py:721: in completion
+    raise OpenAIError(
+E   litellm.llms.openai.common_utils.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+During handling of the above exception, another exception occurred:
+tests/project_test.py:212: in test_multiple_before_after_kickoff
+    result = crew.crew().kickoff({"topic": "LLMs"})
+src/crewai/crew.py:646: in kickoff
+    result = self._run_sequential_process()
+src/crewai/crew.py:758: in _run_sequential_process
+    return self._execute_tasks(self.tasks)
+src/crewai/crew.py:861: in _execute_tasks
+    task_output = task.execute_sync(
+src/crewai/task.py:328: in execute_sync
+    return self._execute_core(agent, context, tools)
+src/crewai/task.py:472: in _execute_core
+    raise e  # Re-raise the exception after emitting the event
+src/crewai/task.py:392: in _execute_core
+    result = agent.execute_task(
+src/crewai/agent.py:269: in execute_task
+    raise e
+src/crewai/agent.py:250: in execute_task
+    result = self.agent_executor.invoke(
+src/crewai/agents/crew_agent_executor.py:123: in invoke
+    raise e
+src/crewai/agents/crew_agent_executor.py:112: in invoke
+    formatted_answer = self._invoke_loop()
+src/crewai/agents/crew_agent_executor.py:208: in _invoke_loop
+    raise e
+src/crewai/agents/crew_agent_executor.py:155: in _invoke_loop
+    answer = get_llm_response(
+src/crewai/utilities/agent_utils.py:157: in get_llm_response
+    raise e
+src/crewai/utilities/agent_utils.py:148: in get_llm_response
+    answer = llm.call(
+src/crewai/llm.py:794: in call
+    return self._handle_non_streaming_response(
+src/crewai/llm.py:630: in _handle_non_streaming_response
+    response = litellm.completion(**params)
+.venv/lib/python3.11/site-packages/litellm/utils.py:1154: in wrapper
+    raise e
+.venv/lib/python3.11/site-packages/litellm/utils.py:1032: in wrapper
+    result = original_function(*args, **kwargs)
+.venv/lib/python3.11/site-packages/litellm/main.py:3068: in completion
+    raise exception_type(
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:2201: in exception_type
+    raise e
+.venv/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py:357: in exception_type
+    raise AuthenticationError(
+E   litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+----------------------------- Captured stdout call -----------------------------
+╭─────────────────────────── Crew Execution Started ───────────────────────────╮
+│                                                                              │
+│  Crew Execution Started                                                      │
+│  Name: crew                                                                  │
+│  ID: 4863add2-47b3-4ced-8cff-b7e6fc3e133f                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+🚀 Crew: crew
+└── 📋 Task: e8de1179-8886-4c9b-838b-5e1e66200197
+       Status: Executing Task...
+
+🚀 Crew: crew
+└── 📋 Task: e8de1179-8886-4c9b-838b-5e1e66200197
+       Status: Executing Task...
+    └── 🤖 Agent: plants Senior Data Researcher
+        
+            Status: In Progress
+
+[1m[95m# Agent:[00m [1m[92mplants Senior Data Researcher[00m
+[95m## Task:[00m [92mConduct a thorough research about plants Make sure you find any interesting and relevant information given the current year is 2025.
+[00m
+
+
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+🚀 Crew: crew
+└── 📋 Task: e8de1179-8886-4c9b-838b-5e1e66200197
+       Status: Executing Task...
+    └── 🤖 Agent: plants Senior Data Researcher
+        
+            Status: In Progress
+
+╭───────────────────────────────── LLM Error ──────────────────────────────────╮
+│                                                                              │
+│  ❌ LLM Call Failed                                                          │
+│  Error: litellm.AuthenticationError: AuthenticationError: OpenAIException -  │
+│  The api_key client option must be set either by passing api_key to the      │
+│  client or by setting the OPENAI_API_KEY environment variable                │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+[91m Error during LLM call: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+[91m An unknown error occurred. Please check the details below.[00m
+[91m Error details: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable[00m
+🚀 Crew: crew
+└── 📋 Task: e8de1179-8886-4c9b-838b-5e1e66200197
+       Assigned to: plants Senior Data Researcher
+    
+       Status: ❌ Failed
+    └── 🤖 Agent: plants Senior Data Researcher
+        
+            Status: In Progress
+╭──────────────────────────────── Task Failure ────────────────────────────────╮
+│                                                                              │
+│  Task Failed                                                                 │
+│  Name: e8de1179-8886-4c9b-838b-5e1e66200197                                  │
+│  Agent: plants Senior Data Researcher                                        │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────── Crew Failure ────────────────────────────────╮
+│                                                                              │
+│  Crew Execution Failed                                                       │
+│  Name: crew                                                                  │
+│  ID: 4863add2-47b3-4ced-8cff-b7e6fc3e133f                                    │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+------------------------------ Captured log call -------------------------------
+ERROR    root:llm.py:806 LiteLLM call failed: litellm.AuthenticationError: AuthenticationError: OpenAIException - The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:291
+  /testbed/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:291: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.9/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/litellm/utils.py:162
+  /testbed/.venv/lib/python3.11/site-packages/litellm/utils.py:162: DeprecationWarning: open_text is deprecated. Use files() instead. Refer to https://importlib-resources.readthedocs.io/en/latest/using.html#migrating-from-legacy for migration advice.
+    with resources.open_text(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/project_test.py::test_before_kickoff_modification - litellm.exce...
+FAILED tests/project_test.py::test_after_kickoff_modification - litellm.excep...
+FAILED tests/project_test.py::test_before_kickoff_with_none_input - litellm.e...
+FAILED tests/project_test.py::test_multiple_before_after_kickoff - litellm.ex...
+=================== 4 failed, 5 passed, 2 warnings in 17.19s ===================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
+OMNIGRIL_EXIT_CODE=1
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 2 paths from 25e14e4ba

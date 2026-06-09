@@ -1,0 +1,76 @@
+2026-06-07 11:17:48,434 - INFO - Checking if image crewaiinc__crewai-2265-dockerfile1:latest exists locally...
+2026-06-07 11:17:48,437 - INFO - Image crewaiinc__crewai-2265-dockerfile1:latest found locally.
+2026-06-07 11:17:48,437 - INFO - Creating container for crewaiinc__crewai-2265...
+2026-06-07 11:17:48,847 - INFO - Container for crewaiinc__crewai-2265 started: f4cb9f34bdd0e4565615ab610c5704fd6e049eafab3f6d28bcfd17c26d2502e9
+2026-06-07 11:17:48,847 - INFO - Intermediate patch for crewaiinc__crewai-2265 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2265/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:17:49,260 - INFO - Apply patch success:
+/tmp/patch.diff:11: trailing whitespace.
+        
+Checking patch src/crewai/crew.py...
+Applied patch src/crewai/crew.py cleanly.
+warning: 1 line adds whitespace errors.
+
+2026-06-07 11:17:49,731 - INFO - Git diff before:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index c54d50425..0f6db8c4a 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1156,7 +1156,12 @@ class Crew(BaseModel):
+         return required_inputs
+ 
+     def copy(self):
+-        """Create a deep copy of the Crew."""
++        """
++        Creates a deep copy of the Crew instance.
++        
++        Returns:
++            Crew: A new instance with copied components
++        """
+ 
+         exclude = {
+             "id",
+@@ -1168,13 +1173,19 @@ class Crew(BaseModel):
+             "_short_term_memory",
+             "_long_term_memory",
+             "_entity_memory",
++            "_telemetry",
+             "agents",
+             "tasks",
+             "knowledge_sources",
+             "knowledge",
++            "manager_agent",
++            "manager_llm",
++
+         }
+ 
+         cloned_agents = [agent.copy() for agent in self.agents]
++        manager_agent = self.manager_agent.copy() if self.manager_agent else None
++        manager_llm = shallow_copy(self.manager_llm) if self.manager_llm else None
+ 
+         task_mapping = {}
+ 
+@@ -1207,6 +1218,8 @@ class Crew(BaseModel):
+             tasks=cloned_tasks,
+             knowledge_sources=existing_knowledge_sources,
+             knowledge=existing_knowledge,
++            manager_agent=manager_agent,
++            manager_llm=manager_llm,
+         )
+ 
+         return copied_crew
+2026-06-07 11:17:49,733 - INFO - Eval script for crewaiinc__crewai-2265 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2265/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 12:17:50,100 - INFO - Error in evaluating model for crewaiinc__crewai-2265: Command '/bin/bash /eval.sh' timed out after 3600 seconds
+Traceback (most recent call last):
+  File "/home/cc/swe-factory/app/agents/test_analysis_agent/test_analysis_agent.py", line 503, in run_test
+    result = exec_run_with_timeout(container, "/bin/bash /eval.sh", timeout=self.timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cc/swe-factory/app/agents/test_analysis_agent/docker_utils.py", line 207, in exec_run_with_timeout
+    raise TimeoutError(f"Command '{cmd}' timed out after {timeout} seconds")
+TimeoutError: Command '/bin/bash /eval.sh' timed out after 3600 seconds
+
+Check (/home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2265/test_analysis_agent_1/run_test.log) for more information.
+2026-06-07 12:17:50,100 - INFO - Attempting to stop container crewaiinc__crewai-2265-test1...
+2026-06-07 12:18:10,013 - INFO - Attempting to remove container crewaiinc__crewai-2265-test1...
+2026-06-07 12:18:10,997 - INFO - Container crewaiinc__crewai-2265-test1 removed.
+2026-06-07 12:18:10,997 - INFO - Attempting to remove image crewaiinc__crewai-2265-dockerfile1:latest...
+2026-06-07 12:18:21,179 - INFO - Image crewaiinc__crewai-2265-dockerfile1:latest removed.

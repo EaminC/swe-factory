@@ -1,0 +1,20 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout be8db4cc484b77d0d3bc60a012e9035c4395bee3 "tests/memory_test.py" "tests/msghub_test.py"
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+source /opt/testbed/bin/activate
+
+# Run tests by specifying test directory and a pattern that matches only the target test files
+python3 tests/run.py --test_dir=tests --pattern="memory_test.py|msghub_test.py"
+
+rc=$?            # Save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout be8db4cc484b77d0d3bc60a012e9035c4395bee3 "tests/memory_test.py" "tests/msghub_test.py"

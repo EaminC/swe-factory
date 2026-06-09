@@ -1,0 +1,30 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the target test file to the committed state to ensure a clean state
+git checkout fed397f74590a3f1c3be3bfca96e4967fe38a3e1 "tests/crew_test.py"
+
+# Apply test patch (placeholder content to be replaced)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Export required API keys (set dummy keys if not provided externally)
+export OPENAI_API_KEY="${OPENAI_API_KEY:-dummy_openai_api_key}"
+export SERPER_API_KEY="${SERPER_API_KEY:-dummy_serper_api_key}"
+
+# Activate the virtual environment installed by uv within /testbed/.venv
+source /testbed/.venv/bin/activate
+
+# Run only the specified test file with detailed and concise output
+# Use pytest with verbose and short traceback, disable warnings for cleaner output
+uv run pytest -rA --tb=short --disable-warnings tests/crew_test.py
+
+rc=$?  # Capture the exit code immediately after test run
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to the committed state after testing (clean up)
+git checkout fed397f74590a3f1c3be3bfca96e4967fe38a3e1 "tests/crew_test.py"

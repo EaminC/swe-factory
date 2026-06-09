@@ -1,0 +1,114 @@
+2026-06-07 10:52:43,568 - INFO - Building image crewaiinc__crewai-2063
+Using dockerfile:
+# Base image specification. Using ubuntu 22.04 for stability and bash availability
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies including git, curl, build tools, python3.12 and related packages from default Ubuntu 22.04 repositories
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.12 \
+    python3.12-venv \
+    python3-distutils \
+    python3-pip \
+    python3.12-dev \
+    python3-setuptools \
+    ca-certificates \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 and python point to python3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+
+# Upgrade pip for python3.12
+RUN python3 -m pip install --upgrade pip
+
+# Set environment variables placeholders to be overridden externally
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=""
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the target repo and checkout specific commit SHA
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed && \
+    cd /testbed && \
+    git reset --hard 6f4ad532e615a961ae7c5d57da48bb7209e3598b && \
+    git remote remove origin
+
+# Create python virtual environment named testbed-venv
+RUN python3 -m venv /testbed/testbed-venv
+
+# Activate the virtual env and install required dependencies and the repo itself in editable mode
+RUN /bin/bash -c "source /testbed/testbed-venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install pydantic>=2.4.2 openai>=1.13.3 litellm==1.60.2 instructor>=1.3.3 pdfplumber>=0.11.4 regex>=2024.9.11 \
+    opentelemetry-api>=1.22.0 opentelemetry-sdk>=1.22.0 opentelemetry-exporter-otlp-proto-http>=1.22.0 chromadb>=0.5.23 \
+    openpyxl>=3.1.5 pyvis>=0.3.2 auth0-python>=4.7.1 python-dotenv>=1.0.0 click>=8.1.7 appdirs>=1.4.4 jsonref>=1.1.0 json-repair>=0.25.2 uv>=0.4.25 tomli-w>=1.1.0 tomli>=2.0.2 blinker>=1.9.0 json5>=0.10.0 && \
+    pip install ruff>=0.8.2 mypy>=1.10.0 pre-commit>=3.6.0 pillow>=10.2.0 cairosvg>=2.7.1 pytest>=8.0.0 pytest-vcr>=1.0.2 pytest-asyncio>=0.23.7 pytest-subprocess>=1.5.2 && \
+    pip install -e ."
+
+# Export environment activation for interactive bash sessions
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set default shell explicitly to bash
+SHELL ["/bin/bash", "-c"]
+
+2026-06-07 10:52:43,572 - INFO - Do not find previous image, images list is clean.
+2026-06-07 10:52:43,590 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-07 10:52:43,636 - INFO -  ---> 86f1a8d7b38e
+2026-06-07 10:52:43,636 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-07 10:52:44,644 - INFO -  ---> Running in e1ab1e8dc2f3
+2026-06-07 10:52:45,918 - INFO -  ---> Removed intermediate container e1ab1e8dc2f3
+2026-06-07 10:52:45,918 - INFO -  ---> 024ac3c3c4bd
+2026-06-07 10:52:45,918 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-06-07 10:52:46,778 - INFO -  ---> Running in 4a949682bebe
+2026-06-07 10:52:47,213 - INFO -  ---> Removed intermediate container 4a949682bebe
+2026-06-07 10:52:47,213 - INFO -  ---> 86e09d594682
+2026-06-07 10:52:47,214 - INFO - Step 4/15 : RUN apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3-distutils     python3-pip     python3.12-dev     python3-setuptools     ca-certificates     wget     locales     locales-all     tzdata     rustc     cargo     && rm -rf /var/lib/apt/lists/*
+2026-06-07 10:52:47,551 - INFO -  ---> Running in 244362b36411
+2026-06-07 10:52:48,044 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-06-07 10:52:48,047 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-06-07 10:52:48,291 - INFO - Get:3 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [7183 kB]
+2026-06-07 10:52:48,464 - INFO - Get:4 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1300 kB]
+2026-06-07 10:52:48,506 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [77.8 kB]
+2026-06-07 10:52:48,526 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-06-07 10:52:48,539 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4005 kB]
+2026-06-07 10:52:48,746 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-06-07 10:52:48,776 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-06-07 10:52:49,264 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-06-07 10:52:49,273 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-06-07 10:52:49,277 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-06-07 10:52:49,336 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [7451 kB]
+2026-06-07 10:52:49,713 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1607 kB]
+2026-06-07 10:52:49,755 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4344 kB]
+2026-06-07 10:52:49,892 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [86.4 kB]
+2026-06-07 10:52:49,894 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.8 kB]
+2026-06-07 10:52:49,898 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-06-07 10:52:52,388 - INFO - Fetched 46.5 MB in 4s (10.4 MB/s)
+2026-06-07 10:52:53,836 - INFO - Reading package lists...
+2026-06-07 10:52:55,341 - INFO - Reading package lists...
+2026-06-07 10:52:55,597 - INFO - Building dependency tree...
+2026-06-07 10:52:55,597 - INFO - Reading state information...
+2026-06-07 10:52:55,812 - INFO - E: Unable to locate package python3.12
+2026-06-07 10:52:55,812 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-06-07 10:52:55,812 - INFO - E: Couldn't find any package by regex 'python3.12'
+2026-06-07 10:52:55,812 - INFO - E: Unable to locate package python3.12-venv
+2026-06-07 10:52:55,812 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-06-07 10:52:55,813 - INFO - E: Couldn't find any package by regex 'python3.12-venv'
+2026-06-07 10:52:55,813 - INFO - E: Unable to locate package python3.12-dev
+2026-06-07 10:52:55,813 - INFO - E: Couldn't find any package by glob 'python3.12-dev'
+2026-06-07 10:52:55,813 - INFO - E: Couldn't find any package by regex 'python3.12-dev'
+2026-06-07 10:53:00,248 - INFO -  ---> Removed intermediate container 244362b36411
+2026-06-07 10:53:00,254 - ERROR - Error: The command '/bin/sh -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3-distutils     python3-pip     python3.12-dev     python3-setuptools     ca-certificates     wget     locales     locales-all     tzdata     rustc     cargo     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-06-07 10:53:00,254 - ERROR - The command '/bin/sh -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3-distutils     python3-pip     python3.12-dev     python3-setuptools     ca-certificates     wget     locales     locales-all     tzdata     rustc     cargo     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

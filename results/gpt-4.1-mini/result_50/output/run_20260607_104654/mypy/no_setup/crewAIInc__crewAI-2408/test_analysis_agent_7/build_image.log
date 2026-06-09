@@ -1,0 +1,73 @@
+2026-06-07 12:33:16,811 - INFO - Building image crewaiinc__crewai-2408
+Using dockerfile:
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies
+RUN apt update && apt install -y \
+    git \
+    wget \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    curl \
+    rustc \
+    cargo \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale for proper Unicode support
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip to latest version for Python 3.11
+RUN python3.11 -m pip install --upgrade pip
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+RUN git clone https://github.com/crewAIInc/crewAI /testbed/ && \
+    git reset --hard 4f6054d439c602f93283eda351fe6b67133b9a84
+
+# Create Python virtual environment and install dependencies
+RUN python3.11 -m venv /testbed/testbed_venv
+
+# Install required Python packages inside the virtual environment
+RUN /bin/bash -c "source /testbed/testbed_venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install tiktoken --prefer-binary && \
+    pip install -e . && \
+    pip install 'crewai[tools]' 'crewai[embeddings]' && \
+    pip install pytest pytest-asyncio pytest-subprocess pytest-recording ruff mypy pre-commit mkdocs"
+
+# Ensure that the virtual environment is activated on login shells
+RUN echo "source /testbed/testbed_venv/bin/activate" >> /root/.bashrc
+
+ENV PATH="/testbed/testbed_venv/bin:$PATH"
+
+WORKDIR /testbed/
+
+2026-06-07 12:33:16,813 - INFO - Do not find previous image, images list is clean.
+2026-06-07 12:33:16,851 - INFO - Step 1/16 : FROM ubuntu:22.04
+2026-06-07 12:33:16,851 - INFO -  ---> 86f1a8d7b38e
+2026-06-07 12:33:16,851 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-07 12:33:17,903 - INFO -  ---> Running in e033970466c0
+2026-06-07 12:33:18,162 - INFO -  ---> Removed intermediate container e033970466c0
+2026-06-07 12:33:18,162 - INFO -  ---> aaabd034aa65
+2026-06-07 12:33:18,162 - INFO - Step 3/16 : ENV TZ=Etc/UTC
+2026-06-07 12:33:19,181 - INFO -  ---> Running in 3fcd0a2780c5
+2026-06-07 12:33:19,933 - INFO -  ---> Removed intermediate container 3fcd0a2780c5
+2026-06-07 12:33:19,934 - INFO -  ---> 7a261ef20a57
+2026-06-07 12:33:19,934 - INFO - Step 4/16 : SHELL ["/bin/bash", "-c"]
+2026-06-07 12:33:30,061 - INFO -  ---> Running in aa698b29a1d3
+2026-06-07 12:34:00,688 - INFO -  ---> Removed intermediate container aa698b29a1d3
+2026-06-07 12:34:00,688 - INFO -  ---> 5ed771a5951d
+2026-06-07 12:34:00,689 - INFO - Step 5/16 : RUN apt update && apt install -y     git     wget     build-essential     python3.11     python3.11-venv     python3.11-distutils     python3-pip     curl     rustc     cargo     locales     tzdata     && rm -rf /var/lib/apt/lists/*

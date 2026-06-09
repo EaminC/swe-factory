@@ -1,0 +1,42 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Define test files and verify git existence
+TEST_FILES=("tests/crew_test.py" "tests/test_manager_llm_delegation.py")
+EXISTING_TEST_FILES=()
+
+for file in "${TEST_FILES[@]}"; do
+  if git cat-file -e "73f328860b4a477a6d3736e646783d7493841cb4:$file" 2>/dev/null; then
+    EXISTING_TEST_FILES+=("$file")
+  fi
+done
+
+# Checkout only existing test files to prevent git errors
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate correct virtual environment installed in Dockerfile
+source /testbed/testbed_venv/bin/activate
+
+# Set required environment variables with dummy but non-empty values to avoid errors
+export OPENAI_API_KEY="test_api_key_for_eval_script"
+export SERPER_API_KEY="test_serper_key"
+export OTEL_SDK_DISABLED="true"
+
+# Run pytest only on requested test files (including those not in git but present on FS)
+uv run pytest -rA --tb=short --disable-warnings "${TEST_FILES[@]}"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Revert changes only on the files that exist in git
+if [ ${#EXISTING_TEST_FILES[@]} -gt 0 ]; then
+  git checkout 73f328860b4a477a6d3736e646783d7493841cb4 -- "${EXISTING_TEST_FILES[@]}"
+fi

@@ -1,0 +1,51 @@
+# Use Ubuntu 22.04 base image with bash shell available
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies, python3.9+, git, curl, wget, build tools, and tzdata for time zone
+RUN apt update && apt install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.9 and pip3 to python3.9's pip
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+ && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3 1
+
+# Install virtualenv (use python3 -m venv instead for clarity)
+RUN pip3 install --no-cache-dir virtualenv
+
+# Create virtual environment "testbed"
+RUN python3 -m venv /opt/testbed
+
+# Activate virtual environment, upgrade pip, setuptools, wheel and install dependencies from the repository
+# Clone repository, reset to specific commit SHA, and install it in editable mode with [full] extras as recommended by CI workflow
+WORKDIR /testbed/
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    git reset --hard be8db4cc484b77d0d3bc60a012e9035c4395bee3
+
+# Install dependencies inside virtualenv
+RUN /bin/bash -c "source /opt/testbed/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -e .[full] && \
+    pip install coverage"
+
+# Add virtual environment activation to bashrc for convenience
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Default workdir
+WORKDIR /testbed/
+
+# Use /bin/bash as shell for all RUN and interactive commands
+SHELL ["/bin/bash", "-c"]

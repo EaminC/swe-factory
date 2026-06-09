@@ -1,0 +1,100 @@
+[BUG]Training not properly copying memory
+### Description
+
+I am running a crew like this:
+
+from my_crew import ProcessDataCrew
+
+n_iterations = 1
+# inputs = {"topic": "CrewAI Training"}
+filename = "call_trace_crew_training.pkl"
+
+try:
+    ProcessDataCrew().crew().train(
+      n_iterations=n_iterations, 
+    #   inputs=inputs, 
+      filename=filename
+    )
+
+except Exception as e:
+    raise Exception(f"An error occurred while training the crew: {e}")
+
+I was getting these pydantic validation errors:
+[2025-04-11 22:11:40][ERROR]: Training failed: 3 validation errors for Crew
+short_term_memory
+  Input should be an instance of ShortTermMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x142aae180>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+long_term_memory
+  Input should be an instance of LongTermMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x142ac5040>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+entity_memory
+  Input should be an instance of EntityMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x14f613260>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+
+The issue is in crewai.crew.py
+
+On line 1215 the crew modeled is copied:
+copied_data = self.model_dump(exclude=exclude)
+
+The issue is this is serializing the memory models to dicts, which then causes the copied crew pydantic validation to fail.
+
+I was able to fix this by adding:
+copied_data["short_term_memory"] = self.short_term_memory.model_copy() if self.short_term_memory else None
+        copied_data["long_term_memory"] = self.long_term_memory.model_copy() if self.long_term_memory else None
+        copied_data["entity_memory"] = self.entity_memory.model_copy() if self.entity_memory else None
+
+I am sure you can also specify rules or settings in pydantic to handle the serialization
+
+
+### Steps to Reproduce
+
+Attempt to train a crew that is using memory
+
+### Expected behavior
+
+Train successfully
+
+### Screenshots/Code snippets
+
+None
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.114.0
+
+### crewAI Tools Version
+
+0.40.1
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+Exception: An error occurred while training the crew: 3 validation errors for Crew
+short_term_memory
+  Input should be an instance of ShortTermMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x142aae180>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+long_term_memory
+  Input should be an instance of LongTermMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x142ac5040>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+entity_memory
+  Input should be an instance of EntityMemory [type=is_instance_of, input_value={'embedder_config': None,... object at 0x14f613260>}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/is_instance_of
+
+### Possible Solution
+
+Either copy the memory modules or change the pydantic serialization memory fields on the crew model
+
+### Additional context
+
+None

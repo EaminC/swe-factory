@@ -1,0 +1,201 @@
+2026-06-07 13:32:08,833 - INFO - Checking if image crewaiinc__crewai-3390-dockerfile3:latest exists locally...
+2026-06-07 13:32:08,836 - INFO - Image crewaiinc__crewai-3390-dockerfile3:latest found locally.
+2026-06-07 13:32:08,836 - INFO - Creating container for crewaiinc__crewai-3390...
+2026-06-07 13:32:09,181 - INFO - Container for crewaiinc__crewai-3390 started: 96185bb6eb2a839d8c44503305308b4339e52f612075b2f22d78f6327be89527
+2026-06-07 13:32:09,181 - INFO - Intermediate patch for crewaiinc__crewai-3390 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3390/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 13:32:09,562 - INFO - Apply patch success:
+/tmp/patch.diff:31: trailing whitespace.
+        
+/tmp/patch.diff:40: trailing whitespace.
+                
+Checking patch src/crewai/memory/storage/mem0_storage.py...
+Applied patch src/crewai/memory/storage/mem0_storage.py cleanly.
+warning: 2 lines add whitespace errors.
+
+2026-06-07 13:32:10,773 - INFO - Git diff before:
+diff --git a/src/crewai/memory/storage/mem0_storage.py b/src/crewai/memory/storage/mem0_storage.py
+index 275d025ca..020e0058e 100644
+--- a/src/crewai/memory/storage/mem0_storage.py
++++ b/src/crewai/memory/storage/mem0_storage.py
+@@ -1,10 +1,12 @@
+ import os
+-from typing import Any, Dict, List
++import re
+ from collections import defaultdict
+-from mem0 import Memory, MemoryClient
+-from crewai.utilities.chromadb import sanitize_collection_name
++from typing import Any, Iterable
++
++from mem0 import Memory, MemoryClient  # type: ignore[import-untyped]
+ 
+ from crewai.memory.storage.interface import Storage
++from crewai.utilities.chromadb import sanitize_collection_name
+ 
+ MAX_AGENT_ID_LENGTH_MEM0 = 255
+ 
+@@ -86,9 +88,28 @@ class Mem0Storage(Storage):
+ 
+         return filter
+ 
+-    def save(self, value: Any, metadata: Dict[str, Any]) -> None:
++    def save(self, value: Any, metadata: dict[str, Any]) -> None:
++        def _last_content(messages: Iterable[dict[str, Any]], role: str) -> str:
++            return next(
++                (m.get("content", "") for m in reversed(list(messages)) if m.get("role") == role),
++                ""
++            )
++        
++        conversations = []
++        messages = metadata.pop("messages", None)
++        if messages:
++            last_user = _last_content(messages, "user")
++            last_assistant = _last_content(messages, "assistant")
++
++            if user_msg := self._get_user_message(last_user):
++                conversations.append({"role": "user", "content": user_msg})
++                
++            if assistant_msg := self._get_assistant_message(last_assistant):
++                conversations.append({"role": "assistant", "content": assistant_msg})
++        else:
++            conversations.append({"role": "assistant", "content": value})
++
+         user_id = self.config.get("user_id", "")
+-        assistant_message = [{"role" : "assistant","content" : value}]
+ 
+         base_metadata = {
+             "short_term": "short_term",
+@@ -119,9 +140,9 @@ class Mem0Storage(Storage):
+         if agent_id := self.config.get("agent_id", self._get_agent_name()):
+             params["agent_id"] = agent_id
+ 
+-        self.memory.add(assistant_message, **params)
++        self.memory.add(conversations, **params)
+ 
+-    def search(self,query: str,limit: int = 3,score_threshold: float = 0.35) -> List[Any]:
++    def search(self,query: str,limit: int = 3,score_threshold: float = 0.35) -> list[Any]:
+         params = {
+             "query": query,
+             "limit": limit,
+@@ -160,7 +181,7 @@ class Mem0Storage(Storage):
+         # This makes it compatible for Contextual Memory to retrieve
+         for result in results["results"]:
+             result["context"] = result["memory"]
+-        
++
+         return [r for r in results["results"]]
+ 
+     def reset(self):
+@@ -181,3 +202,16 @@ class Mem0Storage(Storage):
+         agents = [self._sanitize_role(agent.role) for agent in agents]
+         agents = "_".join(agents)
+         return sanitize_collection_name(name=agents, max_collection_length=MAX_AGENT_ID_LENGTH_MEM0)
++
++    def _get_assistant_message(self, text: str) -> str:
++        marker = "Final Answer:"
++        if marker in text:
++            return text.split(marker, 1)[1].strip()
++        return text
++
++    def _get_user_message(self, text: str) -> str:
++        pattern = r"User message:\s*(.*)"
++        match = re.search(pattern, text)
++        if match:
++            return match.group(1).strip()
++        return text
+2026-06-07 13:32:10,773 - INFO - Eval script for crewaiinc__crewai-3390 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3390/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 13:32:35,271 - INFO - Test output for crewaiinc__crewai-3390 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-3390/test_analysis_agent_3/test_output.txt
+2026-06-07 13:32:35,423 - INFO - Git diff after:
+diff --git a/src/crewai/memory/storage/mem0_storage.py b/src/crewai/memory/storage/mem0_storage.py
+index 275d025ca..020e0058e 100644
+--- a/src/crewai/memory/storage/mem0_storage.py
++++ b/src/crewai/memory/storage/mem0_storage.py
+@@ -1,10 +1,12 @@
+ import os
+-from typing import Any, Dict, List
++import re
+ from collections import defaultdict
+-from mem0 import Memory, MemoryClient
+-from crewai.utilities.chromadb import sanitize_collection_name
++from typing import Any, Iterable
++
++from mem0 import Memory, MemoryClient  # type: ignore[import-untyped]
+ 
+ from crewai.memory.storage.interface import Storage
++from crewai.utilities.chromadb import sanitize_collection_name
+ 
+ MAX_AGENT_ID_LENGTH_MEM0 = 255
+ 
+@@ -86,9 +88,28 @@ class Mem0Storage(Storage):
+ 
+         return filter
+ 
+-    def save(self, value: Any, metadata: Dict[str, Any]) -> None:
++    def save(self, value: Any, metadata: dict[str, Any]) -> None:
++        def _last_content(messages: Iterable[dict[str, Any]], role: str) -> str:
++            return next(
++                (m.get("content", "") for m in reversed(list(messages)) if m.get("role") == role),
++                ""
++            )
++        
++        conversations = []
++        messages = metadata.pop("messages", None)
++        if messages:
++            last_user = _last_content(messages, "user")
++            last_assistant = _last_content(messages, "assistant")
++
++            if user_msg := self._get_user_message(last_user):
++                conversations.append({"role": "user", "content": user_msg})
++                
++            if assistant_msg := self._get_assistant_message(last_assistant):
++                conversations.append({"role": "assistant", "content": assistant_msg})
++        else:
++            conversations.append({"role": "assistant", "content": value})
++
+         user_id = self.config.get("user_id", "")
+-        assistant_message = [{"role" : "assistant","content" : value}]
+ 
+         base_metadata = {
+             "short_term": "short_term",
+@@ -119,9 +140,9 @@ class Mem0Storage(Storage):
+         if agent_id := self.config.get("agent_id", self._get_agent_name()):
+             params["agent_id"] = agent_id
+ 
+-        self.memory.add(assistant_message, **params)
++        self.memory.add(conversations, **params)
+ 
+-    def search(self,query: str,limit: int = 3,score_threshold: float = 0.35) -> List[Any]:
++    def search(self,query: str,limit: int = 3,score_threshold: float = 0.35) -> list[Any]:
+         params = {
+             "query": query,
+             "limit": limit,
+@@ -160,7 +181,7 @@ class Mem0Storage(Storage):
+         # This makes it compatible for Contextual Memory to retrieve
+         for result in results["results"]:
+             result["context"] = result["memory"]
+-        
++
+         return [r for r in results["results"]]
+ 
+     def reset(self):
+@@ -181,3 +202,16 @@ class Mem0Storage(Storage):
+         agents = [self._sanitize_role(agent.role) for agent in agents]
+         agents = "_".join(agents)
+         return sanitize_collection_name(name=agents, max_collection_length=MAX_AGENT_ID_LENGTH_MEM0)
++
++    def _get_assistant_message(self, text: str) -> str:
++        marker = "Final Answer:"
++        if marker in text:
++            return text.split(marker, 1)[1].strip()
++        return text
++
++    def _get_user_message(self, text: str) -> str:
++        pattern = r"User message:\s*(.*)"
++        match = re.search(pattern, text)
++        if match:
++            return match.group(1).strip()
++        return text
+2026-06-07 13:32:35,423 - INFO - Attempting to stop container crewaiinc__crewai-3390-test3...
+2026-06-07 13:32:51,240 - INFO - Attempting to remove container crewaiinc__crewai-3390-test3...
+2026-06-07 13:32:55,425 - INFO - Container crewaiinc__crewai-3390-test3 removed.
+2026-06-07 13:32:55,425 - INFO - Attempting to remove image crewaiinc__crewai-3390-dockerfile3:latest...
+2026-06-07 13:33:02,119 - INFO - Image crewaiinc__crewai-3390-dockerfile3:latest removed.

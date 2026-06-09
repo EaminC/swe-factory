@@ -1,0 +1,76 @@
+<dockerfile>
+# Use Ubuntu 22.04 as base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies, Python 3.10 and related tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    locales \
+    tzdata \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to UTF-8
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Set working directory
+WORKDIR /testbed
+
+# Clone the target repository and checkout the provided commit SHA (default placeholder)
+ARG COMMIT_SHA=cb522cf5005f856b21c6976e8d94709ae4f9c3f3
+RUN git clone https://github.com/crewAIInc/crewAI.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create Python virtual environment outside /testbed to avoid packaging issues
+RUN python3.10 -m venv /venv
+
+# Update PATH to prioritize virtual environment python and tools
+ENV PATH="/venv/bin:$PATH"
+
+# Upgrade pip inside virtual environment
+RUN pip install --upgrade pip
+
+# Install UV package manager (dependency management tool used by repo)
+RUN pip install uv
+
+# Initialize UV environment (creates UV venv and installs dependencies including dev and extras)
+RUN uv venv
+RUN uv sync --dev --all-extras
+
+# Install the local repository in editable mode
+RUN pip install -e .
+
+# Install optional extras mentioned: 'tools' and 'embeddings' (per reference Dockerfile)
+RUN pip install 'crewai[tools]' 'crewai[embeddings]' tiktoken --prefer-binary
+
+# Build the project using UV build command
+RUN uv build
+
+# Install pre-commit hooks quietly (optional, no fail on missing pre-commit)
+RUN pre-commit install || echo "Skipping pre-commit install if not available"
+
+# Expose environment variables to be set at runtime (do not set values here)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED="true"
+ENV share_crew="True"
+
+# Default shell to bash
+CMD ["/bin/bash"]
+</dockerfile>

@@ -1,0 +1,102 @@
+2026-06-07 11:29:54,095 - INFO - Checking if image crewaiinc__crewai-2071-dockerfile5:latest exists locally...
+2026-06-07 11:29:54,105 - INFO - Image crewaiinc__crewai-2071-dockerfile5:latest found locally.
+2026-06-07 11:29:54,105 - INFO - Creating container for crewaiinc__crewai-2071...
+2026-06-07 11:29:55,413 - INFO - Container for crewaiinc__crewai-2071 started: 9dec3f16937d7fcdc5068841b7f2f0ef72d234f82ab39e25f84a36fc54f26621
+2026-06-07 11:29:55,413 - INFO - Intermediate patch for crewaiinc__crewai-2071 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2071/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 11:29:55,944 - INFO - Apply patch success:
+Checking patch src/crewai/crew.py...
+Checking patch src/crewai/utilities/evaluators/crew_evaluator_handler.py...
+Applied patch src/crewai/crew.py cleanly.
+Applied patch src/crewai/utilities/evaluators/crew_evaluator_handler.py cleanly.
+
+2026-06-07 11:29:56,379 - INFO - Git diff before:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 9ae9ce2c0..9eb93a16c 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -1148,19 +1148,24 @@ class Crew(BaseModel):
+     def test(
+         self,
+         n_iterations: int,
+-        openai_model_name: Optional[str] = None,
++        eval_llm: Union[str, InstanceOf[LLM]],
+         inputs: Optional[Dict[str, Any]] = None,
+     ) -> None:
+         """Test and evaluate the Crew with the given inputs for n iterations concurrently using concurrent.futures."""
+         test_crew = self.copy()
+ 
++        eval_llm = create_llm(eval_llm)
++
++        if not eval_llm:
++            raise ValueError("Failed to create LLM instance.")
++
+         self._test_execution_span = test_crew._telemetry.test_execution_span(
+             test_crew,
+             n_iterations,
+             inputs,
+-            openai_model_name,  # type: ignore[arg-type]
++            eval_llm.model,  # type: ignore[arg-type]
+         )  # type: ignore[arg-type]
+-        evaluator = CrewEvaluator(test_crew, openai_model_name)  # type: ignore[arg-type]
++        evaluator = CrewEvaluator(test_crew, eval_llm)  # type: ignore[arg-type]
+ 
+         for i in range(1, n_iterations + 1):
+             evaluator.set_iteration(i)
+diff --git a/src/crewai/utilities/evaluators/crew_evaluator_handler.py b/src/crewai/utilities/evaluators/crew_evaluator_handler.py
+index ef9b908e1..9fcd2886d 100644
+--- a/src/crewai/utilities/evaluators/crew_evaluator_handler.py
++++ b/src/crewai/utilities/evaluators/crew_evaluator_handler.py
+@@ -1,11 +1,12 @@
+ from collections import defaultdict
+ 
+-from pydantic import BaseModel, Field
++from pydantic import BaseModel, Field, InstanceOf
+ from rich.box import HEAVY_EDGE
+ from rich.console import Console
+ from rich.table import Table
+ 
+ from crewai.agent import Agent
++from crewai.llm import LLM
+ from crewai.task import Task
+ from crewai.tasks.task_output import TaskOutput
+ from crewai.telemetry import Telemetry
+@@ -23,7 +24,7 @@ class CrewEvaluator:
+ 
+     Attributes:
+         crew (Crew): The crew of agents to evaluate.
+-        openai_model_name (str): The model to use for evaluating the performance of the agents (for now ONLY OpenAI accepted).
++        eval_llm (LLM): Language model instance to use for evaluations
+         tasks_scores (defaultdict): A dictionary to store the scores of the agents for each task.
+         iteration (int): The current iteration of the evaluation.
+     """
+@@ -32,9 +33,9 @@ class CrewEvaluator:
+     run_execution_times: defaultdict = defaultdict(list)
+     iteration: int = 0
+ 
+-    def __init__(self, crew, openai_model_name: str):
++    def __init__(self, crew, eval_llm: InstanceOf[LLM]):
+         self.crew = crew
+-        self.openai_model_name = openai_model_name
++        self.llm = eval_llm
+         self._telemetry = Telemetry()
+         self._setup_for_evaluating()
+ 
+@@ -51,7 +52,7 @@ class CrewEvaluator:
+             ),
+             backstory="Evaluator agent for crew evaluation with precise capabilities to evaluate the performance of the agents in the crew based on the tasks they have performed",
+             verbose=False,
+-            llm=self.openai_model_name,
++            llm=self.llm,
+         )
+ 
+     def _evaluation_task(
+@@ -181,7 +182,7 @@ class CrewEvaluator:
+                 self.crew,
+                 evaluation_result.pydantic.quality,
+                 current_task.execution_duration,
+-                self.openai_model_name,
++                self.llm.model,
+             )
+             self.tasks_scores[self.iteration].append(evaluation_result.pydantic.quality)
+             self.run_execution_times[self.iteration].append(
+2026-06-07 11:29:56,379 - INFO - Eval script for crewaiinc__crewai-2071 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2071/test_analysis_agent_5/patch.diff, now applying to container...

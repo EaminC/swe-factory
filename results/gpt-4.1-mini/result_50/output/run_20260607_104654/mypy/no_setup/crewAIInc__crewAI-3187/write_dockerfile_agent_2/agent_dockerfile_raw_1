@@ -1,0 +1,73 @@
+<dockerfile>
+# Base image specification: Ubuntu 22.04 with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system tools and libraries:
+# git, curl, wget for downloads; build-essential and cmake for compilation;
+# rustc and cargo for Rust compilation (needed for dependencies like tiktoken);
+# Python 3.11 as per requirements (>=3.10 and <3.14)
+# locales and tzdata for localization support
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    rustc \
+    cargo \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate locale to avoid locale issues on Python apps
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip, setuptools, and wheel system-wide for better dependency handling
+RUN python3.11 -m pip install --upgrade pip setuptools wheel
+
+# Create working directory /testbed for source code clone
+WORKDIR /testbed
+
+# Argument to specify commit SHA at build time, default to provided commit
+ARG COMMIT_SHA=2ab79a7dd5623fe3adde03469afb61caefed528b
+
+# Clone repo and checkout specified commit SHA, then remove origin remote for cleanliness
+RUN git clone https://github.com/crewAIInc/crewAI.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Install uv tool globally to manage dependencies and virtual environments as per context
+RUN python3.11 -m pip install uv
+
+# Use UV to create virtual environment, lock, and sync dependencies
+RUN uv lock && uv sync && uv venv
+
+# Activate UV virtual environment and install the repo itself in editable mode with extras
+RUN /bin/bash -c "source .venv/bin/activate && pip install -e . && pip install 'crewai[tools]' 'crewai[embeddings]' && pip install tiktoken --prefer-binary"
+
+# Install pre-commit hooks if available (non-fatal if pre-commit is not installed)
+RUN /bin/bash -c "source .venv/bin/activate && pre-commit install || echo 'Skipping pre-commit install if not available'"
+
+# Environment variable placeholders for runtime API keys
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Disable telemetry for the environment as recommended
+ENV OTEL_SDK_DISABLED=true
+
+# Add auto-activation of the UV virtual environment to bashrc for convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default shell on container start uses bash
+CMD ["/bin/bash"]
+</dockerfile>

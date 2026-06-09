@@ -1,0 +1,79 @@
+# Use Ubuntu 22.04 LTS as base image with bash shell
+FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Set locale environment variables
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Install system dependencies and Python 3.11 with venv, Rust compiler, git, curl, wget, build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    rustc \
+    cargo \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate locale
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+
+# Create working directory
+RUN mkdir /testbed
+WORKDIR /testbed
+
+# Upgrade pip system-wide first (recommended)
+RUN python3.11 -m pip install --upgrade pip setuptools wheel
+
+# Clone the repository and checkout the specific commit
+ARG COMMIT_SHA=b09796cd3ff4d5ec3c1870ca6c516b7981d6778a
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create python virtual environment outside /testbed to avoid packaging issues
+RUN python3.11 -m venv /venv
+
+# Modify PATH to use this venv by default
+ENV PATH="/venv/bin:$PATH"
+
+# Upgrade pip inside virtual environment
+RUN pip install --upgrade pip setuptools wheel
+
+# Install uv environment manager package required for dependency management and project build
+RUN pip install uv
+
+# Use uv commands to create and manage the uv virtual environment inside the project
+RUN uv venv
+
+# Install the repository itself in editable mode (to ensure local code is always used)
+# plus install the extra optional dependencies tools and embeddings and tiktoken with Rust requirement
+RUN pip install -e . \
+    && pip install 'crewai[tools]' \
+    && pip install 'crewai[embeddings]' \
+    && pip install tiktoken --prefer-binary
+
+# Build the project using uv build to ensure packaging & build steps are completed
+RUN uv build
+
+# Install pre-commit hooks if available, skip errors if pre-commit not installed
+RUN pre-commit install || echo "Skipping pre-commit install"
+
+# Declare environment variables expected to be provided at container runtime (default empty)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED="true"
+
+# Set default shell
+CMD ["/bin/bash"]

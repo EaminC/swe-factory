@@ -1,0 +1,90 @@
+2026-06-07 11:23:18,923 - INFO - Checking if image crewaiinc__crewai-2192-dockerfile3:latest exists locally...
+2026-06-07 11:23:18,926 - INFO - Image crewaiinc__crewai-2192-dockerfile3:latest found locally.
+2026-06-07 11:23:18,926 - INFO - Creating container for crewaiinc__crewai-2192...
+2026-06-07 11:23:19,550 - INFO - Container for crewaiinc__crewai-2192 started: 4de6fdd5348735d2e13fcf39af0681194b220f8720b417b8b19d961f7eccc018
+2026-06-07 11:23:19,551 - INFO - Intermediate patch for crewaiinc__crewai-2192 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2192/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 11:23:20,021 - INFO - Apply patch success:
+Checking patch src/crewai/llm.py...
+Applied patch src/crewai/llm.py cleanly.
+
+2026-06-07 11:23:20,380 - INFO - Git diff before:
+diff --git a/src/crewai/llm.py b/src/crewai/llm.py
+index 2eefa8934..0c8a46214 100644
+--- a/src/crewai/llm.py
++++ b/src/crewai/llm.py
+@@ -64,6 +64,7 @@ LLM_CONTEXT_WINDOW_SIZES = {
+     "gpt-4-turbo": 128000,
+     "o1-preview": 128000,
+     "o1-mini": 128000,
++    "o3-mini": 200000,  # Based on official o3-mini specifications
+     # gemini
+     "gemini-2.0-flash": 1048576,
+     "gemini-1.5-pro": 2097152,
+@@ -485,10 +486,23 @@ class LLM:
+         """
+         Returns the context window size, using 75% of the maximum to avoid
+         cutting off messages mid-thread.
++
++        Raises:
++            ValueError: If a model's context window size is outside valid bounds (1024-2097152)
+         """
+         if self.context_window_size != 0:
+             return self.context_window_size
+ 
++        MIN_CONTEXT = 1024
++        MAX_CONTEXT = 2097152  # Current max from gemini-1.5-pro
++
++        # Validate all context window sizes
++        for key, value in LLM_CONTEXT_WINDOW_SIZES.items():
++            if value < MIN_CONTEXT or value > MAX_CONTEXT:
++                raise ValueError(
++                    f"Context window for {key} must be between {MIN_CONTEXT} and {MAX_CONTEXT}"
++                )
++
+         self.context_window_size = int(
+             DEFAULT_CONTEXT_WINDOW_SIZE * CONTEXT_WINDOW_USAGE_RATIO
+         )
+2026-06-07 11:23:20,381 - INFO - Eval script for crewaiinc__crewai-2192 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2192/test_analysis_agent_3/patch.diff, now applying to container...
+2026-06-07 11:27:16,022 - INFO - Test output for crewaiinc__crewai-2192 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2192/test_analysis_agent_3/test_output.txt
+2026-06-07 11:27:16,137 - INFO - Git diff after:
+diff --git a/src/crewai/llm.py b/src/crewai/llm.py
+index 2eefa8934..0c8a46214 100644
+--- a/src/crewai/llm.py
++++ b/src/crewai/llm.py
+@@ -64,6 +64,7 @@ LLM_CONTEXT_WINDOW_SIZES = {
+     "gpt-4-turbo": 128000,
+     "o1-preview": 128000,
+     "o1-mini": 128000,
++    "o3-mini": 200000,  # Based on official o3-mini specifications
+     # gemini
+     "gemini-2.0-flash": 1048576,
+     "gemini-1.5-pro": 2097152,
+@@ -485,10 +486,23 @@ class LLM:
+         """
+         Returns the context window size, using 75% of the maximum to avoid
+         cutting off messages mid-thread.
++
++        Raises:
++            ValueError: If a model's context window size is outside valid bounds (1024-2097152)
+         """
+         if self.context_window_size != 0:
+             return self.context_window_size
+ 
++        MIN_CONTEXT = 1024
++        MAX_CONTEXT = 2097152  # Current max from gemini-1.5-pro
++
++        # Validate all context window sizes
++        for key, value in LLM_CONTEXT_WINDOW_SIZES.items():
++            if value < MIN_CONTEXT or value > MAX_CONTEXT:
++                raise ValueError(
++                    f"Context window for {key} must be between {MIN_CONTEXT} and {MAX_CONTEXT}"
++                )
++
+         self.context_window_size = int(
+             DEFAULT_CONTEXT_WINDOW_SIZE * CONTEXT_WINDOW_USAGE_RATIO
+         )
+2026-06-07 11:27:16,138 - INFO - Attempting to stop container crewaiinc__crewai-2192-test2...
+2026-06-07 11:27:36,112 - INFO - Attempting to remove container crewaiinc__crewai-2192-test2...
+2026-06-07 11:27:39,453 - INFO - Container crewaiinc__crewai-2192-test2 removed.
+2026-06-07 11:27:39,453 - INFO - Attempting to remove image crewaiinc__crewai-2192-dockerfile3:latest...
+2026-06-07 11:28:26,202 - INFO - Image crewaiinc__crewai-2192-dockerfile3:latest removed.

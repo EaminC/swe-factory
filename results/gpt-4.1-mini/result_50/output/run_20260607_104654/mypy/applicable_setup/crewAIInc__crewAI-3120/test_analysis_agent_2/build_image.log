@@ -1,0 +1,91 @@
+2026-06-07 12:42:02,712 - INFO - Building image crewaiinc__crewai-3120
+Using dockerfile:
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip, setuptools, and wheel for better dependency management
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv tool and pre-commit globally for dependency management and hooks
+RUN python3 -m pip install uv pre-commit
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout specific commit SHA (build argument)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=eec1262d4fb9dc3ad700d18585a36ae30c860562
+
+RUN git clone "$REPO" /testbed/ \
+    && cd /testbed/ \
+    && git reset --hard "$COMMIT_SHA" \
+    && git remote remove origin
+
+# Use uv tool to lock dependencies, sync (without --dev or --all-extras to avoid redundant installs),
+# create virtual environment; activate and install 'crewai[tools]' extras and install repo in editable mode only
+RUN UV_VENV_CLEAR=1 uv lock && \
+    UV_VENV_CLEAR=1 uv sync && \
+    UV_VENV_CLEAR=1 uv venv && \
+    source .venv/bin/activate && \
+    pip install 'crewai[tools]' && \
+    pip install -e .
+
+# Install pre-commit hooks inside virtual environment; ignore failure to avoid build breakage
+RUN source .venv/bin/activate && pre-commit install || true
+
+# Environment variables placeholders for required API keys
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Disable telemetry as recommended
+ENV OTEL_SDK_DISABLED=true
+
+# Add environment activation to bashrc for bash session convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Reaffirm working directory
+WORKDIR /testbed/
+
+2026-06-07 12:42:02,716 - INFO - Do not find previous image, images list is clean.
+2026-06-07 12:42:02,732 - INFO - Step 1/19 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-07 12:42:02,733 - INFO -  ---> 86f1a8d7b38e
+2026-06-07 12:42:02,733 - INFO - Step 2/19 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-07 12:42:16,369 - INFO -  ---> Running in 1f75b043f1c2
+2026-06-07 12:42:19,554 - INFO -  ---> Removed intermediate container 1f75b043f1c2
+2026-06-07 12:42:19,555 - INFO -  ---> 986f86f296db
+2026-06-07 12:42:19,555 - INFO - Step 3/19 : ENV TZ=Etc/UTC
+2026-06-07 12:42:20,785 - INFO -  ---> Running in da944f1d6d1f
+2026-06-07 12:42:27,129 - INFO -  ---> Removed intermediate container da944f1d6d1f
+2026-06-07 12:42:27,129 - INFO -  ---> e876d8e11c1f
+2026-06-07 12:42:27,130 - INFO - Step 4/19 : SHELL ["/bin/bash", "-c"]
+2026-06-07 12:42:32,405 - INFO -  ---> Running in ccc441f9fcf1
+2026-06-07 12:42:32,493 - INFO -  ---> Removed intermediate container ccc441f9fcf1
+2026-06-07 12:42:32,493 - ERROR - Error: failed to get digest sha256:e876d8e11c1f323856acece8a0000da90ae00ce0ce3d52d0b4ee033e157c4748: open /var/lib/docker/image/overlay2/imagedb/content/sha256/e876d8e11c1f323856acece8a0000da90ae00ce0ce3d52d0b4ee033e157c4748: no such file or directory
+2026-06-07 12:42:32,493 - ERROR - failed to get digest sha256:e876d8e11c1f323856acece8a0000da90ae00ce0ce3d52d0b4ee033e157c4748: open /var/lib/docker/image/overlay2/imagedb/content/sha256/e876d8e11c1f323856acece8a0000da90ae00ce0ce3d52d0b4ee033e157c4748: no such file or directory

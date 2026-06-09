@@ -1,0 +1,62 @@
+[BUG] Crew.test() requires OpenAI model and does not support specifying model agent uses if different from OpenAI model
+### Description
+
+Function `'test()` in `class Crew(BaseModel)` expects as input parameter `openai_model_name: Optional[str] = None,` 
+
+https://github.com/crewAIInc/crewAI/blob/6f4ad532e615a961ae7c5d57da48bb7209e3598b/src/crewai/crew.py#L1125
+
+However, this would not apply if an agent refers to a model different from an OpenAI model; in that case testing would not be performed with the chosen model for the agent, but with an OpenAI model instead.
+
+I'd expect that the model running an agent is the same as testing the agent. Why does `test()` not take a parameter `llm` as e.g. `Agent()` does?
+
+Thank you.
+
+### Steps to Reproduce
+
+See
+
+https://github.com/crewAIInc/crewAI/blob/6f4ad532e615a961ae7c5d57da48bb7209e3598b/src/crewai/crew.py#L1125
+
+### Expected behavior
+
+I'd expect that the model running an agent is the same as testing the agent.
+
+### Screenshots/Code snippets
+
+See
+
+https://github.com/crewAIInc/crewAI/blob/6f4ad532e615a961ae7c5d57da48bb7209e3598b/src/crewai/crew.py#L1125
+
+### Operating System
+
+Windows 11
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+crewai==0.100.1
+
+### crewAI Tools Version
+
+crewai-tools==0.33.0
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+See
+
+https://github.com/crewAIInc/crewAI/blob/6f4ad532e615a961ae7c5d57da48bb7209e3598b/src/crewai/crew.py#L1125
+
+### Possible Solution
+
+Replace parameter `openai_model_name` with `llm` to be able to match the LLM an agent uses to run.
+
+### Additional context
+
+n/a

@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the target test file to the specified commit state before applying patch
+git checkout 8faa353e579591f99f3322a1aab3f35f2abafdf8 tests/memory_test.py
+
+# Apply the test patch (content replaced programmatically)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the Python virtualenv environment and run only the specified test file with coverage to show test names and status
+source /opt/testbed/bin/activate
+
+# Run pytest for the specified test file with concise output: show each test filename and pass/fail/skip
+# Using pytest flags: -rA (all reporting), --tb=short (short traceback), and no cache provider to avoid cache issues
+# Using coverage run to measure coverage as recommended in context retrieved commands
+coverage run -m pytest -rA --tb=short -p no:cacheprovider tests/memory_test.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file after testing to clean any modifications
+git checkout 8faa353e579591f99f3322a1aab3f35f2abafdf8 tests/memory_test.py

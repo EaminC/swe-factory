@@ -1,0 +1,83 @@
+# Base image specification: Ubuntu 22.04 with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system tools and libraries:
+# git, curl, wget for downloads; build-essential and cmake for compilation;
+# rustc and cargo for Rust compilation (needed for some dependencies like tiktoken);
+# Python 3.11 as per requirements (>=3.10 and <3.14)
+# locales and tzdata for localization support
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    rustc \
+    cargo \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate locale to avoid locale issues on Python apps
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip to latest version system-wide
+RUN python3.11 -m pip install --upgrade pip
+
+# Create working directory /testbed for source code clone
+WORKDIR /testbed
+
+# Argument to specify commit SHA at build time, default value set to a placeholder
+ARG COMMIT_SHA=2ab79a7dd5623fe3adde03469afb61caefed528b
+
+# Clone repo and checkout specified commit SHA, then remove origin remote for cleanliness
+RUN git clone https://github.com/crewAIInc/crewAI.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create Python virtual environment outside /testbed to prevent packaging interference
+RUN python3.11 -m venv /venv
+
+# Add venv binaries to PATH
+ENV PATH="/venv/bin:$PATH"
+
+# Upgrade pip in virtual environment
+RUN pip install --upgrade pip
+
+# Install UV tool inside the venv for dependency management as per project context
+RUN pip install uv
+
+# Initialize UV-managed virtual environment inside the project
+# (This command creates uv venv, locking and syncing dependencies)
+RUN uv venv
+
+# Install the repo itself in editable mode so local code changes are reflected immediately
+# Install additional dependencies as specified by the project extras: tools and embeddings
+# Also explicitly install tiktoken with preference for binary wheels (Rust dependency)
+RUN pip install -e . \
+    && pip install 'crewai[tools]' \
+    && pip install 'crewai[embeddings]' \
+    && pip install tiktoken --prefer-binary
+
+# Build the project using uv's build system, completing compilation steps if any
+RUN uv build
+
+# Install pre-commit hooks if available, don't fail the build if pre-commit isn't present
+RUN pre-commit install || echo "Skipping pre-commit install if not available"
+
+# Set environment variables placeholders for user-set runtime keys (for OpenAI and Serper APIs)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Default shell on container start uses bash
+CMD ["/bin/bash"]

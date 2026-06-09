@@ -1,0 +1,20 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 73f328860b4a477a6d3736e646783d7493841cb4 "tests/crew_test.py" "tests/test_manager_llm_delegation.py"
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment and run only the specified test files with pytest via uv
+source /testbed/testbed_venv/bin/activate
+
+uv run pytest -rA --tb=short --disable-warnings tests/crew_test.py tests/test_manager_llm_delegation.py
+rc=$?            #Required, save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc" #Required, echo test status
+
+# Cleanup: revert test file changes to original state
+git checkout 73f328860b4a477a6d3736e646783d7493841cb4 "tests/crew_test.py" "tests/test_manager_llm_delegation.py"

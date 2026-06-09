@@ -1,0 +1,24 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the target test file(s) to the exact commit state before patching
+git checkout 4f6054d439c602f93283eda351fe6b67133b9a84 "tests/agent_test.py"
+
+# Apply the provided test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file(s) with pytest; concise output showing test names and results
+# We use --tb=short for cleaner tracebacks and -rA to show summary of all tests (passed, failed, skipped)
+pytest --tb=short -rA tests/agent_test.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset the patched test files to original committed state
+git checkout 4f6054d439c602f93283eda351fe6b67133b9a84 "tests/agent_test.py"
+</script>

@@ -1,0 +1,328 @@
+2026-06-07 11:01:59,804 - INFO - Checking if image agentscope-ai__agentscope-1356-dockerfile1:latest exists locally...
+2026-06-07 11:01:59,810 - INFO - Image agentscope-ai__agentscope-1356-dockerfile1:latest found locally.
+2026-06-07 11:01:59,810 - INFO - Creating container for agentscope-ai__agentscope-1356...
+2026-06-07 11:02:05,145 - INFO - Container for agentscope-ai__agentscope-1356 started: 70151147e73fbcb84221bd911dbadedf1550d5859765bf57441f5890760d187f
+2026-06-07 11:02:05,145 - INFO - Intermediate patch for agentscope-ai__agentscope-1356 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1356/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:02:05,569 - INFO - Apply patch success:
+Checking patch src/agentscope/_utils/_common.py...
+Checking patch src/agentscope/model/_anthropic_model.py...
+Checking patch src/agentscope/model/_dashscope_model.py...
+Checking patch src/agentscope/model/_openai_model.py...
+Applied patch src/agentscope/_utils/_common.py cleanly.
+Applied patch src/agentscope/model/_anthropic_model.py cleanly.
+Applied patch src/agentscope/model/_dashscope_model.py cleanly.
+Applied patch src/agentscope/model/_openai_model.py cleanly.
+
+2026-06-07 11:02:05,841 - INFO - Git diff before:
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index 5f1814ab..cc09f48f 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -69,6 +69,31 @@ def _json_loads_with_repair(
+     return {}
+ 
+ 
++def _parse_streaming_json_dict(
++    json_str: str,
++    last_input: dict | None = None,
++) -> dict:
++    """Parse a streaming JSON dict without regressing on incomplete chunks.
++
++    If the current chunk already forms a valid JSON dict, prefer it directly.
++    Otherwise, fall back to repaired JSON and keep the previous parsed value
++    only when repair would shrink the intermediate structure.
++    """
++    json_str = json_str or "{}"
++    try:
++        result = json.loads(json_str)
++        if isinstance(result, dict):
++            return result
++    except Exception:
++        pass
++
++    repaired_input = _json_loads_with_repair(json_str)
++    last_input = last_input or {}
++    if len(json.dumps(last_input)) > len(json.dumps(repaired_input)):
++        return last_input
++    return repaired_input
++
++
+ def _is_accessible_local_file(url: str) -> bool:
+     """Check if the given URL is a local URL."""
+     # First identify if it's an uri with 'file://' schema,
+diff --git a/src/agentscope/model/_anthropic_model.py b/src/agentscope/model/_anthropic_model.py
+index ec4269c4..7e99ac63 100644
+--- a/src/agentscope/model/_anthropic_model.py
++++ b/src/agentscope/model/_anthropic_model.py
+@@ -2,7 +2,6 @@
+ # pylint: disable=too-many-branches, too-many-statements
+ """The Anthropic API model classes."""
+ import copy
+-import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -23,6 +22,7 @@ from ._model_usage import ChatUsage
+ from .._logging import logger
+ from .._utils._common import (
+     _json_loads_with_repair,
++    _parse_streaming_json_dict,
+     _create_tool_from_base_model,
+ )
+ from ..message import TextBlock, ToolUseBlock, ThinkingBlock
+@@ -475,16 +475,10 @@ class AnthropicChatModel(ChatModelBase):
+ 
+                     # If parsing the tool input in streaming mode
+                     if self.stream_tool_parsing:
+-                        repaired_input = _json_loads_with_repair(
+-                            input_str or "{}",
++                        repaired_input = _parse_streaming_json_dict(
++                            input_str,
++                            last_input_objs.get(tool_id),
+                         )
+-                        # If the new repaired input is shorter than one in the
+-                        # last chunk, use the last one to avoid regression
+-                        last_input = last_input_objs.get(tool_id, {})
+-                        if len(json.dumps(last_input)) > len(
+-                            json.dumps(repaired_input),
+-                        ):
+-                            repaired_input = last_input
+                         last_input_objs[tool_id] = repaired_input
+ 
+                     else:
+diff --git a/src/agentscope/model/_dashscope_model.py b/src/agentscope/model/_dashscope_model.py
+index cd727fc7..f91f7dd1 100644
+--- a/src/agentscope/model/_dashscope_model.py
++++ b/src/agentscope/model/_dashscope_model.py
+@@ -25,6 +25,7 @@ from ._model_response import ChatResponse
+ from ._model_usage import ChatUsage
+ from .._utils._common import (
+     _json_loads_with_repair,
++    _parse_streaming_json_dict,
+     _create_tool_from_base_model,
+ )
+ from ..message import TextBlock, ToolUseBlock, ThinkingBlock
+@@ -413,16 +414,10 @@ class DashScopeChatModel(ChatModelBase):
+ 
+                 # If parsing the tool input in streaming mode
+                 if self.stream_tool_parsing:
+-                    repaired_input = _json_loads_with_repair(
+-                        input_str or "{}",
++                    repaired_input = _parse_streaming_json_dict(
++                        input_str,
++                        last_input_objs.get(tool_id),
+                     )
+-                    # If the new repaired input is shorter than one in the last
+-                    # chunk, use the last one to avoid regression
+-                    last_input = last_input_objs.get(tool_id, {})
+-                    if len(json.dumps(last_input)) > len(
+-                        json.dumps(repaired_input),
+-                    ):
+-                        repaired_input = last_input
+                     last_input_objs[tool_id] = repaired_input
+ 
+                 else:
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index 61a22496..81179d62 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -2,7 +2,6 @@
+ # pylint: disable=too-many-branches
+ """OpenAI Chat model class."""
+ import copy
+-import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -21,7 +20,10 @@ from . import ChatResponse
+ from ._model_base import ChatModelBase
+ from ._model_usage import ChatUsage
+ from .._logging import logger
+-from .._utils._common import _json_loads_with_repair
++from .._utils._common import (
++    _json_loads_with_repair,
++    _parse_streaming_json_dict,
++)
+ from ..message import (
+     ToolUseBlock,
+     TextBlock,
+@@ -458,16 +460,10 @@ class OpenAIChatModel(ChatModelBase):
+ 
+                     # If parsing the tool input in streaming mode
+                     if self.stream_tool_parsing:
+-                        repaired_input = _json_loads_with_repair(
+-                            input_str or "{}",
++                        repaired_input = _parse_streaming_json_dict(
++                            input_str,
++                            last_input_objs.get(tool_id),
+                         )
+-                        # If the new repaired input is shorter than one in the
+-                        # last chunk, use the last one to avoid regression
+-                        last_input = last_input_objs.get(tool_id, {})
+-                        if len(json.dumps(last_input)) > len(
+-                            json.dumps(repaired_input),
+-                        ):
+-                            repaired_input = last_input
+                         last_input_objs[tool_id] = repaired_input
+ 
+                     else:
+2026-06-07 11:02:05,842 - INFO - Eval script for agentscope-ai__agentscope-1356 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1356/test_analysis_agent_1/patch.diff, now applying to container...
+2026-06-07 11:02:11,305 - INFO - Test output for agentscope-ai__agentscope-1356 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/agentscope-ai__agentscope-1356/test_analysis_agent_1/test_output.txt
+2026-06-07 11:02:11,424 - INFO - Git diff after:
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+index 5f1814ab..cc09f48f 100644
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -69,6 +69,31 @@ def _json_loads_with_repair(
+     return {}
+ 
+ 
++def _parse_streaming_json_dict(
++    json_str: str,
++    last_input: dict | None = None,
++) -> dict:
++    """Parse a streaming JSON dict without regressing on incomplete chunks.
++
++    If the current chunk already forms a valid JSON dict, prefer it directly.
++    Otherwise, fall back to repaired JSON and keep the previous parsed value
++    only when repair would shrink the intermediate structure.
++    """
++    json_str = json_str or "{}"
++    try:
++        result = json.loads(json_str)
++        if isinstance(result, dict):
++            return result
++    except Exception:
++        pass
++
++    repaired_input = _json_loads_with_repair(json_str)
++    last_input = last_input or {}
++    if len(json.dumps(last_input)) > len(json.dumps(repaired_input)):
++        return last_input
++    return repaired_input
++
++
+ def _is_accessible_local_file(url: str) -> bool:
+     """Check if the given URL is a local URL."""
+     # First identify if it's an uri with 'file://' schema,
+diff --git a/src/agentscope/model/_anthropic_model.py b/src/agentscope/model/_anthropic_model.py
+index ec4269c4..7e99ac63 100644
+--- a/src/agentscope/model/_anthropic_model.py
++++ b/src/agentscope/model/_anthropic_model.py
+@@ -2,7 +2,6 @@
+ # pylint: disable=too-many-branches, too-many-statements
+ """The Anthropic API model classes."""
+ import copy
+-import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -23,6 +22,7 @@ from ._model_usage import ChatUsage
+ from .._logging import logger
+ from .._utils._common import (
+     _json_loads_with_repair,
++    _parse_streaming_json_dict,
+     _create_tool_from_base_model,
+ )
+ from ..message import TextBlock, ToolUseBlock, ThinkingBlock
+@@ -475,16 +475,10 @@ class AnthropicChatModel(ChatModelBase):
+ 
+                     # If parsing the tool input in streaming mode
+                     if self.stream_tool_parsing:
+-                        repaired_input = _json_loads_with_repair(
+-                            input_str or "{}",
++                        repaired_input = _parse_streaming_json_dict(
++                            input_str,
++                            last_input_objs.get(tool_id),
+                         )
+-                        # If the new repaired input is shorter than one in the
+-                        # last chunk, use the last one to avoid regression
+-                        last_input = last_input_objs.get(tool_id, {})
+-                        if len(json.dumps(last_input)) > len(
+-                            json.dumps(repaired_input),
+-                        ):
+-                            repaired_input = last_input
+                         last_input_objs[tool_id] = repaired_input
+ 
+                     else:
+diff --git a/src/agentscope/model/_dashscope_model.py b/src/agentscope/model/_dashscope_model.py
+index cd727fc7..f91f7dd1 100644
+--- a/src/agentscope/model/_dashscope_model.py
++++ b/src/agentscope/model/_dashscope_model.py
+@@ -25,6 +25,7 @@ from ._model_response import ChatResponse
+ from ._model_usage import ChatUsage
+ from .._utils._common import (
+     _json_loads_with_repair,
++    _parse_streaming_json_dict,
+     _create_tool_from_base_model,
+ )
+ from ..message import TextBlock, ToolUseBlock, ThinkingBlock
+@@ -413,16 +414,10 @@ class DashScopeChatModel(ChatModelBase):
+ 
+                 # If parsing the tool input in streaming mode
+                 if self.stream_tool_parsing:
+-                    repaired_input = _json_loads_with_repair(
+-                        input_str or "{}",
++                    repaired_input = _parse_streaming_json_dict(
++                        input_str,
++                        last_input_objs.get(tool_id),
+                     )
+-                    # If the new repaired input is shorter than one in the last
+-                    # chunk, use the last one to avoid regression
+-                    last_input = last_input_objs.get(tool_id, {})
+-                    if len(json.dumps(last_input)) > len(
+-                        json.dumps(repaired_input),
+-                    ):
+-                        repaired_input = last_input
+                     last_input_objs[tool_id] = repaired_input
+ 
+                 else:
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index 61a22496..81179d62 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -2,7 +2,6 @@
+ # pylint: disable=too-many-branches
+ """OpenAI Chat model class."""
+ import copy
+-import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -21,7 +20,10 @@ from . import ChatResponse
+ from ._model_base import ChatModelBase
+ from ._model_usage import ChatUsage
+ from .._logging import logger
+-from .._utils._common import _json_loads_with_repair
++from .._utils._common import (
++    _json_loads_with_repair,
++    _parse_streaming_json_dict,
++)
+ from ..message import (
+     ToolUseBlock,
+     TextBlock,
+@@ -458,16 +460,10 @@ class OpenAIChatModel(ChatModelBase):
+ 
+                     # If parsing the tool input in streaming mode
+                     if self.stream_tool_parsing:
+-                        repaired_input = _json_loads_with_repair(
+-                            input_str or "{}",
++                        repaired_input = _parse_streaming_json_dict(
++                            input_str,
++                            last_input_objs.get(tool_id),
+                         )
+-                        # If the new repaired input is shorter than one in the
+-                        # last chunk, use the last one to avoid regression
+-                        last_input = last_input_objs.get(tool_id, {})
+-                        if len(json.dumps(last_input)) > len(
+-                            json.dumps(repaired_input),
+-                        ):
+-                            repaired_input = last_input
+                         last_input_objs[tool_id] = repaired_input
+ 
+                     else:
+2026-06-07 11:02:11,425 - INFO - Attempting to stop container agentscope-ai__agentscope-1356-test1...
+2026-06-07 11:02:29,295 - INFO - Attempting to remove container agentscope-ai__agentscope-1356-test1...
+2026-06-07 11:02:29,391 - INFO - Container agentscope-ai__agentscope-1356-test1 removed.
+2026-06-07 11:02:29,391 - INFO - Attempting to remove image agentscope-ai__agentscope-1356-dockerfile1:latest...
+2026-06-07 11:02:48,120 - INFO - Image agentscope-ai__agentscope-1356-dockerfile1:latest removed.

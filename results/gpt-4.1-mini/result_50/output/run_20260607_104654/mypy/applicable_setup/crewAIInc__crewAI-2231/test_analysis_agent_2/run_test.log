@@ -1,0 +1,152 @@
+2026-06-07 11:13:15,045 - INFO - Checking if image crewaiinc__crewai-2231-dockerfile2:latest exists locally...
+2026-06-07 11:13:15,047 - INFO - Image crewaiinc__crewai-2231-dockerfile2:latest found locally.
+2026-06-07 11:13:15,047 - INFO - Creating container for crewaiinc__crewai-2231...
+2026-06-07 11:13:15,374 - INFO - Container for crewaiinc__crewai-2231 started: 0f1fa173d1979cbd114806c118bc01fa7b957f453eca9349429d030179270a70
+2026-06-07 11:13:15,374 - INFO - Intermediate patch for crewaiinc__crewai-2231 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2231/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 11:13:15,799 - INFO - Apply patch success:
+Checking patch src/crewai/flow/flow.py...
+Applied patch src/crewai/flow/flow.py cleanly.
+
+2026-06-07 11:13:16,194 - INFO - Git diff before:
+diff --git a/src/crewai/flow/flow.py b/src/crewai/flow/flow.py
+index 7a8b88ba0..3b6e81293 100644
+--- a/src/crewai/flow/flow.py
++++ b/src/crewai/flow/flow.py
+@@ -894,35 +894,45 @@ class Flow(Generic[T], metaclass=FlowMeta):
+         Notes
+         -----
+         - Routers are executed sequentially to maintain flow control
+-        - Each router's result becomes the new trigger_method
++        - Each router's result becomes a new trigger_method
+         - Normal listeners are executed in parallel for efficiency
+         - Listeners can receive the trigger method's result as a parameter
+         """
+         # First, handle routers repeatedly until no router triggers anymore
++        router_results = []
++        current_trigger = trigger_method
++
+         while True:
+             routers_triggered = self._find_triggered_methods(
+-                trigger_method, router_only=True
++                current_trigger, router_only=True
+             )
+             if not routers_triggered:
+                 break
++
+             for router_name in routers_triggered:
+                 await self._execute_single_listener(router_name, result)
+                 # After executing router, the router's result is the path
+-                # The last router executed sets the trigger_method
+-                # The router result is the last element in self._method_outputs
+-                trigger_method = self._method_outputs[-1]
+-
+-        # Now that no more routers are triggered by current trigger_method,
+-        # execute normal listeners
+-        listeners_triggered = self._find_triggered_methods(
+-            trigger_method, router_only=False
+-        )
+-        if listeners_triggered:
+-            tasks = [
+-                self._execute_single_listener(listener_name, result)
+-                for listener_name in listeners_triggered
+-            ]
+-            await asyncio.gather(*tasks)
++                router_result = self._method_outputs[-1]
++                if router_result:  # Only add non-None results
++                    router_results.append(router_result)
++                current_trigger = (
++                    router_result  # Update for next iteration of router chain
++                )
++
++        # Now execute normal listeners for all router results and the original trigger
++        all_triggers = [trigger_method] + router_results
++
++        for current_trigger in all_triggers:
++            if current_trigger:  # Skip None results
++                listeners_triggered = self._find_triggered_methods(
++                    current_trigger, router_only=False
++                )
++                if listeners_triggered:
++                    tasks = [
++                        self._execute_single_listener(listener_name, result)
++                        for listener_name in listeners_triggered
++                    ]
++                    await asyncio.gather(*tasks)
+ 
+     def _find_triggered_methods(
+         self, trigger_method: str, router_only: bool
+2026-06-07 11:13:16,194 - INFO - Eval script for crewaiinc__crewai-2231 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2231/test_analysis_agent_2/patch.diff, now applying to container...
+2026-06-07 11:13:16,593 - INFO - Test output for crewaiinc__crewai-2231 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2231/test_analysis_agent_2/test_output.txt
+2026-06-07 11:13:16,698 - INFO - Git diff after:
+diff --git a/src/crewai/flow/flow.py b/src/crewai/flow/flow.py
+index 7a8b88ba0..3b6e81293 100644
+--- a/src/crewai/flow/flow.py
++++ b/src/crewai/flow/flow.py
+@@ -894,35 +894,45 @@ class Flow(Generic[T], metaclass=FlowMeta):
+         Notes
+         -----
+         - Routers are executed sequentially to maintain flow control
+-        - Each router's result becomes the new trigger_method
++        - Each router's result becomes a new trigger_method
+         - Normal listeners are executed in parallel for efficiency
+         - Listeners can receive the trigger method's result as a parameter
+         """
+         # First, handle routers repeatedly until no router triggers anymore
++        router_results = []
++        current_trigger = trigger_method
++
+         while True:
+             routers_triggered = self._find_triggered_methods(
+-                trigger_method, router_only=True
++                current_trigger, router_only=True
+             )
+             if not routers_triggered:
+                 break
++
+             for router_name in routers_triggered:
+                 await self._execute_single_listener(router_name, result)
+                 # After executing router, the router's result is the path
+-                # The last router executed sets the trigger_method
+-                # The router result is the last element in self._method_outputs
+-                trigger_method = self._method_outputs[-1]
+-
+-        # Now that no more routers are triggered by current trigger_method,
+-        # execute normal listeners
+-        listeners_triggered = self._find_triggered_methods(
+-            trigger_method, router_only=False
+-        )
+-        if listeners_triggered:
+-            tasks = [
+-                self._execute_single_listener(listener_name, result)
+-                for listener_name in listeners_triggered
+-            ]
+-            await asyncio.gather(*tasks)
++                router_result = self._method_outputs[-1]
++                if router_result:  # Only add non-None results
++                    router_results.append(router_result)
++                current_trigger = (
++                    router_result  # Update for next iteration of router chain
++                )
++
++        # Now execute normal listeners for all router results and the original trigger
++        all_triggers = [trigger_method] + router_results
++
++        for current_trigger in all_triggers:
++            if current_trigger:  # Skip None results
++                listeners_triggered = self._find_triggered_methods(
++                    current_trigger, router_only=False
++                )
++                if listeners_triggered:
++                    tasks = [
++                        self._execute_single_listener(listener_name, result)
++                        for listener_name in listeners_triggered
++                    ]
++                    await asyncio.gather(*tasks)
+ 
+     def _find_triggered_methods(
+         self, trigger_method: str, router_only: bool
+2026-06-07 11:13:16,699 - INFO - Attempting to stop container crewaiinc__crewai-2231-test1...
+2026-06-07 11:13:33,055 - INFO - Attempting to remove container crewaiinc__crewai-2231-test1...
+2026-06-07 11:13:33,067 - INFO - Container crewaiinc__crewai-2231-test1 removed.
+2026-06-07 11:13:33,067 - INFO - Attempting to remove image crewaiinc__crewai-2231-dockerfile2:latest...
+2026-06-07 11:13:39,048 - INFO - Image crewaiinc__crewai-2231-dockerfile2:latest removed.

@@ -1,0 +1,26 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the specified test file to the commit state before patching
+git checkout 96dae2cc72a93f98a93331b29c6869580b93cf0c "tests/core/default/test_steps.py"
+
+# Apply the given test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run the specified test file using poetry's pytest integration
+# Activate poetry virtualenv by sourcing the in-project .venv activate script
+# This ensures exact environment for tests including dependencies and python version
+source .venv/bin/activate
+
+poetry run pytest --tb=short -rA tests/core/default/test_steps.py
+
+rc=$?  # Capture the exit code of the tests
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file back to original commit state, cleaning up patch
+git checkout 96dae2cc72a93f98a93331b29c6869580b93cf0c "tests/core/default/test_steps.py"

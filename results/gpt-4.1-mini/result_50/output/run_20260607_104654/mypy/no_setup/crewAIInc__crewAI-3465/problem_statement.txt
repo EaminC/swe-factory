@@ -1,0 +1,80 @@
+[BUG] get_mcp_tools in @CrewBase hits a timeout
+### Description
+
+Raising this as I don't believe #3326 is resolved and it has been closed @lucasgomide, or if the functionality already exists, then the documentation doesn't properly cover it.
+
+Whilst (as per [documenation](https://docs.crewai.com/en/mcp/overview#connection-configuration)) it is possible to use `connect_timeout` with `MCPServerAdapter`:
+```
+with MCPServerAdapter(server_params, connect_timeout=60) as tools:
+    # Connection will timeout after 60 seconds if not established
+    pass
+```
+
+I am using MCP Server with `@CrewBase`, where (as per the same document):
+
+>To use MCPServer tools within a CrewBase class, use the `mcp_tools` method. Server configurations should be provided via the `mcp_server_params` attribute. You can pass either a single configuration or a list of multiple server configurations.
+
+This uses the code in https://github.com/crewAIInc/crewAI/blob/main/src/crewai/project/crew_base.py#L89: 
+```
+        def get_mcp_tools(self, *tool_names: list[str]) -> List[BaseTool]:
+            if not self.mcp_server_params:
+                return []
+
+            from crewai_tools import MCPServerAdapter
+
+            adapter = getattr(self, '_mcp_server_adapter', None)
+            if not adapter:
+                self._mcp_server_adapter = MCPServerAdapter(self.mcp_server_params)
+
+            return self._mcp_server_adapter.tools.filter_by_names(tool_names or None)
+```
+
+Which, as can be seen, invokes `MCPServerAdapter(self.mcp_server_params)`, but unlike this example `with MCPServerAdapter(server_params, connect_timeout=60) as tools:` it is not passing the `connect_timeout` parameter, nor has it been made available for me to override the timeout. As a result, I get hit by the 30 second default.
+
+The previous ticket I raised (#3326) and the fix supplied in (#3327) provides this functionality to `@CrewBase` and matches the functionality available if I invoked `MCPServerAdapter` directly.
+
+I therefore please ask that you accept the code update in #3327 and include in a future release. Thanks.
+
+### Steps to Reproduce
+
+See ticket #3326 
+
+### Expected behavior
+
+See ticket #3326 
+
+### Screenshots/Code snippets
+
+See ticket #3326 
+
+### Operating System
+
+Ubuntu 24.04
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.159.0
+
+### crewAI Tools Version
+
+0.62.0
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+See ticket #3326 
+
+### Possible Solution
+
+See ticket #3326 and #3327 
+
+### Additional context
+
+See ticket #3326 and #3327 

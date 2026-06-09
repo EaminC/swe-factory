@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Since the target test file lib/crewai/tests/agents/test_a2a_trust_completion_status.py does NOT exist in commit 528d81226361be0f87c9e077ed0d3eb28243120f,
+# we skip git checkout steps involving that file to avoid errors.
+
+# Apply test patch (patch may add or modify test files as needed)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the uv virtual environment
+source /testbed/.venv/bin/activate
+
+# Run pytest only on the lib/crewai/tests directory to cover existing tests including any added/modified by the patch
+uv run pytest -rA --tb=short --disable-warnings lib/crewai/tests/
+rc=$?
+
+# Output exit code for evaluation
+echo "OMNIGRIL_EXIT_CODE=$rc"

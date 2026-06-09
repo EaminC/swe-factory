@@ -1,0 +1,59 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies including git, curl, build essentials, python3.11 and poetry dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-distutils \
+    python3.11-venv \
+    python3-pip \
+    python3-setuptools \
+    ca-certificates \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locales to avoid locale related warnings/errors
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install poetry (latest stable)
+RUN python3.11 -m pip install --upgrade pip
+RUN python3.11 -m pip install poetry
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the target repository and checkout specific commit
+ARG REPO=https://github.com/AntonOsika/gpt-engineer.git
+ARG COMMIT_SHA=96dae2cc72a93f98a93331b29c6869580b93cf0c
+RUN git clone "$REPO" /testbed && \
+    cd /testbed && \
+    git reset --hard "$COMMIT_SHA"
+
+# Install dependencies with poetry in virtual environment
+# Poetry will create virtual env inside container (cache disabled)
+RUN cd /testbed && \
+    poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-interaction --no-ansi --no-root
+
+# Install the package in editable mode linked to poetry virtual environment
+# This ensures local code is used for testing instead of any PyPi package
+RUN cd /testbed && \
+    source .venv/bin/activate && \
+    pip install -e .
+
+# Expose environment variable instructions for users running container
+ENV OPENAI_API_KEY=""
+
+# Set default shell to bash
+ENV SHELL=/bin/bash
+
+WORKDIR /testbed/

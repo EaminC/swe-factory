@@ -1,0 +1,72 @@
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip, setuptools, and wheel for better dependency management
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv tool and pre-commit globally for dependency management and hooks
+RUN python3 -m pip install uv pre-commit
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout specific commit SHA (build argument)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=eec1262d4fb9dc3ad700d18585a36ae30c860562
+
+RUN git clone "$REPO" /testbed/ \
+    && cd /testbed/ \
+    && git reset --hard "$COMMIT_SHA" \
+    && git remote remove origin
+
+# Use uv tool to lock dependencies, sync (without --dev or --all-extras to avoid redundant installs),
+# create virtual environment; activate and install 'crewai[tools]' extras and install repo in editable mode only
+RUN UV_VENV_CLEAR=1 uv lock && \
+    UV_VENV_CLEAR=1 uv sync && \
+    UV_VENV_CLEAR=1 uv venv && \
+    source .venv/bin/activate && \
+    pip install 'crewai[tools]' && \
+    pip install -e .
+
+# Install pre-commit hooks inside virtual environment; ignore failure to avoid build breakage
+RUN source .venv/bin/activate && pre-commit install || true
+
+# Environment variables placeholders for required API keys
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Disable telemetry as recommended
+ENV OTEL_SDK_DISABLED=true
+
+# Add environment activation to bashrc for bash session convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Reaffirm working directory
+WORKDIR /testbed/

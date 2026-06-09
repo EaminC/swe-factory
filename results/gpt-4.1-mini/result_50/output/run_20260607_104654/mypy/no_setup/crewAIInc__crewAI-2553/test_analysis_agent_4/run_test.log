@@ -1,0 +1,307 @@
+2026-06-07 12:36:40,721 - INFO - Checking if image crewaiinc__crewai-2553-dockerfile4:latest exists locally...
+2026-06-07 12:36:40,727 - INFO - Image crewaiinc__crewai-2553-dockerfile4:latest found locally.
+2026-06-07 12:36:40,727 - INFO - Creating container for crewaiinc__crewai-2553...
+2026-06-07 12:36:46,013 - INFO - Container for crewaiinc__crewai-2553 started: e5a327b3110b01f3ae6f050f8a9a9ea0447c816b95a34c1993c206597f030a81
+2026-06-07 12:36:46,014 - INFO - Intermediate patch for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-07 12:36:46,513 - INFO - Apply patch success:
+Checking patch src/crewai/memory/external/external_memory.py...
+Checking patch src/crewai/memory/memory.py...
+Applied patch src/crewai/memory/external/external_memory.py cleanly.
+Applied patch src/crewai/memory/memory.py cleanly.
+
+2026-06-07 12:36:47,005 - INFO - Git diff before:
+diff --git a/src/crewai/memory/external/external_memory.py b/src/crewai/memory/external/external_memory.py
+index 4ecf3d065..be35f513b 100644
+--- a/src/crewai/memory/external/external_memory.py
++++ b/src/crewai/memory/external/external_memory.py
+@@ -1,4 +1,4 @@
+-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
++from typing import TYPE_CHECKING, Any, Dict, Optional
+ 
+ from crewai.memory.external.external_memory_item import ExternalMemoryItem
+ from crewai.memory.memory import Memory
+@@ -52,7 +52,7 @@ class ExternalMemory(Memory):
+     def reset(self) -> None:
+         self.storage.reset()
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "ExternalMemory":
+         super().set_crew(crew)
+ 
+         if not self.storage:
+diff --git a/src/crewai/memory/memory.py b/src/crewai/memory/memory.py
+index ba8c10a29..20538a186 100644
+--- a/src/crewai/memory/memory.py
++++ b/src/crewai/memory/memory.py
+@@ -1,4 +1,4 @@
+-from typing import Any, Dict, List, Optional, Self
++from typing import Any, Dict, List, Optional
+ 
+ from pydantic import BaseModel
+ 
+@@ -38,6 +38,6 @@ class Memory(BaseModel):
+             query=query, limit=limit, score_threshold=score_threshold
+         )
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "Memory":
+         self.crew = crew
+         return self
+2026-06-07 12:36:47,005 - INFO - Eval script for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_4/patch.diff, now applying to container...
+2026-06-07 12:39:35,175 - INFO - Test output for crewaiinc__crewai-2553 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2553/test_analysis_agent_4/test_output.txt
+2026-06-07 12:39:35,287 - INFO - Git diff after:
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index f655dcc64..9ee0e999a 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -12,6 +12,9 @@ jobs:
+   tests:
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
++    strategy:
++      matrix:
++        python-version: ['3.10', '3.11', '3.12']
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+@@ -21,9 +24,8 @@ jobs:
+         with:
+           enable-cache: true
+ 
+-
+-      - name: Set up Python
+-        run: uv python install 3.12.8
++      - name: Set up Python ${{ matrix.python-version }}
++        run: uv python install ${{ matrix.python-version }}
+ 
+       - name: Install the project
+         run: uv sync --dev --all-extras
+diff --git a/src/crewai/memory/external/external_memory.py b/src/crewai/memory/external/external_memory.py
+index 4ecf3d065..be35f513b 100644
+--- a/src/crewai/memory/external/external_memory.py
++++ b/src/crewai/memory/external/external_memory.py
+@@ -1,4 +1,4 @@
+-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
++from typing import TYPE_CHECKING, Any, Dict, Optional
+ 
+ from crewai.memory.external.external_memory_item import ExternalMemoryItem
+ from crewai.memory.memory import Memory
+@@ -52,7 +52,7 @@ class ExternalMemory(Memory):
+     def reset(self) -> None:
+         self.storage.reset()
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "ExternalMemory":
+         super().set_crew(crew)
+ 
+         if not self.storage:
+diff --git a/src/crewai/memory/memory.py b/src/crewai/memory/memory.py
+index ba8c10a29..20538a186 100644
+--- a/src/crewai/memory/memory.py
++++ b/src/crewai/memory/memory.py
+@@ -1,4 +1,4 @@
+-from typing import Any, Dict, List, Optional, Self
++from typing import Any, Dict, List, Optional
+ 
+ from pydantic import BaseModel
+ 
+@@ -38,6 +38,6 @@ class Memory(BaseModel):
+             query=query, limit=limit, score_threshold=score_threshold
+         )
+ 
+-    def set_crew(self, crew: Any) -> Self:
++    def set_crew(self, crew: Any) -> "Memory":
+         self.crew = crew
+         return self
+diff --git a/tests/memory/external/test_external_memory.py b/tests/memory/external/test_external_memory.py
+deleted file mode 100644
+index 8cbc34ef9..000000000
+--- a/tests/memory/external/test_external_memory.py
++++ /dev/null
+@@ -1,180 +0,0 @@
+-from unittest.mock import MagicMock, patch
+-
+-import pytest
+-from mem0.memory.main import Memory
+-
+-from crewai.agent import Agent
+-from crewai.crew import Crew, Process
+-from crewai.memory.external.external_memory import ExternalMemory
+-from crewai.memory.external.external_memory_item import ExternalMemoryItem
+-from crewai.memory.storage.interface import Storage
+-from crewai.task import Task
+-
+-
+-@pytest.fixture
+-def mock_mem0_memory():
+-    mock_memory = MagicMock(spec=Memory)
+-    return mock_memory
+-
+-
+-@pytest.fixture
+-def patch_configure_mem0(mock_mem0_memory):
+-    with patch(
+-        "crewai.memory.external.external_memory.ExternalMemory._configure_mem0",
+-        return_value=mock_mem0_memory,
+-    ) as mocked:
+-        yield mocked
+-
+-
+-@pytest.fixture
+-def external_memory_with_mocked_config(patch_configure_mem0):
+-    embedder_config = {"provider": "mem0"}
+-    external_memory = ExternalMemory(embedder_config=embedder_config)
+-    return external_memory
+-
+-
+-@pytest.fixture
+-def crew_with_external_memory(external_memory_with_mocked_config, patch_configure_mem0):
+-    agent = Agent(
+-        role="Researcher",
+-        goal="Search relevant data and provide results",
+-        backstory="You are a researcher at a leading tech think tank.",
+-        tools=[],
+-        verbose=True,
+-    )
+-
+-    task = Task(
+-        description="Perform a search on specific topics.",
+-        expected_output="A list of relevant URLs based on the search query.",
+-        agent=agent,
+-    )
+-
+-    crew = Crew(
+-        agents=[agent],
+-        tasks=[task],
+-        verbose=True,
+-        process=Process.sequential,
+-        memory=True,
+-        external_memory=external_memory_with_mocked_config,
+-    )
+-
+-    return crew
+-
+-
+-def test_external_memory_initialization(external_memory_with_mocked_config):
+-    assert external_memory_with_mocked_config is not None
+-    assert isinstance(external_memory_with_mocked_config, ExternalMemory)
+-
+-
+-def test_external_memory_save(external_memory_with_mocked_config):
+-    memory_item = ExternalMemoryItem(
+-        value="test value", metadata={"task": "test_task"}, agent="test_agent"
+-    )
+-
+-    with patch.object(ExternalMemory, "save") as mock_save:
+-        external_memory_with_mocked_config.save(
+-            value=memory_item.value,
+-            metadata=memory_item.metadata,
+-            agent=memory_item.agent,
+-        )
+-
+-        mock_save.assert_called_once_with(
+-            value=memory_item.value,
+-            metadata=memory_item.metadata,
+-            agent=memory_item.agent,
+-        )
+-
+-
+-def test_external_memory_reset(external_memory_with_mocked_config):
+-    with patch(
+-        "crewai.memory.external.external_memory.ExternalMemory.reset"
+-    ) as mock_reset:
+-        external_memory_with_mocked_config.reset()
+-        mock_reset.assert_called_once()
+-
+-
+-def test_external_memory_supported_storages():
+-    supported_storages = ExternalMemory.external_supported_storages()
+-    assert "mem0" in supported_storages
+-    assert callable(supported_storages["mem0"])
+-
+-
+-def test_external_memory_create_storage_invalid_provider():
+-    embedder_config = {"provider": "invalid_provider", "config": {}}
+-
+-    with pytest.raises(ValueError, match="Provider invalid_provider not supported"):
+-        ExternalMemory.create_storage(None, embedder_config)
+-
+-
+-def test_external_memory_create_storage_missing_provider():
+-    embedder_config = {"config": {}}
+-
+-    with pytest.raises(
+-        ValueError, match="embedder_config must include a 'provider' key"
+-    ):
+-        ExternalMemory.create_storage(None, embedder_config)
+-
+-
+-def test_external_memory_create_storage_missing_config():
+-    with pytest.raises(ValueError, match="embedder_config is required"):
+-        ExternalMemory.create_storage(None, None)
+-
+-
+-def test_crew_with_external_memory_initialization(crew_with_external_memory):
+-    assert crew_with_external_memory._external_memory is not None
+-    assert isinstance(crew_with_external_memory._external_memory, ExternalMemory)
+-    assert crew_with_external_memory._external_memory.crew == crew_with_external_memory
+-
+-
+-@pytest.mark.parametrize("mem_type", ["external", "all"])
+-def test_crew_external_memory_reset(mem_type, crew_with_external_memory):
+-    with patch(
+-        "crewai.memory.external.external_memory.ExternalMemory.reset"
+-    ) as mock_reset:
+-        crew_with_external_memory.reset_memories(mem_type)
+-        mock_reset.assert_called_once()
+-
+-
+-@pytest.mark.parametrize("mem_method", ["search", "save"])
+-@pytest.mark.vcr(filter_headers=["authorization"])
+-def test_crew_external_memory_save(mem_method, crew_with_external_memory):
+-    with patch(
+-        f"crewai.memory.external.external_memory.ExternalMemory.{mem_method}"
+-    ) as mock_method:
+-        crew_with_external_memory.kickoff()
+-        assert mock_method.call_count > 0
+-
+-
+-def test_external_memory_custom_storage(crew_with_external_memory):
+-    class CustomStorage(Storage):
+-        def __init__(self):
+-            self.memories = []
+-
+-        def save(self, value, metadata=None, agent=None):
+-            self.memories.append({"value": value, "metadata": metadata, "agent": agent})
+-
+-        def search(self, query, limit=10, score_threshold=0.5):
+-            return self.memories
+-
+-        def reset(self):
+-            self.memories = []
+-
+-    custom_storage = CustomStorage()
+-    external_memory = ExternalMemory(storage=custom_storage)
+-
+-    # by ensuring the crew is set, we can test that the storage is used
+-    external_memory.set_crew(crew_with_external_memory)
+-
+-    test_value = "test value"
+-    test_metadata = {"source": "test"}
+-    test_agent = "test_agent"
+-    external_memory.save(value=test_value, metadata=test_metadata, agent=test_agent)
+-
+-    results = external_memory.search("test")
+-    assert len(results) == 1
+-    assert results[0]["value"] == test_value
+-    assert results[0]["metadata"] == test_metadata | {"agent": test_agent}
+-
+-    external_memory.reset()
+-    results = external_memory.search("test")
+-    assert len(results) == 0
+2026-06-07 12:39:35,287 - INFO - Git diff changed after running eval script
+2026-06-07 12:39:35,287 - INFO - Attempting to stop container crewaiinc__crewai-2553-test3...
+2026-06-07 12:39:59,269 - INFO - Attempting to remove container crewaiinc__crewai-2553-test3...
+2026-06-07 12:40:04,333 - INFO - Container crewaiinc__crewai-2553-test3 removed.
+2026-06-07 12:40:04,334 - INFO - Attempting to remove image crewaiinc__crewai-2553-dockerfile4:latest...
+2026-06-07 12:40:39,911 - INFO - Image crewaiinc__crewai-2553-dockerfile4:latest removed.

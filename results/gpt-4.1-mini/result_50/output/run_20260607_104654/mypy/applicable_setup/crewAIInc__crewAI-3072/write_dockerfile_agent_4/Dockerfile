@@ -1,0 +1,87 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Install essential packages and development tools including Python 3.11 and Rust toolchain
+RUN apt-get update && apt-get install -y \
+    apt-utils \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    rustc \
+    cargo \
+    python3.11 \
+    python3.11-venv \
+    python3.11-dev \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    ca-certificates \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate and configure locale; update certificates
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8 \
+    && update-ca-certificates
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Set working directory for cloning the project
+WORKDIR /testbed
+
+# Upgrade pip, setuptools, wheel globally
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Clone the repository and checkout the specified commit
+ARG COMMIT_SHA=b09796cd3ff4d5ec3c1870ca6c516b7981d6778a
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed \
+    && git reset --hard ${COMMIT_SHA} \
+    && git remote remove origin
+
+# Create a python virtual environment outside of /testbed
+RUN python3 -m venv /venv
+
+# Add the virtual environment to PATH
+ENV PATH="/venv/bin:$PATH"
+
+# Upgrade pip and packaging tools inside virtual environment
+RUN pip install --upgrade pip setuptools wheel
+
+# Install uv tool for dependency management
+RUN pip install uv
+
+# Create UV-managed venv inside the project folder
+RUN uv venv
+
+# Activate the uv virtual environment and install the package and its extras in editable mode
+RUN source .venv/bin/activate && \
+    pip install 'crewai[tools]' && \
+    pip install 'crewai[embeddings]' && \
+    pip install -e .
+
+# Build the project using uv build tool
+RUN uv build
+
+# Install pre-commit hooks if available, do not fail if pre-commit is absent
+RUN source .venv/bin/activate && pre-commit install || echo "Skipping pre-commit install"
+
+# Set environment variables with empty defaults; OTEL telemetry disabled
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED="true"
+
+# Add activation of uv env to root bashrc for convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default command
+CMD ["/bin/bash"]

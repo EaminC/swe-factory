@@ -1,0 +1,55 @@
+# Use Ubuntu 22.04 as base image with bash shell and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools: git, curl, wget, python3.10, python3-pip, build essentials
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 refers to python3.10 and pip refers to pip3 for python3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory for the container to /testbed
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA (built argument)
+ARG COMMIT_SHA=b35c1652c7b46a0af2785f988925d9910e3b7b70
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    git reset --hard ${COMMIT_SHA}
+
+# Create and activate a python virtual environment named "testbed"
+RUN python3 -m venv /testbed/venv
+
+# Install all dependencies and the project itself in development mode inside the venv
+RUN /bin/bash -c "source /testbed/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install mcp>=1.13 opentelemetry-api>=1.39.0 qdrant-client==1.15.1 && \
+    pip install -e .[dev]"
+
+# Add environment variables note
+ENV DASHSCOPE_API_KEY=""
+ENV GAODE_API_KEY=""
+
+# Update PATH to include the virtual environment binaries by default for convenience
+ENV PATH="/testbed/venv/bin:$PATH"
+
+# Ensure the virtual environment is activated on shell start for interactive use
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+
+# Default shell is bash with virtual env activated
+CMD ["/bin/bash"]

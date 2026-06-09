@@ -1,0 +1,29 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset the target test file to the specified commit to ensure a clean state
+git checkout 4f6054d439c602f93283eda351fe6b67133b9a84 "tests/agent_test.py"
+
+# Apply test patch (placeholder content to be replaced)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment explicitly
+source /testbed/testbed_venv/bin/activate
+
+# Set required environment variables to avoid OpenAI API key errors and disable optional telemetry if needed
+export OPENAI_API_KEY="test_placeholder_api_key"
+export SERPER_API_KEY="test_placeholder_api_key"
+export OTEL_SDK_DISABLED=true
+
+# Run only the specified test file with concise output, showing test names and pass/fail/skip status
+pytest --tb=short -rA tests/agent_test.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the patched test file to original commit state after testing (clean up)
+git checkout 4f6054d439c602f93283eda351fe6b67133b9a84 "tests/agent_test.py"

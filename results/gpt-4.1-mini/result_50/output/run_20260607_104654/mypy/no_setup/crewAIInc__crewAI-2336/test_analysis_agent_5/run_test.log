@@ -1,0 +1,98 @@
+2026-06-07 12:04:23,257 - INFO - Checking if image crewaiinc__crewai-2336-dockerfile5:latest exists locally...
+2026-06-07 12:04:23,260 - INFO - Image crewaiinc__crewai-2336-dockerfile5:latest found locally.
+2026-06-07 12:04:23,260 - INFO - Creating container for crewaiinc__crewai-2336...
+2026-06-07 12:04:23,813 - INFO - Container for crewaiinc__crewai-2336 started: e49e1b764e52f890a0f6ed2913fd233b7aa9dcf2befc543b94b50eb2b0d77f03
+2026-06-07 12:04:23,816 - INFO - Intermediate patch for crewaiinc__crewai-2336 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2336/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 12:04:24,286 - INFO - Apply patch success:
+Checking patch src/crewai/project/crew_base.py...
+Applied patch src/crewai/project/crew_base.py cleanly.
+
+2026-06-07 12:04:24,773 - INFO - Git diff before:
+diff --git a/src/crewai/project/crew_base.py b/src/crewai/project/crew_base.py
+index 53d3d5f3c..385e49f3d 100644
+--- a/src/crewai/project/crew_base.py
++++ b/src/crewai/project/crew_base.py
+@@ -137,13 +137,11 @@ def CrewBase(cls: T) -> T:
+                 all_functions, "is_cache_handler"
+             )
+             callbacks = self._filter_functions(all_functions, "is_callback")
+-            agents = self._filter_functions(all_functions, "is_agent")
+ 
+             for agent_name, agent_info in self.agents_config.items():
+                 self._map_agent_variables(
+                     agent_name,
+                     agent_info,
+-                    agents,
+                     llms,
+                     tool_functions,
+                     cache_handler_functions,
+@@ -154,7 +152,6 @@ def CrewBase(cls: T) -> T:
+             self,
+             agent_name: str,
+             agent_info: Dict[str, Any],
+-            agents: Dict[str, Callable],
+             llms: Dict[str, Callable],
+             tool_functions: Dict[str, Callable],
+             cache_handler_functions: Dict[str, Callable],
+@@ -172,9 +169,10 @@ def CrewBase(cls: T) -> T:
+                 ]
+ 
+             if function_calling_llm := agent_info.get("function_calling_llm"):
+-                self.agents_config[agent_name]["function_calling_llm"] = agents[
+-                    function_calling_llm
+-                ]()
++                try:
++                    self.agents_config[agent_name]["function_calling_llm"] = llms[function_calling_llm]()
++                except KeyError:
++                    self.agents_config[agent_name]["function_calling_llm"] = function_calling_llm
+ 
+             if step_callback := agent_info.get("step_callback"):
+                 self.agents_config[agent_name]["step_callback"] = callbacks[
+2026-06-07 12:04:24,774 - INFO - Eval script for crewaiinc__crewai-2336 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2336/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 12:04:57,751 - INFO - Test output for crewaiinc__crewai-2336 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2336/test_analysis_agent_5/test_output.txt
+2026-06-07 12:04:57,882 - INFO - Git diff after:
+diff --git a/src/crewai/project/crew_base.py b/src/crewai/project/crew_base.py
+index 53d3d5f3c..385e49f3d 100644
+--- a/src/crewai/project/crew_base.py
++++ b/src/crewai/project/crew_base.py
+@@ -137,13 +137,11 @@ def CrewBase(cls: T) -> T:
+                 all_functions, "is_cache_handler"
+             )
+             callbacks = self._filter_functions(all_functions, "is_callback")
+-            agents = self._filter_functions(all_functions, "is_agent")
+ 
+             for agent_name, agent_info in self.agents_config.items():
+                 self._map_agent_variables(
+                     agent_name,
+                     agent_info,
+-                    agents,
+                     llms,
+                     tool_functions,
+                     cache_handler_functions,
+@@ -154,7 +152,6 @@ def CrewBase(cls: T) -> T:
+             self,
+             agent_name: str,
+             agent_info: Dict[str, Any],
+-            agents: Dict[str, Callable],
+             llms: Dict[str, Callable],
+             tool_functions: Dict[str, Callable],
+             cache_handler_functions: Dict[str, Callable],
+@@ -172,9 +169,10 @@ def CrewBase(cls: T) -> T:
+                 ]
+ 
+             if function_calling_llm := agent_info.get("function_calling_llm"):
+-                self.agents_config[agent_name]["function_calling_llm"] = agents[
+-                    function_calling_llm
+-                ]()
++                try:
++                    self.agents_config[agent_name]["function_calling_llm"] = llms[function_calling_llm]()
++                except KeyError:
++                    self.agents_config[agent_name]["function_calling_llm"] = function_calling_llm
+ 
+             if step_callback := agent_info.get("step_callback"):
+                 self.agents_config[agent_name]["step_callback"] = callbacks[
+2026-06-07 12:04:57,882 - INFO - Attempting to stop container crewaiinc__crewai-2336-test3...
+2026-06-07 12:05:13,552 - INFO - Attempting to remove container crewaiinc__crewai-2336-test3...
+2026-06-07 12:05:16,488 - INFO - Container crewaiinc__crewai-2336-test3 removed.
+2026-06-07 12:05:16,488 - INFO - Attempting to remove image crewaiinc__crewai-2336-dockerfile5:latest...
+2026-06-07 12:05:25,558 - INFO - Image crewaiinc__crewai-2336-dockerfile5:latest removed.

@@ -1,0 +1,84 @@
+2026-06-07 12:16:57,105 - INFO - Checking if image crewaiinc__crewai-2408-dockerfile5:latest exists locally...
+2026-06-07 12:16:57,111 - INFO - Image crewaiinc__crewai-2408-dockerfile5:latest found locally.
+2026-06-07 12:16:57,111 - INFO - Creating container for crewaiinc__crewai-2408...
+2026-06-07 12:16:57,529 - INFO - Container for crewaiinc__crewai-2408 started: 76a50c504c5283165e0a8dbf1cf3dd063d44fb9eff5d465b2ea03e72c1d410bc
+2026-06-07 12:16:57,530 - INFO - Intermediate patch for crewaiinc__crewai-2408 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2408/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 12:16:57,972 - INFO - Apply patch success:
+Checking patch src/crewai/utilities/prompts.py...
+Applied patch src/crewai/utilities/prompts.py cleanly.
+
+2026-06-07 12:16:58,528 - INFO - Git diff before:
+diff --git a/src/crewai/utilities/prompts.py b/src/crewai/utilities/prompts.py
+index 0100f0f07..cd3577874 100644
+--- a/src/crewai/utilities/prompts.py
++++ b/src/crewai/utilities/prompts.py
+@@ -54,10 +54,12 @@ class Prompts(BaseModel):
+         response_template=None,
+     ) -> str:
+         """Constructs a prompt string from specified components."""
+-        if not system_template and not prompt_template:
++        if not system_template or not prompt_template:
++            # If any of the required templates are missing, fall back to the default format
+             prompt_parts = [self.i18n.slice(component) for component in components]
+             prompt = "".join(prompt_parts)
+         else:
++            # All templates are provided, use them
+             prompt_parts = [
+                 self.i18n.slice(component)
+                 for component in components
+@@ -67,8 +69,12 @@ class Prompts(BaseModel):
+             prompt = prompt_template.replace(
+                 "{{ .Prompt }}", "".join(self.i18n.slice("task"))
+             )
+-            response = response_template.split("{{ .Response }}")[0]
+-            prompt = f"{system}\n{prompt}\n{response}"
++            # Handle missing response_template
++            if response_template:
++                response = response_template.split("{{ .Response }}")[0]
++                prompt = f"{system}\n{prompt}\n{response}"
++            else:
++                prompt = f"{system}\n{prompt}"
+ 
+         prompt = (
+             prompt.replace("{goal}", self.agent.goal)
+2026-06-07 12:16:58,529 - INFO - Eval script for crewaiinc__crewai-2408 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2408/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 12:17:07,900 - INFO - Test output for crewaiinc__crewai-2408 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2408/test_analysis_agent_5/test_output.txt
+2026-06-07 12:17:08,012 - INFO - Git diff after:
+diff --git a/src/crewai/utilities/prompts.py b/src/crewai/utilities/prompts.py
+index 0100f0f07..cd3577874 100644
+--- a/src/crewai/utilities/prompts.py
++++ b/src/crewai/utilities/prompts.py
+@@ -54,10 +54,12 @@ class Prompts(BaseModel):
+         response_template=None,
+     ) -> str:
+         """Constructs a prompt string from specified components."""
+-        if not system_template and not prompt_template:
++        if not system_template or not prompt_template:
++            # If any of the required templates are missing, fall back to the default format
+             prompt_parts = [self.i18n.slice(component) for component in components]
+             prompt = "".join(prompt_parts)
+         else:
++            # All templates are provided, use them
+             prompt_parts = [
+                 self.i18n.slice(component)
+                 for component in components
+@@ -67,8 +69,12 @@ class Prompts(BaseModel):
+             prompt = prompt_template.replace(
+                 "{{ .Prompt }}", "".join(self.i18n.slice("task"))
+             )
+-            response = response_template.split("{{ .Response }}")[0]
+-            prompt = f"{system}\n{prompt}\n{response}"
++            # Handle missing response_template
++            if response_template:
++                response = response_template.split("{{ .Response }}")[0]
++                prompt = f"{system}\n{prompt}\n{response}"
++            else:
++                prompt = f"{system}\n{prompt}"
+ 
+         prompt = (
+             prompt.replace("{goal}", self.agent.goal)
+2026-06-07 12:17:08,012 - INFO - Attempting to stop container crewaiinc__crewai-2408-test4...
+2026-06-07 12:17:34,861 - INFO - Attempting to remove container crewaiinc__crewai-2408-test4...
+2026-06-07 12:17:34,901 - INFO - Container crewaiinc__crewai-2408-test4 removed.
+2026-06-07 12:17:34,901 - INFO - Attempting to remove image crewaiinc__crewai-2408-dockerfile5:latest...
+2026-06-07 12:17:58,829 - INFO - Image crewaiinc__crewai-2408-dockerfile5:latest removed.

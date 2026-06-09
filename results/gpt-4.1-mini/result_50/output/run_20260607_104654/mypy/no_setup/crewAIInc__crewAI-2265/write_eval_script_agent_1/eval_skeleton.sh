@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Reset the target test file to the commit version to ensure clean state
+git checkout e1a73e0c44fd85b2ad34ca0a3eda57964c0dee4b "tests/crew_test.py"
+
+# Apply the test patch to update target tests (placeholder for actual patch content)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the uv managed virtual environment and run only the specified test file with verbose output
+source .venv/bin/activate
+uv run pytest -vv tests/crew_test.py
+rc=$?            # Save exit code of test run
+
+echo "OMNIGRIL_EXIT_CODE=$rc" # Output test execution result
+
+# Reset the target test file again after test run to clean up any changes
+git checkout e1a73e0c44fd85b2ad34ca0a3eda57964c0dee4b "tests/crew_test.py"

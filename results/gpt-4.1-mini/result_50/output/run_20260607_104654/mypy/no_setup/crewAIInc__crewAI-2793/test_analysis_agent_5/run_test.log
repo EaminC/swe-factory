@@ -1,0 +1,428 @@
+2026-06-07 13:32:07,740 - INFO - Checking if image crewaiinc__crewai-2793-dockerfile5:latest exists locally...
+2026-06-07 13:32:07,754 - INFO - Image crewaiinc__crewai-2793-dockerfile5:latest found locally.
+2026-06-07 13:32:07,754 - INFO - Creating container for crewaiinc__crewai-2793...
+2026-06-07 13:32:08,168 - INFO - Container for crewaiinc__crewai-2793 started: 04443f7b2db1f0f836c23b324858af0f76ce9358885e03bde28a02c3efaf43ca
+2026-06-07 13:32:08,168 - INFO - Intermediate patch for crewaiinc__crewai-2793 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2793/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 13:32:08,582 - INFO - Apply patch success:
+Checking patch src/crewai/crew.py...
+Checking patch src/crewai/task.py...
+Checking patch src/crewai/telemetry/telemetry.py...
+Checking patch src/crewai/utilities/constants.py...
+Checking patch src/crewai/utilities/formatter.py...
+Applied patch src/crewai/crew.py cleanly.
+Applied patch src/crewai/task.py cleanly.
+Applied patch src/crewai/telemetry/telemetry.py cleanly.
+Applied patch src/crewai/utilities/constants.py cleanly.
+Applied patch src/crewai/utilities/formatter.py cleanly.
+
+2026-06-07 13:32:09,451 - INFO - Git diff before:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 102f22881..a0158f646 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -52,7 +52,7 @@ from crewai.tools.agent_tools.agent_tools import AgentTools
+ from crewai.tools.base_tool import BaseTool, Tool
+ from crewai.types.usage_metrics import UsageMetrics
+ from crewai.utilities import I18N, FileHandler, Logger, RPMController
+-from crewai.utilities.constants import TRAINING_DATA_FILE
++from crewai.utilities.constants import NOT_SPECIFIED, TRAINING_DATA_FILE
+ from crewai.utilities.evaluators.crew_evaluator_handler import CrewEvaluator
+ from crewai.utilities.evaluators.task_evaluator import TaskEvaluator
+ from crewai.utilities.events.crew_events import (
+@@ -478,7 +478,7 @@ class Crew(FlowTrackable, BaseModel):
+         separated by a synchronous task.
+         """
+         for i, task in enumerate(self.tasks):
+-            if task.async_execution and task.context:
++            if task.async_execution and isinstance(task.context, list):
+                 for context_task in task.context:
+                     if context_task.async_execution:
+                         for j in range(i - 1, -1, -1):
+@@ -496,7 +496,7 @@ class Crew(FlowTrackable, BaseModel):
+         task_indices = {id(task): i for i, task in enumerate(self.tasks)}
+ 
+         for task in self.tasks:
+-            if task.context:
++            if isinstance(task.context, list):
+                 for context_task in task.context:
+                     if id(context_task) not in task_indices:
+                         continue  # Skip context tasks not in the main tasks list
+@@ -1034,11 +1034,14 @@ class Crew(FlowTrackable, BaseModel):
+                 )
+         return cast(List[BaseTool], tools)
+ 
+-    def _get_context(self, task: Task, task_outputs: List[TaskOutput]):
++    def _get_context(self, task: Task, task_outputs: List[TaskOutput]) -> str:
++        if not task.context:
++            return ""
++
+         context = (
+-            aggregate_raw_outputs_from_tasks(task.context)
+-            if task.context
+-            else aggregate_raw_outputs_from_task_outputs(task_outputs)
++            aggregate_raw_outputs_from_task_outputs(task_outputs)
++            if task.context is NOT_SPECIFIED
++            else aggregate_raw_outputs_from_tasks(task.context)
+         )
+         return context
+ 
+@@ -1226,7 +1229,7 @@ class Crew(FlowTrackable, BaseModel):
+             task_mapping[task.key] = cloned_task
+ 
+         for cloned_task, original_task in zip(cloned_tasks, self.tasks):
+-            if original_task.context:
++            if isinstance(original_task.context, list):
+                 cloned_context = [
+                     task_mapping[context_task.key]
+                     for context_task in original_task.context
+diff --git a/src/crewai/task.py b/src/crewai/task.py
+index e4a25f438..754fab491 100644
+--- a/src/crewai/task.py
++++ b/src/crewai/task.py
+@@ -2,7 +2,6 @@ import datetime
+ import inspect
+ import json
+ import logging
+-import re
+ import threading
+ import uuid
+ from concurrent.futures import Future
+@@ -41,6 +40,7 @@ from crewai.tasks.output_format import OutputFormat
+ from crewai.tasks.task_output import TaskOutput
+ from crewai.tools.base_tool import BaseTool
+ from crewai.utilities.config import process_config
++from crewai.utilities.constants import NOT_SPECIFIED
+ from crewai.utilities.converter import Converter, convert_to_model
+ from crewai.utilities.events import (
+     TaskCompletedEvent,
+@@ -97,7 +97,7 @@ class Task(BaseModel):
+     )
+     context: Optional[List["Task"]] = Field(
+         description="Other tasks that will have their output used as context for this task.",
+-        default=None,
++        default=NOT_SPECIFIED,
+     )
+     async_execution: Optional[bool] = Field(
+         description="Whether the task should be executed asynchronously or not.",
+@@ -643,7 +643,7 @@ class Task(BaseModel):
+ 
+         cloned_context = (
+             [task_mapping[context_task.key] for context_task in self.context]
+-            if self.context
++            if isinstance(self.context, list)
+             else None
+         )
+ 
+diff --git a/src/crewai/telemetry/telemetry.py b/src/crewai/telemetry/telemetry.py
+index 142cafb2a..e22d757cd 100644
+--- a/src/crewai/telemetry/telemetry.py
++++ b/src/crewai/telemetry/telemetry.py
+@@ -10,6 +10,18 @@ from contextlib import contextmanager
+ from importlib.metadata import version
+ from typing import TYPE_CHECKING, Any, Optional
+ 
++from opentelemetry import trace
++from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
++    OTLPSpanExporter,
++)
++from opentelemetry.sdk.resources import SERVICE_NAME, Resource
++from opentelemetry.sdk.trace import TracerProvider
++from opentelemetry.sdk.trace.export import (
++    BatchSpanProcessor,
++    SpanExportResult,
++)
++from opentelemetry.trace import Span, Status, StatusCode
++
+ from crewai.telemetry.constants import (
+     CREWAI_TELEMETRY_BASE_URL,
+     CREWAI_TELEMETRY_SERVICE_NAME,
+@@ -25,18 +37,6 @@ def suppress_warnings():
+         yield
+ 
+ 
+-from opentelemetry import trace  # noqa: E402
+-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+-    OTLPSpanExporter,  # noqa: E402
+-)
+-from opentelemetry.sdk.resources import SERVICE_NAME, Resource  # noqa: E402
+-from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
+-from opentelemetry.sdk.trace.export import (  # noqa: E402
+-    BatchSpanProcessor,
+-    SpanExportResult,
+-)
+-from opentelemetry.trace import Span, Status, StatusCode  # noqa: E402
+-
+ if TYPE_CHECKING:
+     from crewai.crew import Crew
+     from crewai.task import Task
+@@ -232,7 +232,7 @@ class Telemetry:
+                                 "agent_key": task.agent.key if task.agent else None,
+                                 "context": (
+                                     [task.description for task in task.context]
+-                                    if task.context
++                                    if isinstance(task.context, list)
+                                     else None
+                                 ),
+                                 "tools_names": [
+@@ -748,7 +748,7 @@ class Telemetry:
+                             "agent_key": task.agent.key if task.agent else None,
+                             "context": (
+                                 [task.description for task in task.context]
+-                                if task.context
++                                if isinstance(task.context, list)
+                                 else None
+                             ),
+                             "tools_names": [
+diff --git a/src/crewai/utilities/constants.py b/src/crewai/utilities/constants.py
+index 9ff10f1d4..4dbace270 100644
+--- a/src/crewai/utilities/constants.py
++++ b/src/crewai/utilities/constants.py
+@@ -5,3 +5,14 @@ KNOWLEDGE_DIRECTORY = "knowledge"
+ MAX_LLM_RETRY = 3
+ MAX_FILE_NAME_LENGTH = 255
+ EMITTER_COLOR = "bold_blue"
++
++
++class _NotSpecified:
++    def __repr__(self):
++        return "NOT_SPECIFIED"
++
++
++# Sentinel value used to detect when no value has been explicitly provided.
++# Unlike `None`, which might be a valid value from the user, `NOT_SPECIFIED` allows
++# us to distinguish between "not passed at all" and "explicitly passed None" or "[]".
++NOT_SPECIFIED = _NotSpecified()
+diff --git a/src/crewai/utilities/formatter.py b/src/crewai/utilities/formatter.py
+index 19b2a74f9..fd2611472 100644
+--- a/src/crewai/utilities/formatter.py
++++ b/src/crewai/utilities/formatter.py
+@@ -1,6 +1,6 @@
+-import re
+ from typing import TYPE_CHECKING, List
+ 
++
+ if TYPE_CHECKING:
+     from crewai.task import Task
+     from crewai.tasks.task_output import TaskOutput
+@@ -17,6 +17,11 @@ def aggregate_raw_outputs_from_task_outputs(task_outputs: List["TaskOutput"]) ->
+ 
+ def aggregate_raw_outputs_from_tasks(tasks: List["Task"]) -> str:
+     """Generate string context from the tasks."""
+-    task_outputs = [task.output for task in tasks if task.output is not None]
++
++    task_outputs = (
++        [task.output for task in tasks if task.output is not None]
++        if isinstance(tasks, list)
++        else []
++    )
+ 
+     return aggregate_raw_outputs_from_task_outputs(task_outputs)
+2026-06-07 13:32:09,451 - INFO - Eval script for crewaiinc__crewai-2793 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2793/test_analysis_agent_5/patch.diff, now applying to container...
+2026-06-07 13:33:28,849 - INFO - Test output for crewaiinc__crewai-2793 written to /home/cc/swe-factory/output/run_20260607_104654/mypy/crewAIInc__crewAI-2793/test_analysis_agent_5/test_output.txt
+2026-06-07 13:33:28,967 - INFO - Git diff after:
+diff --git a/src/crewai/crew.py b/src/crewai/crew.py
+index 102f22881..a0158f646 100644
+--- a/src/crewai/crew.py
++++ b/src/crewai/crew.py
+@@ -52,7 +52,7 @@ from crewai.tools.agent_tools.agent_tools import AgentTools
+ from crewai.tools.base_tool import BaseTool, Tool
+ from crewai.types.usage_metrics import UsageMetrics
+ from crewai.utilities import I18N, FileHandler, Logger, RPMController
+-from crewai.utilities.constants import TRAINING_DATA_FILE
++from crewai.utilities.constants import NOT_SPECIFIED, TRAINING_DATA_FILE
+ from crewai.utilities.evaluators.crew_evaluator_handler import CrewEvaluator
+ from crewai.utilities.evaluators.task_evaluator import TaskEvaluator
+ from crewai.utilities.events.crew_events import (
+@@ -478,7 +478,7 @@ class Crew(FlowTrackable, BaseModel):
+         separated by a synchronous task.
+         """
+         for i, task in enumerate(self.tasks):
+-            if task.async_execution and task.context:
++            if task.async_execution and isinstance(task.context, list):
+                 for context_task in task.context:
+                     if context_task.async_execution:
+                         for j in range(i - 1, -1, -1):
+@@ -496,7 +496,7 @@ class Crew(FlowTrackable, BaseModel):
+         task_indices = {id(task): i for i, task in enumerate(self.tasks)}
+ 
+         for task in self.tasks:
+-            if task.context:
++            if isinstance(task.context, list):
+                 for context_task in task.context:
+                     if id(context_task) not in task_indices:
+                         continue  # Skip context tasks not in the main tasks list
+@@ -1034,11 +1034,14 @@ class Crew(FlowTrackable, BaseModel):
+                 )
+         return cast(List[BaseTool], tools)
+ 
+-    def _get_context(self, task: Task, task_outputs: List[TaskOutput]):
++    def _get_context(self, task: Task, task_outputs: List[TaskOutput]) -> str:
++        if not task.context:
++            return ""
++
+         context = (
+-            aggregate_raw_outputs_from_tasks(task.context)
+-            if task.context
+-            else aggregate_raw_outputs_from_task_outputs(task_outputs)
++            aggregate_raw_outputs_from_task_outputs(task_outputs)
++            if task.context is NOT_SPECIFIED
++            else aggregate_raw_outputs_from_tasks(task.context)
+         )
+         return context
+ 
+@@ -1226,7 +1229,7 @@ class Crew(FlowTrackable, BaseModel):
+             task_mapping[task.key] = cloned_task
+ 
+         for cloned_task, original_task in zip(cloned_tasks, self.tasks):
+-            if original_task.context:
++            if isinstance(original_task.context, list):
+                 cloned_context = [
+                     task_mapping[context_task.key]
+                     for context_task in original_task.context
+diff --git a/src/crewai/task.py b/src/crewai/task.py
+index e4a25f438..754fab491 100644
+--- a/src/crewai/task.py
++++ b/src/crewai/task.py
+@@ -2,7 +2,6 @@ import datetime
+ import inspect
+ import json
+ import logging
+-import re
+ import threading
+ import uuid
+ from concurrent.futures import Future
+@@ -41,6 +40,7 @@ from crewai.tasks.output_format import OutputFormat
+ from crewai.tasks.task_output import TaskOutput
+ from crewai.tools.base_tool import BaseTool
+ from crewai.utilities.config import process_config
++from crewai.utilities.constants import NOT_SPECIFIED
+ from crewai.utilities.converter import Converter, convert_to_model
+ from crewai.utilities.events import (
+     TaskCompletedEvent,
+@@ -97,7 +97,7 @@ class Task(BaseModel):
+     )
+     context: Optional[List["Task"]] = Field(
+         description="Other tasks that will have their output used as context for this task.",
+-        default=None,
++        default=NOT_SPECIFIED,
+     )
+     async_execution: Optional[bool] = Field(
+         description="Whether the task should be executed asynchronously or not.",
+@@ -643,7 +643,7 @@ class Task(BaseModel):
+ 
+         cloned_context = (
+             [task_mapping[context_task.key] for context_task in self.context]
+-            if self.context
++            if isinstance(self.context, list)
+             else None
+         )
+ 
+diff --git a/src/crewai/telemetry/telemetry.py b/src/crewai/telemetry/telemetry.py
+index 142cafb2a..e22d757cd 100644
+--- a/src/crewai/telemetry/telemetry.py
++++ b/src/crewai/telemetry/telemetry.py
+@@ -10,6 +10,18 @@ from contextlib import contextmanager
+ from importlib.metadata import version
+ from typing import TYPE_CHECKING, Any, Optional
+ 
++from opentelemetry import trace
++from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
++    OTLPSpanExporter,
++)
++from opentelemetry.sdk.resources import SERVICE_NAME, Resource
++from opentelemetry.sdk.trace import TracerProvider
++from opentelemetry.sdk.trace.export import (
++    BatchSpanProcessor,
++    SpanExportResult,
++)
++from opentelemetry.trace import Span, Status, StatusCode
++
+ from crewai.telemetry.constants import (
+     CREWAI_TELEMETRY_BASE_URL,
+     CREWAI_TELEMETRY_SERVICE_NAME,
+@@ -25,18 +37,6 @@ def suppress_warnings():
+         yield
+ 
+ 
+-from opentelemetry import trace  # noqa: E402
+-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+-    OTLPSpanExporter,  # noqa: E402
+-)
+-from opentelemetry.sdk.resources import SERVICE_NAME, Resource  # noqa: E402
+-from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
+-from opentelemetry.sdk.trace.export import (  # noqa: E402
+-    BatchSpanProcessor,
+-    SpanExportResult,
+-)
+-from opentelemetry.trace import Span, Status, StatusCode  # noqa: E402
+-
+ if TYPE_CHECKING:
+     from crewai.crew import Crew
+     from crewai.task import Task
+@@ -232,7 +232,7 @@ class Telemetry:
+                                 "agent_key": task.agent.key if task.agent else None,
+                                 "context": (
+                                     [task.description for task in task.context]
+-                                    if task.context
++                                    if isinstance(task.context, list)
+                                     else None
+                                 ),
+                                 "tools_names": [
+@@ -748,7 +748,7 @@ class Telemetry:
+                             "agent_key": task.agent.key if task.agent else None,
+                             "context": (
+                                 [task.description for task in task.context]
+-                                if task.context
++                                if isinstance(task.context, list)
+                                 else None
+                             ),
+                             "tools_names": [
+diff --git a/src/crewai/utilities/constants.py b/src/crewai/utilities/constants.py
+index 9ff10f1d4..4dbace270 100644
+--- a/src/crewai/utilities/constants.py
++++ b/src/crewai/utilities/constants.py
+@@ -5,3 +5,14 @@ KNOWLEDGE_DIRECTORY = "knowledge"
+ MAX_LLM_RETRY = 3
+ MAX_FILE_NAME_LENGTH = 255
+ EMITTER_COLOR = "bold_blue"
++
++
++class _NotSpecified:
++    def __repr__(self):
++        return "NOT_SPECIFIED"
++
++
++# Sentinel value used to detect when no value has been explicitly provided.
++# Unlike `None`, which might be a valid value from the user, `NOT_SPECIFIED` allows
++# us to distinguish between "not passed at all" and "explicitly passed None" or "[]".
++NOT_SPECIFIED = _NotSpecified()
+diff --git a/src/crewai/utilities/formatter.py b/src/crewai/utilities/formatter.py
+index 19b2a74f9..fd2611472 100644
+--- a/src/crewai/utilities/formatter.py
++++ b/src/crewai/utilities/formatter.py
+@@ -1,6 +1,6 @@
+-import re
+ from typing import TYPE_CHECKING, List
+ 
++
+ if TYPE_CHECKING:
+     from crewai.task import Task
+     from crewai.tasks.task_output import TaskOutput
+@@ -17,6 +17,11 @@ def aggregate_raw_outputs_from_task_outputs(task_outputs: List["TaskOutput"]) ->
+ 
+ def aggregate_raw_outputs_from_tasks(tasks: List["Task"]) -> str:
+     """Generate string context from the tasks."""
+-    task_outputs = [task.output for task in tasks if task.output is not None]
++
++    task_outputs = (
++        [task.output for task in tasks if task.output is not None]
++        if isinstance(tasks, list)
++        else []
++    )
+ 
+     return aggregate_raw_outputs_from_task_outputs(task_outputs)
+2026-06-07 13:33:28,967 - INFO - Attempting to stop container crewaiinc__crewai-2793-test4...
+2026-06-07 13:33:45,478 - INFO - Attempting to remove container crewaiinc__crewai-2793-test4...
+2026-06-07 13:33:47,845 - INFO - Container crewaiinc__crewai-2793-test4 removed.
+2026-06-07 13:33:47,846 - INFO - Attempting to remove image crewaiinc__crewai-2793-dockerfile5:latest...
+2026-06-07 13:33:52,954 - INFO - Image crewaiinc__crewai-2793-dockerfile5:latest removed.

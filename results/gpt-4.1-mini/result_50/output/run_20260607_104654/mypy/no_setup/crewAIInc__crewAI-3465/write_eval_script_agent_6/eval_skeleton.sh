@@ -1,0 +1,29 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Reset the test file to the committed state before applying patch
+git checkout 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e tests/test_project.py
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the correct virtual environment and run the specified test file using uv run pytest
+source /testbed/.venv/bin/activate
+
+# Confirm installation of embedchain package, install if missing
+if ! python -c "import embedchain" &> /dev/null; then
+    echo "embedchain package missing, installing..."
+    pip install embedchain || (echo "Failed to install embedchain" >&2; exit 1)
+fi
+
+uv run pytest -rA --tb=short --disable-warnings tests/test_project.py
+rc=$?
+
+# Echo exit code for evaluation
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset test file to committed state after test run
+git checkout 1dc4f2e8977eb68b54dc3184a9548dfe10e57f3e tests/test_project.py
