@@ -510,6 +510,26 @@ TENSORBLOCK_MODEL_IDS = [
     "tensorblock/grok-4",
 ]
 
+def create_tuzi_model(
+    model_id: str,
+    max_output_token: int = 8192,
+    cost_per_input: float = 0.0,
+    cost_per_output: float = 0.0,
+) -> OpenaiModel:
+    """为 tuzi 网关创建 OpenaiModel 实例，--model 使用 model_id 即可。"""
+    safe_name = "Tuzi_" + model_id.replace("/", "_").replace(".", "_").replace("-", "_").replace("@", "_")
+    class _TuziModel(OpenaiModel):
+        def __init__(self):
+            super().__init__(model_id, max_output_token, cost_per_input, cost_per_output, parallel_tool_call=True)
+    _TuziModel.__name__ = safe_name
+    return _TuziModel()
+
+
+TUZI_MODEL_IDS = [
+    "tuzi/gpt-4.1-mini",
+    "tuzi/deepseek-v3.2",
+]
+
 
 class Gpt5_mini(OpenaiModel):
     def __init__(self):
