@@ -17,7 +17,7 @@ cd "$REPO_ROOT"
 
 if [[ -f ".env" ]]; then
     echo "Loading variables from .env..."
-    export $(grep -v '^#' .env | xargs)
+    export $(grep -v '^#' .env | tr -d '\r' | xargs)
 else
     echo "ERROR: .env file not found! Please create one." >&2
     exit 1
