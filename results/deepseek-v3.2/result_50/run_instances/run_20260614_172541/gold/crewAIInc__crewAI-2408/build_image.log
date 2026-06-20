@@ -1,0 +1,1411 @@
+2026-06-14 20:56:52,326 - INFO - Building image setup.crewaiinc__crewai-2408:latest
+Using dockerfile:
+# Base image with Python 3.12 (within the required range)
+FROM --platform=linux/x86_64 python:3.12-slim
+
+# Set environment variables to prevent interactive prompts
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    curl \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install UV - the project's dependency manager
+# Using pip install as a reliable method
+RUN pip install uv==0.4.25
+
+# Verify UV installation
+RUN uv --version
+
+# Set default working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed/ \
+    && git remote remove origin \
+    && git reset --hard 4f6054d439c602f93283eda351fe6b67133b9a84
+
+# Create a virtual environment using UV
+RUN uv venv /testbed/.venv
+ENV PATH="/testbed/.venv/bin:${PATH}"
+
+# Install project with all dependencies (development and extras)
+RUN uv sync --dev --all-extras
+
+# Install the project in development mode
+RUN uv pip install -e .
+
+# Set environment variables for testing
+ENV OTEL_SDK_DISABLED=true
+ENV OPENAI_API_KEY="dummy-key-for-testing"
+ENV SERPER_API_KEY="dummy-key-for-testing"
+
+# Create a script to activate the environment
+RUN echo 'source /testbed/.venv/bin/activate' >> /root/.bashrc
+
+# Set the working directory to the testbed
+WORKDIR /testbed/
+Adding (0) setup scripts to image build repo
+2026-06-14 20:56:52,326 - INFO - Building docker image setup.crewaiinc__crewai-2408:latest in run_instances/run_20260614_172541/gold/crewAIInc__crewAI-2408 with platform linux/x86_64
+2026-06-14 20:56:52,335 - INFO - Step 1/17 : FROM --platform=linux/x86_64 python:3.12-slim
+2026-06-14 20:56:52,335 - INFO - 
+2026-06-14 20:56:52,335 - INFO - ---> 2931a4956468
+2026-06-14 20:56:52,335 - INFO - Step 2/17 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-14 20:56:52,335 - INFO - 
+2026-06-14 20:56:53,606 - INFO - ---> Running in c6dbc3de597a
+2026-06-14 20:56:53,697 - INFO - ---> Removed intermediate container c6dbc3de597a
+2026-06-14 20:56:53,698 - INFO - ---> 1608c9ce7aaa
+2026-06-14 20:56:53,698 - INFO - Step 3/17 : ENV TZ=Etc/UTC
+2026-06-14 20:56:53,698 - INFO - 
+2026-06-14 20:56:53,750 - INFO - ---> Running in 53acfe3c4b57
+2026-06-14 20:56:53,801 - INFO - ---> Removed intermediate container 53acfe3c4b57
+2026-06-14 20:56:53,801 - INFO - ---> f7517be22b34
+2026-06-14 20:56:53,802 - INFO - Step 4/17 : RUN apt-get update && apt-get install -y     wget     git     curl     build-essential     pkg-config     && rm -rf /var/lib/apt/lists/*
+2026-06-14 20:56:53,802 - INFO - 
+2026-06-14 20:56:54,008 - INFO - ---> Running in 782ad5c79a10
+2026-06-14 20:56:54,347 - INFO - Hit:1 http://deb.debian.org/debian trixie InRelease
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-06-14 20:56:54,353 - INFO - Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-06-14 20:56:54,394 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9671 kB]
+2026-06-14 20:56:54,651 - INFO - Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+2026-06-14 20:56:54,651 - INFO - Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [216 kB]
+2026-06-14 20:56:55,471 - INFO - Fetched 9983 kB in 1s (8532 kB/s)
+Reading package lists...
+2026-06-14 20:56:56,047 - INFO - 
+2026-06-14 20:56:56,082 - INFO - Reading package lists...
+2026-06-14 20:56:56,672 - INFO - 
+2026-06-14 20:56:56,691 - INFO - Building dependency tree...
+2026-06-14 20:56:56,824 - INFO - Reading state information...
+2026-06-14 20:56:57,002 - INFO - The following additional packages will be installed:
+  bash-completion binutils binutils-common binutils-x86-64-linux-gnu bzip2 cpp
+2026-06-14 20:56:57,003 - INFO - cpp-14 cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev fakeroot g++
+  g++-14 g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-06-14 20:56:57,003 - INFO - gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu git-man krb5-locales less
+  libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+2026-06-14 20:56:57,003 - INFO - libasan8 libatomic1 libbinutils libbrotli1 libc-dev-bin libc6-dev
+2026-06-14 20:56:57,003 - INFO - libcbor0.10 libcc1-0 libcom-err2 libcrypt-dev libctf-nobfd0 libctf0
+2026-06-14 20:56:57,003 - INFO - libcurl3t64-gnutls libcurl4t64 libdpkg-perl libedit2 liberror-perl libexpat1
+2026-06-14 20:56:57,004 - INFO - libfakeroot libfido2-1 libfile-fcntllock-perl libgcc-14-dev
+2026-06-14 20:56:57,004 - INFO - libgdbm-compat4t64 libgnutls30t64 libgomp1 libgprofng0 libgssapi-krb5-2
+2026-06-14 20:56:57,004 - INFO - libhwasan0 libidn2-0 libisl23 libitm1 libjansson4 libk5crypto3 libkeyutils1
+  libkrb5-3 libkrb5support0 libldap-common libldap2 liblocale-gettext-perl
+2026-06-14 20:56:57,004 - INFO - liblsan0 libmpc3 libmpfr6 libnghttp2-14 libnghttp3-9 libngtcp2-16
+2026-06-14 20:56:57,004 - INFO - libngtcp2-crypto-gnutls8 libp11-kit0 libperl5.40 libpkgconf3 libpsl5t64
+2026-06-14 20:56:57,004 - INFO - libquadmath0 librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db
+2026-06-14 20:56:57,004 - INFO - libsframe1 libssh2-1t64 libstdc++-14-dev libtasn1-6 libtsan2 libubsan1
+2026-06-14 20:56:57,005 - INFO - libunistring5 libx11-6 libx11-data libxau6 libxcb1 libxdmcp6 libxext6
+2026-06-14 20:56:57,005 - INFO - libxmuu1 linux-libc-dev make manpages manpages-dev openssh-client patch perl
+2026-06-14 20:56:57,005 - INFO - perl-modules-5.40 pkgconf pkgconf-bin publicsuffix rpcsvc-proto sq xauth
+  xz-utils
+2026-06-14 20:56:57,006 - INFO - Suggested packages:
+  binutils-doc gprofng-gui binutils-gold bzip2-doc cpp-doc gcc-14-locales
+  cpp-14-doc debian-keyring debian-tag2upload-keyring g++-multilib
+  g++-14-multilib gcc-14-doc gcc-multilib autoconf automake libtool flex bison
+  gdb gcc-doc gcc-14-multilib gdb-x86-64-linux-gnu gettext-base git-doc
+  git-email git-gui gitk gitweb git-cvs git-mediawiki git-svn libc-devtools
+  glibc-doc sensible-utils bzr gnutls-bin krb5-doc krb5-user
+  libsasl2-modules-gssapi-mit | libsasl2-modules-gssapi-heimdal
+  libsasl2-modules-ldap libsasl2-modules-otp libsasl2-modules-sql
+  libstdc++-14-doc make-doc man-browser keychain libpam-ssh monkeysphere
+  ssh-askpass ed diffutils-doc perl-doc libterm-readline-gnu-perl
+  | libterm-readline-perl-perl libtap-harness-archive-perl
+2026-06-14 20:56:57,520 - INFO - The following NEW packages will be installed:
+  bash-completion binutils binutils-common binutils-x86-64-linux-gnu
+  build-essential bzip2 cpp cpp-14 cpp-14-x86-64-linux-gnu
+  cpp-x86-64-linux-gnu curl dpkg-dev fakeroot g++ g++-14
+  g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-06-14 20:56:57,520 - INFO - gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu git git-man krb5-locales less
+  libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+  libasan8 libatomic1 libbinutils libbrotli1 libc-dev-bin libc6-dev
+2026-06-14 20:56:57,520 - INFO - libcbor0.10 libcc1-0 libcom-err2 libcrypt-dev libctf-nobfd0 libctf0
+  libcurl3t64-gnutls libcurl4t64 libdpkg-perl libedit2 liberror-perl libexpat1
+  libfakeroot libfido2-1 libfile-fcntllock-perl libgcc-14-dev
+2026-06-14 20:56:57,521 - INFO - libgdbm-compat4t64 libgnutls30t64 libgomp1 libgprofng0 libgssapi-krb5-2
+  libhwasan0 libidn2-0 libisl23 libitm1 libjansson4 libk5crypto3 libkeyutils1
+  libkrb5-3 libkrb5support0 libldap-common libldap2 liblocale-gettext-perl
+2026-06-14 20:56:57,521 - INFO - liblsan0 libmpc3 libmpfr6 libnghttp2-14 libnghttp3-9 libngtcp2-16
+2026-06-14 20:56:57,521 - INFO - libngtcp2-crypto-gnutls8 libp11-kit0 libperl5.40 libpkgconf3 libpsl5t64
+2026-06-14 20:56:57,521 - INFO - libquadmath0 librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db
+2026-06-14 20:56:57,521 - INFO - libsframe1 libssh2-1t64 libstdc++-14-dev libtasn1-6 libtsan2 libubsan1
+  libunistring5 libx11-6 libx11-data libxau6 libxcb1 libxdmcp6 libxext6
+2026-06-14 20:56:57,521 - INFO - libxmuu1 linux-libc-dev make manpages manpages-dev openssh-client patch perl
+2026-06-14 20:56:57,521 - INFO - perl-modules-5.40 pkg-config pkgconf pkgconf-bin publicsuffix rpcsvc-proto
+2026-06-14 20:56:57,522 - INFO - sq wget xauth xz-utils
+2026-06-14 20:56:57,592 - INFO - 0 upgraded, 114 newly installed, 0 to remove and 0 not upgraded.
+Need to get 113 MB of archives.
+After this operation, 453 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 libexpat1 amd64 2.7.1-2 [108 kB]
+2026-06-14 20:56:57,600 - INFO - Get:2 http://deb.debian.org/debian trixie/main amd64 liblocale-gettext-perl amd64 1.07-7+b1 [15.3 kB]
+2026-06-14 20:56:57,601 - INFO - Get:3 http://deb.debian.org/debian trixie/main amd64 less amd64 668-1 [161 kB]
+2026-06-14 20:56:57,605 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 bash-completion all 1:2.16.0-7 [319 kB]
+2026-06-14 20:56:57,613 - INFO - Get:5 http://deb.debian.org/debian trixie/main amd64 bzip2 amd64 1.0.8-6 [40.5 kB]
+2026-06-14 20:56:57,613 - INFO - Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 krb5-locales all 1.21.3-5+deb13u1 [101 kB]
+2026-06-14 20:56:57,615 - INFO - Get:7 http://deb.debian.org/debian trixie/main amd64 manpages all 6.9.1-1 [1393 kB]
+2026-06-14 20:56:57,629 - INFO - Get:8 http://deb.debian.org/debian trixie/main amd64 libedit2 amd64 3.1-20250104-1 [93.8 kB]
+2026-06-14 20:56:57,630 - INFO - Get:9 http://deb.debian.org/debian trixie/main amd64 libcbor0.10 amd64 0.10.2-2 [28.3 kB]
+2026-06-14 20:56:57,631 - INFO - Get:10 http://deb.debian.org/debian trixie/main amd64 libfido2-1 amd64 1.15.0-1+b1 [78.7 kB]
+2026-06-14 20:56:57,632 - INFO - Get:11 http://deb.debian.org/debian-security trixie-security/main amd64 libkrb5support0 amd64 1.21.3-5+deb13u1 [33.1 kB]
+2026-06-14 20:56:57,632 - INFO - Get:12 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b11 [25.0 kB]
+2026-06-14 20:56:57,632 - INFO - Get:13 http://deb.debian.org/debian-security trixie-security/main amd64 libk5crypto3 amd64 1.21.3-5+deb13u1 [81.2 kB]
+2026-06-14 20:56:57,633 - INFO - Get:14 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+2026-06-14 20:56:57,633 - INFO - Get:15 http://deb.debian.org/debian-security trixie-security/main amd64 libkrb5-3 amd64 1.21.3-5+deb13u1 [326 kB]
+2026-06-14 20:56:57,638 - INFO - Get:16 http://deb.debian.org/debian-security trixie-security/main amd64 libgssapi-krb5-2 amd64 1.21.3-5+deb13u1 [138 kB]
+2026-06-14 20:56:57,640 - INFO - Get:17 http://deb.debian.org/debian trixie/main amd64 openssh-client amd64 1:10.0p1-7+deb13u4 [990 kB]
+2026-06-14 20:56:57,654 - INFO - Get:18 http://deb.debian.org/debian trixie/main amd64 perl-modules-5.40 all 5.40.1-6 [3019 kB]
+2026-06-14 20:56:57,676 - INFO - Get:19 http://deb.debian.org/debian trixie/main amd64 libgdbm-compat4t64 amd64 1.24-2 [50.3 kB]
+2026-06-14 20:56:57,677 - INFO - Get:20 http://deb.debian.org/debian trixie/main amd64 libperl5.40 amd64 5.40.1-6 [4341 kB]
+2026-06-14 20:56:57,707 - INFO - Get:21 http://deb.debian.org/debian trixie/main amd64 perl amd64 5.40.1-6 [267 kB]
+2026-06-14 20:56:57,708 - INFO - Get:22 http://deb.debian.org/debian trixie/main amd64 libunistring5 amd64 1.3-2 [477 kB]
+2026-06-14 20:56:57,712 - INFO - Get:23 http://deb.debian.org/debian trixie/main amd64 libidn2-0 amd64 2.3.8-2 [109 kB]
+2026-06-14 20:56:57,712 - INFO - Get:24 http://deb.debian.org/debian trixie/main amd64 libp11-kit0 amd64 0.25.5-3 [425 kB]
+2026-06-14 20:56:57,715 - INFO - Get:25 http://deb.debian.org/debian trixie/main amd64 libtasn1-6 amd64 4.20.0-2 [49.9 kB]
+2026-06-14 20:56:57,716 - INFO - Get:26 http://deb.debian.org/debian-security trixie-security/main amd64 libgnutls30t64 amd64 3.8.9-3+deb13u4 [1469 kB]
+2026-06-14 20:56:57,722 - INFO - Get:27 http://deb.debian.org/debian trixie/main amd64 libpsl5t64 amd64 0.21.2-1.1+b1 [57.2 kB]
+2026-06-14 20:56:57,723 - INFO - Get:28 http://deb.debian.org/debian trixie/main amd64 wget amd64 1.25.0-2 [984 kB]
+2026-06-14 20:56:57,728 - INFO - Get:29 http://deb.debian.org/debian trixie/main amd64 xz-utils amd64 5.8.1-1 [660 kB]
+2026-06-14 20:56:57,732 - INFO - Get:30 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+2026-06-14 20:56:57,732 - INFO - Get:31 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+2026-06-14 20:56:57,746 - INFO - Get:32 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+2026-06-14 20:56:57,749 - INFO - Get:33 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+2026-06-14 20:56:57,754 - INFO - Get:34 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+2026-06-14 20:56:57,755 - INFO - Get:35 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+2026-06-14 20:56:57,755 - INFO - Get:36 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+2026-06-14 20:56:57,756 - INFO - Get:37 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+2026-06-14 20:56:57,762 - INFO - Get:38 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+2026-06-14 20:56:57,763 - INFO - Get:39 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u3 [59.8 kB]
+2026-06-14 20:56:57,763 - INFO - Get:40 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.90-2 [2813 kB]
+2026-06-14 20:56:57,775 - INFO - Get:41 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+2026-06-14 20:56:57,775 - INFO - Get:42 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+2026-06-14 20:56:57,776 - INFO - Get:43 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u3 [1992 kB]
+2026-06-14 20:56:57,787 - INFO - Get:44 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+2026-06-14 20:56:57,791 - INFO - Get:45 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+2026-06-14 20:56:57,795 - INFO - Get:46 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+2026-06-14 20:56:57,795 - INFO - Get:47 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+2026-06-14 20:56:57,873 - INFO - Get:48 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+2026-06-14 20:56:57,873 - INFO - Get:49 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+2026-06-14 20:56:57,874 - INFO - Get:50 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+2026-06-14 20:56:57,874 - INFO - Get:51 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+2026-06-14 20:56:57,875 - INFO - Get:52 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+2026-06-14 20:56:57,877 - INFO - Get:53 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+2026-06-14 20:56:57,877 - INFO - Get:54 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+2026-06-14 20:56:57,877 - INFO - Get:55 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+2026-06-14 20:56:57,895 - INFO - Get:56 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+2026-06-14 20:56:57,905 - INFO - Get:57 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+2026-06-14 20:56:57,919 - INFO - Get:58 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+2026-06-14 20:56:57,925 - INFO - Get:59 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+2026-06-14 20:56:57,933 - INFO - Get:60 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+2026-06-14 20:56:57,934 - INFO - Get:61 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+2026-06-14 20:56:57,949 - INFO - Get:62 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+2026-06-14 20:56:58,097 - INFO - Get:63 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+2026-06-14 20:56:58,104 - INFO - Get:64 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+2026-06-14 20:56:58,104 - INFO - Get:65 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+2026-06-14 20:56:58,105 - INFO - Get:66 http://deb.debian.org/debian trixie/main amd64 libstdc++-14-dev amd64 14.2.0-19 [2376 kB]
+2026-06-14 20:56:58,127 - INFO - Get:67 http://deb.debian.org/debian trixie/main amd64 g++-14-x86-64-linux-gnu amd64 14.2.0-19 [12.1 MB]
+2026-06-14 20:56:58,225 - INFO - Get:68 http://deb.debian.org/debian trixie/main amd64 g++-14 amd64 14.2.0-19 [22.5 kB]
+2026-06-14 20:56:58,226 - INFO - Get:69 http://deb.debian.org/debian trixie/main amd64 g++-x86-64-linux-gnu amd64 4:14.2.0-1 [1200 B]
+2026-06-14 20:56:58,226 - INFO - Get:70 http://deb.debian.org/debian trixie/main amd64 g++ amd64 4:14.2.0-1 [1344 B]
+2026-06-14 20:56:58,226 - INFO - Get:71 http://deb.debian.org/debian trixie/main amd64 make amd64 4.4.1-2 [463 kB]
+2026-06-14 20:56:58,233 - INFO - Get:72 http://deb.debian.org/debian trixie/main amd64 libdpkg-perl all 1.22.22 [651 kB]
+2026-06-14 20:56:58,241 - INFO - Get:73 http://deb.debian.org/debian trixie/main amd64 patch amd64 2.8-2 [134 kB]
+2026-06-14 20:56:58,243 - INFO - Get:74 http://deb.debian.org/debian trixie/main amd64 dpkg-dev all 1.22.22 [1337 kB]
+2026-06-14 20:56:58,253 - INFO - Get:75 http://deb.debian.org/debian trixie/main amd64 build-essential amd64 12.12 [4624 B]
+2026-06-14 20:56:58,253 - INFO - Get:76 http://deb.debian.org/debian trixie/main amd64 libbrotli1 amd64 1.1.0-2+b7 [307 kB]
+2026-06-14 20:56:58,255 - INFO - Get:77 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-9 [19.8 kB]
+2026-06-14 20:56:58,256 - INFO - Get:78 http://deb.debian.org/debian trixie/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-9 [57.5 kB]
+2026-06-14 20:56:58,256 - INFO - Get:79 http://deb.debian.org/debian trixie/main amd64 libldap2 amd64 2.6.10+dfsg-1 [194 kB]
+2026-06-14 20:56:58,257 - INFO - Get:80 http://deb.debian.org/debian-security trixie-security/main amd64 libnghttp2-14 amd64 1.64.0-1.1+deb13u1 [76.2 kB]
+2026-06-14 20:56:58,257 - INFO - Get:81 http://deb.debian.org/debian trixie/main amd64 libnghttp3-9 amd64 1.8.0-1 [67.7 kB]
+2026-06-14 20:56:58,258 - INFO - Get:82 http://deb.debian.org/debian trixie/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b5 [58.8 kB]
+2026-06-14 20:56:58,259 - INFO - Get:83 http://deb.debian.org/debian trixie/main amd64 libssh2-1t64 amd64 1.11.1-1 [245 kB]
+2026-06-14 20:56:58,260 - INFO - Get:84 http://deb.debian.org/debian trixie/main amd64 libcurl4t64 amd64 8.14.1-2+deb13u3 [391 kB]
+2026-06-14 20:56:58,262 - INFO - Get:85 http://deb.debian.org/debian trixie/main amd64 curl amd64 8.14.1-2+deb13u3 [270 kB]
+2026-06-14 20:56:58,264 - INFO - Get:86 http://deb.debian.org/debian trixie/main amd64 libfakeroot amd64 1.37.1.1-1 [29.6 kB]
+2026-06-14 20:56:58,264 - INFO - Get:87 http://deb.debian.org/debian trixie/main amd64 fakeroot amd64 1.37.1.1-1 [76.0 kB]
+2026-06-14 20:56:58,264 - INFO - Get:88 http://deb.debian.org/debian trixie/main amd64 libngtcp2-16 amd64 1.11.0-1+deb13u1 [132 kB]
+2026-06-14 20:56:58,265 - INFO - Get:89 http://deb.debian.org/debian trixie/main amd64 libngtcp2-crypto-gnutls8 amd64 1.11.0-1+deb13u1 [29.5 kB]
+2026-06-14 20:56:58,266 - INFO - Get:90 http://deb.debian.org/debian trixie/main amd64 libcurl3t64-gnutls amd64 8.14.1-2+deb13u3 [384 kB]
+2026-06-14 20:56:58,268 - INFO - Get:91 http://deb.debian.org/debian trixie/main amd64 liberror-perl all 0.17030-1 [26.9 kB]
+2026-06-14 20:56:58,269 - INFO - Get:92 http://deb.debian.org/debian trixie/main amd64 git-man all 1:2.47.3-0+deb13u1 [2205 kB]
+2026-06-14 20:56:58,281 - INFO - Get:93 http://deb.debian.org/debian trixie/main amd64 git amd64 1:2.47.3-0+deb13u1 [8862 kB]
+2026-06-14 20:56:58,344 - INFO - Get:94 http://deb.debian.org/debian trixie/main amd64 libalgorithm-diff-perl all 1.201-1 [43.3 kB]
+2026-06-14 20:56:58,344 - INFO - Get:95 http://deb.debian.org/debian trixie/main amd64 libalgorithm-diff-xs-perl amd64 0.04-9 [11.1 kB]
+2026-06-14 20:56:58,344 - INFO - Get:96 http://deb.debian.org/debian trixie/main amd64 libalgorithm-merge-perl all 0.08-5 [11.8 kB]
+2026-06-14 20:56:58,345 - INFO - Get:97 http://deb.debian.org/debian trixie/main amd64 libfile-fcntllock-perl amd64 0.22-4+b4 [34.6 kB]
+2026-06-14 20:56:58,345 - INFO - Get:98 http://deb.debian.org/debian trixie/main amd64 libldap-common all 2.6.10+dfsg-1 [35.1 kB]
+2026-06-14 20:56:58,346 - INFO - Get:99 http://deb.debian.org/debian trixie/main amd64 libpkgconf3 amd64 1.8.1-4 [36.4 kB]
+2026-06-14 20:56:58,346 - INFO - Get:100 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules amd64 2.1.28+dfsg1-9 [66.7 kB]
+2026-06-14 20:56:58,347 - INFO - Get:101 http://deb.debian.org/debian trixie/main amd64 libxau6 amd64 1:1.0.11-1 [20.4 kB]
+2026-06-14 20:56:58,352 - INFO - Get:102 http://deb.debian.org/debian trixie/main amd64 libxdmcp6 amd64 1:1.1.5-1 [27.8 kB]
+2026-06-14 20:56:58,352 - INFO - Get:103 http://deb.debian.org/debian trixie/main amd64 libxcb1 amd64 1.17.0-2+b1 [144 kB]
+2026-06-14 20:56:58,354 - INFO - Get:104 http://deb.debian.org/debian trixie/main amd64 libx11-data all 2:1.8.12-1 [343 kB]
+2026-06-14 20:56:58,357 - INFO - Get:105 http://deb.debian.org/debian trixie/main amd64 libx11-6 amd64 2:1.8.12-1 [815 kB]
+2026-06-14 20:56:58,365 - INFO - Get:106 http://deb.debian.org/debian trixie/main amd64 libxext6 amd64 2:1.3.4-1+b3 [50.4 kB]
+2026-06-14 20:56:58,365 - INFO - Get:107 http://deb.debian.org/debian trixie/main amd64 libxmuu1 amd64 2:1.1.3-3+b4 [21.9 kB]
+2026-06-14 20:56:58,365 - INFO - Get:108 http://deb.debian.org/debian trixie/main amd64 manpages-dev all 6.9.1-1 [2122 kB]
+2026-06-14 20:56:58,378 - INFO - Get:109 http://deb.debian.org/debian trixie/main amd64 pkgconf-bin amd64 1.8.1-4 [30.2 kB]
+2026-06-14 20:56:58,378 - INFO - Get:110 http://deb.debian.org/debian trixie/main amd64 pkgconf amd64 1.8.1-4 [26.2 kB]
+2026-06-14 20:56:58,378 - INFO - Get:111 http://deb.debian.org/debian trixie/main amd64 pkg-config amd64 1.8.1-4 [14.0 kB]
+2026-06-14 20:56:58,379 - INFO - Get:112 http://deb.debian.org/debian trixie/main amd64 publicsuffix all 20250328.1952-0.1 [296 kB]
+2026-06-14 20:56:58,380 - INFO - Get:113 http://deb.debian.org/debian trixie/main amd64 sq amd64 1.3.1-2+b2 [5653 kB]
+2026-06-14 20:56:58,417 - INFO - Get:114 http://deb.debian.org/debian trixie/main amd64 xauth amd64 1:1.1.2-1.1 [35.9 kB]
+2026-06-14 20:57:01,054 - INFO - Fetched 113 MB in 1s (129 MB/s)
+2026-06-14 20:57:01,083 - INFO - Selecting previously unselected package libexpat1:amd64.
+(Reading database ...
+2026-06-14 20:57:01,084 - INFO - (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%
+2026-06-14 20:57:01,084 - INFO - (Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ...
+2026-06-14 20:57:01,084 - INFO - 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%
+2026-06-14 20:57:01,087 - INFO - (Reading database ... 75%
+2026-06-14 20:57:01,088 - INFO - (Reading database ... 80%
+2026-06-14 20:57:01,089 - INFO - (Reading database ... 85%
+2026-06-14 20:57:01,089 - INFO - (Reading database ... 90%
+2026-06-14 20:57:01,090 - INFO - (Reading database ... 95%
+2026-06-14 20:57:01,092 - INFO - (Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+2026-06-14 20:57:01,093 - INFO - Preparing to unpack .../000-libexpat1_2.7.1-2_amd64.deb ...
+2026-06-14 20:57:01,095 - INFO - Unpacking libexpat1:amd64 (2.7.1-2) ...
+2026-06-14 20:57:01,134 - INFO - Selecting previously unselected package liblocale-gettext-perl.
+2026-06-14 20:57:01,135 - INFO - Preparing to unpack .../001-liblocale-gettext-perl_1.07-7+b1_amd64.deb ...
+2026-06-14 20:57:01,136 - INFO - Unpacking liblocale-gettext-perl (1.07-7+b1) ...
+2026-06-14 20:57:01,161 - INFO - Selecting previously unselected package less.
+2026-06-14 20:57:01,162 - INFO - Preparing to unpack .../002-less_668-1_amd64.deb ...
+2026-06-14 20:57:01,165 - INFO - Unpacking less (668-1) ...
+2026-06-14 20:57:01,209 - INFO - Selecting previously unselected package bash-completion.
+2026-06-14 20:57:01,210 - INFO - Preparing to unpack .../003-bash-completion_1%3a2.16.0-7_all.deb ...
+2026-06-14 20:57:01,211 - INFO - Unpacking bash-completion (1:2.16.0-7) ...
+2026-06-14 20:57:01,319 - INFO - Selecting previously unselected package bzip2.
+2026-06-14 20:57:01,321 - INFO - Preparing to unpack .../004-bzip2_1.0.8-6_amd64.deb ...
+2026-06-14 20:57:01,322 - INFO - Unpacking bzip2 (1.0.8-6) ...
+2026-06-14 20:57:01,352 - INFO - Selecting previously unselected package krb5-locales.
+2026-06-14 20:57:01,353 - INFO - Preparing to unpack .../005-krb5-locales_1.21.3-5+deb13u1_all.deb ...
+2026-06-14 20:57:01,354 - INFO - Unpacking krb5-locales (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:01,393 - INFO - Selecting previously unselected package manpages.
+2026-06-14 20:57:01,395 - INFO - Preparing to unpack .../006-manpages_6.9.1-1_all.deb ...
+2026-06-14 20:57:01,396 - INFO - Unpacking manpages (6.9.1-1) ...
+2026-06-14 20:57:01,472 - INFO - Selecting previously unselected package libedit2:amd64.
+2026-06-14 20:57:01,474 - INFO - Preparing to unpack .../007-libedit2_3.1-20250104-1_amd64.deb ...
+2026-06-14 20:57:01,475 - INFO - Unpacking libedit2:amd64 (3.1-20250104-1) ...
+2026-06-14 20:57:01,512 - INFO - Selecting previously unselected package libcbor0.10:amd64.
+2026-06-14 20:57:01,513 - INFO - Preparing to unpack .../008-libcbor0.10_0.10.2-2_amd64.deb ...
+2026-06-14 20:57:01,514 - INFO - Unpacking libcbor0.10:amd64 (0.10.2-2) ...
+2026-06-14 20:57:01,540 - INFO - Selecting previously unselected package libfido2-1:amd64.
+2026-06-14 20:57:01,541 - INFO - Preparing to unpack .../009-libfido2-1_1.15.0-1+b1_amd64.deb ...
+2026-06-14 20:57:01,542 - INFO - Unpacking libfido2-1:amd64 (1.15.0-1+b1) ...
+2026-06-14 20:57:01,576 - INFO - Selecting previously unselected package libkrb5support0:amd64.
+2026-06-14 20:57:01,577 - INFO - Preparing to unpack .../010-libkrb5support0_1.21.3-5+deb13u1_amd64.deb ...
+2026-06-14 20:57:01,578 - INFO - Unpacking libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:01,608 - INFO - Selecting previously unselected package libcom-err2:amd64.
+2026-06-14 20:57:01,610 - INFO - Preparing to unpack .../011-libcom-err2_1.47.2-3+b11_amd64.deb ...
+2026-06-14 20:57:01,610 - INFO - Unpacking libcom-err2:amd64 (1.47.2-3+b11) ...
+2026-06-14 20:57:01,638 - INFO - Selecting previously unselected package libk5crypto3:amd64.
+2026-06-14 20:57:01,639 - INFO - Preparing to unpack .../012-libk5crypto3_1.21.3-5+deb13u1_amd64.deb ...
+2026-06-14 20:57:01,640 - INFO - Unpacking libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:01,679 - INFO - Selecting previously unselected package libkeyutils1:amd64.
+2026-06-14 20:57:01,681 - INFO - Preparing to unpack .../013-libkeyutils1_1.6.3-6_amd64.deb ...
+2026-06-14 20:57:01,681 - INFO - Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+2026-06-14 20:57:01,707 - INFO - Selecting previously unselected package libkrb5-3:amd64.
+2026-06-14 20:57:01,708 - INFO - Preparing to unpack .../014-libkrb5-3_1.21.3-5+deb13u1_amd64.deb ...
+2026-06-14 20:57:01,709 - INFO - Unpacking libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:01,770 - INFO - Selecting previously unselected package libgssapi-krb5-2:amd64.
+2026-06-14 20:57:01,771 - INFO - Preparing to unpack .../015-libgssapi-krb5-2_1.21.3-5+deb13u1_amd64.deb ...
+2026-06-14 20:57:01,772 - INFO - Unpacking libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:01,808 - INFO - Selecting previously unselected package openssh-client.
+2026-06-14 20:57:01,809 - INFO - Preparing to unpack .../016-openssh-client_1%3a10.0p1-7+deb13u4_amd64.deb ...
+2026-06-14 20:57:01,820 - INFO - Unpacking openssh-client (1:10.0p1-7+deb13u4) ...
+2026-06-14 20:57:01,899 - INFO - Selecting previously unselected package perl-modules-5.40.
+2026-06-14 20:57:01,901 - INFO - Preparing to unpack .../017-perl-modules-5.40_5.40.1-6_all.deb ...
+2026-06-14 20:57:01,901 - INFO - Unpacking perl-modules-5.40 (5.40.1-6) ...
+2026-06-14 20:57:03,344 - INFO - Selecting previously unselected package libgdbm-compat4t64:amd64.
+2026-06-14 20:57:03,348 - INFO - Preparing to unpack .../018-libgdbm-compat4t64_1.24-2_amd64.deb ...
+2026-06-14 20:57:03,634 - INFO - Unpacking libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-06-14 20:57:05,013 - INFO - Selecting previously unselected package libperl5.40:amd64.
+2026-06-14 20:57:05,018 - INFO - Preparing to unpack .../019-libperl5.40_5.40.1-6_amd64.deb ...
+2026-06-14 20:57:05,062 - INFO - Unpacking libperl5.40:amd64 (5.40.1-6) ...
+2026-06-14 20:57:06,024 - INFO - Selecting previously unselected package perl.
+2026-06-14 20:57:06,025 - INFO - Preparing to unpack .../020-perl_5.40.1-6_amd64.deb ...
+2026-06-14 20:57:06,042 - INFO - Unpacking perl (5.40.1-6) ...
+2026-06-14 20:57:06,208 - INFO - Selecting previously unselected package libunistring5:amd64.
+2026-06-14 20:57:06,209 - INFO - Preparing to unpack .../021-libunistring5_1.3-2_amd64.deb ...
+2026-06-14 20:57:06,248 - INFO - Unpacking libunistring5:amd64 (1.3-2) ...
+2026-06-14 20:57:06,437 - INFO - Selecting previously unselected package libidn2-0:amd64.
+2026-06-14 20:57:06,439 - INFO - Preparing to unpack .../022-libidn2-0_2.3.8-2_amd64.deb ...
+2026-06-14 20:57:06,444 - INFO - Unpacking libidn2-0:amd64 (2.3.8-2) ...
+2026-06-14 20:57:06,681 - INFO - Selecting previously unselected package libp11-kit0:amd64.
+2026-06-14 20:57:06,684 - INFO - Preparing to unpack .../023-libp11-kit0_0.25.5-3_amd64.deb ...
+2026-06-14 20:57:06,702 - INFO - Unpacking libp11-kit0:amd64 (0.25.5-3) ...
+2026-06-14 20:57:07,887 - INFO - Selecting previously unselected package libtasn1-6:amd64.
+2026-06-14 20:57:07,888 - INFO - Preparing to unpack .../024-libtasn1-6_4.20.0-2_amd64.deb ...
+2026-06-14 20:57:07,923 - INFO - Unpacking libtasn1-6:amd64 (4.20.0-2) ...
+2026-06-14 20:57:08,511 - INFO - Selecting previously unselected package libgnutls30t64:amd64.
+2026-06-14 20:57:08,512 - INFO - Preparing to unpack .../025-libgnutls30t64_3.8.9-3+deb13u4_amd64.deb ...
+2026-06-14 20:57:08,517 - INFO - Unpacking libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+2026-06-14 20:57:08,700 - INFO - Selecting previously unselected package libpsl5t64:amd64.
+2026-06-14 20:57:08,704 - INFO - Preparing to unpack .../026-libpsl5t64_0.21.2-1.1+b1_amd64.deb ...
+2026-06-14 20:57:08,718 - INFO - Unpacking libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+2026-06-14 20:57:08,761 - INFO - Selecting previously unselected package wget.
+2026-06-14 20:57:08,763 - INFO - Preparing to unpack .../027-wget_1.25.0-2_amd64.deb ...
+2026-06-14 20:57:08,764 - INFO - Unpacking wget (1.25.0-2) ...
+2026-06-14 20:57:08,852 - INFO - Selecting previously unselected package xz-utils.
+2026-06-14 20:57:08,853 - INFO - Preparing to unpack .../028-xz-utils_5.8.1-1_amd64.deb ...
+2026-06-14 20:57:08,855 - INFO - Unpacking xz-utils (5.8.1-1) ...
+2026-06-14 20:57:08,927 - INFO - Selecting previously unselected package libsframe1:amd64.
+2026-06-14 20:57:08,929 - INFO - Preparing to unpack .../029-libsframe1_2.44-3_amd64.deb ...
+2026-06-14 20:57:08,934 - INFO - Unpacking libsframe1:amd64 (2.44-3) ...
+2026-06-14 20:57:08,975 - INFO - Selecting previously unselected package binutils-common:amd64.
+2026-06-14 20:57:08,976 - INFO - Preparing to unpack .../030-binutils-common_2.44-3_amd64.deb ...
+2026-06-14 20:57:08,978 - INFO - Unpacking binutils-common:amd64 (2.44-3) ...
+2026-06-14 20:57:09,152 - INFO - Selecting previously unselected package libbinutils:amd64.
+2026-06-14 20:57:09,153 - INFO - Preparing to unpack .../031-libbinutils_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,154 - INFO - Unpacking libbinutils:amd64 (2.44-3) ...
+2026-06-14 20:57:09,232 - INFO - Selecting previously unselected package libgprofng0:amd64.
+2026-06-14 20:57:09,233 - INFO - Preparing to unpack .../032-libgprofng0_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,234 - INFO - Unpacking libgprofng0:amd64 (2.44-3) ...
+2026-06-14 20:57:09,323 - INFO - Selecting previously unselected package libctf-nobfd0:amd64.
+2026-06-14 20:57:09,324 - INFO - Preparing to unpack .../033-libctf-nobfd0_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,325 - INFO - Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+2026-06-14 20:57:09,364 - INFO - Selecting previously unselected package libctf0:amd64.
+2026-06-14 20:57:09,366 - INFO - Preparing to unpack .../034-libctf0_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,367 - INFO - Unpacking libctf0:amd64 (2.44-3) ...
+2026-06-14 20:57:09,407 - INFO - Selecting previously unselected package libjansson4:amd64.
+2026-06-14 20:57:09,408 - INFO - Preparing to unpack .../035-libjansson4_2.14-2+b3_amd64.deb ...
+2026-06-14 20:57:09,409 - INFO - Unpacking libjansson4:amd64 (2.14-2+b3) ...
+2026-06-14 20:57:09,440 - INFO - Selecting previously unselected package binutils-x86-64-linux-gnu.
+2026-06-14 20:57:09,442 - INFO - Preparing to unpack .../036-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,443 - INFO - Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+2026-06-14 20:57:09,562 - INFO - Selecting previously unselected package binutils.
+2026-06-14 20:57:09,563 - INFO - Preparing to unpack .../037-binutils_2.44-3_amd64.deb ...
+2026-06-14 20:57:09,566 - INFO - Unpacking binutils (2.44-3) ...
+2026-06-14 20:57:09,623 - INFO - Selecting previously unselected package libc-dev-bin.
+2026-06-14 20:57:09,625 - INFO - Preparing to unpack .../038-libc-dev-bin_2.41-12+deb13u3_amd64.deb ...
+2026-06-14 20:57:09,625 - INFO - Unpacking libc-dev-bin (2.41-12+deb13u3) ...
+2026-06-14 20:57:09,664 - INFO - Selecting previously unselected package linux-libc-dev.
+2026-06-14 20:57:09,666 - INFO - Preparing to unpack .../039-linux-libc-dev_6.12.90-2_all.deb ...
+2026-06-14 20:57:09,667 - INFO - Unpacking linux-libc-dev (6.12.90-2) ...
+2026-06-14 20:57:09,925 - INFO - Selecting previously unselected package libcrypt-dev:amd64.
+2026-06-14 20:57:09,926 - INFO - Preparing to unpack .../040-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+2026-06-14 20:57:09,939 - INFO - Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-06-14 20:57:09,980 - INFO - Selecting previously unselected package rpcsvc-proto.
+2026-06-14 20:57:09,982 - INFO - Preparing to unpack .../041-rpcsvc-proto_1.4.3-1_amd64.deb ...
+2026-06-14 20:57:09,983 - INFO - Unpacking rpcsvc-proto (1.4.3-1) ...
+2026-06-14 20:57:10,023 - INFO - Selecting previously unselected package libc6-dev:amd64.
+2026-06-14 20:57:10,026 - INFO - Preparing to unpack .../042-libc6-dev_2.41-12+deb13u3_amd64.deb ...
+2026-06-14 20:57:10,027 - INFO - Unpacking libc6-dev:amd64 (2.41-12+deb13u3) ...
+2026-06-14 20:57:10,187 - INFO - Selecting previously unselected package libisl23:amd64.
+2026-06-14 20:57:10,189 - INFO - Preparing to unpack .../043-libisl23_0.27-1_amd64.deb ...
+2026-06-14 20:57:10,190 - INFO - Unpacking libisl23:amd64 (0.27-1) ...
+2026-06-14 20:57:10,269 - INFO - Selecting previously unselected package libmpfr6:amd64.
+2026-06-14 20:57:10,270 - INFO - Preparing to unpack .../044-libmpfr6_4.2.2-1_amd64.deb ...
+2026-06-14 20:57:10,271 - INFO - Unpacking libmpfr6:amd64 (4.2.2-1) ...
+2026-06-14 20:57:10,331 - INFO - Selecting previously unselected package libmpc3:amd64.
+2026-06-14 20:57:10,332 - INFO - Preparing to unpack .../045-libmpc3_1.3.1-1+b3_amd64.deb ...
+2026-06-14 20:57:10,333 - INFO - Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+2026-06-14 20:57:10,366 - INFO - Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+2026-06-14 20:57:10,368 - INFO - Preparing to unpack .../046-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:10,369 - INFO - Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:10,854 - INFO - Selecting previously unselected package cpp-14.
+2026-06-14 20:57:10,857 - INFO - Preparing to unpack .../047-cpp-14_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:10,858 - INFO - Unpacking cpp-14 (14.2.0-19) ...
+2026-06-14 20:57:10,884 - INFO - Selecting previously unselected package cpp-x86-64-linux-gnu.
+2026-06-14 20:57:10,886 - INFO - Preparing to unpack .../048-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:10,887 - INFO - Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:10,915 - INFO - Selecting previously unselected package cpp.
+2026-06-14 20:57:10,917 - INFO - Preparing to unpack .../049-cpp_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:10,930 - INFO - Unpacking cpp (4:14.2.0-1) ...
+2026-06-14 20:57:10,960 - INFO - Selecting previously unselected package libcc1-0:amd64.
+2026-06-14 20:57:10,961 - INFO - Preparing to unpack .../050-libcc1-0_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:10,962 - INFO - Unpacking libcc1-0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:10,994 - INFO - Selecting previously unselected package libgomp1:amd64.
+2026-06-14 20:57:10,995 - INFO - Preparing to unpack .../051-libgomp1_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:10,996 - INFO - Unpacking libgomp1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,040 - INFO - Selecting previously unselected package libitm1:amd64.
+2026-06-14 20:57:11,042 - INFO - Preparing to unpack .../052-libitm1_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,043 - INFO - Unpacking libitm1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,067 - INFO - Selecting previously unselected package libatomic1:amd64.
+2026-06-14 20:57:11,069 - INFO - Preparing to unpack .../053-libatomic1_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,070 - INFO - Unpacking libatomic1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,096 - INFO - Selecting previously unselected package libasan8:amd64.
+2026-06-14 20:57:11,097 - INFO - Preparing to unpack .../054-libasan8_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,098 - INFO - Unpacking libasan8:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,288 - INFO - Selecting previously unselected package liblsan0:amd64.
+2026-06-14 20:57:11,289 - INFO - Preparing to unpack .../055-liblsan0_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,290 - INFO - Unpacking liblsan0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,401 - INFO - Selecting previously unselected package libtsan2:amd64.
+2026-06-14 20:57:11,403 - INFO - Preparing to unpack .../056-libtsan2_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,404 - INFO - Unpacking libtsan2:amd64 (14.2.0-19) ...
+2026-06-14 20:57:11,751 - INFO - Selecting previously unselected package libubsan1:amd64.
+2026-06-14 20:57:11,755 - INFO - Preparing to unpack .../057-libubsan1_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:11,837 - INFO - Unpacking libubsan1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:12,228 - INFO - Selecting previously unselected package libhwasan0:amd64.
+2026-06-14 20:57:12,232 - INFO - Preparing to unpack .../058-libhwasan0_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:12,239 - INFO - Unpacking libhwasan0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:12,408 - INFO - Selecting previously unselected package libquadmath0:amd64.
+2026-06-14 20:57:12,410 - INFO - Preparing to unpack .../059-libquadmath0_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:12,415 - INFO - Unpacking libquadmath0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:12,544 - INFO - Selecting previously unselected package libgcc-14-dev:amd64.
+2026-06-14 20:57:12,549 - INFO - Preparing to unpack .../060-libgcc-14-dev_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:12,564 - INFO - Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-06-14 20:57:13,019 - INFO - Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+2026-06-14 20:57:13,022 - INFO - Preparing to unpack .../061-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:13,040 - INFO - Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:13,732 - INFO - Selecting previously unselected package gcc-14.
+2026-06-14 20:57:13,736 - INFO - Preparing to unpack .../062-gcc-14_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:13,880 - INFO - Unpacking gcc-14 (14.2.0-19) ...
+2026-06-14 20:57:14,153 - INFO - Selecting previously unselected package gcc-x86-64-linux-gnu.
+2026-06-14 20:57:14,156 - INFO - Preparing to unpack .../063-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:14,193 - INFO - Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:14,373 - INFO - Selecting previously unselected package gcc.
+2026-06-14 20:57:14,377 - INFO - Preparing to unpack .../064-gcc_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:14,479 - INFO - Unpacking gcc (4:14.2.0-1) ...
+2026-06-14 20:57:15,300 - INFO - Selecting previously unselected package libstdc++-14-dev:amd64.
+2026-06-14 20:57:15,305 - INFO - Preparing to unpack .../065-libstdc++-14-dev_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:15,426 - INFO - Unpacking libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-06-14 20:57:16,707 - INFO - Selecting previously unselected package g++-14-x86-64-linux-gnu.
+2026-06-14 20:57:16,712 - INFO - Preparing to unpack .../066-g++-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:16,872 - INFO - Unpacking g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:17,603 - INFO - Selecting previously unselected package g++-14.
+2026-06-14 20:57:17,605 - INFO - Preparing to unpack .../067-g++-14_14.2.0-19_amd64.deb ...
+2026-06-14 20:57:17,607 - INFO - Unpacking g++-14 (14.2.0-19) ...
+2026-06-14 20:57:17,641 - INFO - Selecting previously unselected package g++-x86-64-linux-gnu.
+2026-06-14 20:57:17,644 - INFO - Preparing to unpack .../068-g++-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:17,645 - INFO - Unpacking g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:17,674 - INFO - Selecting previously unselected package g++.
+2026-06-14 20:57:17,676 - INFO - Preparing to unpack .../069-g++_4%3a14.2.0-1_amd64.deb ...
+2026-06-14 20:57:17,677 - INFO - Unpacking g++ (4:14.2.0-1) ...
+2026-06-14 20:57:17,707 - INFO - Selecting previously unselected package make.
+2026-06-14 20:57:17,709 - INFO - Preparing to unpack .../070-make_4.4.1-2_amd64.deb ...
+2026-06-14 20:57:17,711 - INFO - Unpacking make (4.4.1-2) ...
+2026-06-14 20:57:17,780 - INFO - Selecting previously unselected package libdpkg-perl.
+2026-06-14 20:57:17,782 - INFO - Preparing to unpack .../071-libdpkg-perl_1.22.22_all.deb ...
+2026-06-14 20:57:17,784 - INFO - Unpacking libdpkg-perl (1.22.22) ...
+2026-06-14 20:57:17,868 - INFO - Selecting previously unselected package patch.
+2026-06-14 20:57:17,871 - INFO - Preparing to unpack .../072-patch_2.8-2_amd64.deb ...
+2026-06-14 20:57:17,872 - INFO - Unpacking patch (2.8-2) ...
+2026-06-14 20:57:17,920 - INFO - Selecting previously unselected package dpkg-dev.
+2026-06-14 20:57:17,922 - INFO - Preparing to unpack .../073-dpkg-dev_1.22.22_all.deb ...
+2026-06-14 20:57:17,924 - INFO - Unpacking dpkg-dev (1.22.22) ...
+2026-06-14 20:57:18,011 - INFO - Selecting previously unselected package build-essential.
+2026-06-14 20:57:18,014 - INFO - Preparing to unpack .../074-build-essential_12.12_amd64.deb ...
+2026-06-14 20:57:18,015 - INFO - Unpacking build-essential (12.12) ...
+2026-06-14 20:57:18,049 - INFO - Selecting previously unselected package libbrotli1:amd64.
+2026-06-14 20:57:18,050 - INFO - Preparing to unpack .../075-libbrotli1_1.1.0-2+b7_amd64.deb ...
+2026-06-14 20:57:18,052 - INFO - Unpacking libbrotli1:amd64 (1.1.0-2+b7) ...
+2026-06-14 20:57:18,116 - INFO - Selecting previously unselected package libsasl2-modules-db:amd64.
+2026-06-14 20:57:18,119 - INFO - Preparing to unpack .../076-libsasl2-modules-db_2.1.28+dfsg1-9_amd64.deb ...
+2026-06-14 20:57:18,120 - INFO - Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:18,152 - INFO - Selecting previously unselected package libsasl2-2:amd64.
+2026-06-14 20:57:18,153 - INFO - Preparing to unpack .../077-libsasl2-2_2.1.28+dfsg1-9_amd64.deb ...
+2026-06-14 20:57:18,154 - INFO - Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:18,191 - INFO - Selecting previously unselected package libldap2:amd64.
+2026-06-14 20:57:18,193 - INFO - Preparing to unpack .../078-libldap2_2.6.10+dfsg-1_amd64.deb ...
+2026-06-14 20:57:18,194 - INFO - Unpacking libldap2:amd64 (2.6.10+dfsg-1) ...
+2026-06-14 20:57:18,356 - INFO - Selecting previously unselected package libnghttp2-14:amd64.
+2026-06-14 20:57:18,359 - INFO - Preparing to unpack .../079-libnghttp2-14_1.64.0-1.1+deb13u1_amd64.deb ...
+2026-06-14 20:57:18,385 - INFO - Unpacking libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+2026-06-14 20:57:18,539 - INFO - Selecting previously unselected package libnghttp3-9:amd64.
+2026-06-14 20:57:18,544 - INFO - Preparing to unpack .../080-libnghttp3-9_1.8.0-1_amd64.deb ...
+2026-06-14 20:57:18,609 - INFO - Unpacking libnghttp3-9:amd64 (1.8.0-1) ...
+2026-06-14 20:57:18,888 - INFO - Selecting previously unselected package librtmp1:amd64.
+2026-06-14 20:57:18,893 - INFO - Preparing to unpack .../081-librtmp1_2.4+20151223.gitfa8646d.1-2+b5_amd64.deb ...
+2026-06-14 20:57:18,942 - INFO - Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+2026-06-14 20:57:19,480 - INFO - Selecting previously unselected package libssh2-1t64:amd64.
+2026-06-14 20:57:19,484 - INFO - Preparing to unpack .../082-libssh2-1t64_1.11.1-1_amd64.deb ...
+2026-06-14 20:57:19,573 - INFO - Unpacking libssh2-1t64:amd64 (1.11.1-1) ...
+2026-06-14 20:57:20,128 - INFO - Selecting previously unselected package libcurl4t64:amd64.
+2026-06-14 20:57:20,132 - INFO - Preparing to unpack .../083-libcurl4t64_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-14 20:57:20,343 - INFO - Unpacking libcurl4t64:amd64 (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:20,691 - INFO - Selecting previously unselected package curl.
+2026-06-14 20:57:20,696 - INFO - Preparing to unpack .../084-curl_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-14 20:57:20,724 - INFO - Unpacking curl (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:21,067 - INFO - Selecting previously unselected package libfakeroot:amd64.
+2026-06-14 20:57:21,072 - INFO - Preparing to unpack .../085-libfakeroot_1.37.1.1-1_amd64.deb ...
+2026-06-14 20:57:21,077 - INFO - Unpacking libfakeroot:amd64 (1.37.1.1-1) ...
+2026-06-14 20:57:21,122 - INFO - Selecting previously unselected package fakeroot.
+2026-06-14 20:57:21,124 - INFO - Preparing to unpack .../086-fakeroot_1.37.1.1-1_amd64.deb ...
+2026-06-14 20:57:21,125 - INFO - Unpacking fakeroot (1.37.1.1-1) ...
+2026-06-14 20:57:21,166 - INFO - Selecting previously unselected package libngtcp2-16:amd64.
+2026-06-14 20:57:21,168 - INFO - Preparing to unpack .../087-libngtcp2-16_1.11.0-1+deb13u1_amd64.deb ...
+2026-06-14 20:57:21,170 - INFO - Unpacking libngtcp2-16:amd64 (1.11.0-1+deb13u1) ...
+2026-06-14 20:57:21,217 - INFO - Selecting previously unselected package libngtcp2-crypto-gnutls8:amd64.
+2026-06-14 20:57:21,218 - INFO - Preparing to unpack .../088-libngtcp2-crypto-gnutls8_1.11.0-1+deb13u1_amd64.deb ...
+2026-06-14 20:57:21,220 - INFO - Unpacking libngtcp2-crypto-gnutls8:amd64 (1.11.0-1+deb13u1) ...
+2026-06-14 20:57:21,255 - INFO - Selecting previously unselected package libcurl3t64-gnutls:amd64.
+2026-06-14 20:57:21,257 - INFO - Preparing to unpack .../089-libcurl3t64-gnutls_8.14.1-2+deb13u3_amd64.deb ...
+2026-06-14 20:57:21,258 - INFO - Unpacking libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:21,326 - INFO - Selecting previously unselected package liberror-perl.
+2026-06-14 20:57:21,329 - INFO - Preparing to unpack .../090-liberror-perl_0.17030-1_all.deb ...
+2026-06-14 20:57:21,330 - INFO - Unpacking liberror-perl (0.17030-1) ...
+2026-06-14 20:57:21,370 - INFO - Selecting previously unselected package git-man.
+2026-06-14 20:57:21,376 - INFO - Preparing to unpack .../091-git-man_1%3a2.47.3-0+deb13u1_all.deb ...
+2026-06-14 20:57:21,377 - INFO - Unpacking git-man (1:2.47.3-0+deb13u1) ...
+2026-06-14 20:57:21,469 - INFO - Selecting previously unselected package git.
+2026-06-14 20:57:21,471 - INFO - Preparing to unpack .../092-git_1%3a2.47.3-0+deb13u1_amd64.deb ...
+2026-06-14 20:57:21,484 - INFO - Unpacking git (1:2.47.3-0+deb13u1) ...
+2026-06-14 20:57:21,816 - INFO - Selecting previously unselected package libalgorithm-diff-perl.
+2026-06-14 20:57:21,819 - INFO - Preparing to unpack .../093-libalgorithm-diff-perl_1.201-1_all.deb ...
+2026-06-14 20:57:21,820 - INFO - Unpacking libalgorithm-diff-perl (1.201-1) ...
+2026-06-14 20:57:21,855 - INFO - Selecting previously unselected package libalgorithm-diff-xs-perl.
+2026-06-14 20:57:21,858 - INFO - Preparing to unpack .../094-libalgorithm-diff-xs-perl_0.04-9_amd64.deb ...
+2026-06-14 20:57:21,859 - INFO - Unpacking libalgorithm-diff-xs-perl (0.04-9) ...
+2026-06-14 20:57:21,890 - INFO - Selecting previously unselected package libalgorithm-merge-perl.
+2026-06-14 20:57:21,893 - INFO - Preparing to unpack .../095-libalgorithm-merge-perl_0.08-5_all.deb ...
+2026-06-14 20:57:21,894 - INFO - Unpacking libalgorithm-merge-perl (0.08-5) ...
+2026-06-14 20:57:21,925 - INFO - Selecting previously unselected package libfile-fcntllock-perl.
+2026-06-14 20:57:21,928 - INFO - Preparing to unpack .../096-libfile-fcntllock-perl_0.22-4+b4_amd64.deb ...
+2026-06-14 20:57:21,929 - INFO - Unpacking libfile-fcntllock-perl (0.22-4+b4) ...
+2026-06-14 20:57:21,964 - INFO - Selecting previously unselected package libldap-common.
+2026-06-14 20:57:21,966 - INFO - Preparing to unpack .../097-libldap-common_2.6.10+dfsg-1_all.deb ...
+2026-06-14 20:57:21,967 - INFO - Unpacking libldap-common (2.6.10+dfsg-1) ...
+2026-06-14 20:57:21,999 - INFO - Selecting previously unselected package libpkgconf3:amd64.
+2026-06-14 20:57:22,001 - INFO - Preparing to unpack .../098-libpkgconf3_1.8.1-4_amd64.deb ...
+2026-06-14 20:57:22,002 - INFO - Unpacking libpkgconf3:amd64 (1.8.1-4) ...
+2026-06-14 20:57:22,035 - INFO - Selecting previously unselected package libsasl2-modules:amd64.
+2026-06-14 20:57:22,037 - INFO - Preparing to unpack .../099-libsasl2-modules_2.1.28+dfsg1-9_amd64.deb ...
+2026-06-14 20:57:22,049 - INFO - Unpacking libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:22,093 - INFO - Selecting previously unselected package libxau6:amd64.
+2026-06-14 20:57:22,095 - INFO - Preparing to unpack .../100-libxau6_1%3a1.0.11-1_amd64.deb ...
+2026-06-14 20:57:22,096 - INFO - Unpacking libxau6:amd64 (1:1.0.11-1) ...
+2026-06-14 20:57:22,127 - INFO - Selecting previously unselected package libxdmcp6:amd64.
+2026-06-14 20:57:22,129 - INFO - Preparing to unpack .../101-libxdmcp6_1%3a1.1.5-1_amd64.deb ...
+2026-06-14 20:57:22,129 - INFO - Unpacking libxdmcp6:amd64 (1:1.1.5-1) ...
+2026-06-14 20:57:22,161 - INFO - Selecting previously unselected package libxcb1:amd64.
+2026-06-14 20:57:22,163 - INFO - Preparing to unpack .../102-libxcb1_1.17.0-2+b1_amd64.deb ...
+2026-06-14 20:57:22,164 - INFO - Unpacking libxcb1:amd64 (1.17.0-2+b1) ...
+2026-06-14 20:57:22,202 - INFO - Selecting previously unselected package libx11-data.
+2026-06-14 20:57:22,205 - INFO - Preparing to unpack .../103-libx11-data_2%3a1.8.12-1_all.deb ...
+2026-06-14 20:57:22,206 - INFO - Unpacking libx11-data (2:1.8.12-1) ...
+2026-06-14 20:57:22,279 - INFO - Selecting previously unselected package libx11-6:amd64.
+2026-06-14 20:57:22,280 - INFO - Preparing to unpack .../104-libx11-6_2%3a1.8.12-1_amd64.deb ...
+2026-06-14 20:57:22,281 - INFO - Unpacking libx11-6:amd64 (2:1.8.12-1) ...
+2026-06-14 20:57:22,355 - INFO - Selecting previously unselected package libxext6:amd64.
+2026-06-14 20:57:22,357 - INFO - Preparing to unpack .../105-libxext6_2%3a1.3.4-1+b3_amd64.deb ...
+2026-06-14 20:57:22,358 - INFO - Unpacking libxext6:amd64 (2:1.3.4-1+b3) ...
+2026-06-14 20:57:22,393 - INFO - Selecting previously unselected package libxmuu1:amd64.
+2026-06-14 20:57:22,395 - INFO - Preparing to unpack .../106-libxmuu1_2%3a1.1.3-3+b4_amd64.deb ...
+2026-06-14 20:57:22,396 - INFO - Unpacking libxmuu1:amd64 (2:1.1.3-3+b4) ...
+2026-06-14 20:57:22,427 - INFO - Selecting previously unselected package manpages-dev.
+2026-06-14 20:57:22,430 - INFO - Preparing to unpack .../107-manpages-dev_6.9.1-1_all.deb ...
+2026-06-14 20:57:22,430 - INFO - Unpacking manpages-dev (6.9.1-1) ...
+2026-06-14 20:57:22,572 - INFO - Selecting previously unselected package pkgconf-bin.
+2026-06-14 20:57:22,575 - INFO - Preparing to unpack .../108-pkgconf-bin_1.8.1-4_amd64.deb ...
+2026-06-14 20:57:22,576 - INFO - Unpacking pkgconf-bin (1.8.1-4) ...
+2026-06-14 20:57:22,608 - INFO - Selecting previously unselected package pkgconf:amd64.
+2026-06-14 20:57:22,610 - INFO - Preparing to unpack .../109-pkgconf_1.8.1-4_amd64.deb ...
+2026-06-14 20:57:22,614 - INFO - Unpacking pkgconf:amd64 (1.8.1-4) ...
+2026-06-14 20:57:22,645 - INFO - Selecting previously unselected package pkg-config:amd64.
+2026-06-14 20:57:22,647 - INFO - Preparing to unpack .../110-pkg-config_1.8.1-4_amd64.deb ...
+2026-06-14 20:57:22,651 - INFO - Unpacking pkg-config:amd64 (1.8.1-4) ...
+2026-06-14 20:57:22,679 - INFO - Selecting previously unselected package publicsuffix.
+2026-06-14 20:57:22,682 - INFO - Preparing to unpack .../111-publicsuffix_20250328.1952-0.1_all.deb ...
+2026-06-14 20:57:22,683 - INFO - Unpacking publicsuffix (20250328.1952-0.1) ...
+2026-06-14 20:57:22,736 - INFO - Selecting previously unselected package sq.
+2026-06-14 20:57:22,739 - INFO - Preparing to unpack .../112-sq_1.3.1-2+b2_amd64.deb ...
+2026-06-14 20:57:22,740 - INFO - Unpacking sq (1.3.1-2+b2) ...
+2026-06-14 20:57:23,062 - INFO - Selecting previously unselected package xauth.
+2026-06-14 20:57:23,066 - INFO - Preparing to unpack .../113-xauth_1%3a1.1.2-1.1_amd64.deb ...
+2026-06-14 20:57:23,068 - INFO - Unpacking xauth (1:1.1.2-1.1) ...
+2026-06-14 20:57:23,118 - INFO - Setting up libexpat1:amd64 (2.7.1-2) ...
+2026-06-14 20:57:23,122 - INFO - Setting up libxau6:amd64 (1:1.0.11-1) ...
+2026-06-14 20:57:23,124 - INFO - Setting up libxdmcp6:amd64 (1:1.1.5-1) ...
+2026-06-14 20:57:23,127 - INFO - Setting up libkeyutils1:amd64 (1.6.3-6) ...
+2026-06-14 20:57:23,129 - INFO - Setting up libxcb1:amd64 (1.17.0-2+b1) ...
+2026-06-14 20:57:23,131 - INFO - Setting up libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-06-14 20:57:23,134 - INFO - Setting up libcbor0.10:amd64 (0.10.2-2) ...
+2026-06-14 20:57:23,136 - INFO - Setting up manpages (6.9.1-1) ...
+2026-06-14 20:57:23,138 - INFO - Setting up libbrotli1:amd64 (1.1.0-2+b7) ...
+2026-06-14 20:57:23,140 - INFO - Setting up libedit2:amd64 (3.1-20250104-1) ...
+2026-06-14 20:57:23,142 - INFO - Setting up libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:23,156 - INFO - Setting up binutils-common:amd64 (2.44-3) ...
+2026-06-14 20:57:23,158 - INFO - Setting up libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+2026-06-14 20:57:23,161 - INFO - Setting up less (668-1) ...
+2026-06-14 20:57:23,169 - INFO - Setting up linux-libc-dev (6.12.90-2) ...
+2026-06-14 20:57:23,172 - INFO - Setting up libctf-nobfd0:amd64 (2.44-3) ...
+2026-06-14 20:57:23,174 - INFO - Setting up krb5-locales (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:23,176 - INFO - Setting up libcom-err2:amd64 (1.47.2-3+b11) ...
+2026-06-14 20:57:23,178 - INFO - Setting up sq (1.3.1-2+b2) ...
+2026-06-14 20:57:23,180 - INFO - Setting up libgomp1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,182 - INFO - Setting up bzip2 (1.0.8-6) ...
+2026-06-14 20:57:23,184 - INFO - Setting up libldap-common (2.6.10+dfsg-1) ...
+2026-06-14 20:57:23,187 - INFO - Setting up libsframe1:amd64 (2.44-3) ...
+2026-06-14 20:57:23,189 - INFO - Setting up libfakeroot:amd64 (1.37.1.1-1) ...
+2026-06-14 20:57:23,192 - INFO - Setting up libjansson4:amd64 (2.14-2+b3) ...
+2026-06-14 20:57:23,194 - INFO - Setting up libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:23,196 - INFO - Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:23,198 - INFO - Setting up fakeroot (1.37.1.1-1) ...
+2026-06-14 20:57:23,204 - INFO - update-alternatives: using /usr/bin/fakeroot-sysv to provide /usr/bin/fakeroot (fakeroot) in auto mode
+2026-06-14 20:57:23,205 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/fakeroot.1.gz because associated file /usr/share/man/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-14 20:57:23,206 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/faked.1.gz because associated file /usr/share/man/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+update-alternatives: warning: skip creation of /usr/share/man/es/man1/fakeroot.1.gz because associated file /usr/share/man/es/man1/fakeroot-sysv.1.gz (of link
+2026-06-14 20:57:23,206 - INFO - group fakeroot) doesn't exist
+update-alternatives: warning: skip creation of /usr/share/man/es/man1/faked.1.gz because associated file /usr/share/man/es/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-14 20:57:23,206 - INFO - update-alternatives: warning: skip creation of /usr/share/man/fr/man1/fakeroot.1.gz because associated file /usr/share/man/fr/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+update-alternatives: warning:
+2026-06-14 20:57:23,206 - INFO - skip creation of /usr/share/man/fr/man1/faked.1.gz because associated file /usr/share/man/fr/man1/faked-sysv.1.gz (of link group fakeroot) doesn't exist
+update-alternatives: warning: skip creation of /usr/share/man/sv/man1/fakeroot.1.gz because associated file /usr/share/man/sv/man1/fakeroot-sysv.1.gz (of link group fakeroot) doesn't exist
+2026-06-14 20:57:23,206 - INFO - update-alternatives: warning: skip creation of /usr/share/man/sv/man1/faked.1.gz because associated file /usr/share/man/sv/man1/faked-sysv.1.gz (of link group
+2026-06-14 20:57:23,207 - INFO - fakeroot) doesn't exist
+2026-06-14 20:57:23,212 - INFO - Setting up libpkgconf3:amd64 (1.8.1-4) ...
+2026-06-14 20:57:23,215 - INFO - Setting up rpcsvc-proto (1.4.3-1) ...
+2026-06-14 20:57:23,218 - INFO - Setting up libx11-data (2:1.8.12-1) ...
+2026-06-14 20:57:23,222 - INFO - Setting up make (4.4.1-2) ...
+2026-06-14 20:57:23,225 - INFO - Setting up libmpfr6:amd64 (4.2.2-1) ...
+2026-06-14 20:57:23,228 - INFO - Setting up bash-completion (1:2.16.0-7) ...
+2026-06-14 20:57:23,234 - INFO - Setting up xz-utils (5.8.1-1) ...
+2026-06-14 20:57:23,242 - INFO - update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+2026-06-14 20:57:23,242 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+2026-06-14 20:57:23,242 - INFO - 
+2026-06-14 20:57:23,242 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) does
+2026-06-14 20:57:23,242 - INFO - n't exist
+2026-06-14 20:57:23,242 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) does
+2026-06-14 20:57:23,243 - INFO - n't exist
+2026-06-14 20:57:23,243 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+2026-06-14 20:57:23,243 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) do
+2026-06-14 20:57:23,243 - INFO - esn't exist
+2026-06-14 20:57:23,243 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) do
+2026-06-14 20:57:23,243 - INFO - esn't exist
+2026-06-14 20:57:23,244 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) does
+2026-06-14 20:57:23,245 - INFO - n't exist
+2026-06-14 20:57:23,245 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) do
+2026-06-14 20:57:23,245 - INFO - esn't exist
+2026-06-14 20:57:23,245 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma)
+2026-06-14 20:57:23,245 - INFO - doesn't exist
+2026-06-14 20:57:23,245 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+2026-06-14 20:57:23,248 - INFO - Setting up libquadmath0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,252 - INFO - Setting up libp11-kit0:amd64 (0.25.5-3) ...
+2026-06-14 20:57:23,255 - INFO - Setting up libunistring5:amd64 (1.3-2) ...
+2026-06-14 20:57:23,258 - INFO - Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+2026-06-14 20:57:23,262 - INFO - Setting up libatomic1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,265 - INFO - Setting up patch (2.8-2) ...
+2026-06-14 20:57:23,268 - INFO - Setting up pkgconf-bin (1.8.1-4) ...
+2026-06-14 20:57:23,274 - INFO - Setting up libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:23,277 - INFO - Setting up libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+2026-06-14 20:57:23,285 - INFO - Setting up libnghttp3-9:amd64 (1.8.0-1) ...
+2026-06-14 20:57:23,288 - INFO - Setting up libubsan1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,291 - INFO - Setting up perl-modules-5.40 (5.40.1-6) ...
+2026-06-14 20:57:23,293 - INFO - Setting up libhwasan0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,296 - INFO - Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-06-14 20:57:23,311 - INFO - Setting up libasan8:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,314 - INFO - Setting up libtasn1-6:amd64 (4.20.0-2) ...
+2026-06-14 20:57:23,318 - INFO - Setting up git-man (1:2.47.3-0+deb13u1) ...
+2026-06-14 20:57:23,320 - INFO - Setting up libx11-6:amd64 (2:1.8.12-1) ...
+2026-06-14 20:57:23,323 - INFO - Setting up libngtcp2-16:amd64 (1.11.0-1+deb13u1) ...
+2026-06-14 20:57:23,326 - INFO - Setting up libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:23,329 - INFO - Setting up libssh2-1t64:amd64 (1.11.1-1) ...
+2026-06-14 20:57:23,332 - INFO - Setting up libtsan2:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,335 - INFO - Setting up libbinutils:amd64 (2.44-3) ...
+2026-06-14 20:57:23,338 - INFO - Setting up libfido2-1:amd64 (1.15.0-1+b1) ...
+2026-06-14 20:57:23,341 - INFO - Setting up libisl23:amd64 (0.27-1) ...
+2026-06-14 20:57:23,344 - INFO - Setting up libc-dev-bin (2.41-12+deb13u3) ...
+2026-06-14 20:57:23,347 - INFO - Setting up publicsuffix (20250328.1952-0.1) ...
+2026-06-14 20:57:23,349 - INFO - Setting up libcc1-0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,352 - INFO - Setting up libldap2:amd64 (2.6.10+dfsg-1) ...
+2026-06-14 20:57:23,355 - INFO - Setting up libxmuu1:amd64 (2:1.1.3-3+b4) ...
+2026-06-14 20:57:23,357 - INFO - Setting up liblocale-gettext-perl (1.07-7+b1) ...
+2026-06-14 20:57:23,360 - INFO - Setting up liblsan0:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,363 - INFO - Setting up libitm1:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,365 - INFO - Setting up libctf0:amd64 (2.44-3) ...
+2026-06-14 20:57:23,368 - INFO - Setting up manpages-dev (6.9.1-1) ...
+2026-06-14 20:57:23,370 - INFO - Setting up libxext6:amd64 (2:1.3.4-1+b3) ...
+2026-06-14 20:57:23,373 - INFO - Setting up libidn2-0:amd64 (2.3.8-2) ...
+2026-06-14 20:57:23,376 - INFO - Setting up pkgconf:amd64 (1.8.1-4) ...
+2026-06-14 20:57:23,379 - INFO - Setting up libperl5.40:amd64 (5.40.1-6) ...
+2026-06-14 20:57:23,382 - INFO - Setting up perl (5.40.1-6) ...
+2026-06-14 20:57:23,393 - INFO - Setting up libgprofng0:amd64 (2.44-3) ...
+2026-06-14 20:57:23,396 - INFO - Setting up libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+2026-06-14 20:57:23,402 - INFO - Setting up pkg-config:amd64 (1.8.1-4) ...
+2026-06-14 20:57:23,405 - INFO - Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:23,409 - INFO - Setting up libdpkg-perl (1.22.22) ...
+2026-06-14 20:57:23,413 - INFO - Setting up cpp-14 (14.2.0-19) ...
+2026-06-14 20:57:23,415 - INFO - Setting up xauth (1:1.1.2-1.1) ...
+2026-06-14 20:57:23,428 - INFO - Setting up libc6-dev:amd64 (2.41-12+deb13u3) ...
+2026-06-14 20:57:23,432 - INFO - Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,435 - INFO - Setting up libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-06-14 20:57:23,437 - INFO - Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+2026-06-14 20:57:23,439 - INFO - Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:23,442 - INFO - Setting up libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+2026-06-14 20:57:23,445 - INFO - Setting up libfile-fcntllock-perl (0.22-4+b4) ...
+2026-06-14 20:57:23,447 - INFO - Setting up libalgorithm-diff-perl (1.201-1) ...
+2026-06-14 20:57:23,450 - INFO - Setting up openssh-client (1:10.0p1-7+deb13u4) ...
+2026-06-14 20:57:23,743 - INFO - Setting up libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+2026-06-14 20:57:23,745 - INFO - Setting up binutils (2.44-3) ...
+2026-06-14 20:57:23,749 - INFO - Setting up dpkg-dev (1.22.22) ...
+2026-06-14 20:57:23,753 - INFO - Setting up liberror-perl (0.17030-1) ...
+2026-06-14 20:57:23,755 - INFO - Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+2026-06-14 20:57:23,758 - INFO - Setting up cpp (4:14.2.0-1) ...
+2026-06-14 20:57:23,778 - INFO - Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:23,781 - INFO - Setting up libalgorithm-diff-xs-perl (0.04-9) ...
+2026-06-14 20:57:23,784 - INFO - Setting up libngtcp2-crypto-gnutls8:amd64 (1.11.0-1+deb13u1) ...
+2026-06-14 20:57:23,786 - INFO - Setting up libalgorithm-merge-perl (0.08-5) ...
+2026-06-14 20:57:23,789 - INFO - Setting up wget (1.25.0-2) ...
+2026-06-14 20:57:23,793 - INFO - Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:23,795 - INFO - Setting up libcurl4t64:amd64 (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:23,797 - INFO - Setting up libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:23,800 - INFO - Setting up gcc-14 (14.2.0-19) ...
+2026-06-14 20:57:23,803 - INFO - Setting up git (1:2.47.3-0+deb13u1) ...
+2026-06-14 20:57:23,823 - INFO - Setting up g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-06-14 20:57:23,825 - INFO - Setting up g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-06-14 20:57:23,828 - INFO - Setting up curl (8.14.1-2+deb13u3) ...
+2026-06-14 20:57:23,830 - INFO - Setting up g++-14 (14.2.0-19) ...
+2026-06-14 20:57:23,832 - INFO - Setting up gcc (4:14.2.0-1) ...
+2026-06-14 20:57:23,849 - INFO - Setting up g++ (4:14.2.0-1) ...
+2026-06-14 20:57:23,855 - INFO - update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+2026-06-14 20:57:23,858 - INFO - Setting up build-essential (12.12) ...
+2026-06-14 20:57:23,861 - INFO - Processing triggers for libc-bin (2.41-12+deb13u3) ...
+2026-06-14 20:57:36,034 - INFO - ---> Removed intermediate container 782ad5c79a10
+2026-06-14 20:57:36,034 - INFO - ---> 13d813cd5de8
+2026-06-14 20:57:36,034 - INFO - Step 5/17 : RUN pip install uv==0.4.25
+2026-06-14 20:57:36,034 - INFO - 
+2026-06-14 20:57:36,161 - INFO - ---> Running in 12060d9d98f5
+2026-06-14 20:57:38,063 - INFO - Collecting uv==0.4.25
+2026-06-14 20:57:38,127 - INFO - Downloading uv-0.4.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+2026-06-14 20:57:38,150 - INFO - Downloading uv-0.4.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.6 MB)
+2026-06-14 20:57:38,260 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.6/13.6 MB 139.2 MB/s eta 0:00:00
+2026-06-14 20:57:38,261 - INFO - 
+2026-06-14 20:57:38,308 - INFO - Installing collected packages: uv
+2026-06-14 20:57:38,512 - INFO - Successfully installed uv-0.4.25
+2026-06-14 20:57:38,512 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-14 20:57:38,608 - INFO - [notice] A new release of pip is available: 25.0.1 -> 26.1.2
+[notice] To update, run: pip install --upgrade pip
+2026-06-14 20:57:41,142 - INFO - ---> Removed intermediate container 12060d9d98f5
+2026-06-14 20:57:41,142 - INFO - ---> 21a2bc7f0ea6
+2026-06-14 20:57:41,142 - INFO - Step 6/17 : RUN uv --version
+2026-06-14 20:57:41,143 - INFO - 
+2026-06-14 20:57:41,417 - INFO - ---> Running in ea7e09ca6a1c
+2026-06-14 20:57:41,760 - INFO - uv 0.4.25
+2026-06-14 20:57:42,426 - INFO - ---> Removed intermediate container ea7e09ca6a1c
+2026-06-14 20:57:42,426 - INFO - ---> 20a62468fadb
+2026-06-14 20:57:42,426 - INFO - Step 7/17 : WORKDIR /testbed/
+2026-06-14 20:57:42,426 - INFO - 
+2026-06-14 20:57:42,450 - INFO - ---> Running in 0d94deb3349d
+2026-06-14 20:57:42,480 - INFO - ---> Removed intermediate container 0d94deb3349d
+2026-06-14 20:57:42,481 - INFO - ---> 94d6fd848a54
+2026-06-14 20:57:42,481 - INFO - Step 8/17 : RUN git clone https://github.com/crewAIInc/crewAI.git /testbed/     && git remote remove origin     && git reset --hard 4f6054d439c602f93283eda351fe6b67133b9a84
+2026-06-14 20:57:42,481 - INFO - 
+2026-06-14 20:57:42,508 - INFO - ---> Running in b1dd1ac5d12d
+2026-06-14 20:57:42,869 - INFO - Cloning into '/testbed'...
+2026-06-14 20:57:52,877 - INFO - HEAD is now at 4f6054d43 new version
+2026-06-14 20:58:21,988 - INFO - ---> Removed intermediate container b1dd1ac5d12d
+2026-06-14 20:58:21,988 - INFO - ---> 51905f2268a4
+2026-06-14 20:58:21,988 - INFO - Step 9/17 : RUN uv venv /testbed/.venv
+2026-06-14 20:58:21,988 - INFO - 
+2026-06-14 20:58:22,031 - INFO - ---> Running in aee2fc9d3274
+2026-06-14 20:58:22,359 - INFO - Using CPython 3.12.13 interpreter at: /usr/local/bin/python
+Creating virtual environment at: .venv
+2026-06-14 20:58:23,049 - INFO - ---> Removed intermediate container aee2fc9d3274
+2026-06-14 20:58:23,049 - INFO - ---> 9b6b714a9a37
+2026-06-14 20:58:23,049 - INFO - Step 10/17 : ENV PATH="/testbed/.venv/bin:${PATH}"
+2026-06-14 20:58:23,050 - INFO - 
+2026-06-14 20:58:23,094 - INFO - ---> Running in 9bea6a22d124
+2026-06-14 20:58:23,151 - INFO - ---> Removed intermediate container 9bea6a22d124
+2026-06-14 20:58:23,151 - INFO - ---> fed9871f4582
+2026-06-14 20:58:23,151 - INFO - Step 11/17 : RUN uv sync --dev --all-extras
+2026-06-14 20:58:23,151 - INFO - 
+2026-06-14 20:58:23,194 - INFO - ---> Running in 6b5102e0dabd
+2026-06-14 20:58:23,562 - INFO - Resolved 314 packages in 1ms
+2026-06-14 20:59:45,675 - INFO - Prepared 308 packages in 1m 22s
+2026-06-14 20:59:48,936 - INFO - Installed 308 packages in 3.26s
+2026-06-14 20:59:48,937 - INFO - + agentops==0.3.14
+2026-06-14 20:59:48,937 - INFO - + aiohappyeyeballs==2.4.3
+2026-06-14 20:59:48,937 - INFO - + aiohttp==3.10.10
+2026-06-14 20:59:48,937 - INFO - + aiosignal==1.3.1
+2026-06-14 20:59:48,937 - INFO - + aisuite
+2026-06-14 20:59:48,937 - INFO - ==0.1.10
+2026-06-14 20:59:48,938 - INFO - 
+2026-06-14 20:59:48,938 - INFO - +
+2026-06-14 20:59:48,938 - INFO - 
+2026-06-14 20:59:48,938 - INFO - alembic==
+2026-06-14 20:59:48,938 - INFO - 1.13.3
+2026-06-14 20:59:48,938 - INFO - 
+2026-06-14 20:59:48,938 - INFO - +
+2026-06-14 20:59:48,939 - INFO - 
+2026-06-14 20:59:48,939 - INFO - annotated-types==0.7.0
+2026-06-14 20:59:48,939 - INFO - + anyio==4.6.2
+2026-06-14 20:59:48,939 - INFO - .post1
+2026-06-14 20:59:48,939 - INFO - +
+2026-06-14 20:59:48,939 - INFO - appdirs==
+2026-06-14 20:59:48,939 - INFO - 1.4.4
+2026-06-14 20:59:48,940 - INFO - + asgiref
+2026-06-14 20:59:48,940 - INFO - ==3.8.1
+ + asttokens==2.4.1
+2026-06-14 20:59:48,940 - INFO - + attrs
+2026-06-14 20:59:48,940 - INFO - ==24.2.0
+2026-06-14 20:59:48,940 - INFO - + auth0-python==4.7.2
+2026-06-14 20:59:48,940 - INFO - + autoflake
+2026-06-14 20:59:48,941 - INFO - ==2.3.1
+2026-06-14 20:59:48,941 - INFO - + babel
+2026-06-14 20:59:48,944 - INFO - ==2.16.0
+2026-06-14 20:59:48,945 - INFO - + backoff
+2026-06-14 20:59:48,945 - INFO - ==2.2.1
+2026-06-14 20:59:48,946 - INFO - +
+2026-06-14 20:59:48,946 - INFO - bcrypt==
+2026-06-14 20:59:48,946 - INFO - 4.2.0
+ +
+2026-06-14 20:59:48,949 - INFO - beautifulsoup4
+2026-06-14 20:59:48,949 - INFO - ==4.12.3
+ + blinker
+2026-06-14 20:59:48,949 - INFO - ==1.9.0
+2026-06-14 20:59:48,949 - INFO - + build==
+2026-06-14 20:59:48,949 - INFO - 1.2.2.post1
+2026-06-14 20:59:48,950 - INFO - + cachetools==5.5.0
+ + cairocffi==1.7.1
+2026-06-14 20:59:48,950 - INFO - + cairosvg
+2026-06-14 20:59:48,950 - INFO - ==2.7.1
+2026-06-14 20:59:48,950 - INFO - +
+2026-06-14 20:59:48,950 - INFO - certifi==2024.8.30
+2026-06-14 20:59:48,950 - INFO - + cffi==1.17.1
+2026-06-14 20:59:48,950 - INFO - + cfgv
+2026-06-14 20:59:48,950 - INFO - ==3.4.0
+ + charset-normalizer
+2026-06-14 20:59:48,950 - INFO - ==3.4.0
+2026-06-14 20:59:48,950 - INFO - + chroma-hnswlib==0.7.6
+2026-06-14 20:59:48,950 - INFO - + chromadb
+2026-06-14 20:59:48,950 - INFO - ==0.5.23
+ +
+2026-06-14 20:59:48,950 - INFO - click
+2026-06-14 20:59:48,950 - INFO - ==8.1.8
+2026-06-14 20:59:48,950 - INFO - + cohere==5.11.1
+2026-06-14 20:59:48,951 - INFO - + colorama==0.4.6
+2026-06-14 20:59:48,951 - INFO - + coloredlogs
+2026-06-14 20:59:48,951 - INFO - ==15.0.1
+ +
+2026-06-14 20:59:48,951 - INFO - crewai==0.117.1 (from file:///testbed)
+2026-06-14 20:59:48,951 - INFO - + crewai-tools==
+2026-06-14 20:59:48,951 - INFO - 0.42.2
+ +
+2026-06-14 20:59:48,951 - INFO - cryptography==43.0.3
+2026-06-14 20:59:48,951 - INFO - +
+2026-06-14 20:59:48,951 - INFO - cssselect2==0.7.0
+ + dataclasses-json
+2026-06-14 20:59:48,951 - INFO - ==0.6.7
+ + decorator
+2026-06-14 20:59:48,951 - INFO - ==5.1.1
+ +
+2026-06-14 20:59:48,951 - INFO - deepsearch-glm==1.0.0
+2026-06-14 20:59:48,951 - INFO - + defusedxml==0.7.1
+2026-06-14 20:59:48,951 - INFO - + deprecated
+2026-06-14 20:59:48,952 - INFO - ==1.2.14
+ + deprecation==2.1.0
+2026-06-14 20:59:48,952 - INFO - + dill==0.3.9
+2026-06-14 20:59:48,955 - INFO - + distlib==0.3.9
+2026-06-14 20:59:48,955 - INFO - +
+2026-06-14 20:59:48,955 - INFO - distro==1.9.0
+2026-06-14 20:59:48,955 - INFO - + docker==7.1.0
+2026-06-14 20:59:48,955 - INFO - +
+2026-06-14 20:59:48,955 - INFO - docling==2.12.0
+2026-06-14 20:59:48,955 - INFO - + docling-core==2.10.0
+ + docling-ibm-models==3.1.0
+2026-06-14 20:59:48,955 - INFO - 
+2026-06-14 20:59:48,955 - INFO - +
+2026-06-14 20:59:48,955 - INFO - docling-parse==3.0.0
+2026-06-14 20:59:48,955 - INFO - 
+2026-06-14 20:59:48,955 - INFO - + docstring-parser==0.16
+2026-06-14 20:59:48,956 - INFO - 
+2026-06-14 20:59:48,956 - INFO - + durationpy==0.9
+2026-06-14 20:59:48,956 - INFO - + easyocr
+2026-06-14 20:59:48,956 - INFO - ==1.7.2
+2026-06-14 20:59:48,956 - INFO - +
+2026-06-14 20:59:48,956 - INFO - embedchain==
+2026-06-14 20:59:48,956 - INFO - 0.1.125
+2026-06-14 20:59:48,956 - INFO - + et-xmlfile==
+2026-06-14 20:59:48,956 - INFO - 2.0.0
+2026-06-14 20:59:48,956 - INFO - +
+2026-06-14 20:59:48,956 - INFO - executing==2.1.0
+2026-06-14 20:59:48,956 - INFO - + fastapi==
+2026-06-14 20:59:48,956 - INFO - 0.115.3
+2026-06-14 20:59:48,957 - INFO - +
+2026-06-14 20:59:48,957 - INFO - fastavro==1.9.7
+ +
+2026-06-14 20:59:48,957 - INFO - fastembed==
+2026-06-14 20:59:48,957 - INFO - 0.4.1
+2026-06-14 20:59:48,957 - INFO - + filelock
+2026-06-14 20:59:48,957 - INFO - ==3.16.1
+2026-06-14 20:59:48,957 - INFO - 
+2026-06-14 20:59:48,957 - INFO - +
+2026-06-14 20:59:48,957 - INFO - filetype==1.2.0
+2026-06-14 20:59:48,957 - INFO - + flatbuffers
+2026-06-14 20:59:48,957 - INFO - ==24.3.25
+2026-06-14 20:59:48,957 - INFO - + frozenlist==
+2026-06-14 20:59:48,957 - INFO - 1.5.0
+2026-06-14 20:59:48,958 - INFO - +
+2026-06-14 20:59:48,958 - INFO - fsspec
+2026-06-14 20:59:48,958 - INFO - ==2024.10.0
+2026-06-14 20:59:48,958 - INFO - + ghp-import==2.1.0
+ + google-api-core==2.21.0
+2026-06-14 20:59:48,958 - INFO - + google-auth==2.35.0
+2026-06-14 20:59:48,958 - INFO - + google-cloud-aiplatform==1.70.0
+2026-06-14 20:59:48,958 - INFO - + google-cloud-bigquery
+2026-06-14 20:59:48,958 - INFO - ==3.26.0
+2026-06-14 20:59:48,958 - INFO - +
+2026-06-14 20:59:48,958 - INFO - google-cloud-core==
+2026-06-14 20:59:48,959 - INFO - 2.4.1
+ +
+2026-06-14 20:59:48,959 - INFO - google-cloud-resource-manager==1.12.5
+ +
+2026-06-14 20:59:48,959 - INFO - google-cloud-storage==2.18.2
+2026-06-14 20:59:48,959 - INFO - 
+2026-06-14 20:59:48,959 - INFO - +
+2026-06-14 20:59:48,959 - INFO - google-crc32c==
+2026-06-14 20:59:48,959 - INFO - 1.6.0
+2026-06-14 20:59:48,959 - INFO - +
+2026-06-14 20:59:48,959 - INFO - google-resumable-media==
+2026-06-14 20:59:48,959 - INFO - 2.7.2
+2026-06-14 20:59:48,959 - INFO - +
+2026-06-14 20:59:48,959 - INFO - googleapis-common-protos==
+2026-06-14 20:59:48,959 - INFO - 1.65.0
+2026-06-14 20:59:48,959 - INFO - +
+2026-06-14 20:59:48,960 - INFO - gptcache==
+2026-06-14 20:59:48,960 - INFO - 0.1.44
+2026-06-14 20:59:48,960 - INFO - +
+2026-06-14 20:59:48,961 - INFO - greenlet
+2026-06-14 20:59:48,961 - INFO - ==3.1.1
+ +
+2026-06-14 20:59:48,961 - INFO - griffe==
+2026-06-14 20:59:48,962 - INFO - 1.5.1
+2026-06-14 20:59:48,962 - INFO - 
+2026-06-14 20:59:48,962 - INFO - +
+2026-06-14 20:59:48,962 - INFO - grpc-google-iam-v1
+2026-06-14 20:59:48,962 - INFO - ==0.13.1
+ +
+2026-06-14 20:59:48,962 - INFO - grpcio==1.67.0
+ + grpcio-status==1.62.3
+ + grpcio-tools==1.67.0
+ + h11==0.14.0
+ + h2==4.1.0
+ +
+2026-06-14 20:59:48,962 - INFO - hpack
+2026-06-14 20:59:48,962 - INFO - ==4.0.0
+2026-06-14 20:59:48,962 - INFO - + httpcore
+2026-06-14 20:59:48,962 - INFO - ==1.0.6
+ + httptools==0.6.4
+2026-06-14 20:59:48,962 - INFO - + httpx
+2026-06-14 20:59:48,962 - INFO - ==0.27.2
+2026-06-14 20:59:48,962 - INFO - + httpx-sse==0.4.0
+2026-06-14 20:59:48,962 - INFO - +
+2026-06-14 20:59:48,962 - INFO - huggingface-hub==0.26.1
+2026-06-14 20:59:48,962 - INFO - + humanfriendly==10.0
+2026-06-14 20:59:48,962 - INFO - +
+2026-06-14 20:59:48,963 - INFO - hyperframe==6.0.1
+2026-06-14 20:59:48,963 - INFO - +
+2026-06-14 20:59:48,963 - INFO - identify==2.6.1
+2026-06-14 20:59:48,963 - INFO - + idna
+2026-06-14 20:59:48,963 - INFO - ==3.10
+2026-06-14 20:59:48,963 - INFO - +
+2026-06-14 20:59:48,963 - INFO - imageio==2.36.1
+2026-06-14 20:59:48,963 - INFO - + importlib-metadata==8.4.0
+2026-06-14 20:59:48,963 - INFO - + importlib-resources==
+2026-06-14 20:59:48,963 - INFO - 6.4.5
+2026-06-14 20:59:48,963 - INFO - +
+2026-06-14 20:59:48,963 - INFO - iniconfig==2.0.0
+2026-06-14 20:59:48,963 - INFO - 
+2026-06-14 20:59:48,963 - INFO - + instructor==1.6.3
+2026-06-14 20:59:48,963 - INFO - + ipython==
+2026-06-14 20:59:48,963 - INFO - 8.28.0
+2026-06-14 20:59:48,964 - INFO - +
+2026-06-14 20:59:48,964 - INFO - jedi==0.19.1
+2026-06-14 20:59:48,964 - INFO - 
+2026-06-14 20:59:48,964 - INFO - + jinja2
+2026-06-14 20:59:48,964 - INFO - ==3.1.4
+2026-06-14 20:59:48,967 - INFO - + jiter
+2026-06-14 20:59:48,967 - INFO - ==0.5.0
+2026-06-14 20:59:48,967 - INFO - +
+2026-06-14 20:59:48,967 - INFO - json-repair==0.30.0
+ +
+2026-06-14 20:59:48,967 - INFO - json5==0.10.0
+2026-06-14 20:59:48,967 - INFO - + jsonlines==
+2026-06-14 20:59:48,967 - INFO - 3.1.0
+2026-06-14 20:59:48,968 - INFO - + jsonpatch==1.33
+ +
+2026-06-14 20:59:48,968 - INFO - jsonpickle
+2026-06-14 20:59:48,968 - INFO - ==3.3.0
+2026-06-14 20:59:48,968 - INFO - +
+2026-06-14 20:59:48,968 - INFO - jsonpointer==3.0.0
+2026-06-14 20:59:48,968 - INFO - +
+2026-06-14 20:59:48,968 - INFO - jsonref==
+2026-06-14 20:59:48,969 - INFO - 1.1.0
+2026-06-14 20:59:48,969 - INFO - + jsonschema
+2026-06-14 20:59:48,969 - INFO - ==4.23.0
+2026-06-14 20:59:48,969 - INFO - 
+2026-06-14 20:59:48,969 - INFO - +
+2026-06-14 20:59:48,969 - INFO - jsonschema-specifications==
+2026-06-14 20:59:48,969 - INFO - 2024.10.1
+2026-06-14 20:59:48,969 - INFO - 
+2026-06-14 20:59:48,969 - INFO - +
+2026-06-14 20:59:48,969 - INFO - kubernetes==31.0.0
+2026-06-14 20:59:48,969 - INFO - + lancedb
+2026-06-14 20:59:48,969 - INFO - ==0.14.0
+2026-06-14 20:59:48,969 - INFO - + langchain
+2026-06-14 20:59:48,969 - INFO - ==0.3.4
+2026-06-14 20:59:48,969 - INFO - + langchain-cohere
+2026-06-14 20:59:48,969 - INFO - ==
+2026-06-14 20:59:48,969 - INFO - 0.3.1
+2026-06-14 20:59:48,970 - INFO - 
+2026-06-14 20:59:48,970 - INFO - +
+2026-06-14 20:59:48,970 - INFO - langchain-community
+2026-06-14 20:59:48,970 - INFO - ==
+2026-06-14 20:59:48,970 - INFO - 0.3.3
+2026-06-14 20:59:48,970 - INFO - 
+2026-06-14 20:59:48,970 - INFO - +
+2026-06-14 20:59:48,970 - INFO - langchain-core
+2026-06-14 20:59:48,970 - INFO - ==
+2026-06-14 20:59:48,970 - INFO - 0.3.12
+2026-06-14 20:59:48,970 - INFO - + langchain-experimental==
+2026-06-14 20:59:48,971 - INFO - 0.3.2
+2026-06-14 20:59:48,971 - INFO - +
+2026-06-14 20:59:48,971 - INFO - langchain-openai==
+2026-06-14 20:59:48,971 - INFO - 0.2.3
+2026-06-14 20:59:48,971 - INFO - + langchain-text-splitters
+2026-06-14 20:59:48,971 - INFO - ==0.3.0
+2026-06-14 20:59:48,971 - INFO - + langsmith
+2026-06-14 20:59:48,971 - INFO - ==0.1.137
+2026-06-14 20:59:48,971 - INFO - +
+2026-06-14 20:59:48,971 - INFO - lazy-loader==0.4
+2026-06-14 20:59:48,971 - INFO - + litellm
+2026-06-14 20:59:48,971 - INFO - ==
+2026-06-14 20:59:48,974 - INFO - 1.67.2
+2026-06-14 20:59:48,974 - INFO - + loguru==0.7.2
+2026-06-14 20:59:48,974 - INFO - + lxml==5.3.0
+2026-06-14 20:59:48,974 - INFO - + mako
+2026-06-14 20:59:48,974 - INFO - ==1.3.6
+2026-06-14 20:59:48,974 - INFO - + markdown
+2026-06-14 20:59:48,974 - INFO - ==3.7
+ +
+2026-06-14 20:59:48,974 - INFO - markdown-it-py==3.0.0
+2026-06-14 20:59:48,974 - INFO - + marko==2.1.2
+2026-06-14 20:59:48,975 - INFO - +
+2026-06-14 20:59:48,975 - INFO - markupsafe==3.0.2
+2026-06-14 20:59:48,975 - INFO - + marshmallow==
+2026-06-14 20:59:48,975 - INFO - 3.23.0
+2026-06-14 20:59:48,975 - INFO - + matplotlib-inline==0.1.7
+2026-06-14 20:59:48,975 - INFO - + mdurl==0.1.2
+2026-06-14 20:59:48,975 - INFO - + mem0ai==0.1.94
+ + mergedeep==1.3.4
+2026-06-14 20:59:48,975 - INFO - + mkdocs==1.6.1
+2026-06-14 20:59:48,975 - INFO - + mkdocs-autorefs
+2026-06-14 20:59:48,975 - INFO - ==1.2.0
+2026-06-14 20:59:48,976 - INFO - + mkdocs-get-deps
+2026-06-14 20:59:48,976 - INFO - ==0.2.0
+2026-06-14 20:59:48,976 - INFO - + mkdocs-material==
+2026-06-14 20:59:48,976 - INFO - 9.5.42
+2026-06-14 20:59:48,976 - INFO - + mkdocs-material-extensions
+2026-06-14 20:59:48,976 - INFO - ==1.3.1
+2026-06-14 20:59:48,976 - INFO - +
+2026-06-14 20:59:48,976 - INFO - mkdocstrings==0.26.2
+2026-06-14 20:59:48,976 - INFO - + mkdocstrings-python==
+2026-06-14 20:59:48,976 - INFO - 1.12.2
+2026-06-14 20:59:48,978 - INFO - +
+2026-06-14 20:59:48,978 - INFO - mmh3==4.1.0
+ + monotonic
+2026-06-14 20:59:48,978 - INFO - ==1.6
+2026-06-14 20:59:48,978 - INFO - + mpire==2.10.2
+2026-06-14 20:59:48,978 - INFO - + mpmath==1.3.0
+ +
+2026-06-14 20:59:48,978 - INFO - multidict==
+2026-06-14 20:59:48,978 - INFO - 6.1.0
+2026-06-14 20:59:48,978 - INFO - +
+2026-06-14 20:59:48,979 - INFO - multiprocess==
+2026-06-14 20:59:48,979 - INFO - 0.70.17
+2026-06-14 20:59:48,979 - INFO - +
+2026-06-14 20:59:48,979 - INFO - mypy==
+2026-06-14 20:59:48,979 - INFO - 1.13.0
+ + mypy-extensions==
+2026-06-14 20:59:48,979 - INFO - 1.0.0
+ + networkx==
+2026-06-14 20:59:48,979 - INFO - 3.4.2
+2026-06-14 20:59:48,979 - INFO - + ninja==1.11.1.3
+2026-06-14 20:59:48,979 - INFO - +
+2026-06-14 20:59:48,979 - INFO - nodeenv==
+2026-06-14 20:59:48,979 - INFO - 1.9.1
+ +
+2026-06-14 20:59:48,980 - INFO - numpy==1.26.4
+2026-06-14 20:59:48,980 - INFO - + nvidia-cublas-cu12==
+2026-06-14 20:59:48,980 - INFO - 12.1.3.1
+2026-06-14 20:59:48,980 - INFO - + nvidia-cuda-cupti-cu12==12.1.105
+2026-06-14 20:59:48,980 - INFO - +
+2026-06-14 20:59:48,980 - INFO - nvidia-cuda-nvrtc-cu12==12.1.105
+2026-06-14 20:59:48,983 - INFO - + nvidia-cuda-runtime-cu12==12.1.105
+2026-06-14 20:59:48,983 - INFO - +
+2026-06-14 20:59:48,983 - INFO - nvidia-cudnn-cu12==9.1.0.70
+2026-06-14 20:59:48,983 - INFO - + nvidia-cufft-cu12
+2026-06-14 20:59:48,984 - INFO - ==11.0.2.54
+ +
+2026-06-14 20:59:48,984 - INFO - nvidia-curand-cu12==10.3.2.106
+2026-06-14 20:59:48,984 - INFO - + nvidia-cusolver-cu12
+2026-06-14 20:59:48,984 - INFO - ==11.4.5.107
+2026-06-14 20:59:48,984 - INFO - + nvidia-cusparse-cu12==12.1.0.106
+ +
+2026-06-14 20:59:48,984 - INFO - nvidia-nccl-cu12==2.20.5
+2026-06-14 20:59:48,984 - INFO - + nvidia-nvjitlink-cu12==12.6.85
+2026-06-14 20:59:48,984 - INFO - 
+2026-06-14 20:59:48,984 - INFO - + nvidia-nvtx-cu12
+2026-06-14 20:59:48,985 - INFO - ==12.1.105
+ + oauthlib==
+2026-06-14 20:59:48,985 - INFO - 3.2.2
+2026-06-14 20:59:48,985 - INFO - +
+2026-06-14 20:59:48,985 - INFO - onnx==1.17.0
+2026-06-14 20:59:48,985 - INFO - + onnxruntime==1.19.2
+2026-06-14 20:59:48,985 - INFO - + openai==1.68.2
+ + opencv-python-headless==
+2026-06-14 20:59:48,985 - INFO - 4.10.0.84
+ +
+2026-06-14 20:59:48,985 - INFO - openpyxl==
+2026-06-14 20:59:48,985 - INFO - 3.1.5
+ + opentelemetry-api==1.31.1
+2026-06-14 20:59:48,985 - INFO - + opentelemetry-exporter-otlp-proto-common==1.31.1
+2026-06-14 20:59:48,986 - INFO - + opentelemetry-exporter-otlp-proto-grpc==
+2026-06-14 20:59:48,986 - INFO - 1.31.1
+ +
+2026-06-14 20:59:48,986 - INFO - opentelemetry-exporter-otlp-proto-http==1.31.1
+2026-06-14 20:59:48,986 - INFO - + opentelemetry-instrumentation
+2026-06-14 20:59:48,986 - INFO - ==0.52b1
+ +
+2026-06-14 20:59:48,986 - INFO - opentelemetry-instrumentation-asgi==0.52b1
+2026-06-14 20:59:48,986 - INFO - + opentelemetry-instrumentation-fastapi==0.52b1
+ + opentelemetry-proto==
+2026-06-14 20:59:48,986 - INFO - 1.31.1
+2026-06-14 20:59:48,987 - INFO - + opentelemetry-sdk==
+2026-06-14 20:59:48,987 - INFO - 1.31.1
+ + opentelemetry-semantic-conventions==0.52
+2026-06-14 20:59:48,987 - INFO - b1
+ + opentelemetry-util-http==0.52b1
+2026-06-14 20:59:48,987 - INFO - + orjson==
+2026-06-14 20:59:48,988 - INFO - 3.10.10
+2026-06-14 20:59:48,988 - INFO - + overrides==7.7.0
+2026-06-14 20:59:48,988 - INFO - +
+2026-06-14 20:59:48,988 - INFO - packaging==23.2
+2026-06-14 20:59:48,988 - INFO - + paginate==0.5.7
+2026-06-14 20:59:48,988 - INFO - +
+2026-06-14 20:59:48,988 - INFO - pandas==2.2.3
+2026-06-14 20:59:48,988 - INFO - + parameterized==0.9.0
+2026-06-14 20:59:48,988 - INFO - +
+2026-06-14 20:59:48,988 - INFO - parso==0.8.4
+2026-06-14 20:59:48,989 - INFO - + pathspec
+2026-06-14 20:59:48,989 - INFO - ==0.12.1
+ + pdfminer-six==
+2026-06-14 20:59:48,989 - INFO - 20231228
+ +
+2026-06-14 20:59:48,989 - INFO - pdfplumber==0.11.4
+2026-06-14 20:59:48,989 - INFO - + pexpect
+2026-06-14 20:59:48,989 - INFO - ==4.9.0
+ + pillow==10.4.0
+2026-06-14 20:59:48,989 - INFO - +
+2026-06-14 20:59:48,989 - INFO - platformdirs==4.3.6
+2026-06-14 20:59:48,989 - INFO - +
+2026-06-14 20:59:48,990 - INFO - pluggy==1.5.0
+2026-06-14 20:59:48,990 - INFO - + portalocker
+2026-06-14 20:59:48,993 - INFO - ==2.10.1
+ + posthog==
+2026-06-14 20:59:48,993 - INFO - 3.7.0
+2026-06-14 20:59:48,993 - INFO - + pre-commit==4.0.1
+2026-06-14 20:59:48,993 - INFO - + prompt-toolkit==
+2026-06-14 20:59:48,993 - INFO - 3.0.48
+2026-06-14 20:59:48,993 - INFO - +
+2026-06-14 20:59:48,993 - INFO - propcache==0.2.0
+2026-06-14 20:59:48,994 - INFO - + proto-plus
+2026-06-14 20:59:48,994 - INFO - ==1.25.0
+2026-06-14 20:59:48,994 - INFO - + protobuf==5.29.4
+2026-06-14 20:59:48,994 - INFO - + psutil==5.9.8
+2026-06-14 20:59:48,994 - INFO - + psycopg2-binary
+2026-06-14 20:59:48,994 - INFO - ==2.9.10
+ +
+2026-06-14 20:59:48,994 - INFO - ptyprocess==
+2026-06-14 20:59:48,995 - INFO - 0.7.0
+ +
+2026-06-14 20:59:48,995 - INFO - pure-eval==0.2.3
+2026-06-14 20:59:48,995 - INFO - + py==1.11.0
+2026-06-14 20:59:48,995 - INFO - 
+2026-06-14 20:59:48,995 - INFO - + py-rust-stemmers==
+2026-06-14 20:59:48,995 - INFO - 0.1.3
+ + pyarrow==17.0.0
+2026-06-14 20:59:48,995 - INFO - 
+2026-06-14 20:59:48,995 - INFO - + pyasn1==0.6.1
+2026-06-14 20:59:48,996 - INFO - + pyasn1-modules
+2026-06-14 20:59:48,996 - INFO - ==0.4.1
+2026-06-14 20:59:48,996 - INFO - + pyclipper==1.3.0.post6
+2026-06-14 20:59:48,996 - INFO - + pycparser
+2026-06-14 20:59:48,996 - INFO - ==2.22
+ + pydantic==
+2026-06-14 20:59:48,996 - INFO - 2.9.2
+ + pydantic-core==2.23.4
+2026-06-14 20:59:48,996 - INFO - +
+2026-06-14 20:59:48,996 - INFO - pydantic-settings==2.6.0
+2026-06-14 20:59:48,997 - INFO - + pyflakes
+2026-06-14 20:59:48,997 - INFO - ==3.2.0
+2026-06-14 20:59:48,997 - INFO - + pygments==2.18.0
+2026-06-14 20:59:48,997 - INFO - +
+2026-06-14 20:59:48,997 - INFO - pyjwt==2.9.0
+2026-06-14 20:59:48,997 - INFO - +
+2026-06-14 20:59:48,997 - INFO - pylance==0.18.2
+2026-06-14 20:59:48,997 - INFO - +
+2026-06-14 20:59:48,997 - INFO - pymdown-extensions==10.11.2
+2026-06-14 20:59:48,998 - INFO - + pypdf==
+2026-06-14 20:59:48,998 - INFO - 5.0.1
+2026-06-14 20:59:48,998 - INFO - + pypdfium2==4.30.0
+2026-06-14 20:59:48,998 - INFO - + pypika
+2026-06-14 20:59:48,998 - INFO - ==0.48.9
+ +
+2026-06-14 20:59:48,998 - INFO - pyproject-hooks
+2026-06-14 20:59:48,998 - INFO - ==1.2.0
+ +
+2026-06-14 20:59:49,000 - INFO - pyright==1.1.386
+2026-06-14 20:59:49,000 - INFO - + pysbd==
+2026-06-14 20:59:49,000 - INFO - 0.3.4
+2026-06-14 20:59:49,000 - INFO - + pytest
+2026-06-14 20:59:49,000 - INFO - ==8.3.3
+ +
+2026-06-14 20:59:49,000 - INFO - pytest-asyncio==0.24.0
+2026-06-14 20:59:49,000 - INFO - +
+2026-06-14 20:59:49,001 - INFO - pytest-recording==
+2026-06-14 20:59:49,001 - INFO - 0.13.2
+ +
+2026-06-14 20:59:49,001 - INFO - pytest-subprocess==
+2026-06-14 20:59:49,001 - INFO - 1.5.2
+ +
+2026-06-14 20:59:49,001 - INFO - python-bidi==0.6.3
+2026-06-14 20:59:49,001 - INFO - + python-dateutil==
+2026-06-14 20:59:49,001 - INFO - 2.9.0.post0
+2026-06-14 20:59:49,001 - INFO - + python-docx
+2026-06-14 20:59:49,001 - INFO - ==1.1.2
+ +
+2026-06-14 20:59:49,002 - INFO - python-dotenv==1.0.1
+ +
+2026-06-14 20:59:49,002 - INFO - python-pptx
+2026-06-14 20:59:49,002 - INFO - ==1.0.2
+2026-06-14 20:59:49,004 - INFO - + pytube
+2026-06-14 20:59:49,004 - INFO - ==15.0.0
+ + pytz
+2026-06-14 20:59:49,004 - INFO - ==2024.2
+2026-06-14 20:59:49,004 - INFO - +
+2026-06-14 20:59:49,005 - INFO - pyvis==0.3.2
+2026-06-14 20:59:49,005 - INFO - +
+2026-06-14 20:59:49,005 - INFO - pyyaml==6.0.2
+ +
+2026-06-14 20:59:49,005 - INFO - pyyaml-env-tag
+2026-06-14 20:59:49,005 - INFO - ==0.1
+2026-06-14 20:59:49,005 - INFO - + qdrant-client
+2026-06-14 20:59:49,005 - INFO - ==1.12.0
+ +
+2026-06-14 20:59:49,005 - INFO - referencing==
+2026-06-14 20:59:49,005 - INFO - 0.35.1
+ +
+2026-06-14 20:59:49,005 - INFO - regex==
+2026-06-14 20:59:49,005 - INFO - 2024.9.11
+ +
+2026-06-14 20:59:49,005 - INFO - requests==2.32.3
+2026-06-14 20:59:49,005 - INFO - +
+2026-06-14 20:59:49,006 - INFO - requests-oauthlib==2.0.0
+ +
+2026-06-14 20:59:49,006 - INFO - requests-toolbelt
+2026-06-14 20:59:49,006 - INFO - ==1.0.0
+ +
+2026-06-14 20:59:49,006 - INFO - retry
+2026-06-14 20:59:49,007 - INFO - ==0.9.2
+ +
+2026-06-14 20:59:49,007 - INFO - rich
+2026-06-14 20:59:49,007 - INFO - ==13.9.3
+ +
+2026-06-14 20:59:49,007 - INFO - rpds-py
+2026-06-14 20:59:49,007 - INFO - ==0.20.0
+ + rsa==4.9
+2026-06-14 20:59:49,007 - INFO - +
+2026-06-14 20:59:49,008 - INFO - rtree==1.3.0
+2026-06-14 20:59:49,008 - INFO - +
+2026-06-14 20:59:49,008 - INFO - ruff==0.8.2
+2026-06-14 20:59:49,008 - INFO - + safetensors==
+2026-06-14 20:59:49,008 - INFO - 0.4.5
+2026-06-14 20:59:49,008 - INFO - +
+2026-06-14 20:59:49,008 - INFO - schema==0.7.7
+ +
+2026-06-14 20:59:49,009 - INFO - scikit-image==0.25.0
+2026-06-14 20:59:49,009 - INFO - 
+2026-06-14 20:59:49,009 - INFO - + scipy==1.14.1
+2026-06-14 20:59:49,009 - INFO - +
+2026-06-14 20:59:49,009 - INFO - semchunk==2.2.0
+2026-06-14 20:59:49,009 - INFO - +
+2026-06-14 20:59:49,009 - INFO - setuptools==75.2.0
+2026-06-14 20:59:49,011 - INFO - + shapely==
+2026-06-14 20:59:49,011 - INFO - 2.0.6
+ +
+2026-06-14 20:59:49,011 - INFO - shellingham==
+2026-06-14 20:59:49,011 - INFO - 1.5.4
+2026-06-14 20:59:49,011 - INFO - + six==1.16.0
+ + sniffio==1.3.1
+ + soupsieve==2.6
+ + sqlalchemy==2.0.36
+ + stack-data==0.6.3
+ + starlette==0.41.0
+ + sympy==1.13.3
+ + tabulate==0.9.0
+ + tenacity==9.0.0
+ + termcolor==2.4.0
+ + tifffile==2024.12.12
+ + tiktoken==0.7.0
+ + tinycss2==1.3.0
+ + tokenizers==0.20.1
+ + tomli==2.0.2
+ + tomli-w==1.1.0
+ + torch==2.4.1
+ + torchvision==0.19.1
+ + tqdm==4.66.5
+ + traitlets==5.14.3
+ + transformers==4.46.3
+ + triton==3.0.0
+ + typer==0.12.5
+ + types-requests==2.32.0.20241016
+ + typing-extensions==4.12.2
+ + typing-inspect==0.9.0
+ + tzdata==2024.2
+ + urllib3==2.2.3
+ + uv==0.4.26
+ + uvicorn==0.32.0
+ + uvloop==0.21.0
+ + vcrpy==7.0.0
+ + virtualenv==20.27.0
+ + watchdog==5.0.3
+ + watchfiles==0.24.0
+ + wcwidth==0.2.13
+ + webencodings==0.5.1
+ + websocket-client==1.8.0
+ + websockets==13.1
+ + wrapt==1.16.0
+ + xlsxwriter==3.2.0
+ + yarl==1.16.0
+ + zipp==3.20.2
+2026-06-14 21:03:25,670 - INFO - ---> Removed intermediate container 6b5102e0dabd
+2026-06-14 21:03:25,671 - INFO - ---> 3fea17d81607
+2026-06-14 21:03:25,671 - INFO - Step 12/17 : RUN uv pip install -e .
+2026-06-14 21:03:25,671 - INFO - 
+2026-06-14 21:03:25,982 - INFO - ---> Running in d32834c81b58
+2026-06-14 21:03:26,290 - INFO - Audited 1 package in 35ms
+2026-06-14 21:03:26,799 - INFO - ---> Removed intermediate container d32834c81b58
+2026-06-14 21:03:26,800 - INFO - ---> 6e31b2672949
+2026-06-14 21:03:26,800 - INFO - Step 13/17 : ENV OTEL_SDK_DISABLED=true
+2026-06-14 21:03:26,800 - INFO - 
+2026-06-14 21:03:26,817 - INFO - ---> Running in 62e43df8d3c4
+2026-06-14 21:03:26,846 - INFO - ---> Removed intermediate container 62e43df8d3c4
+2026-06-14 21:03:26,846 - INFO - ---> ca9a3cada24b
+2026-06-14 21:03:26,846 - INFO - Step 14/17 : ENV OPENAI_API_KEY="dummy-key-for-testing"
+2026-06-14 21:03:26,846 - INFO - 
+2026-06-14 21:03:26,861 - INFO - ---> Running in ab68988aff02
+2026-06-14 21:03:26,884 - INFO - ---> Removed intermediate container ab68988aff02
+2026-06-14 21:03:26,884 - INFO - ---> e99d9ec1db56
+2026-06-14 21:03:26,884 - INFO - Step 15/17 : ENV SERPER_API_KEY="dummy-key-for-testing"
+2026-06-14 21:03:26,884 - INFO - 
+2026-06-14 21:03:26,901 - INFO - ---> Running in 4fe549dd7ef5
+2026-06-14 21:03:26,927 - INFO - ---> Removed intermediate container 4fe549dd7ef5
+2026-06-14 21:03:26,927 - INFO - ---> fd259a0b07bd
+2026-06-14 21:03:26,927 - INFO - Step 16/17 : RUN echo 'source /testbed/.venv/bin/activate' >> /root/.bashrc
+2026-06-14 21:03:26,927 - INFO - 
+2026-06-14 21:03:26,942 - INFO - ---> Running in fd0e24113951
+2026-06-14 21:03:27,736 - INFO - ---> Removed intermediate container fd0e24113951
+2026-06-14 21:03:27,737 - INFO - ---> 14ad53d18790
+2026-06-14 21:03:27,737 - INFO - Step 17/17 : WORKDIR /testbed/
+2026-06-14 21:03:27,737 - INFO - 
+2026-06-14 21:03:27,770 - INFO - ---> Running in 5892a936c5cb
+2026-06-14 21:03:27,793 - INFO - ---> Removed intermediate container 5892a936c5cb
+2026-06-14 21:03:27,794 - INFO - ---> f2605407dfdb
+2026-06-14 21:03:27,794 - INFO - Successfully built f2605407dfdb
+2026-06-14 21:03:27,795 - INFO - Successfully tagged setup.crewaiinc__crewai-2408:latest
+2026-06-14 21:03:27,796 - INFO - Image built successfully!

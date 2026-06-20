@@ -1,0 +1,164 @@
++ cd /testbed/libs/prebuilt
++ git checkout 5212369bd0791806083f183cb19ccce024db8790 tests/test_tool_node.py
+Updated 1 path from b6a0e7593
++ git apply -v -
+Checking patch libs/prebuilt/tests/test_tool_node.py...
+Applied patch libs/prebuilt/tests/test_tool_node.py cleanly.
++ echo 'Starting external services (Postgres and Redis) for full tests...'
++ docker-compose -f tests/compose-postgres.yml -f tests/compose-redis.yml up -V --force-recreate --wait --remove-orphans -d
+Starting external services (Postgres and Redis) for full tests...
+Builds, (re)creates, starts, and attaches to containers for a service.
+
+Unless they are already running, this command also starts any linked services.
+
+The `docker-compose up` command aggregates the output of each container. When
+the command exits, all containers are stopped. Running `docker-compose up -d`
+starts the containers in the background and leaves them running.
+
+If there are existing containers for a service, and the service's configuration
+or image was changed after the container's creation, `docker-compose up` picks
+up the changes by stopping and recreating the containers (preserving mounted
+volumes). To prevent Compose from picking up changes, use the `--no-recreate`
+flag.
+
+If you want to force Compose to stop and recreate all containers, use the
+`--force-recreate` flag.
+
+Usage: up [options] [--scale SERVICE=NUM...] [--] [SERVICE...]
+
+Options:
+    -d, --detach               Detached mode: Run containers in the background,
+                               print new container names. Incompatible with
+                               --abort-on-container-exit.
+    --no-color                 Produce monochrome output.
+    --quiet-pull               Pull without printing progress information
+    --no-deps                  Don't start linked services.
+    --force-recreate           Recreate containers even if their configuration
+                               and image haven't changed.
+    --always-recreate-deps     Recreate dependent containers.
+                               Incompatible with --no-recreate.
+    --no-recreate              If containers already exist, don't recreate
+                               them. Incompatible with --force-recreate and -V.
+    --no-build                 Don't build an image, even if it's missing.
+    --no-start                 Don't start the services after creating them.
+    --build                    Build images before starting containers.
+    --abort-on-container-exit  Stops all containers if any container was
+                               stopped. Incompatible with -d.
+    --attach-dependencies      Attach to dependent containers.
+    -t, --timeout TIMEOUT      Use this timeout in seconds for container
+                               shutdown when attached or when containers are
+                               already running. (default: 10)
+    -V, --renew-anon-volumes   Recreate anonymous volumes instead of retrieving
+                               data from the previous containers.
+    --remove-orphans           Remove containers for services not defined
+                               in the Compose file.
+    --exit-code-from SERVICE   Return the exit code of the selected service
+                               container. Implies --abort-on-container-exit.
+    --scale SERVICE=NUM        Scale SERVICE to NUM instances. Overrides the
+                               `scale` setting in the Compose file if present.
+    --no-log-prefix            Don't print prefix in logs.
++ echo 'Running test file: tests/test_tool_node.py with full test suite...'
++ LANGGRAPH_TEST_FAST=0
++ uv run pytest --no-header -rA --tb=no -p no:cacheprovider tests/test_tool_node.py
+Running test file: tests/test_tool_node.py with full test suite...
+Using CPython 3.11.15
+Creating virtual environment at: .venv
+Downloading pydantic-core (2.0MiB)
+Downloading pygments (1.2MiB)
+Downloading ruff (13.4MiB)
+Downloading mypy (12.8MiB)
+Downloading psycopg-binary (4.9MiB)
+ Downloaded pydantic-core
+ Downloaded ruff
+ Downloaded psycopg-binary
+ Downloaded pygments
+ Downloaded mypy
+Installed 53 packages in 128ms
+============================= test session starts ==============================
+collecting ... collected 28 items
+
+tests/test_tool_node.py::test_tool_node PASSED                           [  3%]
+tests/test_tool_node.py::test_tool_node_tool_call_input PASSED           [  7%]
+tests/test_tool_node.py::test_tool_node_error_handling_default_invocation PASSED [ 10%]
+tests/test_tool_node.py::test_tool_node_error_handling_default_exception PASSED [ 14%]
+tests/test_tool_node.py::test_tool_node_error_handling PASSED            [ 17%]
+tests/test_tool_node.py::test_tool_node_error_handling_callable PASSED   [ 21%]
+tests/test_tool_node.py::test_tool_node_handle_tool_errors_false PASSED  [ 25%]
+tests/test_tool_node.py::test_tool_node_individual_tool_error_handling PASSED [ 28%]
+tests/test_tool_node.py::test_tool_node_incorrect_tool_name PASSED       [ 32%]
+tests/test_tool_node.py::test_tool_node_node_interrupt PASSED            [ 35%]
+tests/test_tool_node.py::test_tool_node_command[dict] PASSED             [ 39%]
+tests/test_tool_node.py::test_tool_node_command[tool_calls] PASSED       [ 42%]
+tests/test_tool_node.py::test_tool_node_command_list_input PASSED        [ 46%]
+tests/test_tool_node.py::test_tool_node_parent_command_with_send PASSED  [ 50%]
+tests/test_tool_node.py::test_tool_node_command_remove_all_messages PASSED [ 53%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema] PASSED [ 57%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticV2Schema] PASSED [ 60%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStateDataclassSchema] PASSED [ 64%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticSchema] PASSED [ 67%]
+tests/test_tool_node.py::test_tool_node_inject_store PASSED              [ 71%]
+tests/test_tool_node.py::test_tool_node_ensure_utf8 PASSED               [ 75%]
+tests/test_tool_node.py::test_tool_node_messages_key PASSED              [ 78%]
+tests/test_tool_node.py::test_tool_node_stream_writer PASSED             [ 82%]
+tests/test_tool_node.py::test_tool_call_request_setattr_deprecation_warning PASSED [ 85%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_signature_only PASSED [ 89%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_decorator PASSED [ 92%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_schema PASSED [ 96%]
+tests/test_tool_node.py::test_tool_node_tool_runtime_generic PASSED      [100%]
+
+=============================== warnings summary ===============================
+tests/conftest.py:31
+  /testbed/libs/prebuilt/tests/conftest.py:31: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.memory_assert
+    pytest.register_assert_rewrite("tests.memory_assert")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations ==============================
+0.11s call     tests/test_tool_node.py::test_tool_node_command[dict]
+0.04s call     tests/test_tool_node.py::test_tool_node_command_list_input
+0.04s call     tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticV2Schema]
+0.03s call     tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema]
+0.03s call     tests/test_tool_node.py::test_tool_node_command[tool_calls]
+=========================== short test summary info ============================
+PASSED tests/test_tool_node.py::test_tool_node
+PASSED tests/test_tool_node.py::test_tool_node_tool_call_input
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_default_invocation
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_default_exception
+PASSED tests/test_tool_node.py::test_tool_node_error_handling
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_callable
+PASSED tests/test_tool_node.py::test_tool_node_handle_tool_errors_false
+PASSED tests/test_tool_node.py::test_tool_node_individual_tool_error_handling
+PASSED tests/test_tool_node.py::test_tool_node_incorrect_tool_name
+PASSED tests/test_tool_node.py::test_tool_node_node_interrupt
+PASSED tests/test_tool_node.py::test_tool_node_command[dict]
+PASSED tests/test_tool_node.py::test_tool_node_command[tool_calls]
+PASSED tests/test_tool_node.py::test_tool_node_command_list_input
+PASSED tests/test_tool_node.py::test_tool_node_parent_command_with_send
+PASSED tests/test_tool_node.py::test_tool_node_command_remove_all_messages
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticV2Schema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStateDataclassSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_store
+PASSED tests/test_tool_node.py::test_tool_node_ensure_utf8
+PASSED tests/test_tool_node.py::test_tool_node_messages_key
+PASSED tests/test_tool_node.py::test_tool_node_stream_writer
+PASSED tests/test_tool_node.py::test_tool_call_request_setattr_deprecation_warning
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_signature_only
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_decorator
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_schema
+PASSED tests/test_tool_node.py::test_tool_node_tool_runtime_generic
+======================== 28 passed, 1 warning in 0.91s =========================
++ rc=0
++ echo 'Stopping external services...'
++ docker-compose -f tests/compose-postgres.yml -f tests/compose-redis.yml down -v
+Stopping external services...
+The Compose file './tests/compose-postgres.yml' is invalid because:
+'name' does not match any of the regexes: '^x-'
+
+You might be seeing this error because you're using the wrong Compose file version. Either specify a supported version (e.g "2.2" or "3.3") and place your service definitions under the `services` key, or omit the `version` key and place your service definitions at the root of the file to use version 1.
+For more on the Compose file format versions, see https://docs.docker.com/compose/compose-file/
+services.postgres-test.healthcheck value 'start_interval' does not match any of the regexes: '^x-'
++ echo OMNIGRIL_EXIT_CODE=0
++ git checkout 5212369bd0791806083f183cb19ccce024db8790 tests/test_tool_node.py
+OMNIGRIL_EXIT_CODE=0
+Updated 1 path from b6a0e7593

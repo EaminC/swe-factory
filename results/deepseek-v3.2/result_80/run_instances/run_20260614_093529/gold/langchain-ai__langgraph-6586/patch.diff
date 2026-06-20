@@ -1,0 +1,81 @@
+diff --git a/libs/langgraph/langgraph/graph/state.py b/libs/langgraph/langgraph/graph/state.py
+--- a/libs/langgraph/langgraph/graph/state.py
++++ b/libs/langgraph/langgraph/graph/state.py
+@@ -78,6 +78,7 @@
+     Command,
+     RetryPolicy,
+     Send,
++    ensure_valid_checkpointer,
+ )
+ from langgraph.typing import ContextT, InputT, NodeInputT, OutputT, StateT
+ from langgraph.warnings import LangGraphDeprecatedSinceV05, LangGraphDeprecatedSinceV10
+@@ -853,6 +854,8 @@ def compile(
+         Returns:
+             CompiledStateGraph: The compiled `StateGraph`.
+         """
++        checkpointer = ensure_valid_checkpointer(checkpointer)
++
+         # assign default values
+         interrupt_before = interrupt_before or []
+         interrupt_after = interrupt_after or []
+diff --git a/libs/langgraph/langgraph/pregel/main.py b/libs/langgraph/langgraph/pregel/main.py
+--- a/libs/langgraph/langgraph/pregel/main.py
++++ b/libs/langgraph/langgraph/pregel/main.py
+@@ -142,6 +142,7 @@
+     StateSnapshot,
+     StateUpdate,
+     StreamMode,
++    ensure_valid_checkpointer,
+ )
+ from langgraph.typing import ContextT, InputT, OutputT, StateT
+ from langgraph.warnings import LangGraphDeprecatedSinceV10
+@@ -642,7 +643,7 @@ def __init__(
+         input_channels: str | Sequence[str],
+         step_timeout: float | None = None,
+         debug: bool | None = None,
+-        checkpointer: BaseCheckpointSaver | None = None,
++        checkpointer: Checkpointer = None,
+         store: BaseStore | None = None,
+         cache: BaseCache | None = None,
+         retry_policy: RetryPolicy | Sequence[RetryPolicy] = (),
+@@ -665,6 +666,8 @@ def __init__(
+             if context_schema is None:
+                 context_schema = cast(type[ContextT], config_type)
+ 
++        checkpointer = ensure_valid_checkpointer(checkpointer)
++
+         self.nodes = {
+             k: v.build() if isinstance(v, NodeBuilder) else v for k, v in nodes.items()
+         }
+diff --git a/libs/langgraph/langgraph/types.py b/libs/langgraph/langgraph/types.py
+--- a/libs/langgraph/langgraph/types.py
++++ b/libs/langgraph/langgraph/types.py
+@@ -56,6 +56,7 @@ class ToolOutputMixin:  # type: ignore[no-redef]
+     "Durability",
+     "interrupt",
+     "Overwrite",
++    "ensure_valid_checkpointer",
+ )
+ 
+ Durability = Literal["sync", "async", "exit"]
+@@ -73,6 +74,20 @@ class ToolOutputMixin:  # type: ignore[no-redef]
+ - False disables checkpointing, even if the parent graph has a checkpointer.
+ - None inherits checkpointer from the parent graph."""
+ 
++
++def ensure_valid_checkpointer(checkpointer: Checkpointer) -> Checkpointer:
++    if checkpointer not in (None, True, False) and not isinstance(
++        checkpointer, BaseCheckpointSaver
++    ):
++        raise TypeError(
++            "Invalid checkpointer provided. Expected an instance of "
++            "`BaseCheckpointSaver`, `True`, `False`, or `None`. "
++            f"Received {type(checkpointer).__name__!s}. "
++            "Pass a proper saver (e.g., InMemorySaver, AsyncPostgresSaver)."
++        )
++    return checkpointer
++
++
+ StreamMode = Literal[
+     "values", "updates", "checkpoints", "tasks", "debug", "messages", "custom"
+ ]

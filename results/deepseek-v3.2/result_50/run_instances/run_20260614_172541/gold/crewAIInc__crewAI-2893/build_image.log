@@ -1,0 +1,741 @@
+2026-06-14 21:04:30,717 - INFO - Building image setup.crewaiinc__crewai-2893:latest
+Using dockerfile:
+# Base image specification. Defines the foundation OS and architecture for the container
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime
+RUN apt update && apt install -y \
+    wget \
+    git \
+    build-essential \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python-is-python3 \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python 3.10 explicitly (required version range: >=3.10, <3.14)
+RUN add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt update && apt install -y python3.10 python3.10-venv python3.10-dev \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install UV using pip (as it's listed as a dependency in pyproject.toml)
+RUN pip3 install uv==0.4.25
+
+# Set default workdir to testbed
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/crewAIInc/crewAI /testbed \
+    && chmod -R 777 /testbed \
+    && cd /testbed \
+    && git reset --hard 9a6557395595f2491ea253048acf65442ed70418 \
+    && git remote remove origin
+
+# Set up Python environment and install dependencies using UV (as per CI workflow)
+# First install the specific Python version using uv
+RUN uv python install 3.10
+
+# Install project dependencies with all extras and dev dependencies (as per CI workflow)
+RUN uv sync --dev --all-extras
+
+# Install the project in development mode
+RUN uv pip install -e .
+
+# Set environment variables (required for tests)
+ENV OPENAI_API_KEY="fake-api-key"
+ENV PYTHONUNBUFFERED=1
+ENV OTEL_SDK_DISABLED="true"
+
+# Add uv to PATH for convenience and ensure Python 3.10 is default
+RUN echo "export PATH=\$PATH:/usr/local/bin" >> /root/.bashrc \
+    && echo "alias python=python3" >> /root/.bashrc \
+    && echo "alias python3=python3.10" >> /root/.bashrc
+
+# Ensure bash is the default shell for compatibility
+SHELL ["/bin/bash", "-c"]
+Adding (0) setup scripts to image build repo
+2026-06-14 21:04:30,719 - INFO - Building docker image setup.crewaiinc__crewai-2893:latest in run_instances/run_20260614_172541/gold/crewAIInc__crewAI-2893 with platform linux/x86_64
+2026-06-14 21:04:30,731 - INFO - Step 1/16 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-06-14 21:04:30,732 - INFO - 
+2026-06-14 21:04:30,734 - INFO - ---> 86f1a8d7b38e
+2026-06-14 21:04:30,734 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-14 21:04:30,735 - INFO - 
+2026-06-14 21:04:30,735 - INFO - ---> Using cache
+2026-06-14 21:04:30,735 - INFO - ---> 943dbea6ac3d
+2026-06-14 21:04:30,735 - INFO - Step 3/16 : ENV TZ=Etc/UTC
+2026-06-14 21:04:30,736 - INFO - 
+2026-06-14 21:04:30,736 - INFO - ---> Using cache
+2026-06-14 21:04:30,736 - INFO - ---> cabba75cd91a
+2026-06-14 21:04:30,736 - INFO - Step 4/16 : RUN apt update && apt install -y     wget     git     build-essential     curl     locales     locales-all     tzdata     python3     python3-pip     python3-venv     python-is-python3     software-properties-common     && rm -rf /var/lib/apt/lists/*
+2026-06-14 21:04:30,736 - INFO - 
+2026-06-14 21:04:30,736 - INFO - ---> Using cache
+2026-06-14 21:04:30,736 - INFO - ---> 67c15da83c1d
+2026-06-14 21:04:30,736 - INFO - Step 5/16 : RUN add-apt-repository ppa:deadsnakes/ppa -y     && apt update && apt install -y python3.10 python3.10-venv python3.10-dev     && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1     && rm -rf /var/lib/apt/lists/*
+2026-06-14 21:04:30,736 - INFO - 
+2026-06-14 21:04:30,737 - INFO - ---> Using cache
+2026-06-14 21:04:30,737 - INFO - ---> f1ab82bbd1cb
+2026-06-14 21:04:30,737 - INFO - Step 6/16 : RUN pip3 install uv==0.4.25
+2026-06-14 21:04:30,737 - INFO - 
+2026-06-14 21:04:30,805 - INFO - ---> Running in ef84e1a638a1
+2026-06-14 21:04:32,503 - INFO - Collecting uv==0.4.25
+2026-06-14 21:04:32,603 - INFO - Downloading uv-0.4.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.6 MB)
+2026-06-14 21:04:32,869 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.6/13.6 MB 69.4 MB/s eta 0:00:00
+2026-06-14 21:04:32,869 - INFO - 
+2026-06-14 21:04:32,948 - INFO - Installing collected packages: uv
+2026-06-14 21:04:33,154 - INFO - Successfully installed uv-0.4.25
+2026-06-14 21:04:33,154 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+2026-06-14 21:04:34,482 - INFO - ---> Removed intermediate container ef84e1a638a1
+2026-06-14 21:04:34,482 - INFO - ---> 27e9c5016be0
+2026-06-14 21:04:34,482 - INFO - Step 7/16 : WORKDIR /testbed/
+2026-06-14 21:04:34,482 - INFO - 
+2026-06-14 21:04:34,494 - INFO - ---> Running in 20be53b07bd4
+2026-06-14 21:04:34,510 - INFO - ---> Removed intermediate container 20be53b07bd4
+2026-06-14 21:04:34,510 - INFO - ---> 11f0d188a4c9
+2026-06-14 21:04:34,510 - INFO - Step 8/16 : RUN git clone https://github.com/crewAIInc/crewAI /testbed     && chmod -R 777 /testbed     && cd /testbed     && git reset --hard 9a6557395595f2491ea253048acf65442ed70418     && git remote remove origin
+2026-06-14 21:04:34,510 - INFO - 
+2026-06-14 21:04:34,523 - INFO - ---> Running in a8f86ba10d9f
+2026-06-14 21:04:34,780 - INFO - Cloning into '/testbed'...
+2026-06-14 21:04:43,447 - INFO - HEAD is now at 9a6557395 Feature/update docs (#3205)
+2026-06-14 21:04:53,750 - INFO - ---> Removed intermediate container a8f86ba10d9f
+2026-06-14 21:04:53,750 - INFO - ---> 547fef1bcc24
+2026-06-14 21:04:53,750 - INFO - Step 9/16 : RUN uv python install 3.10
+2026-06-14 21:04:53,750 - INFO - 
+2026-06-14 21:04:53,768 - INFO - ---> Running in 0209b52a7d71
+2026-06-14 21:04:54,017 - INFO - Searching for Python versions matching: Python 3.10
+2026-06-14 21:04:55,834 - INFO - Installed Python 3.10.15 in 1.81s
+ + cpython-3.10.15-linux-x86_64-gnu
+2026-06-14 21:05:00,539 - INFO - ---> Removed intermediate container 0209b52a7d71
+2026-06-14 21:05:00,540 - INFO - ---> 242aac664756
+2026-06-14 21:05:00,540 - INFO - Step 10/16 : RUN uv sync --dev --all-extras
+2026-06-14 21:05:00,540 - INFO - 
+2026-06-14 21:05:00,594 - INFO - ---> Running in b1153e6f5dd9
+2026-06-14 21:05:01,116 - INFO - Using CPython 3.10.15
+Creating virtual environment at: .venv
+2026-06-14 21:05:01,161 - INFO - Failed to parse lockfile; ignoring locked requirements: TOML parse error at line 679, column 1
+    |
+679 | [[package]]
+    | ^^^^^^^^^^^
+missing field `version`
+2026-06-14 21:05:08,097 - INFO - Resolved 303 packages in 6.93s
+2026-06-14 21:05:47,925 - INFO - Prepared 293 packages in 39.77s
+2026-06-14 21:05:48,670 - INFO - Installed 293 packages in 745ms
+2026-06-14 21:05:48,673 - INFO - + accelerate==1.14.0
+ +
+2026-06-14 21:05:48,673 - INFO - agentops==0.3.18
+ +
+2026-06-14 21:05:48,673 - INFO - aiohappyeyeballs==2.6.2
+2026-06-14 21:05:48,674 - INFO - + aiohttp
+2026-06-14 21:05:48,674 - INFO - ==3.14.1
+2026-06-14 21:05:48,674 - INFO - + aiosignal
+2026-06-14 21:05:48,674 - INFO - ==1.4.0
+2026-06-14 21:05:48,674 - INFO - + aisuite
+2026-06-14 21:05:48,674 - INFO - ==0.1.11
+2026-06-14 21:05:48,674 - INFO - 
+2026-06-14 21:05:48,675 - INFO - +
+2026-06-14 21:05:48,675 - INFO - alembic
+2026-06-14 21:05:48,675 - INFO - ==1.18.4
+2026-06-14 21:05:48,675 - INFO - +
+2026-06-14 21:05:48,675 - INFO - 
+2026-06-14 21:05:48,675 - INFO - annotated-doc==
+2026-06-14 21:05:48,675 - INFO - 0.0.4
+2026-06-14 21:05:48,676 - INFO - +
+2026-06-14 21:05:48,676 - INFO - annotated-types==0.7.0
+2026-06-14 21:05:48,676 - INFO - +
+2026-06-14 21:05:48,676 - INFO - antlr4-python3-runtime
+2026-06-14 21:05:48,676 - INFO - ==4.9.3
+2026-06-14 21:05:48,676 - INFO - + anyio
+2026-06-14 21:05:48,676 - INFO - ==4.13.0
+ +
+2026-06-14 21:05:48,677 - INFO - 
+2026-06-14 21:05:48,677 - INFO - appdirs
+2026-06-14 21:05:48,677 - INFO - ==1.4.4
+ + asgiref==3.11.1
+2026-06-14 21:05:48,677 - INFO - 
+2026-06-14 21:05:48,677 - INFO - +
+2026-06-14 21:05:48,677 - INFO - 
+2026-06-14 21:05:48,677 - INFO - ast-serialize
+2026-06-14 21:05:48,678 - INFO - ==
+2026-06-14 21:05:48,678 - INFO - 0.5.0
+2026-06-14 21:05:48,678 - INFO - +
+2026-06-14 21:05:48,678 - INFO - asttokens==
+2026-06-14 21:05:48,678 - INFO - 3.0.1
+2026-06-14 21:05:48,678 - INFO - +
+2026-06-14 21:05:48,679 - INFO - async-timeout
+2026-06-14 21:05:48,679 - INFO - ==
+2026-06-14 21:05:48,679 - INFO - 4.0.3
+2026-06-14 21:05:48,679 - INFO - +
+2026-06-14 21:05:48,679 - INFO - 
+2026-06-14 21:05:48,679 - INFO - attrs
+2026-06-14 21:05:48,679 - INFO - ==26.1.0
+2026-06-14 21:05:48,679 - INFO - + backoff
+2026-06-14 21:05:48,680 - INFO - ==2.2.1
+2026-06-14 21:05:48,680 - INFO - 
+2026-06-14 21:05:48,680 - INFO - +
+2026-06-14 21:05:48,680 - INFO - backports-asyncio-runner
+2026-06-14 21:05:48,680 - INFO - ==
+2026-06-14 21:05:48,680 - INFO - 1.2.0
+2026-06-14 21:05:48,680 - INFO - + bcrypt
+2026-06-14 21:05:48,681 - INFO - ==5.0.0
+2026-06-14 21:05:48,681 - INFO - +
+2026-06-14 21:05:48,681 - INFO - beautifulsoup4
+2026-06-14 21:05:48,681 - INFO - ==4.15.0
+2026-06-14 21:05:48,681 - INFO - +
+2026-06-14 21:05:48,681 - INFO - 
+2026-06-14 21:05:48,681 - INFO - blinker
+2026-06-14 21:05:48,682 - INFO - ==1.9.0
+2026-06-14 21:05:48,682 - INFO - +
+2026-06-14 21:05:48,682 - INFO - build==1.3.0
+2026-06-14 21:05:48,682 - INFO - +
+2026-06-14 21:05:48,682 - INFO - cachetools==
+2026-06-14 21:05:48,682 - INFO - 7.1.4
+2026-06-14 21:05:48,682 - INFO - +
+2026-06-14 21:05:48,682 - INFO - cairocffi==
+2026-06-14 21:05:48,683 - INFO - 1.7.1
+2026-06-14 21:05:48,683 - INFO - + cairosvg
+2026-06-14 21:05:48,683 - INFO - ==2.9.0
+2026-06-14 21:05:48,683 - INFO - +
+2026-06-14 21:05:48,683 - INFO - certifi
+2026-06-14 21:05:48,683 - INFO - ==2026.5.20
+2026-06-14 21:05:48,683 - INFO - +
+2026-06-14 21:05:48,684 - INFO - cffi==
+2026-06-14 21:05:48,684 - INFO - 2.0.0
+2026-06-14 21:05:48,684 - INFO - +
+2026-06-14 21:05:48,684 - INFO - cfgv==
+2026-06-14 21:05:48,684 - INFO - 3.5.0
+2026-06-14 21:05:48,684 - INFO - + charset-normalizer
+2026-06-14 21:05:48,684 - INFO - ==3.4.7
+2026-06-14 21:05:48,684 - INFO - +
+2026-06-14 21:05:48,685 - INFO - chroma-hnswlib==
+2026-06-14 21:05:48,685 - INFO - 0.7.6
+2026-06-14 21:05:48,685 - INFO - + chromadb
+2026-06-14 21:05:48,685 - INFO - ==
+2026-06-14 21:05:48,685 - INFO - 0.5.23
+2026-06-14 21:05:48,685 - INFO - 
+2026-06-14 21:05:48,685 - INFO - +
+2026-06-14 21:05:48,686 - INFO - 
+2026-06-14 21:05:48,686 - INFO - click
+2026-06-14 21:05:48,686 - INFO - ==8.4.1
+2026-06-14 21:05:48,686 - INFO - +
+2026-06-14 21:05:48,686 - INFO - cohere==5.21.1
+2026-06-14 21:05:48,686 - INFO - +
+2026-06-14 21:05:48,686 - INFO - coloredlogs==15.0.1
+2026-06-14 21:05:48,686 - INFO - + colorlog
+2026-06-14 21:05:48,686 - INFO - ==
+2026-06-14 21:05:48,687 - INFO - 6.10.1
+2026-06-14 21:05:48,687 - INFO - + crewai
+2026-06-14 21:05:48,687 - INFO - ==0.148.0
+2026-06-14 21:05:48,687 - INFO - (from file:///testbed)
+2026-06-14 21:05:48,687 - INFO - +
+2026-06-14 21:05:48,687 - INFO - crewai-tools
+2026-06-14 21:05:48,687 - INFO - ==0.55.0
+2026-06-14 21:05:48,687 - INFO - 
+2026-06-14 21:05:48,687 - INFO - + cryptography
+2026-06-14 21:05:48,687 - INFO - ==49.0.0
+2026-06-14 21:05:48,687 - INFO - + cssselect2
+2026-06-14 21:05:48,687 - INFO - ==
+2026-06-14 21:05:48,688 - INFO - 0.9.0
+2026-06-14 21:05:48,688 - INFO - +
+2026-06-14 21:05:48,688 - INFO - cuda-bindings
+2026-06-14 21:05:48,688 - INFO - ==
+2026-06-14 21:05:48,688 - INFO - 13.3.1
+2026-06-14 21:05:48,688 - INFO - +
+2026-06-14 21:05:48,688 - INFO - cuda-pathfinder==
+2026-06-14 21:05:48,688 - INFO - 1.5.5
+ +
+2026-06-14 21:05:48,688 - INFO - 
+2026-06-14 21:05:48,688 - INFO - cuda-toolkit==
+2026-06-14 21:05:48,688 - INFO - 13.0.2
+2026-06-14 21:05:48,688 - INFO - +
+2026-06-14 21:05:48,689 - INFO - dataclasses-json
+2026-06-14 21:05:48,689 - INFO - ==0.6.7
+2026-06-14 21:05:48,689 - INFO - +
+2026-06-14 21:05:48,689 - INFO - decorator==
+2026-06-14 21:05:48,689 - INFO - 5.3.1
+ + defusedxml
+2026-06-14 21:05:48,689 - INFO - ==0.7.1
+2026-06-14 21:05:48,689 - INFO - 
+2026-06-14 21:05:48,689 - INFO - +
+2026-06-14 21:05:48,689 - INFO - 
+2026-06-14 21:05:48,689 - INFO - deprecation
+2026-06-14 21:05:48,689 - INFO - ==2.1.0
+2026-06-14 21:05:48,690 - INFO - + dill
+2026-06-14 21:05:48,690 - INFO - ==0.4.1
+2026-06-14 21:05:48,690 - INFO - + diskcache
+2026-06-14 21:05:48,690 - INFO - ==
+2026-06-14 21:05:48,690 - INFO - 5.6.3
+2026-06-14 21:05:48,690 - INFO - + distlib
+2026-06-14 21:05:48,690 - INFO - ==0.4.3
+2026-06-14 21:05:48,690 - INFO - 
+2026-06-14 21:05:48,690 - INFO - +
+2026-06-14 21:05:48,690 - INFO - distro==
+2026-06-14 21:05:48,691 - INFO - 1.9.0
+2026-06-14 21:05:48,691 - INFO - +
+2026-06-14 21:05:48,691 - INFO - docker
+2026-06-14 21:05:48,691 - INFO - ==7.1.0
+2026-06-14 21:05:48,691 - INFO - + docling
+2026-06-14 21:05:48,691 - INFO - ==2.87.0
+2026-06-14 21:05:48,691 - INFO - + docling-core
+2026-06-14 21:05:48,691 - INFO - ==2.82.0
+2026-06-14 21:05:48,691 - INFO - + docling-ibm-models
+2026-06-14 21:05:48,691 - INFO - ==3.13.3
+2026-06-14 21:05:48,691 - INFO - 
+2026-06-14 21:05:48,691 - INFO - +
+2026-06-14 21:05:48,692 - INFO - docling-parse==
+2026-06-14 21:05:48,692 - INFO - 5.11.0
+2026-06-14 21:05:48,692 - INFO - 
+2026-06-14 21:05:48,692 - INFO - +
+2026-06-14 21:05:48,692 - INFO - docstring-parser
+2026-06-14 21:05:48,692 - INFO - ==0.18.0
+2026-06-14 21:05:48,692 - INFO - +
+2026-06-14 21:05:48,692 - INFO - durationpy
+2026-06-14 21:05:48,692 - INFO - ==
+2026-06-14 21:05:48,692 - INFO - 0.10
+2026-06-14 21:05:48,692 - INFO - 
+2026-06-14 21:05:48,692 - INFO - +
+2026-06-14 21:05:48,693 - INFO - embedchain==0.1.128
+2026-06-14 21:05:48,693 - INFO - +
+2026-06-14 21:05:48,693 - INFO - et-xmlfile
+2026-06-14 21:05:48,693 - INFO - ==
+2026-06-14 21:05:48,693 - INFO - 2.0.0
+2026-06-14 21:05:48,693 - INFO - 
+2026-06-14 21:05:48,693 - INFO - +
+2026-06-14 21:05:48,693 - INFO - 
+2026-06-14 21:05:48,693 - INFO - exceptiongroup
+2026-06-14 21:05:48,693 - INFO - ==
+2026-06-14 21:05:48,693 - INFO - 1.3.1
+2026-06-14 21:05:48,693 - INFO - +
+2026-06-14 21:05:48,694 - INFO - execnet
+2026-06-14 21:05:48,694 - INFO - ==
+2026-06-14 21:05:48,694 - INFO - 2.1.2
+2026-06-14 21:05:48,694 - INFO - +
+2026-06-14 21:05:48,694 - INFO - 
+2026-06-14 21:05:48,694 - INFO - executing==
+2026-06-14 21:05:48,694 - INFO - 2.2.1
+2026-06-14 21:05:48,694 - INFO - +
+2026-06-14 21:05:48,694 - INFO - faker
+2026-06-14 21:05:48,694 - INFO - ==40.23.0
+2026-06-14 21:05:48,694 - INFO - +
+2026-06-14 21:05:48,694 - INFO - fastapi
+2026-06-14 21:05:48,695 - INFO - ==0.137.0
+2026-06-14 21:05:48,695 - INFO - + fastavro
+2026-06-14 21:05:48,695 - INFO - ==1.12.2
+2026-06-14 21:05:48,695 - INFO - 
+2026-06-14 21:05:48,695 - INFO - + filelock
+2026-06-14 21:05:48,695 - INFO - ==3.29.4
+2026-06-14 21:05:48,695 - INFO - 
+2026-06-14 21:05:48,695 - INFO - +
+2026-06-14 21:05:48,695 - INFO - filetype
+2026-06-14 21:05:48,695 - INFO - ==
+2026-06-14 21:05:48,695 - INFO - 1.2.0
+2026-06-14 21:05:48,695 - INFO - +
+2026-06-14 21:05:48,696 - INFO - flatbuffers
+2026-06-14 21:05:48,696 - INFO - ==25.12.19
+2026-06-14 21:05:48,696 - INFO - + frozenlist
+2026-06-14 21:05:48,696 - INFO - ==1.8.0
+2026-06-14 21:05:48,696 - INFO - +
+2026-06-14 21:05:48,696 - INFO - fsspec
+2026-06-14 21:05:48,696 - INFO - ==2026.4.0
+2026-06-14 21:05:48,696 - INFO - 
+2026-06-14 21:05:48,696 - INFO - +
+2026-06-14 21:05:48,696 - INFO - googleapis-common-protos
+2026-06-14 21:05:48,696 - INFO - ==1.75.0
+2026-06-14 21:05:48,696 - INFO - +
+2026-06-14 21:05:48,696 - INFO - gptcache
+2026-06-14 21:05:48,697 - INFO - ==0.1.44
+2026-06-14 21:05:48,697 - INFO - +
+2026-06-14 21:05:48,697 - INFO - greenlet
+2026-06-14 21:05:48,697 - INFO - ==
+2026-06-14 21:05:48,697 - INFO - 3.5.1
+2026-06-14 21:05:48,697 - INFO - +
+2026-06-14 21:05:48,697 - INFO - 
+2026-06-14 21:05:48,697 - INFO - grpcio==
+2026-06-14 21:05:48,697 - INFO - 1.81.1
+2026-06-14 21:05:48,697 - INFO - 
+2026-06-14 21:05:48,697 - INFO - +
+2026-06-14 21:05:48,697 - INFO - h11
+2026-06-14 21:05:48,697 - INFO - ==
+2026-06-14 21:05:48,697 - INFO - 0.16.0
+2026-06-14 21:05:48,697 - INFO - +
+2026-06-14 21:05:48,697 - INFO - h2==4.3.0
+2026-06-14 21:05:48,697 - INFO - +
+2026-06-14 21:05:48,697 - INFO - hf-xet==
+2026-06-14 21:05:48,698 - INFO - 1.5.1
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,698 - INFO - hpack==
+2026-06-14 21:05:48,698 - INFO - 4.1.0
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,698 - INFO - httpcore
+2026-06-14 21:05:48,698 - INFO - ==1.0.9
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,698 - INFO - httptools==
+2026-06-14 21:05:48,698 - INFO - 0.8.0
+2026-06-14 21:05:48,698 - INFO - + httpx==
+2026-06-14 21:05:48,698 - INFO - 0.27.2
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,698 - INFO - httpx-sse==0.4.3
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,698 - INFO - huggingface-hub
+2026-06-14 21:05:48,698 - INFO - ==0.36.2
+2026-06-14 21:05:48,698 - INFO - +
+2026-06-14 21:05:48,699 - INFO - humanfriendly
+2026-06-14 21:05:48,699 - INFO - ==
+2026-06-14 21:05:48,699 - INFO - 10.0
+2026-06-14 21:05:48,699 - INFO - + hyperframe
+2026-06-14 21:05:48,699 - INFO - ==
+2026-06-14 21:05:48,699 - INFO - 6.1.0
+2026-06-14 21:05:48,699 - INFO - +
+2026-06-14 21:05:48,699 - INFO - identify
+2026-06-14 21:05:48,699 - INFO - ==2.6.19
+2026-06-14 21:05:48,699 - INFO - +
+2026-06-14 21:05:48,699 - INFO - idna==
+2026-06-14 21:05:48,699 - INFO - 3.18
+2026-06-14 21:05:48,699 - INFO - +
+2026-06-14 21:05:48,699 - INFO - importlib-metadata==9.0.0
+2026-06-14 21:05:48,699 - INFO - +
+2026-06-14 21:05:48,699 - INFO - importlib-resources
+2026-06-14 21:05:48,699 - INFO - ==7.1.0
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - iniconfig
+2026-06-14 21:05:48,700 - INFO - ==2.3.0
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - instructor
+2026-06-14 21:05:48,700 - INFO - ==1.12.0
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - ipython
+2026-06-14 21:05:48,700 - INFO - ==
+2026-06-14 21:05:48,700 - INFO - 8.39.0
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - jedi==0.20.0
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - 
+2026-06-14 21:05:48,700 - INFO - jinja2==
+2026-06-14 21:05:48,700 - INFO - 3.1.6
+2026-06-14 21:05:48,700 - INFO - +
+2026-06-14 21:05:48,700 - INFO - jiter==0.10.0
+2026-06-14 21:05:48,701 - INFO - +
+2026-06-14 21:05:48,701 - INFO - json-repair
+2026-06-14 21:05:48,701 - INFO - ==0.25.2
+2026-06-14 21:05:48,701 - INFO - +
+2026-06-14 21:05:48,701 - INFO - json5
+2026-06-14 21:05:48,701 - INFO - ==0.14.0
+2026-06-14 21:05:48,701 - INFO - +
+2026-06-14 21:05:48,701 - INFO - jsonlines
+2026-06-14 21:05:48,701 - INFO - ==4.0.0
+2026-06-14 21:05:48,701 - INFO - + jsonpatch
+2026-06-14 21:05:48,701 - INFO - ==1.33
+2026-06-14 21:05:48,701 - INFO - +
+2026-06-14 21:05:48,701 - INFO - jsonpickle
+2026-06-14 21:05:48,701 - INFO - ==
+2026-06-14 21:05:48,701 - INFO - 4.1.2
+2026-06-14 21:05:48,701 - INFO - 
+2026-06-14 21:05:48,701 - INFO - + jsonpointer
+2026-06-14 21:05:48,701 - INFO - ==3.1.1
+2026-06-14 21:05:48,702 - INFO - +
+2026-06-14 21:05:48,702 - INFO - 
+2026-06-14 21:05:48,702 - INFO - jsonref
+2026-06-14 21:05:48,702 - INFO - ==
+2026-06-14 21:05:48,702 - INFO - 1.1.0
+2026-06-14 21:05:48,702 - INFO - 
+2026-06-14 21:05:48,702 - INFO - 
+2026-06-14 21:05:48,702 - INFO - +
+2026-06-14 21:05:48,702 - INFO - 
+2026-06-14 21:05:48,702 - INFO - jsonschema
+2026-06-14 21:05:48,702 - INFO - ==
+2026-06-14 21:05:48,702 - INFO - 4.26.0
+2026-06-14 21:05:48,702 - INFO - +
+2026-06-14 21:05:48,702 - INFO - jsonschema-specifications
+2026-06-14 21:05:48,702 - INFO - ==2025.9.1
+2026-06-14 21:05:48,702 - INFO - + kubernetes
+2026-06-14 21:05:48,703 - INFO - ==36.0.2
+2026-06-14 21:05:48,703 - INFO - 
+2026-06-14 21:05:48,703 - INFO - +
+2026-06-14 21:05:48,703 - INFO - 
+2026-06-14 21:05:48,703 - INFO - lance-namespace
+2026-06-14 21:05:48,703 - INFO - ==
+2026-06-14 21:05:48,703 - INFO - 0.8.6
+2026-06-14 21:05:48,703 - INFO - + lance-namespace-urllib3-client
+2026-06-14 21:05:48,703 - INFO - ==
+2026-06-14 21:05:48,703 - INFO - 0.8.6
+2026-06-14 21:05:48,703 - INFO - 
+2026-06-14 21:05:48,703 - INFO - +
+2026-06-14 21:05:48,703 - INFO - lancedb==0.33.0
+2026-06-14 21:05:48,703 - INFO - + langchain
+2026-06-14 21:05:48,703 - INFO - ==
+2026-06-14 21:05:48,703 - INFO - 0.3.30
+2026-06-14 21:05:48,703 - INFO - + langchain-cohere
+2026-06-14 21:05:48,704 - INFO - ==0.3.5
+2026-06-14 21:05:48,704 - INFO - + langchain-community
+2026-06-14 21:05:48,704 - INFO - ==
+2026-06-14 21:05:48,704 - INFO - 0.3.31
+2026-06-14 21:05:48,704 - INFO - +
+2026-06-14 21:05:48,704 - INFO - langchain-core==0.3.86
+2026-06-14 21:05:48,704 - INFO - +
+2026-06-14 21:05:48,704 - INFO - langchain-experimental==0.3.4
+2026-06-14 21:05:48,704 - INFO - +
+2026-06-14 21:05:48,704 - INFO - langchain-openai
+2026-06-14 21:05:48,704 - INFO - ==0.2.14
+2026-06-14 21:05:48,704 - INFO - +
+2026-06-14 21:05:48,704 - INFO - langchain-text-splitters==0.3.11
+2026-06-14 21:05:48,704 - INFO - 
+2026-06-14 21:05:48,704 - INFO - + langsmith==
+2026-06-14 21:05:48,704 - INFO - 0.3.45
+2026-06-14 21:05:48,704 - INFO - + latex2mathml
+2026-06-14 21:05:48,704 - INFO - ==3.81.0
+2026-06-14 21:05:48,705 - INFO - 
+2026-06-14 21:05:48,705 - INFO - +
+2026-06-14 21:05:48,705 - INFO - librt==0.11.0
+2026-06-14 21:05:48,705 - INFO - + litellm==1.74.3
+2026-06-14 21:05:48,705 - INFO - + lxml
+2026-06-14 21:05:48,705 - INFO - ==
+2026-06-14 21:05:48,705 - INFO - 6.1.1
+2026-06-14 21:05:48,705 - INFO - +
+2026-06-14 21:05:48,705 - INFO - mako
+2026-06-14 21:05:48,705 - INFO - ==1.3.12
+2026-06-14 21:05:48,705 - INFO - 
+2026-06-14 21:05:48,705 - INFO - +
+2026-06-14 21:05:48,705 - INFO - markdown-it-py
+2026-06-14 21:05:48,705 - INFO - ==4.2.0
+2026-06-14 21:05:48,705 - INFO - +
+2026-06-14 21:05:48,705 - INFO - marko
+2026-06-14 21:05:48,705 - INFO - ==2.2.3
+2026-06-14 21:05:48,705 - INFO - +
+2026-06-14 21:05:48,706 - INFO - markupsafe
+2026-06-14 21:05:48,706 - INFO - ==3.0.3
+2026-06-14 21:05:48,706 - INFO - + marshmallow
+2026-06-14 21:05:48,706 - INFO - ==3.26.2
+2026-06-14 21:05:48,706 - INFO - + matplotlib-inline
+2026-06-14 21:05:48,706 - INFO - ==0.2.2
+2026-06-14 21:05:48,706 - INFO - 
+2026-06-14 21:05:48,706 - INFO - +
+2026-06-14 21:05:48,706 - INFO - mdurl
+2026-06-14 21:05:48,706 - INFO - ==0.1.2
+2026-06-14 21:05:48,706 - INFO - + mem0ai
+2026-06-14 21:05:48,706 - INFO - ==
+2026-06-14 21:05:48,706 - INFO - 0.1.118
+2026-06-14 21:05:48,706 - INFO - + mmh3==
+2026-06-14 21:05:48,706 - INFO - 5.2.1
+2026-06-14 21:05:48,706 - INFO - + monotonic
+2026-06-14 21:05:48,706 - INFO - ==1.6
+2026-06-14 21:05:48,706 - INFO - + mpire
+2026-06-14 21:05:48,706 - INFO - ==
+2026-06-14 21:05:48,706 - INFO - 2.10.2
+2026-06-14 21:05:48,707 - INFO - + mpmath
+2026-06-14 21:05:48,707 - INFO - ==1.3.0
+2026-06-14 21:05:48,707 - INFO - +
+2026-06-14 21:05:48,707 - INFO - multidict==
+2026-06-14 21:05:48,707 - INFO - 6.7.1
+2026-06-14 21:05:48,707 - INFO - +
+2026-06-14 21:05:48,707 - INFO - multiprocess==0.70.19
+2026-06-14 21:05:48,707 - INFO - + mypy==
+2026-06-14 21:05:48,707 - INFO - 2.1.0
+2026-06-14 21:05:48,707 - INFO - + mypy-extensions
+2026-06-14 21:05:48,707 - INFO - ==1.1.0
+2026-06-14 21:05:48,707 - INFO - + networkx
+2026-06-14 21:05:48,707 - INFO - ==3.4.2
+ +
+2026-06-14 21:05:48,707 - INFO - nodeenv
+2026-06-14 21:05:48,707 - INFO - ==1.10.0
+2026-06-14 21:05:48,707 - INFO - +
+2026-06-14 21:05:48,707 - INFO - 
+2026-06-14 21:05:48,707 - INFO - numpy==2.2.6
+2026-06-14 21:05:48,707 - INFO - + nvidia-cublas
+2026-06-14 21:05:48,707 - INFO - ==
+2026-06-14 21:05:48,707 - INFO - 13.1.1.3
+2026-06-14 21:05:48,707 - INFO - + nvidia-cuda-cupti
+2026-06-14 21:05:48,707 - INFO - ==13.0.85
+ + nvidia-cuda-nvrtc==13.0.88
+ + nvidia-cuda-runtime==13.0.96
+ + nvidia-cudnn-cu13==9.20.0.48
+ + nvidia-cufft==12.0.0.61
+ + nvidia-cufile==1.15.1.6
+ + nvidia-curand==10.4.0.35
+ + nvidia-cusolver==12.0.4.66
+ + nvidia-cusparse==12.6.3.3
+ + nvidia-cusparselt-cu13==0.8.1
+ + nvidia-nccl-cu13==2.29.7
+ + nvidia-nvjitlink==13.0.88
+ + nvidia-nvshmem-cu13==3.4.5
+ + nvidia-nvtx==13.0.85
+ + oauthlib==3.3.1
+ + omegaconf==2.3.1
+ + onnxruntime==1.22.0
+ + openai==1.109.1
+ + opencv-python==4.13.0.92
+ + openpyxl==3.1.5
+ + opentelemetry-api==1.42.1
+ + opentelemetry-exporter-otlp-proto-common==1.42.1
+ + opentelemetry-exporter-otlp-proto-grpc==1.42.1
+ + opentelemetry-exporter-otlp-proto-http==1.42.1
+ + opentelemetry-instrumentation==0.63b1
+ + opentelemetry-instrumentation-asgi==0.63b1
+ + opentelemetry-instrumentation-fastapi==0.63b1
+ + opentelemetry-proto==1.42.1
+ + opentelemetry-sdk==1.42.1
+ + opentelemetry-semantic-conventions==0.63b1
+ + opentelemetry-util-http==0.63b1
+ + orjson==3.11.9
+ + overrides==7.7.0
+ + packaging==23.2
+ + pandas==2.3.3
+ + parso==0.8.7
+ + pathspec==1.1.1
+ + pdfminer-six==20251230
+ + pdfplumber==0.11.9
+ + pexpect==4.9.0
+ + pillow==12.2.0
+ + platformdirs==4.10.0
+ + pluggy==1.6.0
+ + polyfactory==3.3.0
+ + portalocker==2.7.0
+ + posthog==3.25.0
+ + pre-commit==4.6.0
+ + prompt-toolkit==3.0.52
+ + propcache==0.5.2
+ + protobuf==5.29.6
+ + psutil==5.9.8
+ + ptyprocess==0.7.0
+ + pure-eval==0.2.3
+ + pyarrow==24.0.0
+ + pyclipper==1.4.0
+ + pycparser==3.0
+ + pydantic==2.13.4
+ + pydantic-core==2.46.4
+ + pydantic-settings==2.14.1
+ + pygments==2.20.0
+ + pyjwt==2.13.0
+ + pylatexenc==2.10
+ + pypdf==5.9.0
+ + pypdfium2==5.9.0
+ + pypika==0.51.1
+ + pyproject-hooks==1.2.0
+ + pyright==1.1.410
+ + pysbd==0.3.4
+ + pytest==9.1.0
+ + pytest-asyncio==1.4.0
+ + pytest-randomly==4.1.0
+ + pytest-recording==0.13.4
+ + pytest-split==0.11.0
+ + pytest-subprocess==1.6.0
+ + pytest-timeout==2.4.0
+ + pytest-xdist==3.8.0
+ + python-dateutil==2.9.0.post0
+ + python-discovery==1.4.2
+ + python-docx==1.2.0
+ + python-dotenv==1.2.2
+ + python-pptx==1.0.2
+ + pytube==15.0.0
+ + pytz==2026.2
+ + pyvis==0.3.2
+ + pyyaml==6.0.3
+ + qdrant-client==1.18.0
+ + rapidocr==3.8.3
+ + referencing==0.37.0
+ + regex==2026.5.9
+ + requests==2.34.2
+ + requests-oauthlib==2.0.0
+ + requests-toolbelt==1.0.0
+ + rich==13.9.4
+ + rpds-py==0.30.0
+ + rtree==1.4.1
+ + ruff==0.15.17
+ + safetensors==0.8.0
+ + schema==0.7.8
+ + scipy==1.15.3
+ + semchunk==3.2.5
+ + setuptools==81.0.0
+ + shapely==2.1.2
+ + shellingham==1.5.4
+ + six==1.17.0
+ + sniffio==1.3.1
+ + soupsieve==2.8.4
+ + sqlalchemy==2.0.50
+ + stack-data==0.6.3
+ + starlette==1.3.1
+ + sympy==1.14.0
+ + tabulate==0.9.0
+ + tenacity==9.1.4
+ + termcolor==3.3.0
+ + tiktoken==0.8.0
+ + tinycss2==1.5.1
+ + tokenizers==0.20.3
+ + tomli==2.4.1
+ + tomli-w==1.2.0
+ + torch==2.12.0
+ + torchvision==0.27.0
+ + tqdm==4.68.2
+ + traitlets==5.15.1
+ + transformers==4.46.3
+ + tree-sitter==0.25.2
+ + tree-sitter-c==0.24.2
+ + tree-sitter-javascript==0.25.0
+ + tree-sitter-python==0.25.0
+ + tree-sitter-typescript==0.23.2
+ + triton==3.7.0
+ + typer==0.21.2
+ + types-requests==2.33.0.20260518
+ + typing-extensions==4.15.0
+ + typing-inspect==0.9.0
+ + typing-inspection==0.4.2
+ + tzdata==2026.2
+ + urllib3==2.7.0
+ + uuid-utils==0.16.0
+ + uv==0.11.21
+ + uvicorn==0.49.0
+ + uvloop==0.22.1
+ + vcrpy==8.1.1
+ + virtualenv==21.5.0
+ + watchfiles==1.2.0
+ + wcwidth==0.8.1
+ + webencodings==0.5.1
+ + websocket-client==1.9.0
+ + websockets==16.0
+ + wrapt==2.2.1
+ + xlsxwriter==3.2.9
+ + yarl==1.24.2
+ + zipp==4.1.0
+ + zstandard==0.23.0
+2026-06-14 21:08:17,208 - INFO - ---> Removed intermediate container b1153e6f5dd9
+2026-06-14 21:08:17,208 - INFO - ---> 7b629fc24a22
+2026-06-14 21:08:17,209 - INFO - Step 11/16 : RUN uv pip install -e .
+2026-06-14 21:08:17,209 - INFO - 
+2026-06-14 21:08:17,823 - INFO - ---> Running in 551a8726cf44
+2026-06-14 21:08:18,282 - INFO - Audited 1 package in 179ms
+2026-06-14 21:08:19,886 - INFO - ---> Removed intermediate container 551a8726cf44
+2026-06-14 21:08:19,886 - INFO - ---> 50da173ca6a7
+2026-06-14 21:08:19,887 - INFO - Step 12/16 : ENV OPENAI_API_KEY="fake-api-key"
+2026-06-14 21:08:19,887 - INFO - 
+2026-06-14 21:08:19,992 - INFO - ---> Running in fa766ffe7761
+2026-06-14 21:08:20,073 - INFO - ---> Removed intermediate container fa766ffe7761
+2026-06-14 21:08:20,074 - INFO - ---> bbf6c3fde6c8
+2026-06-14 21:08:20,074 - INFO - Step 13/16 : ENV PYTHONUNBUFFERED=1
+2026-06-14 21:08:20,074 - INFO - 
+2026-06-14 21:08:20,110 - INFO - ---> Running in b2e66bbab222
+2026-06-14 21:08:20,136 - INFO - ---> Removed intermediate container b2e66bbab222
+2026-06-14 21:08:20,136 - INFO - ---> f08af84f8b72
+2026-06-14 21:08:20,136 - INFO - Step 14/16 : ENV OTEL_SDK_DISABLED="true"
+2026-06-14 21:08:20,137 - INFO - 
+2026-06-14 21:08:20,152 - INFO - ---> Running in f35c03015818
+2026-06-14 21:08:20,177 - INFO - ---> Removed intermediate container f35c03015818
+2026-06-14 21:08:20,177 - INFO - ---> 69e1efa223e6
+2026-06-14 21:08:20,177 - INFO - Step 15/16 : RUN echo "export PATH=\$PATH:/usr/local/bin" >> /root/.bashrc     && echo "alias python=python3" >> /root/.bashrc     && echo "alias python3=python3.10" >> /root/.bashrc
+2026-06-14 21:08:20,177 - INFO - 
+2026-06-14 21:08:20,193 - INFO - ---> Running in 7b4d9a96760c
+2026-06-14 21:08:21,511 - INFO - ---> Removed intermediate container 7b4d9a96760c
+2026-06-14 21:08:21,511 - INFO - ---> 3922204ce901
+2026-06-14 21:08:21,512 - INFO - Step 16/16 : SHELL ["/bin/bash", "-c"]
+2026-06-14 21:08:21,512 - INFO - 
+2026-06-14 21:08:21,561 - INFO - ---> Running in fd48ac7abd42
+2026-06-14 21:08:21,590 - INFO - ---> Removed intermediate container fd48ac7abd42
+2026-06-14 21:08:21,590 - INFO - ---> c1c075fea66c
+2026-06-14 21:08:21,591 - INFO - Successfully built c1c075fea66c
+2026-06-14 21:08:21,592 - INFO - Successfully tagged setup.crewaiinc__crewai-2893:latest
+2026-06-14 21:08:21,593 - INFO - Image built successfully!

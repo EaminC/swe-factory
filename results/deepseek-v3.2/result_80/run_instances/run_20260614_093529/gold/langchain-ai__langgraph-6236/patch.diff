@@ -1,0 +1,124 @@
+diff --git a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py
+--- a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py
++++ b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/__init__.py
+@@ -14,7 +14,7 @@
+     CheckpointMetadata,
+     CheckpointTuple,
+     get_checkpoint_id,
+-    get_checkpoint_metadata,
++    get_serializable_checkpoint_metadata,
+ )
+ from langgraph.checkpoint.serde.base import SerializerProtocol
+ from psycopg import Capabilities, Connection, Cursor, Pipeline
+@@ -325,7 +325,7 @@ def put(
+                     checkpoint["id"],
+                     checkpoint_id,
+                     Jsonb(copy),
+-                    Jsonb(get_checkpoint_metadata(config, metadata)),
++                    Jsonb(get_serializable_checkpoint_metadata(config, metadata)),
+                 ),
+             )
+         return next_config
+diff --git a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py
+--- a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py
++++ b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/aio.py
+@@ -14,7 +14,7 @@
+     CheckpointMetadata,
+     CheckpointTuple,
+     get_checkpoint_id,
+-    get_checkpoint_metadata,
++    get_serializable_checkpoint_metadata,
+ )
+ from langgraph.checkpoint.serde.base import SerializerProtocol
+ from psycopg import AsyncConnection, AsyncCursor, AsyncPipeline, Capabilities
+@@ -283,7 +283,7 @@ async def aput(
+                     checkpoint["id"],
+                     checkpoint_id,
+                     Jsonb(copy),
+-                    Jsonb(get_checkpoint_metadata(config, metadata)),
++                    Jsonb(get_serializable_checkpoint_metadata(config, metadata)),
+                 ),
+             )
+         return next_config
+diff --git a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py
+--- a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py
++++ b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/base.py
+@@ -1,7 +1,9 @@
+ from __future__ import annotations
+ 
+ import random
++import warnings
+ from collections.abc import Sequence
++from importlib.metadata import version as get_version
+ from typing import Any, Optional, cast
+ 
+ from langchain_core.runnables import RunnableConfig
+@@ -16,6 +18,18 @@
+ 
+ MetadataInput = Optional[dict[str, Any]]
+ 
++try:
++    major, minor = get_version("langgraph").split(".")[:2]
++    if int(major) == 0 and int(minor) < 5:
++        warnings.warn(
++            "You're using incompatible versions of langgraph and checkpoint-postgres. Please upgrade langgraph to avoid unexpected behavior.",
++            DeprecationWarning,
++            stacklevel=2,
++        )
++except Exception:
++    # skip version check if running from source
++    pass
++
+ """
+ To add a new migration, add a new string to the MIGRATIONS list.
+ The position of the migration in the list is the version number.
+diff --git a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py
+--- a/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py
++++ b/libs/checkpoint-postgres/langgraph/checkpoint/postgres/shallow.py
+@@ -12,7 +12,7 @@
+     Checkpoint,
+     CheckpointMetadata,
+     CheckpointTuple,
+-    get_checkpoint_metadata,
++    get_serializable_checkpoint_metadata,
+ )
+ from langgraph.checkpoint.serde.base import SerializerProtocol
+ from langgraph.checkpoint.serde.types import TASKS
+@@ -441,7 +441,7 @@ def put(
+                     thread_id,
+                     checkpoint_ns,
+                     Jsonb(copy),
+-                    Jsonb(get_checkpoint_metadata(config, metadata)),
++                    Jsonb(get_serializable_checkpoint_metadata(config, metadata)),
+                 ),
+             )
+         return next_config
+@@ -774,7 +774,7 @@ async def aput(
+                     thread_id,
+                     checkpoint_ns,
+                     Jsonb(copy),
+-                    Jsonb(get_checkpoint_metadata(config, metadata)),
++                    Jsonb(get_serializable_checkpoint_metadata(config, metadata)),
+                 ),
+             )
+         return next_config
+diff --git a/libs/checkpoint/langgraph/checkpoint/base/__init__.py b/libs/checkpoint/langgraph/checkpoint/base/__init__.py
+--- a/libs/checkpoint/langgraph/checkpoint/base/__init__.py
++++ b/libs/checkpoint/langgraph/checkpoint/base/__init__.py
+@@ -404,6 +404,16 @@ def get_checkpoint_metadata(
+     return metadata
+ 
+ 
++def get_serializable_checkpoint_metadata(
++    config: RunnableConfig, metadata: CheckpointMetadata
++) -> CheckpointMetadata:
++    """Get checkpoint metadata in a backwards-compatible manner."""
++    checkpoint_metadata = get_checkpoint_metadata(config, metadata)
++    if "writes" in checkpoint_metadata:
++        checkpoint_metadata.pop("writes")
++    return checkpoint_metadata
++
++
+ """
+ Mapping from error type to error index.
+ Regular writes just map to their index in the list of writes being saved.

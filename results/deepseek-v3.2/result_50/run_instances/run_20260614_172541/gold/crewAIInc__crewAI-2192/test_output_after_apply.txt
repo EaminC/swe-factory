@@ -1,0 +1,209 @@
++ source /testbed/.venv/bin/activate
+++ '[' -z '' ']'
+++ '[' -n x ']'
+++ SCRIPT_PATH=/testbed/.venv/bin/activate
+++ '[' /testbed/.venv/bin/activate = /eval.sh ']'
+++ deactivate nondestructive
+++ unset -f pydoc
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ hash -r
+++ '[' -z '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ '[' linux-gnu = cygwin ']'
+++ '[' linux-gnu = msys ']'
+++ export VIRTUAL_ENV
+++ '[' -z '' ']'
+++ unset SCRIPT_PATH
+++ _OLD_VIRTUAL_PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' xtestbed '!=' x ']'
+++ VIRTUAL_ENV_PROMPT=testbed
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ alias pydoc
+++ true
+++ hash -r
++ echo '=== Environment Verification ==='
+=== Environment Verification ===
++ python --version
+Python 3.12.13
+++ which python
++ echo 'Python executable: /testbed/.venv/bin/python'
+Python executable: /testbed/.venv/bin/python
+++ uv --version
++ echo 'UV version: uv 0.4.26'
++ echo 'Installed packages:'
+UV version: uv 0.4.26
+Installed packages:
++ pip list
++ grep -E '^(crewai|pytest|uv|pydantic|openai|litellm|instructor)'
+uv                  0.11.21
++ echo '=== End Environment Verification ==='
++ cd /testbed
+=== End Environment Verification ===
++ git checkout b4e2db03069fcedbf80eb2130aa91d0cb68b3a43 tests/llm_test.py
+Updated 1 path from 3d33ed289
++ git apply -v -
+Checking patch tests/llm_test.py...
+Applied patch tests/llm_test.py cleanly.
++ echo '=== Running Tests ==='
+=== Running Tests ===
++ uv run pytest tests/llm_test.py -v --tb=short --no-header -rA
+/testbed/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+collecting ... collected 22 items
+
+tests/llm_test.py::test_llm_callback_replacement PASSED                  [  4%]
+tests/llm_test.py::test_llm_call_with_string_input PASSED                [  9%]
+tests/llm_test.py::test_llm_call_with_string_input_and_callbacks PASSED  [ 13%]
+tests/llm_test.py::test_llm_call_with_message_list PASSED                [ 18%]
+tests/llm_test.py::test_llm_call_with_tool_and_string_input PASSED       [ 22%]
+tests/llm_test.py::test_llm_call_with_tool_and_message_list PASSED       [ 27%]
+tests/llm_test.py::test_llm_passes_additional_params PASSED              [ 31%]
+tests/llm_test.py::test_get_custom_llm_provider_openrouter PASSED        [ 36%]
+tests/llm_test.py::test_get_custom_llm_provider_gemini PASSED            [ 40%]
+tests/llm_test.py::test_get_custom_llm_provider_openai PASSED            [ 45%]
+tests/llm_test.py::test_validate_call_params_supported PASSED            [ 50%]
+tests/llm_test.py::test_validate_call_params_not_supported PASSED        [ 54%]
+tests/llm_test.py::test_validate_call_params_no_response_format PASSED   [ 59%]
+tests/llm_test.py::test_o3_mini_reasoning_effort_high PASSED             [ 63%]
+tests/llm_test.py::test_o3_mini_reasoning_effort_low PASSED              [ 68%]
+tests/llm_test.py::test_o3_mini_reasoning_effort_medium PASSED           [ 72%]
+tests/llm_test.py::test_context_window_validation PASSED                 [ 77%]
+tests/llm_test.py::test_anthropic_message_formatting_edge_cases PASSED   [ 81%]
+tests/llm_test.py::test_anthropic_model_detection PASSED                 [ 86%]
+tests/llm_test.py::test_anthropic_message_formatting PASSED              [ 90%]
+tests/llm_test.py::test_deepseek_r1_with_open_router SKIPPED (OPEN_R...) [ 95%]
+tests/llm_test.py::test_tool_execution_error_event PASSED                [100%]
+
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+tests/llm_test.py:306
+  /testbed/tests/llm_test.py:306: PytestRemovedIn9Warning: Marks applied to fixtures have no effect
+  See docs: https://docs.pytest.org/en/stable/deprecations.html#applying-a-mark-to-a-fixture-function
+    @pytest.mark.vcr(filter_headers=["authorization"])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+________________________ test_llm_callback_replacement _________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:17][🤖 LLM CALL STARTED]: 2026-06-14 20:48:17.030760[00m
+[1m[94m 
+[2026-06-14 20:48:17][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:17.102779[00m
+result1: Hello! How can I assist you today?
+usage_metrics_1: total_tokens=21 prompt_tokens=11 cached_prompt_tokens=0 completion_tokens=10 successful_requests=1
+[1m[94m 
+[2026-06-14 20:48:17][🤖 LLM CALL STARTED]: 2026-06-14 20:48:17.102933[00m
+[1m[94m 
+[2026-06-14 20:48:17][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:17.107575[00m
+result2: Hello! It's great to connect with another agent. How can I assist you today?
+usage_metrics_2: total_tokens=32 prompt_tokens=14 cached_prompt_tokens=0 completion_tokens=18 successful_requests=1
+_______________________ test_llm_call_with_string_input ________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.135872[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.146028[00m
+________________ test_llm_call_with_string_input_and_callbacks _________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.152720[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.158418[00m
+_______________________ test_llm_call_with_message_list ________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.163645[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.168017[00m
+___________________ test_llm_call_with_tool_and_string_input ___________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.173063[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.179203[00m
+___________________ test_llm_call_with_tool_and_message_list ___________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.184157[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.188827[00m
+______________________ test_llm_passes_additional_params _______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.193560[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.193920[00m
+______________________ test_o3_mini_reasoning_effort_high ______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.205796[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.210102[00m
+______________________ test_o3_mini_reasoning_effort_low _______________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.215208[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.219313[00m
+_____________________ test_o3_mini_reasoning_effort_medium _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.224432[00m
+[1m[94m 
+[2026-06-14 20:48:22][✅ LLM CALL COMPLETED]: 2026-06-14 20:48:22.228605[00m
+_______________________ test_tool_execution_error_event ________________________
+----------------------------- Captured stdout call -----------------------------
+[1m[94m 
+[2026-06-14 20:48:22][🤖 LLM CALL STARTED]: 2026-06-14 20:48:22.240002[00m
+[1m[94m 
+[2026-06-14 20:48:22][❌ LLM CALL FAILED: 'TOOL EXECUTION ERROR: TOOL EXECUTION FAILED!']: 2026-06-14 20:48:22.244554[00m
+------------------------------ Captured log call -------------------------------
+ERROR    root:llm.py:354 Error executing function 'failing_tool': Tool execution failed!
+=========================== short test summary info ============================
+PASSED tests/llm_test.py::test_llm_callback_replacement
+PASSED tests/llm_test.py::test_llm_call_with_string_input
+PASSED tests/llm_test.py::test_llm_call_with_string_input_and_callbacks
+PASSED tests/llm_test.py::test_llm_call_with_message_list
+PASSED tests/llm_test.py::test_llm_call_with_tool_and_string_input
+PASSED tests/llm_test.py::test_llm_call_with_tool_and_message_list
+PASSED tests/llm_test.py::test_llm_passes_additional_params
+PASSED tests/llm_test.py::test_get_custom_llm_provider_openrouter
+PASSED tests/llm_test.py::test_get_custom_llm_provider_gemini
+PASSED tests/llm_test.py::test_get_custom_llm_provider_openai
+PASSED tests/llm_test.py::test_validate_call_params_supported
+PASSED tests/llm_test.py::test_validate_call_params_not_supported
+PASSED tests/llm_test.py::test_validate_call_params_no_response_format
+PASSED tests/llm_test.py::test_o3_mini_reasoning_effort_high
+PASSED tests/llm_test.py::test_o3_mini_reasoning_effort_low
+PASSED tests/llm_test.py::test_o3_mini_reasoning_effort_medium
+PASSED tests/llm_test.py::test_context_window_validation
+PASSED tests/llm_test.py::test_anthropic_message_formatting_edge_cases
+PASSED tests/llm_test.py::test_anthropic_model_detection
+PASSED tests/llm_test.py::test_anthropic_message_formatting
+PASSED tests/llm_test.py::test_tool_execution_error_event
+SKIPPED [1] tests/llm_test.py:387: OPEN_ROUTER_API_KEY not set; skipping test.
+================== 21 passed, 1 skipped, 3 warnings in 10.75s ==================
++ rc=0
++ echo OMNIGRIL_EXIT_CODE=0
++ git checkout b4e2db03069fcedbf80eb2130aa91d0cb68b3a43 tests/llm_test.py
+OMNIGRIL_EXIT_CODE=0
+Updated 1 path from 3d33ed289

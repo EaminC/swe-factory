@@ -1,0 +1,119 @@
++ source /testbed/venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/testbed/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/venv/bin:/testbed/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ cd /testbed
++ git checkout 301c4265b76a5b8c4a939acb59314e091cacebec tests/basic/test_editblock.py
+Updated 1 path from 86fd59cb8
++ git apply -v -
+Checking patch tests/basic/test_editblock.py...
+Applied patch tests/basic/test_editblock.py cleanly.
++ pytest --no-header -v tests/basic/test_editblock.py
+============================= test session starts ==============================
+collecting ... collected 20 items
+
+tests/basic/test_editblock.py::TestUtils::test_deepseek_coder_v2_filename_mangling PASSED [  5%]
+tests/basic/test_editblock.py::TestUtils::test_find_filename PASSED      [ 10%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks PASSED [ 15%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_mangled_filename_w_source_tag PASSED [ 20%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_missing_filename PASSED [ 25%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_mupltiple_same_file PASSED [ 30%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_no_final_newline PASSED [ 35%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_quote_below_filename PASSED [ 40%]
+tests/basic/test_editblock.py::TestUtils::test_find_original_update_blocks_unclosed PASSED [ 45%]
+tests/basic/test_editblock.py::TestUtils::test_full_edit PASSED          [ 50%]
+tests/basic/test_editblock.py::TestUtils::test_full_edit_dry_run PASSED  [ 55%]
+tests/basic/test_editblock.py::TestUtils::test_incomplete_edit_block_missing_filename PASSED [ 60%]
+tests/basic/test_editblock.py::TestUtils::test_new_file_created_in_same_folder FAILED [ 65%]
+tests/basic/test_editblock.py::TestUtils::test_replace_part_with_just_some_missing_leading_whitespace PASSED [ 70%]
+tests/basic/test_editblock.py::TestUtils::test_replace_part_with_missing_leading_whitespace PASSED [ 75%]
+tests/basic/test_editblock.py::TestUtils::test_replace_part_with_missing_leading_whitespace_including_blank_line PASSED [ 80%]
+tests/basic/test_editblock.py::TestUtils::test_replace_part_with_missing_varied_leading_whitespace PASSED [ 85%]
+tests/basic/test_editblock.py::TestUtils::test_strip_quoted_wrapping PASSED [ 90%]
+tests/basic/test_editblock.py::TestUtils::test_strip_quoted_wrapping_no_filename PASSED [ 95%]
+tests/basic/test_editblock.py::TestUtils::test_strip_quoted_wrapping_no_wrapping PASSED [100%]
+
+=================================== FAILURES ===================================
+________________ TestUtils.test_new_file_created_in_same_folder ________________
+
+self = <test_editblock.TestUtils testMethod=test_new_file_created_in_same_folder>
+
+        def test_new_file_created_in_same_folder(self):
+            edit = """
+    Here's the change:
+    
+    path/to/a/file2.txt
+    ```python
+    <<<<<<< SEARCH
+    =======
+    three
+    >>>>>>> REPLACE
+    ```
+    
+    another change
+    
+    path/to/a/file1.txt
+    ```python
+    <<<<<<< SEARCH
+    one
+    =======
+    two
+    >>>>>>> REPLACE
+    ```
+    
+    Hope you like it!
+    """
+    
+            edits = list(
+                eb.find_original_update_blocks(edit, valid_fnames=["path/to/a/file1.txt"])
+            )
+>           self.assertEqual(
+                edits,
+                [
+                    ("path/to/a/file2.txt", "", "three\n"),
+                    ("path/to/a/file1.txt", "one\n", "two\n"),
+                ],
+            )
+E           AssertionError: Lists differ: [('path/to/a/file1.txt', '', 'three\n'), ('path/to/a/file1[20 chars]\n')] != [('path/to/a/file2.txt', '', 'three\n'), ('path/to/a/file1[20 chars]\n')]
+E           
+E           First differing element 0:
+E           ('path/to/a/file1.txt', '', 'three\n')
+E           ('path/to/a/file2.txt', '', 'three\n')
+E           
+E           - [('path/to/a/file1.txt', '', 'three\n'),
+E           ?                  ^
+E           
+E           + [('path/to/a/file2.txt', '', 'three\n'),
+E           ?                  ^
+E           
+E              ('path/to/a/file1.txt', 'one\n', 'two\n')]
+
+tests/basic/test_editblock.py:488: AssertionError
+=========================== short test summary info ============================
+FAILED tests/basic/test_editblock.py::TestUtils::test_new_file_created_in_same_folder
+========================= 1 failed, 19 passed in 2.36s =========================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 301c4265b76a5b8c4a939acb59314e091cacebec tests/basic/test_editblock.py
+Updated 1 path from 86fd59cb8

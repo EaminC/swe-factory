@@ -1,0 +1,278 @@
+2026-06-14 11:38:16,048 - INFO - Building image setup.langchain-ai__langgraph-6236:latest
+Using dockerfile:
+# Base image with Python 3.11 (compatible with Python >=3.9 requirement)
+FROM --platform=linux/x86_64 python:3.11-slim
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# System dependencies installation
+RUN apt update && apt install -y \
+    wget \
+    git \
+    build-essential \
+    curl \
+    postgresql-client \
+    libpq-dev \
+    postgresql \
+    postgresql-contrib \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv (Python package manager used in the project)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+# Set default workdir
+WORKDIR /testbed/
+
+# Clone the repository
+RUN git clone https://github.com/langchain-ai/langgraph.git /testbed
+
+# Checkout the specific commit
+RUN cd /testbed && git reset --hard b0958115c1887d93bfd25229b307406920038cc4
+
+# Remove origin to avoid accidental pushes
+RUN cd /testbed && git remote remove origin
+
+# Create virtual environment using uv (following project pattern)
+RUN uv venv /testbed/.venv
+ENV PATH="/testbed/.venv/bin:${PATH}"
+ENV VIRTUAL_ENV="/testbed/.venv"
+
+# Install main langgraph package from its subdirectory
+WORKDIR /testbed/libs/langgraph
+RUN uv pip install -e .
+# Install all dependencies including dev dependencies for langgraph
+RUN uv sync --frozen --all-extras --all-packages --group dev
+
+# Install checkpoint-postgres package from its subdirectory
+WORKDIR /testbed/libs/checkpoint-postgres
+RUN uv pip install -e .
+# Install dependencies for checkpoint-postgres
+RUN uv sync --frozen --all-extras --all-packages --group dev
+
+# Install additional test dependencies that might be needed
+RUN uv pip install pytest-asyncio pytest-mock anyio pytest-watcher psycopg[binary] psycopg-pool
+
+# Configure PostgreSQL for testing (skip if already exists)
+# First, find the actual PostgreSQL version installed
+RUN PG_VERSION=$(ls /etc/postgresql/ | head -n1) && \
+    # Configure PostgreSQL to accept connections on localhost:5441
+    echo "listen_addresses = '*'" >> /etc/postgresql/$PG_VERSION/main/postgresql.conf && \
+    echo "port = 5441" >> /etc/postgresql/$PG_VERSION/main/postgresql.conf && \
+    echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$PG_VERSION/main/pg_hba.conf && \
+    echo "host all all ::/0 md5" >> /etc/postgresql/$PG_VERSION/main/pg_hba.conf
+
+# Start PostgreSQL, set password, and stop it (handle existing user/database)
+RUN service postgresql start && \
+    # Set password for existing postgres user (ignore errors if already set)
+    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" 2>/dev/null || true && \
+    # Ensure postgres user has superuser privileges
+    sudo -u postgres psql -c "ALTER USER postgres WITH SUPERUSER;" 2>/dev/null || true && \
+    # Ensure the postgres database exists and is owned by postgres
+    sudo -u postgres psql -c "ALTER DATABASE postgres OWNER TO postgres;" 2>/dev/null || true && \
+    service postgresql stop
+
+# Create a script to start PostgreSQL for testing (will be used by eval script)
+RUN echo '#!/bin/bash\n\
+# Start PostgreSQL service\n\
+service postgresql start\n\
+# Wait for PostgreSQL to be ready\n\
+for i in {1..30}; do\n\
+  if pg_isready -h localhost -p 5441 -U postgres; then\n\
+    echo "PostgreSQL is ready on port 5441"\n\
+    break\n\
+  fi\n\
+  echo "Waiting for PostgreSQL... ($i/30)"\n\
+  sleep 2\n\
+done\n\
+' > /usr/local/bin/start-postgres && chmod +x /usr/local/bin/start-postgres
+
+RUN echo '#!/bin/bash\n\
+# Stop PostgreSQL service\n\
+service postgresql stop\n\
+echo "PostgreSQL service stopped"\n\
+' > /usr/local/bin/stop-postgres && chmod +x /usr/local/bin/stop-postgres
+
+# Set environment variables for test execution
+ENV NO_DOCKER=1
+ENV POSTGRES_VERSION=16
+ENV DEFAULT_POSTGRES_URI="postgres://postgres:postgres@localhost:5441/"
+ENV PYTHONPATH=/testbed:/testbed/libs:$PYTHONPATH
+
+# Add virtual environment activation to bashrc for interactive sessions
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Verify the environment is set up correctly
+RUN python --version && \
+    uv --version && \
+    which pytest && \
+    uv pip list | grep -E "langgraph|psycopg|pytest" || echo "Packages verified"
+
+# Set the working directory back to testbed for test execution
+WORKDIR /testbed
+Adding (0) setup scripts to image build repo
+2026-06-14 11:38:16,048 - INFO - Building docker image setup.langchain-ai__langgraph-6236:latest in run_instances/run_20260614_093529/gold/langchain-ai__langgraph-6236 with platform linux/x86_64
+2026-06-14 11:38:16,059 - INFO - Step 1/31 : FROM --platform=linux/x86_64 python:3.11-slim
+2026-06-14 11:38:16,059 - INFO - 
+2026-06-14 11:38:16,059 - INFO - ---> a8a3e0a84b0d
+2026-06-14 11:38:16,059 - INFO - Step 2/31 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-14 11:38:16,059 - INFO - 
+2026-06-14 11:38:16,061 - INFO - ---> Using cache
+2026-06-14 11:38:16,061 - INFO - ---> be2ff49937dc
+2026-06-14 11:38:16,061 - INFO - Step 3/31 : ENV TZ=Etc/UTC
+2026-06-14 11:38:16,062 - INFO - 
+2026-06-14 11:38:16,062 - INFO - ---> Using cache
+2026-06-14 11:38:16,062 - INFO - ---> 943d2e5310e1
+2026-06-14 11:38:16,062 - INFO - Step 4/31 : RUN apt update && apt install -y     wget     git     build-essential     curl     postgresql-client     libpq-dev     postgresql     postgresql-contrib     sudo     && rm -rf /var/lib/apt/lists/*
+2026-06-14 11:38:16,062 - INFO - 
+2026-06-14 11:38:16,062 - INFO - ---> Using cache
+2026-06-14 11:38:16,063 - INFO - ---> 67c91fbb2ef4
+2026-06-14 11:38:16,063 - INFO - Step 5/31 : RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+2026-06-14 11:38:16,063 - INFO - 
+2026-06-14 11:38:16,063 - INFO - ---> Using cache
+2026-06-14 11:38:16,063 - INFO - ---> 44ec18a7c7ea
+2026-06-14 11:38:16,064 - INFO - Step 6/31 : ENV PATH="/root/.local/bin:${PATH}"
+2026-06-14 11:38:16,064 - INFO - 
+2026-06-14 11:38:16,064 - INFO - ---> Using cache
+2026-06-14 11:38:16,064 - INFO - ---> e436a27b134e
+2026-06-14 11:38:16,064 - INFO - Step 7/31 : WORKDIR /testbed/
+2026-06-14 11:38:16,064 - INFO - 
+2026-06-14 11:38:16,065 - INFO - ---> Using cache
+2026-06-14 11:38:16,065 - INFO - ---> dc2a4ebef9b4
+2026-06-14 11:38:16,065 - INFO - Step 8/31 : RUN git clone https://github.com/langchain-ai/langgraph.git /testbed
+2026-06-14 11:38:16,065 - INFO - 
+2026-06-14 11:38:16,066 - INFO - ---> Using cache
+2026-06-14 11:38:16,066 - INFO - ---> 6ceee0bfbf49
+2026-06-14 11:38:16,066 - INFO - Step 9/31 : RUN cd /testbed && git reset --hard b0958115c1887d93bfd25229b307406920038cc4
+2026-06-14 11:38:16,066 - INFO - 
+2026-06-14 11:38:16,066 - INFO - ---> Using cache
+2026-06-14 11:38:16,067 - INFO - ---> b2b234396fd4
+2026-06-14 11:38:16,067 - INFO - Step 10/31 : RUN cd /testbed && git remote remove origin
+2026-06-14 11:38:16,067 - INFO - 
+2026-06-14 11:38:16,067 - INFO - ---> Using cache
+2026-06-14 11:38:16,067 - INFO - ---> f2656b2faa4c
+2026-06-14 11:38:16,067 - INFO - Step 11/31 : RUN uv venv /testbed/.venv
+2026-06-14 11:38:16,067 - INFO - 
+2026-06-14 11:38:16,068 - INFO - ---> Using cache
+2026-06-14 11:38:16,068 - INFO - ---> e6d0a21228c9
+2026-06-14 11:38:16,068 - INFO - Step 12/31 : ENV PATH="/testbed/.venv/bin:${PATH}"
+2026-06-14 11:38:16,068 - INFO - 
+2026-06-14 11:38:16,068 - INFO - ---> Using cache
+2026-06-14 11:38:16,068 - INFO - ---> 34f1d4a55c45
+2026-06-14 11:38:16,069 - INFO - Step 13/31 : ENV VIRTUAL_ENV="/testbed/.venv"
+2026-06-14 11:38:16,069 - INFO - 
+2026-06-14 11:38:16,069 - INFO - ---> Using cache
+2026-06-14 11:38:16,069 - INFO - ---> 468aebf642da
+2026-06-14 11:38:16,069 - INFO - Step 14/31 : WORKDIR /testbed/libs/langgraph
+2026-06-14 11:38:16,069 - INFO - 
+2026-06-14 11:38:16,070 - INFO - ---> Using cache
+2026-06-14 11:38:16,070 - INFO - ---> d9b007bfb982
+2026-06-14 11:38:16,070 - INFO - Step 15/31 : RUN uv pip install -e .
+2026-06-14 11:38:16,070 - INFO - 
+2026-06-14 11:38:16,070 - INFO - ---> Using cache
+2026-06-14 11:38:16,070 - INFO - ---> e7e44ca26a6a
+2026-06-14 11:38:16,070 - INFO - Step 16/31 : RUN uv sync --frozen --all-extras --all-packages --group dev
+2026-06-14 11:38:16,071 - INFO - 
+2026-06-14 11:38:16,071 - INFO - ---> Using cache
+2026-06-14 11:38:16,071 - INFO - ---> 71382b2f4869
+2026-06-14 11:38:16,071 - INFO - Step 17/31 : WORKDIR /testbed/libs/checkpoint-postgres
+2026-06-14 11:38:16,071 - INFO - 
+2026-06-14 11:38:16,071 - INFO - ---> Using cache
+2026-06-14 11:38:16,071 - INFO - ---> f143eee77084
+2026-06-14 11:38:16,072 - INFO - Step 18/31 : RUN uv pip install -e .
+2026-06-14 11:38:16,072 - INFO - 
+2026-06-14 11:38:16,072 - INFO - ---> Using cache
+2026-06-14 11:38:16,072 - INFO - ---> b6beffc500fd
+2026-06-14 11:38:16,072 - INFO - Step 19/31 : RUN uv sync --frozen --all-extras --all-packages --group dev
+2026-06-14 11:38:16,072 - INFO - 
+2026-06-14 11:38:16,072 - INFO - ---> Using cache
+2026-06-14 11:38:16,073 - INFO - ---> bb6ce5e51e05
+2026-06-14 11:38:16,073 - INFO - Step 20/31 : RUN uv pip install pytest-asyncio pytest-mock anyio pytest-watcher psycopg[binary] psycopg-pool
+2026-06-14 11:38:16,073 - INFO - 
+2026-06-14 11:38:16,073 - INFO - ---> Using cache
+2026-06-14 11:38:16,073 - INFO - ---> 35d1469c2ce1
+2026-06-14 11:38:16,073 - INFO - Step 21/31 : RUN PG_VERSION=$(ls /etc/postgresql/ | head -n1) &&     echo "listen_addresses = '*'" >> /etc/postgresql/$PG_VERSION/main/postgresql.conf &&     echo "port = 5441" >> /etc/postgresql/$PG_VERSION/main/postgresql.conf &&     echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$PG_VERSION/main/pg_hba.conf &&     echo "host all all ::/0 md5" >> /etc/postgresql/$PG_VERSION/main/pg_hba.conf
+2026-06-14 11:38:16,074 - INFO - 
+2026-06-14 11:38:17,136 - INFO - ---> Running in ecd5dd665e6b
+2026-06-14 11:38:17,850 - INFO - ---> Removed intermediate container ecd5dd665e6b
+2026-06-14 11:38:17,850 - INFO - ---> 6cb47a186b49
+2026-06-14 11:38:17,850 - INFO - Step 22/31 : RUN service postgresql start &&     sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';" 2>/dev/null || true &&     sudo -u postgres psql -c "ALTER USER postgres WITH SUPERUSER;" 2>/dev/null || true &&     sudo -u postgres psql -c "ALTER DATABASE postgres OWNER TO postgres;" 2>/dev/null || true &&     service postgresql stop
+2026-06-14 11:38:17,850 - INFO - 
+2026-06-14 11:38:17,881 - INFO - ---> Running in b4f44b8501f0
+2026-06-14 11:38:18,192 - INFO - Starting PostgreSQL 17 database server:
+2026-06-14 11:38:18,199 - INFO - main
+2026-06-14 11:38:20,463 - INFO - .
+2026-06-14 11:38:20,665 - INFO - ALTER ROLE
+2026-06-14 11:38:20,803 - INFO - ALTER ROLE
+2026-06-14 11:38:20,937 - INFO - ALTER DATABASE
+2026-06-14 11:38:21,013 - INFO - Stopping PostgreSQL 17 database server:
+2026-06-14 11:38:21,018 - INFO - main
+2026-06-14 11:38:21,163 - INFO - .
+2026-06-14 11:38:32,612 - INFO - ---> Removed intermediate container b4f44b8501f0
+2026-06-14 11:38:32,612 - INFO - ---> 85af956a9f7e
+2026-06-14 11:38:32,612 - INFO - Step 23/31 : RUN echo '#!/bin/bash\nservice postgresql start\nfor i in {1..30}; do\n  if pg_isready -h localhost -p 5441 -U postgres; then\n    echo "PostgreSQL is ready on port 5441"\n    break\n  fi\n  echo "Waiting for PostgreSQL... ($i/30)"\n  sleep 2\ndone\n' > /usr/local/bin/start-postgres && chmod +x /usr/local/bin/start-postgres
+2026-06-14 11:38:32,613 - INFO - 
+2026-06-14 11:38:32,884 - INFO - ---> Running in a095b50f7dd2
+2026-06-14 11:38:33,707 - INFO - ---> Removed intermediate container a095b50f7dd2
+2026-06-14 11:38:33,707 - INFO - ---> 1e4a72e273a3
+2026-06-14 11:38:33,708 - INFO - Step 24/31 : RUN echo '#!/bin/bash\nservice postgresql stop\necho "PostgreSQL service stopped"\n' > /usr/local/bin/stop-postgres && chmod +x /usr/local/bin/stop-postgres
+2026-06-14 11:38:33,708 - INFO - 
+2026-06-14 11:38:33,720 - INFO - ---> Running in b6e6dee77589
+2026-06-14 11:38:34,314 - INFO - ---> Removed intermediate container b6e6dee77589
+2026-06-14 11:38:34,314 - INFO - ---> 3e58167cfc19
+2026-06-14 11:38:34,314 - INFO - Step 25/31 : ENV NO_DOCKER=1
+2026-06-14 11:38:34,314 - INFO - 
+2026-06-14 11:38:34,327 - INFO - ---> Running in 02d6b9072634
+2026-06-14 11:38:34,346 - INFO - ---> Removed intermediate container 02d6b9072634
+2026-06-14 11:38:34,347 - INFO - ---> d52bab217a2c
+2026-06-14 11:38:34,347 - INFO - Step 26/31 : ENV POSTGRES_VERSION=16
+2026-06-14 11:38:34,347 - INFO - 
+2026-06-14 11:38:34,364 - INFO - ---> Running in f07264d8d87b
+2026-06-14 11:38:34,386 - INFO - ---> Removed intermediate container f07264d8d87b
+2026-06-14 11:38:34,386 - INFO - ---> bdff63b4757a
+2026-06-14 11:38:34,386 - INFO - Step 27/31 : ENV DEFAULT_POSTGRES_URI="postgres://postgres:postgres@localhost:5441/"
+2026-06-14 11:38:34,386 - INFO - 
+2026-06-14 11:38:34,398 - INFO - ---> Running in 1266181f45aa
+2026-06-14 11:38:34,417 - INFO - ---> Removed intermediate container 1266181f45aa
+2026-06-14 11:38:34,417 - INFO - ---> 10404dc156dc
+2026-06-14 11:38:34,417 - INFO - Step 28/31 : ENV PYTHONPATH=/testbed:/testbed/libs:$PYTHONPATH
+2026-06-14 11:38:34,418 - INFO - 
+2026-06-14 11:38:34,429 - INFO - ---> Running in 4234c3ec6553
+2026-06-14 11:38:34,445 - INFO - ---> Removed intermediate container 4234c3ec6553
+2026-06-14 11:38:34,445 - INFO - ---> ea0601482b29
+2026-06-14 11:38:34,445 - INFO - Step 29/31 : RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+2026-06-14 11:38:34,445 - INFO - 
+2026-06-14 11:38:34,456 - INFO - ---> Running in a8c263f07d49
+2026-06-14 11:38:35,030 - INFO - ---> Removed intermediate container a8c263f07d49
+2026-06-14 11:38:35,030 - INFO - ---> 89cee6b0b8a8
+2026-06-14 11:38:35,030 - INFO - Step 30/31 : RUN python --version &&     uv --version &&     which pytest &&     uv pip list | grep -E "langgraph|psycopg|pytest" || echo "Packages verified"
+2026-06-14 11:38:35,031 - INFO - 
+2026-06-14 11:38:35,044 - INFO - ---> Running in a700a2c3d682
+2026-06-14 11:38:35,297 - INFO - Python 3.11.15
+2026-06-14 11:38:35,306 - INFO - uv 0.11.21 (x86_64-unknown-linux-gnu)
+2026-06-14 11:38:35,309 - INFO - /testbed/.venv/bin/pytest
+2026-06-14 11:38:35,332 - INFO - Using Python 3.11.15 environment at: /testbed/.venv
+2026-06-14 11:38:35,339 - INFO - langgraph                     0.6.8     /testbed/libs/langgraph
+langgraph-checkpoint          2.1.1     /testbed/libs/checkpoint
+langgraph-checkpoint-postgres 2.0.24    /testbed/libs/checkpoint-postgres
+langgraph-prebuilt            0.6.4     /testbed/libs/prebuilt
+langgraph-sdk                 0.2.9     /testbed/libs/sdk-py
+psycopg                       3.3.4
+psycopg-binary                3.3.4
+psycopg-pool                  3.3.1
+pytest                        9.1.0
+pytest-asyncio                1.4.0
+pytest-mock                   3.15.1
+pytest-watcher                0.6.3
+2026-06-14 11:38:35,700 - INFO - ---> Removed intermediate container a700a2c3d682
+2026-06-14 11:38:35,700 - INFO - ---> 8c86e8f778da
+2026-06-14 11:38:35,700 - INFO - Step 31/31 : WORKDIR /testbed
+2026-06-14 11:38:35,701 - INFO - 
+2026-06-14 11:38:35,714 - INFO - ---> Running in 32ffb9065451
+2026-06-14 11:38:35,733 - INFO - ---> Removed intermediate container 32ffb9065451
+2026-06-14 11:38:35,733 - INFO - ---> f1be8103239c
+2026-06-14 11:38:35,733 - INFO - Successfully built f1be8103239c
+2026-06-14 11:38:35,735 - INFO - Successfully tagged setup.langchain-ai__langgraph-6236:latest
+2026-06-14 11:38:35,735 - INFO - Image built successfully!

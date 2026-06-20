@@ -1,0 +1,1408 @@
+2026-06-14 20:30:57,013 - INFO - Building image setup.agentscope-ai__agentscope-1390:latest
+Using dockerfile:
+FROM --platform=linux/x86_64 python:3.10-bookworm
+
+# Set environment variables to avoid interactive prompts
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    libffi-dev \
+    libtiff-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /testbed
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    git reset --hard 8faa353e579591f99f3322a1aab3f35f2abafdf8 && \
+    git remote remove origin
+
+# Upgrade pip and install setuptools/wheel to specific versions (from CI)
+RUN pip install --upgrade pip && \
+    pip install setuptools==78.1.1 wheel==0.45.1
+
+# Install the package in development mode with dev extras
+# This installs both core dependencies and development/test dependencies including aiosqlite
+RUN pip install -e .[dev]
+
+# Install additional test dependencies that might not be in dev extras
+RUN pip install pytest-forked coverage
+
+# Install optional dependencies for the target test files
+# from async_related_dependencies: ensure aiosqlite is installed (already included in dev)
+# Install fakeredis explicitly for Redis memory tests
+RUN pip install fakeredis
+
+# Set up environment for testing (no API keys needed as tests are mocked)
+ENV GRPC_VERBOSITY=ERROR
+
+# Clean up to reduce image size
+RUN pip cache purge && \
+    apt-get clean
+Adding (0) setup scripts to image build repo
+2026-06-14 20:30:57,046 - INFO - Building docker image setup.agentscope-ai__agentscope-1390:latest in run_instances/run_20260614_172541/gold/agentscope-ai__agentscope-1390 with platform linux/x86_64
+2026-06-14 20:30:57,089 - INFO - Step 1/13 : FROM --platform=linux/x86_64 python:3.10-bookworm
+2026-06-14 20:30:57,089 - INFO - 
+2026-06-14 20:30:57,090 - INFO - ---> fc64caeab681
+2026-06-14 20:30:57,090 - INFO - Step 2/13 : ARG DEBIAN_FRONTEND=noninteractive
+2026-06-14 20:30:57,090 - INFO - 
+2026-06-14 20:30:57,143 - INFO - ---> Running in abe6e3f2acba
+2026-06-14 20:30:57,171 - INFO - ---> Removed intermediate container abe6e3f2acba
+2026-06-14 20:30:57,172 - INFO - ---> 1d00f4423429
+2026-06-14 20:30:57,172 - INFO - Step 3/13 : ENV TZ=Etc/UTC
+2026-06-14 20:30:57,172 - INFO - 
+2026-06-14 20:30:57,188 - INFO - ---> Running in 11308ac573dd
+2026-06-14 20:30:57,211 - INFO - ---> Removed intermediate container 11308ac573dd
+2026-06-14 20:30:57,211 - INFO - ---> 1d5fdff78fd9
+2026-06-14 20:30:57,211 - INFO - Step 4/13 : ENV PYTHONUNBUFFERED=1
+2026-06-14 20:30:57,211 - INFO - 
+2026-06-14 20:30:57,229 - INFO - ---> Running in 2be4970db365
+2026-06-14 20:30:57,250 - INFO - ---> Removed intermediate container 2be4970db365
+2026-06-14 20:30:57,250 - INFO - ---> f95930daba33
+2026-06-14 20:30:57,250 - INFO - Step 5/13 : RUN apt-get update && apt-get install -y     git     wget     curl     build-essential     libffi-dev     libtiff-dev     && rm -rf /var/lib/apt/lists/*
+2026-06-14 20:30:57,250 - INFO - 
+2026-06-14 20:30:57,268 - INFO - ---> Running in 73b8fbfc6f72
+2026-06-14 20:30:57,663 - INFO - Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-06-14 20:30:57,688 - INFO - Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-06-14 20:30:57,689 - INFO - Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-06-14 20:30:57,867 - INFO - Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+2026-06-14 20:30:58,025 - INFO - Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-06-14 20:30:58,144 - INFO - Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [311 kB]
+2026-06-14 20:30:59,050 - INFO - Fetched 9363 kB in 1s (6566 kB/s)
+Reading package lists...
+2026-06-14 20:30:59,529 - INFO - 
+2026-06-14 20:30:59,563 - INFO - Reading package lists...
+2026-06-14 20:31:00,025 - INFO - 
+2026-06-14 20:31:00,045 - INFO - Building dependency tree...
+2026-06-14 20:31:00,154 - INFO - Reading state information...
+2026-06-14 20:31:00,155 - INFO - 
+2026-06-14 20:31:00,298 - INFO - git is already the newest version (1:2.39.5-0+deb12u3).
+wget is already the newest version (1.21.3-1+deb12u1).
+curl is already the newest version (7.88.1-10+deb12u14).
+libffi-dev is already the newest version (3.4.4-1).
+libtiff-dev is already the newest version (4.5.0-6+deb12u4).
+libtiff-dev set to manually installed.
+The following NEW packages will be installed:
+2026-06-14 20:31:00,298 - INFO - build-essential
+2026-06-14 20:31:00,352 - INFO - 0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Need to get 7704 B of archives.
+After this operation, 20.5 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian bookworm/main amd64 build-essential amd64 12.9 [7704 B]
+2026-06-14 20:31:00,524 - INFO - debconf: delaying package configuration, since apt-utils is not installed
+2026-06-14 20:31:00,570 - INFO - Fetched 7704 B in 0s (159 kB/s)
+2026-06-14 20:31:00,600 - INFO - Selecting previously unselected package build-essential.
+(Reading database ...
+2026-06-14 20:31:00,608 - INFO - (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%
+2026-06-14 20:31:00,613 - INFO - (Reading database ... 70%
+2026-06-14 20:31:00,616 - INFO - (Reading database ... 75%
+2026-06-14 20:31:00,619 - INFO - (Reading database ... 80%
+2026-06-14 20:31:00,620 - INFO - (Reading database ... 85%
+2026-06-14 20:31:00,622 - INFO - (Reading database ... 90%
+2026-06-14 20:31:00,624 - INFO - (Reading database ... 95%
+2026-06-14 20:31:00,626 - INFO - (Reading database ... 100%(Reading database ... 23971 files and directories currently installed.)
+2026-06-14 20:31:00,626 - INFO - Preparing to unpack .../build-essential_12.9_amd64.deb ...
+2026-06-14 20:31:00,627 - INFO - Unpacking build-essential (12.9) ...
+2026-06-14 20:31:00,669 - INFO - Setting up build-essential (12.9) ...
+2026-06-14 20:31:02,045 - INFO - ---> Removed intermediate container 73b8fbfc6f72
+2026-06-14 20:31:02,045 - INFO - ---> 6c48c6b85faf
+2026-06-14 20:31:02,045 - INFO - Step 6/13 : WORKDIR /testbed
+2026-06-14 20:31:02,045 - INFO - 
+2026-06-14 20:31:02,072 - INFO - ---> Running in f009cd0a4536
+2026-06-14 20:31:02,091 - INFO - ---> Removed intermediate container f009cd0a4536
+2026-06-14 20:31:02,091 - INFO - ---> 3b134189913b
+2026-06-14 20:31:02,091 - INFO - Step 7/13 : RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed &&     git reset --hard 8faa353e579591f99f3322a1aab3f35f2abafdf8 &&     git remote remove origin
+2026-06-14 20:31:02,091 - INFO - 
+2026-06-14 20:31:02,111 - INFO - ---> Running in 5c0ba5a6ebcc
+2026-06-14 20:31:02,414 - INFO - Cloning into '/testbed'...
+2026-06-14 20:31:06,754 - INFO - HEAD is now at 8faa353e feat(agent): handle thinking blocks in DeepResearchAgent to support thinking and non-thinking models (#1492)
+2026-06-14 20:31:11,054 - INFO - ---> Removed intermediate container 5c0ba5a6ebcc
+2026-06-14 20:31:11,054 - INFO - ---> 0dd429d74fe1
+2026-06-14 20:31:11,054 - INFO - Step 8/13 : RUN pip install --upgrade pip &&     pip install setuptools==78.1.1 wheel==0.45.1
+2026-06-14 20:31:11,054 - INFO - 
+2026-06-14 20:31:11,133 - INFO - ---> Running in 3ab0a2ea9ec1
+2026-06-14 20:31:12,781 - INFO - Requirement already satisfied: pip in /usr/local/lib/python3.10/site-packages (23.0.1)
+2026-06-14 20:31:12,937 - INFO - Collecting pip
+2026-06-14 20:31:13,026 - INFO - Downloading pip-26.1.2-py3-none-any.whl (1.8 MB)
+2026-06-14 20:31:13,139 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 16.4 MB/s eta 0:00:00
+2026-06-14 20:31:13,207 - INFO - Installing collected packages: pip
+2026-06-14 20:31:13,207 - INFO - Attempting uninstall: pip
+2026-06-14 20:31:13,208 - INFO - Found existing installation: pip 23.0.1
+2026-06-14 20:31:13,363 - INFO - Uninstalling pip-23.0.1:
+2026-06-14 20:31:13,570 - INFO - Successfully uninstalled pip-23.0.1
+2026-06-14 20:31:14,397 - INFO - Successfully installed pip-26.1.2
+2026-06-14 20:31:14,398 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+2026-06-14 20:31:15,156 - INFO - Collecting setuptools==78.1.1
+2026-06-14 20:31:15,278 - INFO - Downloading setuptools-78.1.1-py3-none-any.whl.metadata (6.5 kB)
+2026-06-14 20:31:15,292 - INFO - Requirement already satisfied: wheel==0.45.1 in /usr/local/lib/python3.10/site-packages (0.45.1)
+2026-06-14 20:31:15,298 - INFO - Downloading setuptools-78.1.1-py3-none-any.whl (1.3 MB)
+2026-06-14 20:31:15,381 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 21.1 MB/s  0:00:00
+2026-06-14 20:31:15,422 - INFO - Installing collected packages: setuptools
+2026-06-14 20:31:15,423 - INFO - Attempting uninstall: setuptools
+2026-06-14 20:31:15,423 - INFO - Found existing installation: setuptools 79.0.1
+2026-06-14 20:31:15,458 - INFO - Uninstalling setuptools-79.0.1:
+2026-06-14 20:31:15,592 - INFO - Successfully uninstalled setuptools-79.0.1
+2026-06-14 20:31:16,326 - INFO - Successfully installed setuptools-78.1.1
+2026-06-14 20:31:16,326 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-14 20:31:29,565 - INFO - ---> Removed intermediate container 3ab0a2ea9ec1
+2026-06-14 20:31:29,565 - INFO - ---> 8eed4fa645f1
+2026-06-14 20:31:29,565 - INFO - Step 9/13 : RUN pip install -e .[dev]
+2026-06-14 20:31:29,565 - INFO - 
+2026-06-14 20:31:29,622 - INFO - ---> Running in 7de00c8f89eb
+2026-06-14 20:31:30,385 - INFO - Obtaining file:///testbed
+2026-06-14 20:31:30,388 - INFO - Installing build dependencies: started
+2026-06-14 20:31:31,461 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:31,462 - INFO - Checking if build backend supports build_editable: started
+2026-06-14 20:31:31,761 - INFO - Checking if build backend supports build_editable: finished with status 'done'
+2026-06-14 20:31:31,763 - INFO - Getting requirements to build editable: started
+2026-06-14 20:31:32,094 - INFO - Getting requirements to build editable: finished with status 'done'
+2026-06-14 20:31:32,097 - INFO - Preparing editable metadata (pyproject.toml): started
+2026-06-14 20:31:32,328 - INFO - Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:32,469 - INFO - Collecting aioitertools (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,596 - INFO - Downloading aioitertools-0.13.0-py3-none-any.whl.metadata (3.3 kB)
+2026-06-14 20:31:32,671 - INFO - Collecting anthropic (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,686 - INFO - Downloading anthropic-0.109.1-py3-none-any.whl.metadata (3.2 kB)
+2026-06-14 20:31:32,714 - INFO - Collecting dashscope (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,721 - INFO - Downloading dashscope-1.25.21-py3-none-any.whl.metadata (13 kB)
+2026-06-14 20:31:32,741 - INFO - Collecting docstring_parser (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,748 - INFO - Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+2026-06-14 20:31:32,765 - INFO - Collecting filetype (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,770 - INFO - Downloading filetype-1.2.0-py2.py3-none-any.whl.metadata (6.5 kB)
+2026-06-14 20:31:32,791 - INFO - Collecting json5 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,797 - INFO - Downloading json5-0.14.0-py3-none-any.whl.metadata (36 kB)
+2026-06-14 20:31:32,850 - INFO - Collecting json_repair (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,855 - INFO - Downloading json_repair-0.60.1-py3-none-any.whl.metadata (19 kB)
+2026-06-14 20:31:32,878 - INFO - Collecting mcp>=1.13 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:32,883 - INFO - Downloading mcp-1.27.2-py3-none-any.whl.metadata (8.3 kB)
+2026-06-14 20:31:33,114 - INFO - Collecting numpy (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,120 - INFO - Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (62 kB)
+2026-06-14 20:31:33,191 - INFO - Collecting openai (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,197 - INFO - Downloading openai-2.41.1-py3-none-any.whl.metadata (32 kB)
+2026-06-14 20:31:33,218 - INFO - Collecting python-datauri (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,225 - INFO - Downloading python_datauri-3.0.2-py2.py3-none-any.whl.metadata (3.3 kB)
+2026-06-14 20:31:33,249 - INFO - Collecting opentelemetry-api>=1.39.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,255 - INFO - Downloading opentelemetry_api-1.42.1-py3-none-any.whl.metadata (1.4 kB)
+2026-06-14 20:31:33,277 - INFO - Collecting opentelemetry-sdk>=1.39.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,282 - INFO - Downloading opentelemetry_sdk-1.42.1-py3-none-any.whl.metadata (1.7 kB)
+2026-06-14 20:31:33,302 - INFO - Collecting opentelemetry-exporter-otlp>=1.39.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,308 - INFO - Downloading opentelemetry_exporter_otlp-1.42.1-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:31:33,328 - INFO - Collecting opentelemetry-semantic-conventions>=0.60b0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,334 - INFO - Downloading opentelemetry_semantic_conventions-0.63b1-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:31:33,363 - INFO - Collecting python-socketio (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,368 - INFO - Downloading python_socketio-5.16.2-py3-none-any.whl.metadata (3.3 kB)
+2026-06-14 20:31:33,382 - INFO - Collecting shortuuid (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,389 - INFO - Downloading shortuuid-1.0.13-py3-none-any.whl.metadata (5.8 kB)
+2026-06-14 20:31:33,435 - INFO - Collecting tiktoken (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,443 - INFO - Downloading tiktoken-0.13.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (6.7 kB)
+2026-06-14 20:31:33,473 - INFO - Collecting sounddevice (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,482 - INFO - Downloading sounddevice-0.5.5-py3-none-any.whl.metadata (1.4 kB)
+2026-06-14 20:31:33,811 - INFO - Collecting sqlalchemy (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,817 - INFO - Downloading sqlalchemy-2.0.50-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+2026-06-14 20:31:33,841 - INFO - Collecting python-frontmatter (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,845 - INFO - Downloading python_frontmatter-1.3.0-py3-none-any.whl.metadata (4.4 kB)
+2026-06-14 20:31:33,864 - INFO - Collecting aiofiles (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,871 - INFO - Downloading aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+2026-06-14 20:31:33,913 - INFO - Collecting pre-commit (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,918 - INFO - Downloading pre_commit-4.6.0-py2.py3-none-any.whl.metadata (1.2 kB)
+2026-06-14 20:31:33,981 - INFO - Collecting pytest (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:33,986 - INFO - Downloading pytest-9.1.0-py3-none-any.whl.metadata (7.6 kB)
+2026-06-14 20:31:34,011 - INFO - Collecting pytest-asyncio (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,016 - INFO - Downloading pytest_asyncio-1.4.0-py3-none-any.whl.metadata (4.1 kB)
+2026-06-14 20:31:34,031 - INFO - Collecting pytest-forked (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,037 - INFO - Downloading pytest_forked-1.6.0-py3-none-any.whl.metadata (3.5 kB)
+2026-06-14 20:31:34,054 - INFO - Collecting sphinx-gallery (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,061 - INFO - Downloading sphinx_gallery-0.21.0-py3-none-any.whl.metadata (9.5 kB)
+2026-06-14 20:31:34,095 - INFO - Collecting furo (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,102 - INFO - Downloading furo-2025.12.19-py3-none-any.whl.metadata (4.9 kB)
+2026-06-14 20:31:34,125 - INFO - Collecting myst_parser (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,132 - INFO - Downloading myst_parser-4.0.1-py3-none-any.whl.metadata (5.5 kB)
+2026-06-14 20:31:34,315 - INFO - Collecting matplotlib (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,323 - INFO - Downloading matplotlib-3.10.9-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (52 kB)
+2026-06-14 20:31:34,377 - INFO - Collecting fakeredis (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,383 - INFO - Downloading fakeredis-2.36.1-py3-none-any.whl.metadata (7.1 kB)
+2026-06-14 20:31:34,399 - INFO - Collecting aiosqlite (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,405 - INFO - Downloading aiosqlite-0.22.1-py3-none-any.whl.metadata (4.3 kB)
+2026-06-14 20:31:34,554 - INFO - Collecting greenlet (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,560 - INFO - Downloading greenlet-3.5.1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-06-14 20:31:34,596 - INFO - Collecting py-openjudge (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,604 - INFO - Downloading py_openjudge-0.2.4-py3-none-any.whl.metadata (23 kB)
+2026-06-14 20:31:34,644 - INFO - Collecting dspy (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,650 - INFO - Downloading dspy-3.2.1-py3-none-any.whl.metadata (8.4 kB)
+2026-06-14 20:31:34,677 - INFO - Collecting anyio>=4.5 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,683 - INFO - Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+2026-06-14 20:31:34,695 - INFO - Collecting httpx-sse>=0.4 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,700 - INFO - Downloading httpx_sse-0.4.3-py3-none-any.whl.metadata (9.7 kB)
+2026-06-14 20:31:34,720 - INFO - Collecting httpx<1.0.0,>=0.27.1 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,727 - INFO - Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-06-14 20:31:34,751 - INFO - Collecting jsonschema>=4.20.0 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,757 - INFO - Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+2026-06-14 20:31:34,778 - INFO - Collecting pydantic-settings>=2.5.2 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,784 - INFO - Downloading pydantic_settings-2.14.1-py3-none-any.whl.metadata (3.4 kB)
+2026-06-14 20:31:34,910 - INFO - Collecting pydantic<3.0.0,>=2.11.0 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,915 - INFO - Downloading pydantic-2.13.4-py3-none-any.whl.metadata (109 kB)
+2026-06-14 20:31:34,945 - INFO - Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,951 - INFO - Downloading pyjwt-2.13.0-py3-none-any.whl.metadata (3.4 kB)
+2026-06-14 20:31:34,967 - INFO - Collecting python-multipart>=0.0.9 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,973 - INFO - Downloading python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+2026-06-14 20:31:34,993 - INFO - Collecting sse-starlette>=1.6.1 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:34,998 - INFO - Downloading sse_starlette-3.4.4-py3-none-any.whl.metadata (15 kB)
+2026-06-14 20:31:35,074 - INFO - Collecting starlette>=0.27 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,080 - INFO - Downloading starlette-1.3.1-py3-none-any.whl.metadata (6.4 kB)
+2026-06-14 20:31:35,100 - INFO - Collecting typing-extensions>=4.9.0 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,106 - INFO - Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2026-06-14 20:31:35,119 - INFO - Collecting typing-inspection>=0.4.1 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,124 - INFO - Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+2026-06-14 20:31:35,152 - INFO - Collecting uvicorn>=0.31.1 (from mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,157 - INFO - Downloading uvicorn-0.49.0-py3-none-any.whl.metadata (6.7 kB)
+2026-06-14 20:31:35,184 - INFO - Collecting certifi (from httpx<1.0.0,>=0.27.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,189 - INFO - Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+2026-06-14 20:31:35,206 - INFO - Collecting httpcore==1.* (from httpx<1.0.0,>=0.27.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,211 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-06-14 20:31:35,229 - INFO - Collecting idna (from httpx<1.0.0,>=0.27.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,235 - INFO - Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+2026-06-14 20:31:35,248 - INFO - Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0.0,>=0.27.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,253 - INFO - Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-14 20:31:35,270 - INFO - Collecting annotated-types>=0.6.0 (from pydantic<3.0.0,>=2.11.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:35,275 - INFO - Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2026-06-14 20:31:36,057 - INFO - Collecting pydantic-core==2.46.4 (from pydantic<3.0.0,>=2.11.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,062 - INFO - Downloading pydantic_core-2.46.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+2026-06-14 20:31:36,085 - INFO - Collecting exceptiongroup>=1.0.2 (from anyio>=4.5->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,090 - INFO - Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+2026-06-14 20:31:36,115 - INFO - Collecting attrs>=22.2.0 (from jsonschema>=4.20.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,119 - INFO - Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-06-14 20:31:36,133 - INFO - Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=4.20.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,139 - INFO - Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-14 20:31:36,168 - INFO - Collecting referencing>=0.28.4 (from jsonschema>=4.20.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,173 - INFO - Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+2026-06-14 20:31:36,516 - INFO - Collecting rpds-py>=0.25.0 (from jsonschema>=4.20.0->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,522 - INFO - Downloading rpds_py-0.30.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+2026-06-14 20:31:36,558 - INFO - Collecting opentelemetry-exporter-otlp-proto-grpc==1.42.1 (from opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,566 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.42.1-py3-none-any.whl.metadata (2.6 kB)
+2026-06-14 20:31:36,598 - INFO - Collecting opentelemetry-exporter-otlp-proto-http==1.42.1 (from opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,606 - INFO - Downloading opentelemetry_exporter_otlp_proto_http-1.42.1-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:31:36,633 - INFO - Collecting googleapis-common-protos~=1.57 (from opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:36,640 - INFO - Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+2026-06-14 20:31:37,267 - INFO - Collecting grpcio<2.0.0,>=1.63.2 (from opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,272 - INFO - Downloading grpcio-1.81.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+2026-06-14 20:31:37,290 - INFO - Collecting opentelemetry-exporter-otlp-proto-common==1.42.1 (from opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,296 - INFO - Downloading opentelemetry_exporter_otlp_proto_common-1.42.1-py3-none-any.whl.metadata (1.8 kB)
+2026-06-14 20:31:37,320 - INFO - Collecting opentelemetry-proto==1.42.1 (from opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,325 - INFO - Downloading opentelemetry_proto-1.42.1-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:31:37,363 - INFO - Collecting requests~=2.7 (from opentelemetry-exporter-otlp-proto-http==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,368 - INFO - Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+2026-06-14 20:31:37,586 - INFO - Collecting protobuf<7.0,>=5.0 (from opentelemetry-proto==1.42.1->opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,592 - INFO - Downloading protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+2026-06-14 20:31:37,714 - INFO - Collecting charset_normalizer<4,>=2 (from requests~=2.7->opentelemetry-exporter-otlp-proto-http==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,719 - INFO - Downloading charset_normalizer-3.4.7-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-14 20:31:37,747 - INFO - Collecting urllib3<3,>=1.26 (from requests~=2.7->opentelemetry-exporter-otlp-proto-http==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,752 - INFO - Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+2026-06-14 20:31:37,780 - INFO - Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.5.2->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:37,785 - INFO - Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+2026-06-14 20:31:38,061 - INFO - Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.10.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,067 - INFO - Downloading cryptography-49.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+2026-06-14 20:31:38,179 - INFO - Collecting cffi>=2.0.0 (from cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,184 - INFO - Downloading cffi-2.0.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2026-06-14 20:31:38,200 - INFO - Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,205 - INFO - Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+2026-06-14 20:31:38,260 - INFO - Collecting click>=7.0 (from uvicorn>=0.31.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,266 - INFO - Downloading click-8.4.1-py3-none-any.whl.metadata (2.6 kB)
+2026-06-14 20:31:38,295 - INFO - Collecting a2a-sdk (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,301 - INFO - Downloading a2a_sdk-1.1.0-py3-none-any.whl.metadata (9.7 kB)
+2026-06-14 20:31:38,347 - INFO - Collecting nacos-sdk-python>=3.0.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:38,356 - INFO - Downloading nacos_sdk_python-3.2.0-py3-none-any.whl.metadata (23 kB)
+2026-06-14 20:31:39,034 - INFO - Collecting aiohttp>=3.10.11 (from nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,040 - INFO - Downloading aiohttp-3.14.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+2026-06-14 20:31:39,059 - INFO - Collecting alibabacloud_kms20160120>=2.2.3 (from nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,066 - INFO - Downloading alibabacloud_kms20160120-2.4.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:31:39,084 - INFO - Collecting alibabacloud_tea_openapi>=0.3.12 (from nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,091 - INFO - Downloading alibabacloud_tea_openapi-0.4.4-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:31:39,199 - INFO - Collecting psutil>=5.9.5 (from nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,204 - INFO - Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-06-14 20:31:39,298 - INFO - Collecting pycryptodome>=3.19.1 (from nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,304 - INFO - Downloading pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.4 kB)
+2026-06-14 20:31:39,318 - INFO - Collecting a2a-sdk (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,324 - INFO - Downloading a2a_sdk-0.3.26-py3-none-any.whl.metadata (9.2 kB)
+2026-06-14 20:31:39,398 - INFO - Collecting google-api-core>=1.26.0 (from a2a-sdk->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,403 - INFO - Downloading google_api_core-2.31.0-py3-none-any.whl.metadata (3.2 kB)
+2026-06-14 20:31:39,528 - INFO - Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,549 - INFO - Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl.metadata (5.9 kB)
+2026-06-14 20:31:39,700 - INFO - Collecting aiosignal>=1.4.0 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,708 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-06-14 20:31:39,928 - INFO - Collecting async-timeout<6.0,>=4.0 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:39,934 - INFO - Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+2026-06-14 20:31:40,139 - INFO - Collecting frozenlist>=1.1.1 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:40,146 - INFO - Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-06-14 20:31:40,609 - INFO - Collecting multidict<7.0,>=4.5 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:40,615 - INFO - Downloading multidict-6.7.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2026-06-14 20:31:41,043 - INFO - Collecting propcache>=0.2.0 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:41,049 - INFO - Downloading propcache-0.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+2026-06-14 20:31:41,741 - INFO - Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.10.11->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:41,747 - INFO - Downloading yarl-1.24.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (94 kB)
+2026-06-14 20:31:42,210 - INFO - Collecting alibabacloud-endpoint-util<1.0.0,>=0.0.4 (from alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:42,221 - INFO - Downloading alibabacloud_endpoint_util-0.0.4.tar.gz (2.8 kB)
+2026-06-14 20:31:42,508 - INFO - Installing build dependencies: started
+2026-06-14 20:31:43,365 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:43,367 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:43,688 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:43,690 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:43,867 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:43,888 - INFO - Collecting alibabacloud-gateway-pop<1.0.0,>=0.1.3 (from alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:43,899 - INFO - Downloading alibabacloud_gateway_pop-0.1.3-py3-none-any.whl.metadata (1.5 kB)
+2026-06-14 20:31:43,917 - INFO - Collecting alibabacloud-openapi-util<1.0.0,>=0.2.2 (from alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:43,925 - INFO - Downloading alibabacloud_openapi_util-0.2.4-py3-none-any.whl.metadata (1.8 kB)
+2026-06-14 20:31:43,943 - INFO - Collecting alibabacloud-tea-util<1.0.0,>=0.3.13 (from alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:43,950 - INFO - Downloading alibabacloud_tea_util-0.3.14-py3-none-any.whl.metadata (2.0 kB)
+2026-06-14 20:31:43,977 - INFO - Collecting alibabacloud-credentials<2.0.0,>=1.0.2 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:43,984 - INFO - Downloading alibabacloud_credentials-1.0.9-py3-none-any.whl.metadata (29 kB)
+2026-06-14 20:31:44,011 - INFO - Collecting alibabacloud-darabonba-array<1.0.0,>=0.1.0 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:44,020 - INFO - Downloading alibabacloud_darabonba_array-0.1.0.tar.gz (2.3 kB)
+2026-06-14 20:31:44,028 - INFO - Installing build dependencies: started
+2026-06-14 20:31:44,892 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:44,893 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:45,250 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:45,252 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:45,443 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:45,466 - INFO - Collecting alibabacloud-darabonba-encode-util<1.0.0,>=0.0.2 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:45,474 - INFO - Downloading alibabacloud_darabonba_encode_util-0.0.2.tar.gz (4.0 kB)
+2026-06-14 20:31:45,488 - INFO - Installing build dependencies: started
+2026-06-14 20:31:46,322 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:46,324 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:46,656 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:46,658 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:46,850 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:46,896 - INFO - Collecting alibabacloud-darabonba-map<1.0.0,>=0.0.1 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:46,906 - INFO - Downloading alibabacloud_darabonba_map-0.0.1.tar.gz (2.1 kB)
+2026-06-14 20:31:46,920 - INFO - Installing build dependencies: started
+2026-06-14 20:31:47,800 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:47,800 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:48,203 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:48,206 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:48,466 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:48,611 - INFO - Collecting alibabacloud-darabonba-signature-util<1.0.0,>=0.0.4 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:48,621 - INFO - Downloading alibabacloud_darabonba_signature_util-0.0.4.tar.gz (4.2 kB)
+2026-06-14 20:31:48,713 - INFO - Installing build dependencies: started
+2026-06-14 20:31:49,635 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:49,636 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:49,994 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:49,996 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:50,189 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:50,210 - INFO - Collecting alibabacloud-darabonba-string<1.0.0,>=0.0.4 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:50,216 - INFO - Downloading alibabacloud-darabonba-string-0.0.4.tar.gz (2.9 kB)
+2026-06-14 20:31:50,225 - INFO - Installing build dependencies: started
+2026-06-14 20:31:51,059 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:51,061 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:51,455 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:51,458 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:51,662 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:51,697 - INFO - Collecting alibabacloud-gateway-spi<1.0.0,>=0.0.2 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:51,706 - INFO - Downloading alibabacloud_gateway_spi-0.0.3.tar.gz (4.2 kB)
+2026-06-14 20:31:51,760 - INFO - Installing build dependencies: started
+2026-06-14 20:31:52,691 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:52,693 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:53,041 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:53,043 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:53,246 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:53,276 - INFO - Collecting alibabacloud-tea-xml<1.0.0,>=0.0.3 (from alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:53,286 - INFO - Downloading alibabacloud_tea_xml-0.0.3.tar.gz (3.5 kB)
+2026-06-14 20:31:53,321 - INFO - Installing build dependencies: started
+2026-06-14 20:31:54,178 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:54,180 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:54,525 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:54,527 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:54,710 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:54,781 - INFO - Collecting APScheduler<4.0.0,>=3.10.0 (from alibabacloud-credentials<2.0.0,>=1.0.2->alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:54,787 - INFO - Downloading apscheduler-3.11.2-py3-none-any.whl.metadata (6.4 kB)
+2026-06-14 20:31:54,851 - INFO - Collecting aiofiles (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:54,858 - INFO - Downloading aiofiles-24.1.0-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:31:55,181 - INFO - Collecting alibabacloud-tea>=0.4.0 (from alibabacloud-credentials<2.0.0,>=1.0.2->alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:55,191 - INFO - Downloading alibabacloud-tea-0.4.3.tar.gz (8.8 kB)
+2026-06-14 20:31:55,268 - INFO - Installing build dependencies: started
+2026-06-14 20:31:56,312 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:56,313 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:56,675 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:56,677 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:56,866 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:56,885 - INFO - Collecting alibabacloud-credentials-api<2.0.0,>=1.0.0 (from alibabacloud-credentials<2.0.0,>=1.0.2->alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:56,894 - INFO - Downloading alibabacloud-credentials-api-1.0.0.tar.gz (2.3 kB)
+2026-06-14 20:31:56,903 - INFO - Installing build dependencies: started
+2026-06-14 20:31:57,689 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:31:57,699 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:31:58,212 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:31:58,214 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:31:58,443 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:31:58,503 - INFO - Collecting darabonba-core<2.0.0,>=1.0.3 (from alibabacloud_tea_openapi>=0.3.12->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:58,511 - INFO - Downloading darabonba_core-1.0.6-py3-none-any.whl.metadata (2.6 kB)
+2026-06-14 20:31:58,531 - INFO - Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.10.1->mcp>=1.13->agentscope==1.0.19.dev0)
+2026-06-14 20:31:58,537 - INFO - Downloading cryptography-46.0.7-cp38-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-06-14 20:31:58,731 - INFO - Collecting tzlocal>=3.0 (from APScheduler<4.0.0,>=3.10.0->alibabacloud-credentials<2.0.0,>=1.0.2->alibabacloud-gateway-pop<1.0.0,>=0.1.3->alibabacloud_kms20160120>=2.2.3->nacos-sdk-python>=3.0.0->agentscope==1.0.19.dev0)
+2026-06-14 20:31:58,737 - INFO - Downloading tzlocal-5.3.1-py3-none-any.whl.metadata (7.6 kB)
+2026-06-14 20:31:58,830 - INFO - Collecting proto-plus<2.0.0,>=1.24.0 (from google-api-core>=1.26.0->a2a-sdk->agentscope==1.0.19.dev0)
+2026-06-14 20:31:58,835 - INFO - Downloading proto_plus-1.28.0-py3-none-any.whl.metadata (2.2 kB)
+2026-06-14 20:31:58,905 - INFO - Collecting google-auth<3.0.0,>=2.14.1 (from google-api-core>=1.26.0->a2a-sdk->agentscope==1.0.19.dev0)
+2026-06-14 20:31:58,926 - INFO - Downloading google_auth-2.54.0-py3-none-any.whl.metadata (5.6 kB)
+2026-06-14 20:31:59,326 - INFO - Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-api-core>=1.26.0->a2a-sdk->agentscope==1.0.19.dev0)
+2026-06-14 20:31:59,331 - INFO - Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+2026-06-14 20:31:59,529 - INFO - Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.14.1->google-api-core>=1.26.0->a2a-sdk->agentscope==1.0.19.dev0)
+2026-06-14 20:31:59,539 - INFO - Downloading pyasn1-0.6.3-py3-none-any.whl.metadata (8.4 kB)
+2026-06-14 20:31:59,722 - INFO - Collecting ray (from agentscope==1.0.19.dev0)
+2026-06-14 20:31:59,729 - INFO - Downloading ray-2.55.1-cp310-cp310-manylinux2014_x86_64.whl.metadata (21 kB)
+2026-06-14 20:32:00,089 - INFO - Collecting mem0ai<=1.0.3 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,135 - INFO - Downloading mem0ai-1.0.3-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:00,255 - INFO - Collecting packaging (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,258 - INFO - Using cached packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+2026-06-14 20:32:00,340 - INFO - Collecting posthog>=3.5.0 (from mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,412 - INFO - Downloading posthog-7.18.3-py3-none-any.whl.metadata (4.7 kB)
+2026-06-14 20:32:00,451 - INFO - Collecting protobuf<7.0,>=5.0 (from opentelemetry-proto==1.42.1->opentelemetry-exporter-otlp-proto-grpc==1.42.1->opentelemetry-exporter-otlp>=1.39.0->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,457 - INFO - Downloading protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl.metadata (592 bytes)
+2026-06-14 20:32:00,527 - INFO - Collecting pytz>=2024.1 (from mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,554 - INFO - Downloading pytz-2026.2-py2.py3-none-any.whl.metadata (22 kB)
+2026-06-14 20:32:00,599 - INFO - Collecting qdrant-client>=1.9.1 (from mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,606 - INFO - Downloading qdrant_client-1.18.0-py3-none-any.whl.metadata (11 kB)
+2026-06-14 20:32:00,649 - INFO - Collecting distro<2,>=1.7.0 (from openai->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,655 - INFO - Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+2026-06-14 20:32:00,776 - INFO - Collecting jiter<1,>=0.10.0 (from openai->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,781 - INFO - Downloading jiter-0.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-06-14 20:32:00,852 - INFO - Collecting sniffio (from openai->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,859 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-14 20:32:00,934 - INFO - Collecting tqdm>4 (from openai->agentscope==1.0.19.dev0)
+2026-06-14 20:32:00,940 - INFO - Downloading tqdm-4.68.2-py3-none-any.whl.metadata (58 kB)
+2026-06-14 20:32:01,024 - INFO - Collecting backoff>=1.10.0 (from posthog>=3.5.0->mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:01,030 - INFO - Downloading backoff-2.2.1-py3-none-any.whl.metadata (14 kB)
+2026-06-14 20:32:01,127 - INFO - Collecting portalocker<4.0,>=2.7.0 (from qdrant-client>=1.9.1->mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:01,135 - INFO - Downloading portalocker-3.2.0-py3-none-any.whl.metadata (8.7 kB)
+2026-06-14 20:32:01,858 - INFO - Collecting h2<5,>=3 (from httpx[http2]>=0.20.0->qdrant-client>=1.9.1->mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:01,865 - INFO - Downloading h2-4.3.0-py3-none-any.whl.metadata (5.1 kB)
+2026-06-14 20:32:02,121 - INFO - Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]>=0.20.0->qdrant-client>=1.9.1->mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,129 - INFO - Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+2026-06-14 20:32:02,167 - INFO - Collecting hpack<5,>=4.1 (from h2<5,>=3->httpx[http2]>=0.20.0->qdrant-client>=1.9.1->mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,173 - INFO - Downloading hpack-4.1.0-py3-none-any.whl.metadata (4.6 kB)
+2026-06-14 20:32:02,224 - INFO - Collecting google-genai (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,230 - INFO - Downloading google_genai-2.8.0-py3-none-any.whl.metadata (53 kB)
+2026-06-14 20:32:02,271 - INFO - Collecting ollama>=0.5.4 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,279 - INFO - Downloading ollama-0.6.2-py3-none-any.whl.metadata (5.8 kB)
+2026-06-14 20:32:02,320 - INFO - Collecting python-docx (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,326 - INFO - Downloading python_docx-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+2026-06-14 20:32:02,585 - INFO - Collecting pandas (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,590 - INFO - Downloading pandas-2.3.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (91 kB)
+2026-06-14 20:32:02,641 - INFO - Collecting openpyxl (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,646 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-06-14 20:32:02,685 - INFO - Collecting pypdf<=6.5.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,692 - INFO - Downloading pypdf-6.5.0-py3-none-any.whl.metadata (7.1 kB)
+2026-06-14 20:32:02,739 - INFO - Collecting python-pptx (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,746 - INFO - Downloading python_pptx-1.0.2-py3-none-any.whl.metadata (2.5 kB)
+2026-06-14 20:32:02,854 - INFO - Collecting websockets>=14.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:02,859 - INFO - Downloading websockets-16.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+2026-06-14 20:32:03,019 - INFO - Collecting scipy (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,025 - INFO - Downloading scipy-1.15.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+2026-06-14 20:32:03,072 - INFO - Collecting redis (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,077 - INFO - Downloading redis-8.0.0-py3-none-any.whl.metadata (13 kB)
+2026-06-14 20:32:03,109 - INFO - Collecting reme-ai>=0.2.0.3 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,116 - INFO - Downloading reme_ai-0.3.1.10-py3-none-any.whl.metadata (48 kB)
+2026-06-14 20:32:03,165 - INFO - Collecting sqlite-vec>=0.1.6 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,172 - INFO - Downloading sqlite_vec-0.1.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux1_x86_64.whl.metadata (198 bytes)
+2026-06-14 20:32:03,213 - INFO - Collecting prompt_toolkit>=3.0.52 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,218 - INFO - Downloading prompt_toolkit-3.0.52-py3-none-any.whl.metadata (6.4 kB)
+2026-06-14 20:32:03,272 - INFO - Collecting rich>=14.2.0 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,276 - INFO - Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+2026-06-14 20:32:03,325 - INFO - Collecting asyncpg>=0.31.0 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,329 - INFO - Downloading asyncpg-0.31.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.4 kB)
+2026-06-14 20:32:03,368 - INFO - Collecting chromadb>=1.3.5 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,375 - INFO - Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.0 kB)
+2026-06-14 20:32:03,417 - INFO - Collecting elasticsearch>=9.2.0 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,422 - INFO - Downloading elasticsearch-9.4.1-py3-none-any.whl.metadata (9.0 kB)
+2026-06-14 20:32:03,479 - INFO - Collecting fastapi>=0.121.3 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,483 - INFO - Downloading fastapi-0.137.0-py3-none-any.whl.metadata (26 kB)
+2026-06-14 20:32:03,527 - INFO - Collecting fastmcp>=2.14.1 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,533 - INFO - Downloading fastmcp-3.4.2-py3-none-any.whl.metadata (8.5 kB)
+2026-06-14 20:32:03,553 - INFO - Collecting loguru>=0.7.3 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,560 - INFO - Downloading loguru-0.7.3-py3-none-any.whl.metadata (22 kB)
+2026-06-14 20:32:03,627 - INFO - Collecting tavily-python>=0.7.13 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,633 - INFO - Downloading tavily_python-0.7.26-py3-none-any.whl.metadata (12 kB)
+2026-06-14 20:32:03,700 - INFO - Collecting transformers>=4.57.3 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,706 - INFO - Downloading transformers-5.12.0-py3-none-any.whl.metadata (33 kB)
+2026-06-14 20:32:03,988 - INFO - Collecting watchfiles>=1.1.1 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:03,995 - INFO - Downloading watchfiles-1.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-06-14 20:32:04,037 - INFO - Collecting pyyaml>=6.0.3 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,043 - INFO - Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-06-14 20:32:04,066 - INFO - Collecting build>=1.0.3 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,071 - INFO - Downloading build-1.5.0-py3-none-any.whl.metadata (5.7 kB)
+2026-06-14 20:32:04,186 - INFO - Collecting pybase64>=1.4.1 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,195 - INFO - Downloading pybase64-1.4.3-cp310-cp310-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl.metadata (8.7 kB)
+2026-06-14 20:32:04,273 - INFO - Collecting onnxruntime>=1.14.1 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,278 - INFO - Downloading onnxruntime-1.23.2-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-06-14 20:32:04,445 - INFO - Collecting tokenizers>=0.13.2 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,451 - INFO - Downloading tokenizers-0.23.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.8 kB)
+2026-06-14 20:32:04,480 - INFO - Collecting pypika>=0.48.9 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,491 - INFO - Downloading pypika-0.51.1-py2.py3-none-any.whl.metadata (51 kB)
+2026-06-14 20:32:04,535 - INFO - Collecting overrides>=7.3.1 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,541 - INFO - Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)
+2026-06-14 20:32:04,576 - INFO - Collecting importlib-resources (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,582 - INFO - Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+2026-06-14 20:32:04,633 - INFO - Collecting bcrypt>=4.0.1 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,640 - INFO - Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+2026-06-14 20:32:04,779 - INFO - Collecting typer>=0.9.0 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,784 - INFO - Downloading typer-0.26.7-py3-none-any.whl.metadata (16 kB)
+2026-06-14 20:32:04,814 - INFO - Collecting kubernetes>=28.1.0 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:04,820 - INFO - Downloading kubernetes-36.0.2-py2.py3-none-any.whl.metadata (1.8 kB)
+2026-06-14 20:32:05,096 - INFO - Collecting tenacity>=8.2.3 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:05,103 - INFO - Downloading tenacity-9.1.4-py3-none-any.whl.metadata (1.2 kB)
+2026-06-14 20:32:05,393 - INFO - Collecting mmh3>=4.0.1 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:05,399 - INFO - Downloading mmh3-5.2.1-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (14 kB)
+2026-06-14 20:32:05,723 - INFO - Collecting orjson>=3.9.12 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:05,729 - INFO - Downloading orjson-3.11.9-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+2026-06-14 20:32:05,848 - INFO - Collecting pyproject_hooks (from build>=1.0.3->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:05,857 - INFO - Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+2026-06-14 20:32:06,522 - INFO - Collecting tomli>=1.1.0 (from build>=1.0.3->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:06,528 - INFO - Downloading tomli-2.4.1-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:07,287 - INFO - Collecting websocket-client (from dashscope->agentscope==1.0.19.dev0)
+2026-06-14 20:32:07,293 - INFO - Downloading websocket_client-1.9.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-14 20:32:08,316 - INFO - Collecting elastic-transport<10,>=9.4.1 (from elasticsearch>=9.2.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:08,325 - INFO - Downloading elastic_transport-9.4.1-py3-none-any.whl.metadata (3.9 kB)
+2026-06-14 20:32:08,908 - INFO - Collecting python-dateutil (from elasticsearch>=9.2.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:08,915 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2026-06-14 20:32:09,133 - INFO - Collecting annotated-doc>=0.0.2 (from fastapi>=0.121.3->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:09,145 - INFO - Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+2026-06-14 20:32:09,241 - INFO - Collecting fastmcp-slim==3.4.2 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:09,251 - INFO - Downloading fastmcp_slim-3.4.2-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:09,389 - INFO - Collecting platformdirs>=4.0.0 (from fastmcp-slim==3.4.2->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:09,395 - INFO - Downloading platformdirs-4.10.0-py3-none-any.whl.metadata (5.5 kB)
+2026-06-14 20:32:09,994 - INFO - Collecting authlib>=1.6.11 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,037 - INFO - Downloading authlib-1.7.2-py2.py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:10,160 - INFO - Collecting py-key-value-aio<0.5.0,>=0.4.4 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,166 - INFO - Downloading py_key_value_aio-0.4.5-py3-none-any.whl.metadata (16 kB)
+2026-06-14 20:32:10,289 - INFO - Collecting cyclopts>=4.0.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,380 - INFO - Downloading cyclopts-4.18.0-py3-none-any.whl.metadata (12 kB)
+2026-06-14 20:32:10,546 - INFO - Collecting griffelib>=2.0.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,569 - INFO - Downloading griffelib-2.0.2-py3-none-any.whl.metadata (1.3 kB)
+2026-06-14 20:32:10,700 - INFO - Collecting joserfc>=1.1.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,708 - INFO - Downloading joserfc-1.7.1-py3-none-any.whl.metadata (3.1 kB)
+2026-06-14 20:32:10,959 - INFO - Collecting jsonref>=1.1.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:10,968 - INFO - Downloading jsonref-1.1.0-py3-none-any.whl.metadata (2.7 kB)
+2026-06-14 20:32:11,170 - INFO - Collecting jsonschema-path>=0.3.4 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:11,178 - INFO - Downloading jsonschema_path-0.5.0-py3-none-any.whl.metadata (8.1 kB)
+2026-06-14 20:32:11,275 - INFO - Collecting openapi-pydantic>=0.5.1 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:11,283 - INFO - Downloading openapi_pydantic-0.5.1-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:11,548 - INFO - Collecting pyperclip>=1.9.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:11,555 - INFO - Downloading pyperclip-1.11.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:32:11,658 - INFO - Collecting uncalled-for>=0.2.0 (from fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:11,699 - INFO - Downloading uncalled_for-0.3.2-py3-none-any.whl.metadata (2.9 kB)
+2026-06-14 20:32:11,945 - INFO - Collecting beartype>=0.20.0 (from py-key-value-aio<0.5.0,>=0.4.4->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:11,951 - INFO - Downloading beartype-0.22.9-py3-none-any.whl.metadata (37 kB)
+2026-06-14 20:32:12,039 - INFO - Collecting cachetools>=5.0.0 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,047 - INFO - Downloading cachetools-7.1.4-py3-none-any.whl.metadata (5.5 kB)
+2026-06-14 20:32:12,129 - INFO - Collecting keyring>=25.6.0 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,134 - INFO - Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+2026-06-14 20:32:12,232 - INFO - Collecting aiofile>=3.5.0 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,239 - INFO - Downloading aiofile-3.9.0-py3-none-any.whl.metadata (14 kB)
+2026-06-14 20:32:12,293 - INFO - Collecting caio<0.10.0,>=0.9.0 (from aiofile>=3.5.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,300 - INFO - Downloading caio-0.9.25-cp310-cp310-manylinux_2_34_x86_64.whl.metadata (3.3 kB)
+2026-06-14 20:32:12,334 - INFO - Collecting rich-rst<3.0.0,>=1.3.1 (from cyclopts>=4.0.0->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,339 - INFO - Downloading rich_rst-2.0.1-py3-none-any.whl.metadata (4.6 kB)
+2026-06-14 20:32:12,382 - INFO - Collecting pygments>=2.0.0 (from rich-rst<3.0.0,>=1.3.1->cyclopts>=4.0.0->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,387 - INFO - Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-14 20:32:12,421 - INFO - Collecting pathable<0.7.0,>=0.6.0 (from jsonschema-path>=0.3.4->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,426 - INFO - Downloading pathable-0.6.0-py3-none-any.whl.metadata (7.2 kB)
+2026-06-14 20:32:12,449 - INFO - Collecting SecretStorage>=3.2 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,455 - INFO - Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+2026-06-14 20:32:12,471 - INFO - Collecting jeepney>=0.4.2 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,484 - INFO - Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+2026-06-14 20:32:12,520 - INFO - Collecting importlib_metadata>=4.11.4 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,525 - INFO - Downloading importlib_metadata-9.0.0-py3-none-any.whl.metadata (4.5 kB)
+2026-06-14 20:32:12,540 - INFO - Collecting jaraco.classes (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,545 - INFO - Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+2026-06-14 20:32:12,567 - INFO - Collecting jaraco.functools (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,573 - INFO - Downloading jaraco_functools-4.5.0-py3-none-any.whl.metadata (2.9 kB)
+2026-06-14 20:32:12,591 - INFO - Collecting jaraco.context (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,596 - INFO - Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+2026-06-14 20:32:12,619 - INFO - Collecting zipp>=3.20 (from importlib_metadata>=4.11.4->keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,624 - INFO - Downloading zipp-4.1.0-py3-none-any.whl.metadata (3.6 kB)
+2026-06-14 20:32:12,649 - INFO - Collecting six>=1.9.0 (from kubernetes>=28.1.0->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,654 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-06-14 20:32:12,675 - INFO - Collecting requests-oauthlib (from kubernetes>=28.1.0->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,680 - INFO - Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+2026-06-14 20:32:12,698 - INFO - Collecting durationpy>=0.7 (from kubernetes>=28.1.0->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,704 - INFO - Downloading durationpy-0.10-py3-none-any.whl.metadata (340 bytes)
+2026-06-14 20:32:12,747 - INFO - Collecting coloredlogs (from onnxruntime>=1.14.1->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,754 - INFO - Downloading coloredlogs-15.0.1-py2.py3-none-any.whl.metadata (12 kB)
+2026-06-14 20:32:12,777 - INFO - Collecting flatbuffers (from onnxruntime>=1.14.1->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,784 - INFO - Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+2026-06-14 20:32:12,808 - INFO - Collecting sympy (from onnxruntime>=1.14.1->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,814 - INFO - Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-06-14 20:32:12,857 - INFO - Collecting tzdata>=2022.7 (from pandas->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,863 - INFO - Downloading tzdata-2026.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-06-14 20:32:12,886 - INFO - Collecting wcwidth (from prompt_toolkit>=3.0.52->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,891 - INFO - Downloading wcwidth-0.8.1-py3-none-any.whl.metadata (43 kB)
+2026-06-14 20:32:12,916 - INFO - Collecting email-validator>=2.0.0 (from pydantic[email]>=2.11.7->fastmcp-slim==3.4.2->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,921 - INFO - Downloading email_validator-2.3.0-py3-none-any.whl.metadata (26 kB)
+2026-06-14 20:32:12,945 - INFO - Collecting dnspython>=2.0.0 (from email-validator>=2.0.0->pydantic[email]>=2.11.7->fastmcp-slim==3.4.2->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,950 - INFO - Downloading dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+2026-06-14 20:32:12,991 - INFO - Collecting markdown-it-py>=2.2.0 (from rich>=14.2.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:12,996 - INFO - Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+2026-06-14 20:32:13,018 - INFO - Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=14.2.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:13,023 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+2026-06-14 20:32:13,515 - INFO - Collecting regex (from tiktoken->agentscope==1.0.19.dev0)
+2026-06-14 20:32:13,520 - INFO - Downloading regex-2026.5.9-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-06-14 20:32:13,966 - INFO - Collecting huggingface-hub<2.0,>=0.16.4 (from tokenizers>=0.13.2->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,033 - INFO - Downloading huggingface_hub-1.19.0-py3-none-any.whl.metadata (14 kB)
+2026-06-14 20:32:14,450 - INFO - Collecting filelock>=3.10.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,458 - INFO - Downloading filelock-3.29.4-py3-none-any.whl.metadata (2.0 kB)
+2026-06-14 20:32:14,560 - INFO - Collecting fsspec>=2023.5.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,566 - INFO - Downloading fsspec-2026.4.0-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:14,744 - INFO - Collecting hf-xet<2.0.0,>=1.5.1 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,753 - INFO - Downloading hf_xet-1.5.1-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-06-14 20:32:14,820 - INFO - Collecting typer>=0.9.0 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,826 - INFO - Downloading typer-0.25.1-py3-none-any.whl.metadata (15 kB)
+2026-06-14 20:32:14,924 - INFO - Collecting shellingham>=1.3.0 (from typer>=0.9.0->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:14,931 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+2026-06-14 20:32:15,031 - INFO - Collecting tokenizers>=0.13.2 (from chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,043 - INFO - Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-06-14 20:32:15,317 - INFO - Collecting safetensors>=0.4.3 (from transformers>=4.57.3->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,330 - INFO - Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+2026-06-14 20:32:15,450 - INFO - Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.18.3->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,460 - INFO - Downloading httptools-0.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-06-14 20:32:15,557 - INFO - Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.18.3->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,574 - INFO - Downloading uvloop-0.22.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+2026-06-14 20:32:15,749 - INFO - Collecting tablestore-for-agent-memory (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,758 - INFO - Downloading tablestore_for_agent_memory-1.1.3-py3-none-any.whl.metadata (2.1 kB)
+2026-06-14 20:32:15,864 - INFO - Collecting tablestore (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,874 - INFO - Downloading tablestore-6.4.6-py3-none-any.whl.metadata (5.2 kB)
+2026-06-14 20:32:15,949 - INFO - Collecting nltk (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:15,954 - INFO - Downloading nltk-3.9.4-py3-none-any.whl.metadata (3.2 kB)
+2026-06-14 20:32:16,240 - INFO - Collecting Pillow (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:16,375 - INFO - Downloading pillow-12.2.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+2026-06-14 20:32:16,733 - INFO - Collecting jinja2 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:16,740 - INFO - Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+2026-06-14 20:32:16,912 - INFO - Collecting mysql-connector-python (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:16,961 - INFO - Downloading mysql_connector_python-9.7.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (11 kB)
+2026-06-14 20:32:17,855 - INFO - Collecting pymilvus==2.6.2 (from pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0)
+2026-06-14 20:32:17,898 - INFO - Downloading pymilvus-2.6.2-py3-none-any.whl.metadata (6.5 kB)
+2026-06-14 20:32:17,916 - INFO - Requirement already satisfied: setuptools>69 in /usr/local/lib/python3.10/site-packages (from pymilvus==2.6.2->pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0) (78.1.1)
+2026-06-14 20:32:18,109 - INFO - Collecting ujson>=2.0.0 (from pymilvus==2.6.2->pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0)
+2026-06-14 20:32:18,118 - INFO - Downloading ujson-5.12.1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (9.6 kB)
+2026-06-14 20:32:18,158 - INFO - Collecting milvus-lite>=2.4.0 (from pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0)
+2026-06-14 20:32:18,179 - INFO - Downloading milvus_lite-3.0-py3-none-any.whl.metadata (13 kB)
+2026-06-14 20:32:18,269 - INFO - Collecting faiss-cpu>=1.7.4 (from milvus-lite>=2.4.0->pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0)
+2026-06-14 20:32:18,370 - INFO - Downloading faiss_cpu-1.14.3-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (7.8 kB)
+2026-06-14 20:32:18,803 - INFO - Collecting pyarrow>=15.0 (from milvus-lite>=2.4.0->pymilvus[milvus_lite]==2.6.2; extra == "milvus"->agentscope==1.0.19.dev0)
+2026-06-14 20:32:18,808 - INFO - Downloading pyarrow-24.0.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+2026-06-14 20:32:19,837 - INFO - Collecting pymongo (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:19,844 - INFO - Downloading pymongo-4.17.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+2026-06-14 20:32:19,875 - INFO - Collecting pyobvector<0.3.0,>=0.2.0 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:19,882 - INFO - Downloading pyobvector-0.2.28-py3-none-any.whl.metadata (16 kB)
+2026-06-14 20:32:20,079 - INFO - Collecting aiomysql>=0.3.2 (from pyobvector<0.3.0,>=0.2.0->agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,091 - INFO - Downloading aiomysql-0.3.2-py3-none-any.whl.metadata (5.1 kB)
+2026-06-14 20:32:20,118 - INFO - Collecting pymysql>=1.1.1 (from pyobvector<0.3.0,>=0.2.0->agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,124 - INFO - Downloading pymysql-1.2.0-py3-none-any.whl.metadata (4.3 kB)
+2026-06-14 20:32:20,236 - INFO - Collecting sqlglot>=26.0.1 (from pyobvector<0.3.0,>=0.2.0->agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,241 - INFO - Downloading sqlglot-30.11.0-py3-none-any.whl.metadata (24 kB)
+2026-06-14 20:32:20,270 - INFO - INFO: pip is looking at multiple versions of agentscope[qdrant] to determine which version is compatible with other requirements. This could take a while.
+2026-06-14 20:32:20,292 - INFO - Collecting reme-ai>=0.2.0.3 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,298 - INFO - Downloading reme_ai-0.3.1.9-py3-none-any.whl.metadata (47 kB)
+2026-06-14 20:32:20,343 - INFO - Collecting sqlglot<30,>=25 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,352 - INFO - Downloading sqlglot-29.0.1-py3-none-any.whl.metadata (22 kB)
+2026-06-14 20:32:20,771 - INFO - Collecting reme-ai>=0.2.0.3 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:20,801 - INFO - Downloading reme_ai-0.3.1.8-py3-none-any.whl.metadata (47 kB)
+2026-06-14 20:32:21,209 - INFO - Downloading reme_ai-0.3.1.7-py3-none-any.whl.metadata (47 kB)
+2026-06-14 20:32:21,602 - INFO - Downloading reme_ai-0.3.1.6-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:21,914 - INFO - Downloading reme_ai-0.3.1.5-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:22,228 - INFO - Downloading reme_ai-0.3.1.4-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:22,562 - INFO - Downloading reme_ai-0.3.1.3-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:22,875 - INFO - INFO: pip is still looking at multiple versions of agentscope[qdrant] to determine which version is compatible with other requirements. This could take a while.
+2026-06-14 20:32:22,909 - INFO - Downloading reme_ai-0.3.1.2-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:23,367 - INFO - Collecting flowllm>=0.2.0.10 (from flowllm[reme]>=0.2.0.10->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:23,377 - INFO - Downloading flowllm-0.2.0.10-py3-none-any.whl.metadata (25 kB)
+2026-06-14 20:32:23,869 - INFO - Collecting litellm>=1.80.0 (from reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:23,875 - INFO - Downloading litellm-1.89.0-py3-none-any.whl.metadata (34 kB)
+2026-06-14 20:32:24,050 - INFO - Collecting pyfiglet>=0.8.0 (from flowllm>=0.2.0.10->flowllm[reme]>=0.2.0.10->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,056 - INFO - Downloading pyfiglet-1.0.4-py3-none-any.whl.metadata (7.4 kB)
+2026-06-14 20:32:24,088 - INFO - Collecting pathspec>=0.12.1 (from flowllm>=0.2.0.10->flowllm[reme]>=0.2.0.10->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,094 - INFO - Downloading pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+2026-06-14 20:32:24,150 - INFO - Collecting pgvector>=0.4.2 (from flowllm[reme]>=0.2.0.10->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,155 - INFO - Downloading pgvector-0.4.2-py3-none-any.whl.metadata (19 kB)
+2026-06-14 20:32:24,228 - INFO - Collecting fastuuid<1.0,>=0.14.0 (from litellm>=1.80.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,235 - INFO - Downloading fastuuid-0.14.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.1 kB)
+2026-06-14 20:32:24,253 - INFO - Collecting importlib_metadata>=4.11.4 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,258 - INFO - Downloading importlib_metadata-8.9.0-py3-none-any.whl.metadata (4.5 kB)
+2026-06-14 20:32:24,545 - INFO - Collecting MarkupSafe>=2.0 (from jinja2->agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,551 - INFO - Downloading markupsafe-3.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-06-14 20:32:24,796 - INFO - Collecting reme-ai>=0.2.0.3 (from agentscope==1.0.19.dev0)
+2026-06-14 20:32:24,806 - INFO - Downloading reme_ai-0.3.1.1-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:25,221 - INFO - Downloading reme_ai-0.3.1.0-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:25,627 - INFO - Downloading reme_ai-0.3.0.9-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:25,996 - INFO - Downloading reme_ai-0.3.0.8-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:26,349 - INFO - INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+2026-06-14 20:32:26,369 - INFO - Downloading reme_ai-0.3.0.7-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:26,763 - INFO - Downloading reme_ai-0.3.0.6-py3-none-any.whl.metadata (44 kB)
+2026-06-14 20:32:27,170 - INFO - Downloading reme_ai-0.3.0.5-py3-none-any.whl.metadata (43 kB)
+2026-06-14 20:32:27,554 - INFO - Downloading reme_ai-0.3.0.4-py3-none-any.whl.metadata (43 kB)
+2026-06-14 20:32:27,942 - INFO - Downloading reme_ai-0.3.0.3-py3-none-any.whl.metadata (43 kB)
+2026-06-14 20:32:28,513 - INFO - Downloading reme_ai-0.3.0.2-py3-none-any.whl.metadata (38 kB)
+2026-06-14 20:32:28,890 - INFO - Downloading reme_ai-0.3.0.1-py3-none-any.whl.metadata (38 kB)
+2026-06-14 20:32:29,265 - INFO - Downloading reme_ai-0.3.0.0-py3-none-any.whl.metadata (47 kB)
+2026-06-14 20:32:29,639 - INFO - Downloading reme_ai-0.2.0.6-py3-none-any.whl.metadata (46 kB)
+2026-06-14 20:32:30,199 - INFO - Collecting qdrant-client>=1.9.1 (from mem0ai<=1.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,206 - INFO - Downloading qdrant_client-1.15.1-py3-none-any.whl.metadata (11 kB)
+2026-06-14 20:32:30,354 - INFO - Collecting humanfriendly>=9.1 (from coloredlogs->onnxruntime>=1.14.1->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,360 - INFO - Downloading humanfriendly-10.0-py2.py3-none-any.whl.metadata (9.2 kB)
+2026-06-14 20:32:30,440 - INFO - Collecting diskcache>=5.6.0 (from dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,445 - INFO - Downloading diskcache-5.6.3-py3-none-any.whl.metadata (20 kB)
+2026-06-14 20:32:30,464 - INFO - Collecting asyncer==0.0.8 (from dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,470 - INFO - Downloading asyncer-0.0.8-py3-none-any.whl.metadata (6.7 kB)
+2026-06-14 20:32:30,495 - INFO - Collecting cloudpickle>=3.1.2 (from dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,500 - INFO - Downloading cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+2026-06-14 20:32:30,620 - INFO - Collecting xxhash>=3.5.0 (from dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,628 - INFO - Downloading xxhash-3.7.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+2026-06-14 20:32:30,649 - INFO - Collecting gepa==0.0.27 (from gepa[dspy]==0.0.27->dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,658 - INFO - Downloading gepa-0.0.27-py3-none-any.whl.metadata (30 kB)
+2026-06-14 20:32:30,685 - INFO - Collecting typeguard==4.4.3 (from dspy->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,691 - INFO - Downloading typeguard-4.4.3-py3-none-any.whl.metadata (3.4 kB)
+2026-06-14 20:32:30,760 - INFO - Collecting sortedcontainers>=2 (from fakeredis->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,765 - INFO - Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:30,805 - INFO - Collecting beautifulsoup4 (from furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,810 - INFO - Downloading beautifulsoup4-4.15.0-py3-none-any.whl.metadata (3.8 kB)
+2026-06-14 20:32:30,852 - INFO - Collecting sphinx<10.0,>=7.0 (from furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,858 - INFO - Downloading sphinx-8.1.3-py3-none-any.whl.metadata (6.4 kB)
+2026-06-14 20:32:30,874 - INFO - Collecting sphinx-basic-ng>=1.0.0.beta2 (from furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,881 - INFO - Downloading sphinx_basic_ng-1.0.0b2-py3-none-any.whl.metadata (1.5 kB)
+2026-06-14 20:32:30,897 - INFO - Collecting accessible-pygments>=0.0.5 (from furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,903 - INFO - Downloading accessible_pygments-0.0.5-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:30,951 - INFO - Collecting sphinxcontrib-applehelp>=1.0.7 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,959 - INFO - Downloading sphinxcontrib_applehelp-2.0.0-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:32:30,974 - INFO - Collecting sphinxcontrib-devhelp>=1.0.6 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:30,979 - INFO - Downloading sphinxcontrib_devhelp-2.0.0-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:32:30,999 - INFO - Collecting sphinxcontrib-htmlhelp>=2.0.6 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,005 - INFO - Downloading sphinxcontrib_htmlhelp-2.1.0-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:32:31,020 - INFO - Collecting sphinxcontrib-jsmath>=1.0.1 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,026 - INFO - Downloading sphinxcontrib_jsmath-1.0.1-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-06-14 20:32:31,044 - INFO - Collecting sphinxcontrib-qthelp>=1.0.6 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,050 - INFO - Downloading sphinxcontrib_qthelp-2.0.0-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:32:31,067 - INFO - Collecting sphinxcontrib-serializinghtml>=1.1.9 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,073 - INFO - Downloading sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl.metadata (2.4 kB)
+2026-06-14 20:32:31,119 - INFO - Collecting docutils<0.22,>=0.20 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,126 - INFO - Downloading docutils-0.21.2-py3-none-any.whl.metadata (2.8 kB)
+2026-06-14 20:32:31,146 - INFO - Collecting snowballstemmer>=2.2 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,152 - INFO - Downloading snowballstemmer-3.1.1-py3-none-any.whl.metadata (7.9 kB)
+2026-06-14 20:32:31,174 - INFO - Collecting babel>=2.13 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,180 - INFO - Downloading babel-2.18.0-py3-none-any.whl.metadata (2.2 kB)
+2026-06-14 20:32:31,202 - INFO - Collecting alabaster>=0.7.14 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,208 - INFO - Downloading alabaster-1.0.0-py3-none-any.whl.metadata (2.8 kB)
+2026-06-14 20:32:31,223 - INFO - Collecting imagesize>=1.3 (from sphinx<10.0,>=7.0->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,229 - INFO - Downloading imagesize-2.0.0-py2.py3-none-any.whl.metadata (1.5 kB)
+2026-06-14 20:32:31,322 - INFO - Collecting soupsieve>=1.6.1 (from beautifulsoup4->furo->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,327 - INFO - Downloading soupsieve-2.8.4-py3-none-any.whl.metadata (4.6 kB)
+2026-06-14 20:32:31,388 - INFO - Collecting more-itertools (from jaraco.classes->keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,394 - INFO - Downloading more_itertools-11.1.0-py3-none-any.whl.metadata (41 kB)
+2026-06-14 20:32:31,414 - INFO - Collecting backports.tarfile (from jaraco.context->keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==3.4.2->fastmcp>=2.14.1->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,420 - INFO - Downloading backports.tarfile-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+2026-06-14 20:32:31,519 - INFO - Collecting contourpy>=1.0.1 (from matplotlib->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,525 - INFO - Downloading contourpy-1.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.5 kB)
+2026-06-14 20:32:31,541 - INFO - Collecting cycler>=0.10 (from matplotlib->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,546 - INFO - Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+2026-06-14 20:32:31,773 - INFO - Collecting fonttools>=4.22.0 (from matplotlib->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,779 - INFO - Downloading fonttools-4.63.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (118 kB)
+2026-06-14 20:32:31,870 - INFO - Collecting kiwisolver>=1.3.1 (from matplotlib->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,876 - INFO - Downloading kiwisolver-1.5.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (5.1 kB)
+2026-06-14 20:32:31,915 - INFO - Collecting pyparsing>=3 (from matplotlib->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,920 - INFO - Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+2026-06-14 20:32:31,975 - INFO - Collecting markdown-it-py>=2.2.0 (from rich>=14.2.0->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:31,981 - INFO - Downloading markdown_it_py-3.0.0-py3-none-any.whl.metadata (6.9 kB)
+2026-06-14 20:32:32,001 - INFO - Collecting mdit-py-plugins>=0.4.1,~=0.4 (from myst_parser->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,007 - INFO - Downloading mdit_py_plugins-0.6.1-py3-none-any.whl.metadata (2.9 kB)
+2026-06-14 20:32:32,340 - INFO - Collecting joblib (from nltk->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,345 - INFO - Downloading joblib-1.5.3-py3-none-any.whl.metadata (5.5 kB)
+2026-06-14 20:32:32,378 - INFO - Collecting et-xmlfile (from openpyxl->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,383 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2026-06-14 20:32:32,414 - INFO - Collecting cfgv>=2.0.0 (from pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,420 - INFO - Downloading cfgv-3.5.0-py2.py3-none-any.whl.metadata (8.9 kB)
+2026-06-14 20:32:32,466 - INFO - Collecting identify>=1.0.0 (from pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,471 - INFO - Downloading identify-2.6.19-py2.py3-none-any.whl.metadata (4.4 kB)
+2026-06-14 20:32:32,497 - INFO - Collecting nodeenv>=0.11.1 (from pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,503 - INFO - Downloading nodeenv-1.10.0-py2.py3-none-any.whl.metadata (24 kB)
+2026-06-14 20:32:32,558 - INFO - Collecting virtualenv>=20.10.0 (from pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,563 - INFO - Downloading virtualenv-21.5.0-py3-none-any.whl.metadata (3.4 kB)
+2026-06-14 20:32:32,899 - INFO - Collecting distlib<1,>=0.3.7 (from virtualenv>=20.10.0->pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,907 - INFO - Downloading distlib-0.4.3-py2.py3-none-any.whl.metadata (5.3 kB)
+2026-06-14 20:32:32,943 - INFO - Collecting python-discovery>=1.4.2 (from virtualenv>=20.10.0->pre-commit->agentscope==1.0.19.dev0)
+2026-06-14 20:32:32,949 - INFO - Downloading python_discovery-1.4.2-py3-none-any.whl.metadata (5.6 kB)
+2026-06-14 20:32:33,087 - INFO - Collecting math-verify<0.8.0,>=0.7.0 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:33,093 - INFO - Downloading math_verify-0.7.0-py3-none-any.whl.metadata (1.5 kB)
+2026-06-14 20:32:33,118 - INFO - Collecting fire (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:33,125 - INFO - Downloading fire-0.7.1-py3-none-any.whl.metadata (5.8 kB)
+2026-06-14 20:32:33,152 - INFO - Collecting jieba>=0.42.1 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:33,158 - INFO - Downloading jieba-0.42.1.tar.gz (19.2 MB)
+2026-06-14 20:32:34,128 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 19.2/19.2 MB 19.9 MB/s  0:00:00
+2026-06-14 20:32:34,129 - INFO - 
+2026-06-14 20:32:34,643 - INFO - Installing build dependencies: started
+2026-06-14 20:32:35,425 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:32:35,425 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:32:35,824 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:32:35,826 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:32:36,028 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:36,079 - INFO - Collecting sacrebleu>=2.0.0 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:36,088 - INFO - Downloading sacrebleu-2.6.0-py3-none-any.whl.metadata (39 kB)
+2026-06-14 20:32:36,112 - INFO - Collecting rouge-score>=0.1.2 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:36,120 - INFO - Downloading rouge_score-0.1.2.tar.gz (17 kB)
+2026-06-14 20:32:36,140 - INFO - Installing build dependencies: started
+2026-06-14 20:32:36,924 - INFO - Installing build dependencies: finished with status 'done'
+2026-06-14 20:32:36,926 - INFO - Getting requirements to build wheel: started
+2026-06-14 20:32:37,374 - INFO - Getting requirements to build wheel: finished with status 'done'
+2026-06-14 20:32:37,377 - INFO - Preparing metadata (pyproject.toml): started
+2026-06-14 20:32:37,652 - INFO - Preparing metadata (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:37,688 - INFO - Collecting python-Levenshtein>=0.20.0 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:37,698 - INFO - Downloading python_levenshtein-0.27.3-py3-none-any.whl.metadata (3.9 kB)
+2026-06-14 20:32:37,910 - INFO - Collecting scikit-learn>=1.0.0 (from py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:37,979 - INFO - Downloading scikit_learn-1.7.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+2026-06-14 20:32:38,253 - INFO - Collecting latex2sympy2_extended==1.10.1 (from math-verify<0.8.0,>=0.7.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:38,263 - INFO - Downloading latex2sympy2_extended-1.10.1-py3-none-any.whl.metadata (5.3 kB)
+2026-06-14 20:32:38,378 - INFO - Collecting antlr4-python3-runtime<=4.13.2,>=4.9.3 (from latex2sympy2_extended==1.10.1->math-verify<0.8.0,>=0.7.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:38,386 - INFO - Downloading antlr4_python3_runtime-4.13.2-py3-none-any.whl.metadata (304 bytes)
+2026-06-14 20:32:38,732 - INFO - Collecting Levenshtein==0.27.3 (from python-Levenshtein>=0.20.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:38,738 - INFO - Downloading levenshtein-0.27.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.7 kB)
+2026-06-14 20:32:39,494 - INFO - Collecting rapidfuzz<4.0.0,>=3.9.0 (from Levenshtein==0.27.3->python-Levenshtein>=0.20.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:39,502 - INFO - Downloading rapidfuzz-3.14.5-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (12 kB)
+2026-06-14 20:32:39,589 - INFO - Collecting absl-py (from rouge-score>=0.1.2->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:39,596 - INFO - Downloading absl_py-2.4.0-py3-none-any.whl.metadata (3.3 kB)
+2026-06-14 20:32:39,780 - INFO - Collecting tabulate>=0.8.9 (from sacrebleu>=2.0.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:39,787 - INFO - Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+2026-06-14 20:32:39,836 - INFO - Collecting colorama (from sacrebleu>=2.0.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:39,842 - INFO - Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+2026-06-14 20:32:40,111 - INFO - Collecting lxml (from sacrebleu>=2.0.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:40,117 - INFO - Downloading lxml-6.1.1-cp310-cp310-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+2026-06-14 20:32:40,336 - INFO - Collecting threadpoolctl>=3.1.0 (from scikit-learn>=1.0.0->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:40,344 - INFO - Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+2026-06-14 20:32:40,677 - INFO - Collecting termcolor (from fire->py-openjudge->agentscope==1.0.19.dev0)
+2026-06-14 20:32:40,684 - INFO - Downloading termcolor-3.3.0-py3-none-any.whl.metadata (6.5 kB)
+2026-06-14 20:32:40,955 - INFO - Collecting iniconfig>=1.0.1 (from pytest->agentscope==1.0.19.dev0)
+2026-06-14 20:32:40,964 - INFO - Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-14 20:32:40,999 - INFO - Collecting pluggy<2,>=1.5 (from pytest->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,006 - INFO - Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+2026-06-14 20:32:41,080 - INFO - Collecting backports-asyncio-runner<2,>=1.1 (from pytest-asyncio->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,089 - INFO - Downloading backports_asyncio_runner-1.2.0-py3-none-any.whl.metadata (7.5 kB)
+2026-06-14 20:32:41,146 - INFO - Collecting py (from pytest-forked->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,151 - INFO - Downloading py-1.11.0-py2.py3-none-any.whl.metadata (2.8 kB)
+2026-06-14 20:32:41,201 - INFO - Collecting cached-property (from python-datauri->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,208 - INFO - Downloading cached_property-2.0.1-py3-none-any.whl.metadata (10 kB)
+2026-06-14 20:32:41,294 - INFO - Collecting XlsxWriter>=0.5.7 (from python-pptx->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,299 - INFO - Downloading xlsxwriter-3.2.9-py3-none-any.whl.metadata (2.7 kB)
+2026-06-14 20:32:41,338 - INFO - Collecting bidict>=0.21.0 (from python-socketio->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,346 - INFO - Downloading bidict-0.23.1-py3-none-any.whl.metadata (8.7 kB)
+2026-06-14 20:32:41,381 - INFO - Collecting python-engineio>=4.13.2 (from python-socketio->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,386 - INFO - Downloading python_engineio-4.13.2-py3-none-any.whl.metadata (2.3 kB)
+2026-06-14 20:32:41,416 - INFO - Collecting simple-websocket>=0.10.0 (from python-engineio>=4.13.2->python-socketio->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,421 - INFO - Downloading simple_websocket-1.1.0-py3-none-any.whl.metadata (1.5 kB)
+2026-06-14 20:32:41,452 - INFO - Collecting wsproto (from simple-websocket>=0.10.0->python-engineio>=4.13.2->python-socketio->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,458 - INFO - Downloading wsproto-1.3.2-py3-none-any.whl.metadata (5.2 kB)
+2026-06-14 20:32:41,571 - INFO - Collecting msgpack<2.0.0,>=1.0.0 (from ray->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,576 - INFO - Downloading msgpack-1.2.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+2026-06-14 20:32:41,621 - INFO - Collecting oauthlib>=3.0.0 (from requests-oauthlib->kubernetes>=28.1.0->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,627 - INFO - Downloading oauthlib-3.3.1-py3-none-any.whl.metadata (7.9 kB)
+2026-06-14 20:32:41,684 - INFO - Collecting mpmath<1.4,>=1.1.0 (from sympy->onnxruntime>=1.14.1->chromadb>=1.3.5->reme-ai>=0.2.0.3->agentscope==1.0.19.dev0)
+2026-06-14 20:32:41,690 - INFO - Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-06-14 20:32:42,043 - INFO - Collecting crc32c>=2.7.1 (from tablestore->agentscope==1.0.19.dev0)
+2026-06-14 20:32:42,049 - INFO - Downloading crc32c-2.8-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (7.8 kB)
+2026-06-14 20:32:42,078 - INFO - Collecting future>=0.16.0 (from tablestore->agentscope==1.0.19.dev0)
+2026-06-14 20:32:42,085 - INFO - Downloading future-1.0.0-py3-none-any.whl.metadata (4.0 kB)
+2026-06-14 20:32:42,192 - INFO - Downloading mcp-1.27.2-py3-none-any.whl (220 kB)
+2026-06-14 20:32:42,205 - INFO - Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-06-14 20:32:42,214 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-06-14 20:32:42,222 - INFO - Downloading pydantic-2.13.4-py3-none-any.whl (472 kB)
+2026-06-14 20:32:42,241 - INFO - Downloading pydantic_core-2.46.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-06-14 20:32:42,296 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 37.7 MB/s  0:00:00
+2026-06-14 20:32:42,302 - INFO - Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2026-06-14 20:32:42,310 - INFO - Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+2026-06-14 20:32:42,318 - INFO - Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+2026-06-14 20:32:42,326 - INFO - Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-06-14 20:32:42,335 - INFO - Downloading httpx_sse-0.4.3-py3-none-any.whl (9.0 kB)
+2026-06-14 20:32:42,342 - INFO - Downloading idna-3.18-py3-none-any.whl (65 kB)
+2026-06-14 20:32:42,351 - INFO - Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+2026-06-14 20:32:42,359 - INFO - Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-06-14 20:32:42,366 - INFO - Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+2026-06-14 20:32:42,373 - INFO - Downloading opentelemetry_api-1.42.1-py3-none-any.whl (61 kB)
+2026-06-14 20:32:42,381 - INFO - Downloading opentelemetry_exporter_otlp-1.42.1-py3-none-any.whl (6.7 kB)
+2026-06-14 20:32:42,390 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.42.1-py3-none-any.whl (19 kB)
+2026-06-14 20:32:42,399 - INFO - Downloading opentelemetry_exporter_otlp_proto_common-1.42.1-py3-none-any.whl (17 kB)
+2026-06-14 20:32:42,407 - INFO - Downloading opentelemetry_exporter_otlp_proto_http-1.42.1-py3-none-any.whl (21 kB)
+2026-06-14 20:32:42,415 - INFO - Downloading opentelemetry_proto-1.42.1-py3-none-any.whl (71 kB)
+2026-06-14 20:32:42,425 - INFO - Downloading googleapis_common_protos-1.75.0-py3-none-any.whl (300 kB)
+2026-06-14 20:32:42,440 - INFO - Downloading grpcio-1.81.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.8 MB)
+2026-06-14 20:32:42,597 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 44.6 MB/s  0:00:00
+2026-06-14 20:32:42,597 - INFO - 
+2026-06-14 20:32:42,605 - INFO - Downloading opentelemetry_sdk-1.42.1-py3-none-any.whl (170 kB)
+2026-06-14 20:32:42,617 - INFO - Downloading opentelemetry_semantic_conventions-0.63b1-py3-none-any.whl (203 kB)
+2026-06-14 20:32:42,630 - INFO - Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+2026-06-14 20:32:42,640 - INFO - Downloading charset_normalizer-3.4.7-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (216 kB)
+2026-06-14 20:32:42,653 - INFO - Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-06-14 20:32:42,663 - INFO - Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+2026-06-14 20:32:42,674 - INFO - Downloading certifi-2026.5.20-py3-none-any.whl (134 kB)
+2026-06-14 20:32:42,685 - INFO - Downloading pydantic_settings-2.14.1-py3-none-any.whl (60 kB)
+2026-06-14 20:32:42,695 - INFO - Downloading pyjwt-2.13.0-py3-none-any.whl (31 kB)
+2026-06-14 20:32:42,706 - INFO - Downloading cffi-2.0.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (216 kB)
+2026-06-14 20:32:42,721 - INFO - Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+2026-06-14 20:32:42,732 - INFO - Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+2026-06-14 20:32:42,740 - INFO - Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+2026-06-14 20:32:42,749 - INFO - Downloading rpds_py-0.30.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (390 kB)
+2026-06-14 20:32:42,767 - INFO - Downloading sse_starlette-3.4.4-py3-none-any.whl (16 kB)
+2026-06-14 20:32:42,777 - INFO - Downloading starlette-1.3.1-py3-none-any.whl (73 kB)
+2026-06-14 20:32:42,787 - INFO - Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+2026-06-14 20:32:42,797 - INFO - Downloading uvicorn-0.49.0-py3-none-any.whl (71 kB)
+2026-06-14 20:32:42,809 - INFO - Downloading click-8.4.1-py3-none-any.whl (116 kB)
+2026-06-14 20:32:42,826 - INFO - Downloading nacos_sdk_python-3.2.0-py3-none-any.whl (120 kB)
+2026-06-14 20:32:42,841 - INFO - Downloading a2a_sdk-0.3.26-py3-none-any.whl (151 kB)
+2026-06-14 20:32:42,853 - INFO - Downloading aiohttp-3.14.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+2026-06-14 20:32:42,937 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 18.8 MB/s  0:00:00
+2026-06-14 20:32:42,937 - INFO - 
+2026-06-14 20:32:42,944 - INFO - Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+2026-06-14 20:32:42,959 - INFO - Downloading multidict-6.7.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (243 kB)
+2026-06-14 20:32:42,977 - INFO - Downloading yarl-1.24.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (106 kB)
+2026-06-14 20:32:42,988 - INFO - Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl (15 kB)
+2026-06-14 20:32:43,003 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-06-14 20:32:43,020 - INFO - Downloading alibabacloud_kms20160120-2.4.0-py3-none-any.whl (75 kB)
+2026-06-14 20:32:43,031 - INFO - Downloading alibabacloud_gateway_pop-0.1.3-py3-none-any.whl (5.5 kB)
+2026-06-14 20:32:43,041 - INFO - Downloading alibabacloud_credentials-1.0.9-py3-none-any.whl (50 kB)
+2026-06-14 20:32:43,051 - INFO - Downloading aiofiles-24.1.0-py3-none-any.whl (15 kB)
+2026-06-14 20:32:43,063 - INFO - Downloading alibabacloud_openapi_util-0.2.4-py3-none-any.whl (7.7 kB)
+2026-06-14 20:32:43,075 - INFO - Downloading alibabacloud_tea_openapi-0.4.4-py3-none-any.whl (26 kB)
+2026-06-14 20:32:43,094 - INFO - Downloading alibabacloud_tea_util-0.3.14-py3-none-any.whl (6.7 kB)
+2026-06-14 20:32:43,104 - INFO - Downloading apscheduler-3.11.2-py3-none-any.whl (64 kB)
+2026-06-14 20:32:43,112 - INFO - Downloading cryptography-46.0.7-cp38-abi3-manylinux_2_34_x86_64.whl (4.4 MB)
+2026-06-14 20:32:43,206 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 47.7 MB/s  0:00:00
+2026-06-14 20:32:43,207 - INFO - 
+2026-06-14 20:32:43,214 - INFO - Downloading darabonba_core-1.0.6-py3-none-any.whl (24 kB)
+2026-06-14 20:32:43,224 - INFO - Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+2026-06-14 20:32:43,236 - INFO - Downloading google_api_core-2.31.0-py3-none-any.whl (173 kB)
+2026-06-14 20:32:43,247 - INFO - Downloading google_auth-2.54.0-py3-none-any.whl (249 kB)
+2026-06-14 20:32:43,260 - INFO - Downloading proto_plus-1.28.0-py3-none-any.whl (50 kB)
+2026-06-14 20:32:43,273 - INFO - Downloading propcache-0.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (60 kB)
+2026-06-14 20:32:43,286 - INFO - Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-06-14 20:32:43,295 - INFO - Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+2026-06-14 20:32:43,304 - INFO - Downloading pyasn1-0.6.3-py3-none-any.whl (83 kB)
+2026-06-14 20:32:43,312 - INFO - Downloading pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+2026-06-14 20:32:43,360 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 50.1 MB/s  0:00:00
+2026-06-14 20:32:43,365 - INFO - Downloading tzlocal-5.3.1-py3-none-any.whl (18 kB)
+2026-06-14 20:32:43,374 - INFO - Downloading mem0ai-1.0.3-py3-none-any.whl (275 kB)
+2026-06-14 20:32:43,387 - INFO - Downloading protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl (320 kB)
+2026-06-14 20:32:43,400 - INFO - Downloading openai-2.41.1-py3-none-any.whl (1.4 MB)
+2026-06-14 20:32:43,425 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 57.2 MB/s  0:00:00
+2026-06-14 20:32:43,430 - INFO - Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+2026-06-14 20:32:43,438 - INFO - Downloading jiter-0.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (349 kB)
+2026-06-14 20:32:43,451 - INFO - Downloading posthog-7.18.3-py3-none-any.whl (273 kB)
+2026-06-14 20:32:43,464 - INFO - Downloading backoff-2.2.1-py3-none-any.whl (15 kB)
+2026-06-14 20:32:43,471 - INFO - Downloading pytz-2026.2-py2.py3-none-any.whl (510 kB)
+2026-06-14 20:32:43,487 - INFO - Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+2026-06-14 20:32:43,783 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 57.3 MB/s  0:00:00
+2026-06-14 20:32:43,783 - INFO - 
+2026-06-14 20:32:43,789 - INFO - Downloading portalocker-3.2.0-py3-none-any.whl (22 kB)
+2026-06-14 20:32:43,797 - INFO - Downloading h2-4.3.0-py3-none-any.whl (61 kB)
+2026-06-14 20:32:43,804 - INFO - Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
+2026-06-14 20:32:43,812 - INFO - Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
+2026-06-14 20:32:43,821 - INFO - Downloading sqlalchemy-2.0.50-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+2026-06-14 20:32:43,870 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 64.3 MB/s  0:00:00
+2026-06-14 20:32:43,871 - INFO - 
+2026-06-14 20:32:43,876 - INFO - Downloading greenlet-3.5.1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (612 kB)
+2026-06-14 20:32:43,887 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 612.9/612.9 kB 45.0 MB/s  0:00:00
+2026-06-14 20:32:43,893 - INFO - Downloading tqdm-4.68.2-py3-none-any.whl (78 kB)
+2026-06-14 20:32:43,901 - INFO - Downloading ollama-0.6.2-py3-none-any.whl (15 kB)
+2026-06-14 20:32:43,911 - INFO - Downloading pypdf-6.5.0-py3-none-any.whl (329 kB)
+2026-06-14 20:32:43,921 - INFO - Downloading websockets-16.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (183 kB)
+2026-06-14 20:32:43,932 - INFO - Downloading reme_ai-0.2.0.6-py3-none-any.whl (364 kB)
+2026-06-14 20:32:43,945 - INFO - Downloading flowllm-0.2.0.10-py3-none-any.whl (222 kB)
+2026-06-14 20:32:43,955 - INFO - Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23.3 MB)
+2026-06-14 20:32:44,291 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.3/23.3 MB 69.6 MB/s  0:00:00
+2026-06-14 20:32:44,292 - INFO - 
+2026-06-14 20:32:44,298 - INFO - Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+2026-06-14 20:32:44,311 - INFO - Downloading build-1.5.0-py3-none-any.whl (26 kB)
+2026-06-14 20:32:44,324 - INFO - Downloading dashscope-1.25.21-py3-none-any.whl (1.5 MB)
+2026-06-14 20:32:44,348 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 62.2 MB/s  0:00:00
+2026-06-14 20:32:44,354 - INFO - Downloading elasticsearch-9.4.1-py3-none-any.whl (993 kB)
+2026-06-14 20:32:44,370 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 993.6/993.6 kB 55.6 MB/s  0:00:00
+2026-06-14 20:32:44,377 - INFO - Downloading elastic_transport-9.4.1-py3-none-any.whl (66 kB)
+2026-06-14 20:32:44,385 - INFO - Downloading fastapi-0.137.0-py3-none-any.whl (121 kB)
+2026-06-14 20:32:44,393 - INFO - Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+2026-06-14 20:32:44,401 - INFO - Downloading fastmcp-3.4.2-py3-none-any.whl (8.0 kB)
+2026-06-14 20:32:44,409 - INFO - Downloading fastmcp_slim-3.4.2-py3-none-any.whl (749 kB)
+2026-06-14 20:32:44,423 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 749.2/749.2 kB 47.2 MB/s  0:00:00
+2026-06-14 20:32:44,424 - INFO - 
+2026-06-14 20:32:44,430 - INFO - Downloading py_key_value_aio-0.4.5-py3-none-any.whl (170 kB)
+2026-06-14 20:32:44,441 - INFO - Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (770 kB)
+2026-06-14 20:32:44,457 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 770.3/770.3 kB 47.1 MB/s  0:00:00
+2026-06-14 20:32:44,457 - INFO - 
+2026-06-14 20:32:44,464 - INFO - Downloading aiofile-3.9.0-py3-none-any.whl (19 kB)
+2026-06-14 20:32:44,477 - INFO - Downloading caio-0.9.25-cp310-cp310-manylinux_2_34_x86_64.whl (77 kB)
+2026-06-14 20:32:44,488 - INFO - Downloading authlib-1.7.2-py2.py3-none-any.whl (259 kB)
+2026-06-14 20:32:44,499 - INFO - Downloading beartype-0.22.9-py3-none-any.whl (1.3 MB)
+2026-06-14 20:32:44,524 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 50.3 MB/s  0:00:00
+2026-06-14 20:32:44,530 - INFO - Downloading cachetools-7.1.4-py3-none-any.whl (16 kB)
+2026-06-14 20:32:44,538 - INFO - Downloading cyclopts-4.18.0-py3-none-any.whl (221 kB)
+2026-06-14 20:32:44,550 - INFO - Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+2026-06-14 20:32:44,559 - INFO - Downloading rich_rst-2.0.1-py3-none-any.whl (272 kB)
+2026-06-14 20:32:44,571 - INFO - Downloading griffelib-2.0.2-py3-none-any.whl (142 kB)
+2026-06-14 20:32:44,583 - INFO - Downloading joserfc-1.7.1-py3-none-any.whl (70 kB)
+2026-06-14 20:32:44,593 - INFO - Downloading jsonref-1.1.0-py3-none-any.whl (9.4 kB)
+2026-06-14 20:32:44,602 - INFO - Downloading jsonschema_path-0.5.0-py3-none-any.whl (24 kB)
+2026-06-14 20:32:44,613 - INFO - Downloading pathable-0.6.0-py3-none-any.whl (18 kB)
+2026-06-14 20:32:44,624 - INFO - Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+2026-06-14 20:32:44,636 - INFO - Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+2026-06-14 20:32:44,647 - INFO - Downloading kubernetes-36.0.2-py2.py3-none-any.whl (4.6 MB)
+2026-06-14 20:32:44,713 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 70.4 MB/s  0:00:00
+2026-06-14 20:32:44,719 - INFO - Downloading durationpy-0.10-py3-none-any.whl (3.9 kB)
+2026-06-14 20:32:44,729 - INFO - Downloading litellm-1.89.0-py3-none-any.whl (15.5 MB)
+2026-06-14 20:32:44,957 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.5/15.5 MB 68.7 MB/s  0:00:00
+2026-06-14 20:32:44,957 - INFO - 
+2026-06-14 20:32:44,966 - INFO - Downloading fastuuid-0.14.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (280 kB)
+2026-06-14 20:32:45,026 - INFO - Downloading importlib_metadata-8.9.0-py3-none-any.whl (27 kB)
+2026-06-14 20:32:45,082 - INFO - Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+2026-06-14 20:32:45,144 - INFO - Downloading tiktoken-0.13.0-cp310-cp310-manylinux_2_28_x86_64.whl (1.1 MB)
+2026-06-14 20:32:45,343 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 4.6 MB/s  0:00:00
+2026-06-14 20:32:45,343 - INFO - 
+2026-06-14 20:32:45,352 - INFO - Downloading huggingface_hub-1.19.0-py3-none-any.whl (693 kB)
+2026-06-14 20:32:45,374 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 693.4/693.4 kB 25.6 MB/s  0:00:00
+2026-06-14 20:32:45,374 - INFO - 
+2026-06-14 20:32:45,381 - INFO - Downloading hf_xet-1.5.1-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+2026-06-14 20:32:45,445 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 72.7 MB/s  0:00:00
+2026-06-14 20:32:45,445 - INFO - 
+2026-06-14 20:32:45,452 - INFO - Downloading typer-0.25.1-py3-none-any.whl (58 kB)
+2026-06-14 20:32:45,473 - INFO - Downloading filelock-3.29.4-py3-none-any.whl (42 kB)
+2026-06-14 20:32:45,486 - INFO - Downloading fsspec-2026.4.0-py3-none-any.whl (203 kB)
+2026-06-14 20:32:45,498 - INFO - Downloading loguru-0.7.3-py3-none-any.whl (61 kB)
+2026-06-14 20:32:45,514 - INFO - Downloading markupsafe-3.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+2026-06-14 20:32:45,530 - INFO - Downloading mmh3-5.2.1-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (101 kB)
+2026-06-14 20:32:45,564 - INFO - Downloading onnxruntime-1.23.2-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (17.4 MB)
+2026-06-14 20:32:46,205 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 17.4/17.4 MB 27.8 MB/s  0:00:00
+2026-06-14 20:32:46,205 - INFO - 
+2026-06-14 20:32:46,213 - INFO - Downloading openapi_pydantic-0.5.1-py3-none-any.whl (96 kB)
+2026-06-14 20:32:46,237 - INFO - Downloading orjson-3.11.9-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (134 kB)
+2026-06-14 20:32:46,245 - INFO - Downloading overrides-7.7.0-py3-none-any.whl (17 kB)
+2026-06-14 20:32:46,250 - INFO - Using cached packaging-26.2-py3-none-any.whl (100 kB)
+2026-06-14 20:32:46,256 - INFO - Downloading pandas-2.3.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+2026-06-14 20:32:46,474 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 58.6 MB/s  0:00:00
+2026-06-14 20:32:46,508 - INFO - 
+2026-06-14 20:32:46,528 - INFO - Downloading pathspec-1.1.1-py3-none-any.whl (57 kB)
+2026-06-14 20:32:46,660 - INFO - Downloading pgvector-0.4.2-py3-none-any.whl (27 kB)
+2026-06-14 20:32:46,677 - INFO - Downloading platformdirs-4.10.0-py3-none-any.whl (22 kB)
+2026-06-14 20:32:46,703 - INFO - Downloading pybase64-1.4.3-cp310-cp310-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (68 kB)
+2026-06-14 20:32:46,729 - INFO - Downloading email_validator-2.3.0-py3-none-any.whl (35 kB)
+2026-06-14 20:32:46,745 - INFO - Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+2026-06-14 20:32:46,772 - INFO - Downloading pyfiglet-1.0.4-py3-none-any.whl (1.8 MB)
+2026-06-14 20:32:46,813 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 44.9 MB/s  0:00:00
+2026-06-14 20:32:46,814 - INFO - 
+2026-06-14 20:32:46,822 - INFO - Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+2026-06-14 20:32:46,863 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 29.0 MB/s  0:00:00
+2026-06-14 20:32:46,863 - INFO - 
+2026-06-14 20:32:46,873 - INFO - Downloading pyperclip-1.11.0-py3-none-any.whl (11 kB)
+2026-06-14 20:32:46,889 - INFO - Downloading pypika-0.51.1-py2.py3-none-any.whl (60 kB)
+2026-06-14 20:32:46,905 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2026-06-14 20:32:46,925 - INFO - Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+2026-06-14 20:32:46,953 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+2026-06-14 20:32:46,963 - INFO - Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+2026-06-14 20:32:46,977 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+2026-06-14 20:32:46,990 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-06-14 20:32:47,013 - INFO - Downloading tavily_python-0.7.26-py3-none-any.whl (21 kB)
+2026-06-14 20:32:47,057 - INFO - Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
+2026-06-14 20:32:47,087 - INFO - Downloading tomli-2.4.1-py3-none-any.whl (14 kB)
+2026-06-14 20:32:47,105 - INFO - Downloading tzdata-2026.2-py2.py3-none-any.whl (349 kB)
+2026-06-14 20:32:47,119 - INFO - Downloading uncalled_for-0.3.2-py3-none-any.whl (11 kB)
+2026-06-14 20:32:47,130 - INFO - Downloading httptools-0.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (450 kB)
+2026-06-14 20:32:47,144 - INFO - Downloading uvloop-0.22.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.7 MB)
+2026-06-14 20:32:47,216 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.7/3.7 MB 54.5 MB/s  0:00:00
+2026-06-14 20:32:47,216 - INFO - 
+2026-06-14 20:32:47,227 - INFO - Downloading watchfiles-1.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (457 kB)
+2026-06-14 20:32:47,242 - INFO - Downloading websocket_client-1.9.0-py3-none-any.whl (82 kB)
+2026-06-14 20:32:47,251 - INFO - Downloading zipp-4.1.0-py3-none-any.whl (10 kB)
+2026-06-14 20:32:47,262 - INFO - Downloading qdrant_client-1.15.1-py3-none-any.whl (337 kB)
+2026-06-14 20:32:47,275 - INFO - Downloading pymilvus-2.6.2-py3-none-any.whl (258 kB)
+2026-06-14 20:32:47,293 - INFO - Downloading milvus_lite-3.0-py3-none-any.whl (230 kB)
+2026-06-14 20:32:47,309 - INFO - Downloading faiss_cpu-1.14.3-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (18.5 MB)
+2026-06-14 20:32:47,636 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.5/18.5 MB 57.6 MB/s  0:00:00
+2026-06-14 20:32:47,636 - INFO - 
+2026-06-14 20:32:47,644 - INFO - Downloading pyarrow-24.0.0-cp310-cp310-manylinux_2_28_x86_64.whl (48.8 MB)
+2026-06-14 20:32:48,467 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.8/48.8 MB 59.4 MB/s  0:00:00
+2026-06-14 20:32:48,467 - INFO - 
+2026-06-14 20:32:48,477 - INFO - Downloading ujson-5.12.1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (59 kB)
+2026-06-14 20:32:48,487 - INFO - Downloading pyobvector-0.2.28-py3-none-any.whl (66 kB)
+2026-06-14 20:32:48,497 - INFO - Downloading aiomysql-0.3.2-py3-none-any.whl (71 kB)
+2026-06-14 20:32:48,508 - INFO - Downloading pymysql-1.2.0-py3-none-any.whl (45 kB)
+2026-06-14 20:32:48,520 - INFO - Downloading sqlglot-30.11.0-py3-none-any.whl (698 kB)
+2026-06-14 20:32:48,538 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 698.7/698.7 kB 35.9 MB/s  0:00:00
+2026-06-14 20:32:48,538 - INFO - 
+2026-06-14 20:32:48,545 - INFO - Downloading aioitertools-0.13.0-py3-none-any.whl (24 kB)
+2026-06-14 20:32:48,556 - INFO - Downloading aiosqlite-0.22.1-py3-none-any.whl (17 kB)
+2026-06-14 20:32:48,565 - INFO - Downloading anthropic-0.109.1-py3-none-any.whl (923 kB)
+2026-06-14 20:32:48,582 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 923.9/923.9 kB 56.2 MB/s  0:00:00
+2026-06-14 20:32:48,582 - INFO - 
+2026-06-14 20:32:48,589 - INFO - Downloading coloredlogs-15.0.1-py2.py3-none-any.whl (46 kB)
+2026-06-14 20:32:48,599 - INFO - Downloading humanfriendly-10.0-py2.py3-none-any.whl (86 kB)
+2026-06-14 20:32:48,613 - INFO - Downloading dspy-3.2.1-py3-none-any.whl (331 kB)
+2026-06-14 20:32:48,627 - INFO - Downloading asyncer-0.0.8-py3-none-any.whl (9.2 kB)
+2026-06-14 20:32:48,638 - INFO - Downloading gepa-0.0.27-py3-none-any.whl (146 kB)
+2026-06-14 20:32:48,651 - INFO - Downloading typeguard-4.4.3-py3-none-any.whl (34 kB)
+2026-06-14 20:32:48,663 - INFO - Downloading cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+2026-06-14 20:32:48,673 - INFO - Downloading diskcache-5.6.3-py3-none-any.whl (45 kB)
+2026-06-14 20:32:48,683 - INFO - Downloading json_repair-0.60.1-py3-none-any.whl (48 kB)
+2026-06-14 20:32:48,691 - INFO - Downloading regex-2026.5.9-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (794 kB)
+2026-06-14 20:32:48,703 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 794.1/794.1 kB 65.5 MB/s  0:00:00
+2026-06-14 20:32:48,709 - INFO - Downloading xxhash-3.7.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (193 kB)
+2026-06-14 20:32:48,718 - INFO - Downloading fakeredis-2.36.1-py3-none-any.whl (139 kB)
+2026-06-14 20:32:48,727 - INFO - Downloading redis-8.0.0-py3-none-any.whl (499 kB)
+2026-06-14 20:32:48,740 - INFO - Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+2026-06-14 20:32:48,749 - INFO - Downloading filetype-1.2.0-py2.py3-none-any.whl (19 kB)
+2026-06-14 20:32:48,759 - INFO - Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+2026-06-14 20:32:48,772 - INFO - Downloading furo-2025.12.19-py3-none-any.whl (339 kB)
+2026-06-14 20:32:48,787 - INFO - Downloading sphinx-8.1.3-py3-none-any.whl (3.5 MB)
+2026-06-14 20:32:48,844 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.5/3.5 MB 62.3 MB/s  0:00:00
+2026-06-14 20:32:48,845 - INFO - 
+2026-06-14 20:32:48,856 - INFO - Downloading docutils-0.21.2-py3-none-any.whl (587 kB)
+2026-06-14 20:32:48,874 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.4/587.4 kB 27.0 MB/s  0:00:00
+2026-06-14 20:32:48,875 - INFO - 
+2026-06-14 20:32:48,883 - INFO - Downloading accessible_pygments-0.0.5-py3-none-any.whl (1.4 MB)
+2026-06-14 20:32:48,913 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 46.4 MB/s  0:00:00
+2026-06-14 20:32:48,914 - INFO - 
+2026-06-14 20:32:48,922 - INFO - Downloading alabaster-1.0.0-py3-none-any.whl (13 kB)
+2026-06-14 20:32:48,934 - INFO - Downloading babel-2.18.0-py3-none-any.whl (10.2 MB)
+2026-06-14 20:32:49,097 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 63.4 MB/s  0:00:00
+2026-06-14 20:32:49,097 - INFO - 
+2026-06-14 20:32:49,106 - INFO - Downloading imagesize-2.0.0-py2.py3-none-any.whl (9.4 kB)
+2026-06-14 20:32:49,117 - INFO - Downloading snowballstemmer-3.1.1-py3-none-any.whl (104 kB)
+2026-06-14 20:32:49,127 - INFO - Downloading sphinx_basic_ng-1.0.0b2-py3-none-any.whl (22 kB)
+2026-06-14 20:32:49,138 - INFO - Downloading sphinxcontrib_applehelp-2.0.0-py3-none-any.whl (119 kB)
+2026-06-14 20:32:49,148 - INFO - Downloading sphinxcontrib_devhelp-2.0.0-py3-none-any.whl (82 kB)
+2026-06-14 20:32:49,157 - INFO - Downloading sphinxcontrib_htmlhelp-2.1.0-py3-none-any.whl (98 kB)
+2026-06-14 20:32:49,168 - INFO - Downloading sphinxcontrib_jsmath-1.0.1-py2.py3-none-any.whl (5.1 kB)
+2026-06-14 20:32:49,177 - INFO - Downloading sphinxcontrib_qthelp-2.0.0-py3-none-any.whl (88 kB)
+2026-06-14 20:32:49,186 - INFO - Downloading sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl (92 kB)
+2026-06-14 20:32:49,196 - INFO - Downloading beautifulsoup4-4.15.0-py3-none-any.whl (109 kB)
+2026-06-14 20:32:49,205 - INFO - Downloading soupsieve-2.8.4-py3-none-any.whl (37 kB)
+2026-06-14 20:32:49,215 - INFO - Downloading google_genai-2.8.0-py3-none-any.whl (832 kB)
+2026-06-14 20:32:49,230 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 832.5/832.5 kB 56.1 MB/s  0:00:00
+2026-06-14 20:32:49,237 - INFO - Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+2026-06-14 20:32:49,246 - INFO - Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+2026-06-14 20:32:49,256 - INFO - Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+2026-06-14 20:32:49,266 - INFO - Downloading backports.tarfile-1.2.0-py3-none-any.whl (30 kB)
+2026-06-14 20:32:49,275 - INFO - Downloading jaraco_functools-4.5.0-py3-none-any.whl (10 kB)
+2026-06-14 20:32:49,283 - INFO - Downloading json5-0.14.0-py3-none-any.whl (36 kB)
+2026-06-14 20:32:49,291 - INFO - Downloading matplotlib-3.10.9-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.8 MB)
+2026-06-14 20:32:49,432 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.8/8.8 MB 62.3 MB/s  0:00:00
+2026-06-14 20:32:49,432 - INFO - 
+2026-06-14 20:32:49,439 - INFO - Downloading contourpy-1.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (325 kB)
+2026-06-14 20:32:49,451 - INFO - Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+2026-06-14 20:32:49,460 - INFO - Downloading fonttools-4.63.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.9 MB)
+2026-06-14 20:32:49,538 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 64.8 MB/s  0:00:00
+2026-06-14 20:32:49,538 - INFO - 
+2026-06-14 20:32:49,546 - INFO - Downloading kiwisolver-1.5.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.6 MB)
+2026-06-14 20:32:49,581 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 49.1 MB/s  0:00:00
+2026-06-14 20:32:49,581 - INFO - 
+2026-06-14 20:32:49,590 - INFO - Downloading pillow-12.2.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-06-14 20:32:49,706 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 62.6 MB/s  0:00:00
+2026-06-14 20:32:49,706 - INFO - 
+2026-06-14 20:32:49,713 - INFO - Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
+2026-06-14 20:32:49,724 - INFO - Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+2026-06-14 20:32:49,739 - INFO - Downloading mysql_connector_python-9.7.0-cp310-cp310-manylinux_2_28_x86_64.whl (21.7 MB)
+2026-06-14 20:32:50,094 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.7/21.7 MB 61.5 MB/s  0:00:00
+2026-06-14 20:32:50,094 - INFO - 
+2026-06-14 20:32:50,101 - INFO - Downloading myst_parser-4.0.1-py3-none-any.whl (84 kB)
+2026-06-14 20:32:50,112 - INFO - Downloading markdown_it_py-3.0.0-py3-none-any.whl (87 kB)
+2026-06-14 20:32:50,121 - INFO - Downloading mdit_py_plugins-0.6.1-py3-none-any.whl (66 kB)
+2026-06-14 20:32:50,132 - INFO - Downloading nltk-3.9.4-py3-none-any.whl (1.6 MB)
+2026-06-14 20:32:50,155 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 73.9 MB/s  0:00:00
+2026-06-14 20:32:50,155 - INFO - 
+2026-06-14 20:32:50,162 - INFO - Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+2026-06-14 20:32:50,175 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2026-06-14 20:32:50,186 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2026-06-14 20:32:50,195 - INFO - Downloading pre_commit-4.6.0-py2.py3-none-any.whl (226 kB)
+2026-06-14 20:32:50,206 - INFO - Downloading cfgv-3.5.0-py2.py3-none-any.whl (7.4 kB)
+2026-06-14 20:32:50,215 - INFO - Downloading identify-2.6.19-py2.py3-none-any.whl (99 kB)
+2026-06-14 20:32:50,225 - INFO - Downloading nodeenv-1.10.0-py2.py3-none-any.whl (23 kB)
+2026-06-14 20:32:50,234 - INFO - Downloading virtualenv-21.5.0-py3-none-any.whl (4.6 MB)
+2026-06-14 20:32:50,296 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 74.9 MB/s  0:00:00
+2026-06-14 20:32:50,297 - INFO - 
+2026-06-14 20:32:50,304 - INFO - Downloading distlib-0.4.3-py2.py3-none-any.whl (470 kB)
+2026-06-14 20:32:50,319 - INFO - Downloading python_discovery-1.4.2-py3-none-any.whl (33 kB)
+2026-06-14 20:32:50,329 - INFO - Downloading py_openjudge-0.2.4-py3-none-any.whl (1.3 MB)
+2026-06-14 20:32:50,353 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 54.6 MB/s  0:00:00
+2026-06-14 20:32:50,353 - INFO - 
+2026-06-14 20:32:50,361 - INFO - Downloading math_verify-0.7.0-py3-none-any.whl (28 kB)
+2026-06-14 20:32:50,378 - INFO - Downloading latex2sympy2_extended-1.10.1-py3-none-any.whl (207 kB)
+2026-06-14 20:32:50,394 - INFO - Downloading antlr4_python3_runtime-4.13.2-py3-none-any.whl (144 kB)
+2026-06-14 20:32:50,410 - INFO - Downloading python_levenshtein-0.27.3-py3-none-any.whl (9.5 kB)
+2026-06-14 20:32:50,420 - INFO - Downloading levenshtein-0.27.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (153 kB)
+2026-06-14 20:32:50,436 - INFO - Downloading rapidfuzz-3.14.5-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+2026-06-14 20:32:50,487 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 66.0 MB/s  0:00:00
+2026-06-14 20:32:50,487 - INFO - 
+2026-06-14 20:32:50,495 - INFO - Downloading sacrebleu-2.6.0-py3-none-any.whl (100 kB)
+2026-06-14 20:32:50,506 - INFO - Downloading scikit_learn-1.7.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.7 MB)
+2026-06-14 20:32:50,665 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.7/9.7 MB 61.7 MB/s  0:00:00
+2026-06-14 20:32:50,666 - INFO - 
+2026-06-14 20:32:50,673 - INFO - Downloading scipy-1.15.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (37.7 MB)
+2026-06-14 20:32:51,298 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.7/37.7 MB 60.3 MB/s  0:00:00
+2026-06-14 20:32:51,305 - INFO - Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+2026-06-14 20:32:51,315 - INFO - Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+2026-06-14 20:32:51,325 - INFO - Downloading absl_py-2.4.0-py3-none-any.whl (135 kB)
+2026-06-14 20:32:51,335 - INFO - Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+2026-06-14 20:32:51,343 - INFO - Downloading fire-0.7.1-py3-none-any.whl (115 kB)
+2026-06-14 20:32:51,350 - INFO - Downloading lxml-6.1.1-cp310-cp310-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.3 MB)
+2026-06-14 20:32:51,440 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.3/5.3 MB 59.8 MB/s  0:00:00
+2026-06-14 20:32:51,440 - INFO - 
+2026-06-14 20:32:51,448 - INFO - Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+2026-06-14 20:32:51,461 - INFO - Downloading pymongo-4.17.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.3 MB)
+2026-06-14 20:32:51,488 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 48.7 MB/s  0:00:00
+2026-06-14 20:32:51,488 - INFO - 
+2026-06-14 20:32:51,497 - INFO - Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+2026-06-14 20:32:51,508 - INFO - Downloading pytest-9.1.0-py3-none-any.whl (386 kB)
+2026-06-14 20:32:51,519 - INFO - Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+2026-06-14 20:32:51,529 - INFO - Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+2026-06-14 20:32:51,557 - INFO - Downloading pytest_asyncio-1.4.0-py3-none-any.whl (16 kB)
+2026-06-14 20:32:51,567 - INFO - Downloading backports_asyncio_runner-1.2.0-py3-none-any.whl (12 kB)
+2026-06-14 20:32:51,577 - INFO - Downloading pytest_forked-1.6.0-py3-none-any.whl (4.9 kB)
+2026-06-14 20:32:51,585 - INFO - Downloading py-1.11.0-py2.py3-none-any.whl (98 kB)
+2026-06-14 20:32:51,595 - INFO - Downloading python_datauri-3.0.2-py2.py3-none-any.whl (5.8 kB)
+2026-06-14 20:32:51,605 - INFO - Downloading cached_property-2.0.1-py3-none-any.whl (7.4 kB)
+2026-06-14 20:32:51,613 - INFO - Downloading python_docx-1.2.0-py3-none-any.whl (252 kB)
+2026-06-14 20:32:51,624 - INFO - Downloading python_frontmatter-1.3.0-py3-none-any.whl (10 kB)
+2026-06-14 20:32:51,633 - INFO - Downloading python_pptx-1.0.2-py3-none-any.whl (472 kB)
+2026-06-14 20:32:51,647 - INFO - Downloading xlsxwriter-3.2.9-py3-none-any.whl (175 kB)
+2026-06-14 20:32:51,657 - INFO - Downloading python_socketio-5.16.2-py3-none-any.whl (82 kB)
+2026-06-14 20:32:51,667 - INFO - Downloading bidict-0.23.1-py3-none-any.whl (32 kB)
+2026-06-14 20:32:51,676 - INFO - Downloading python_engineio-4.13.2-py3-none-any.whl (59 kB)
+2026-06-14 20:32:51,685 - INFO - Downloading simple_websocket-1.1.0-py3-none-any.whl (13 kB)
+2026-06-14 20:32:51,699 - INFO - Downloading ray-2.55.1-cp310-cp310-manylinux2014_x86_64.whl (73.6 MB)
+2026-06-14 20:32:52,889 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.6/73.6 MB 61.8 MB/s  0:00:01
+2026-06-14 20:32:52,896 - INFO - Downloading msgpack-1.2.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (405 kB)
+2026-06-14 20:32:52,911 - INFO - Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+2026-06-14 20:32:52,920 - INFO - Downloading oauthlib-3.3.1-py3-none-any.whl (160 kB)
+2026-06-14 20:32:52,931 - INFO - Downloading shortuuid-1.0.13-py3-none-any.whl (10 kB)
+2026-06-14 20:32:52,941 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2026-06-14 20:32:52,950 - INFO - Downloading sounddevice-0.5.5-py3-none-any.whl (32 kB)
+2026-06-14 20:32:52,962 - INFO - Downloading sphinx_gallery-0.21.0-py3-none-any.whl (466 kB)
+2026-06-14 20:32:52,977 - INFO - Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-06-14 20:32:53,079 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 61.9 MB/s  0:00:00
+2026-06-14 20:32:53,080 - INFO - 
+2026-06-14 20:32:53,088 - INFO - Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-06-14 20:32:53,101 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 31.2 MB/s  0:00:00
+2026-06-14 20:32:53,108 - INFO - Downloading tablestore-6.4.6-py3-none-any.whl (5.1 MB)
+2026-06-14 20:32:53,212 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 49.7 MB/s  0:00:00
+2026-06-14 20:32:53,213 - INFO - 
+2026-06-14 20:32:53,224 - INFO - Downloading crc32c-2.8-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (79 kB)
+2026-06-14 20:32:53,237 - INFO - Downloading future-1.0.0-py3-none-any.whl (491 kB)
+2026-06-14 20:32:53,254 - INFO - Downloading tablestore_for_agent_memory-1.1.3-py3-none-any.whl (33 kB)
+2026-06-14 20:32:53,268 - INFO - Downloading termcolor-3.3.0-py3-none-any.whl (7.7 kB)
+2026-06-14 20:32:53,279 - INFO - Downloading transformers-5.12.0-py3-none-any.whl (11.2 MB)
+2026-06-14 20:32:53,479 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.2/11.2 MB 56.5 MB/s  0:00:00
+2026-06-14 20:32:53,479 - INFO - 
+2026-06-14 20:32:53,487 - INFO - Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-06-14 20:32:53,552 - INFO - ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 51.7 MB/s  0:00:00
+2026-06-14 20:32:53,552 - INFO - 
+2026-06-14 20:32:53,562 - INFO - Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+2026-06-14 20:32:53,581 - INFO - Downloading wsproto-1.3.2-py3-none-any.whl (24 kB)
+2026-06-14 20:32:55,128 - INFO - Building wheels for collected packages: agentscope, alibabacloud-endpoint-util, alibabacloud-credentials-api, alibabacloud-darabonba-array, alibabacloud-darabonba-encode-util, alibabacloud-darabonba-map, alibabacloud-darabonba-signature-util, alibabacloud-darabonba-string, alibabacloud-gateway-spi, alibabacloud-tea-xml, alibabacloud-tea, jieba, rouge-score
+2026-06-14 20:32:55,130 - INFO - Building editable for agentscope (pyproject.toml): started
+2026-06-14 20:32:55,422 - INFO - Building editable for agentscope (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:55,424 - INFO - Created wheel for agentscope: filename=agentscope-1.0.19.dev0-0.editable-py3-none-any.whl size=13868 sha256=e9aacba56eebf29fc984d8c3169cb3c4069e6bf13e6e2b17dd693b091ef1a4ff
+2026-06-14 20:32:55,424 - INFO - Stored in directory: /tmp/pip-ephem-wheel-cache-_7ary86e/wheels/0d/a6/cb/465a7b303d624cc531250fa27c75d038ddc29430bdb6ba7c9f
+2026-06-14 20:32:55,436 - INFO - Building wheel for alibabacloud-endpoint-util (pyproject.toml): started
+2026-06-14 20:32:55,656 - INFO - Building wheel for alibabacloud-endpoint-util (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:55,658 - INFO - Created wheel for alibabacloud-endpoint-util: filename=alibabacloud_endpoint_util-0.0.4-py3-none-any.whl size=2699 sha256=01a8e2239a5bb35c169dbd3f16e7d20196c0db538eb9cd12d0ac21410e308036
+2026-06-14 20:32:55,658 - INFO - Stored in directory: /root/.cache/pip/wheels/74/44/6c/69143f42ac4c28ff583167a70a3ffc042e49d5b31ccef07855
+2026-06-14 20:32:55,664 - INFO - Building wheel for alibabacloud-credentials-api (pyproject.toml): started
+2026-06-14 20:32:55,898 - INFO - Building wheel for alibabacloud-credentials-api (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:55,899 - INFO - Created wheel for alibabacloud-credentials-api: filename=alibabacloud_credentials_api-1.0.0-py3-none-any.whl size=2298 sha256=eb10d5cc54104e9cecc2f5f2f17f91b44d4e683e4dcd3a6f64d591c3a9fa3781
+2026-06-14 20:32:55,899 - INFO - Stored in directory: /root/.cache/pip/wheels/d6/78/9b/e733a8128dff3c9613ca3736cc96fd079a66ca7699df90f94a
+2026-06-14 20:32:55,905 - INFO - Building wheel for alibabacloud-darabonba-array (pyproject.toml): started
+2026-06-14 20:32:56,135 - INFO - Building wheel for alibabacloud-darabonba-array (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:56,136 - INFO - Created wheel for alibabacloud-darabonba-array: filename=alibabacloud_darabonba_array-0.1.0-py3-none-any.whl size=2451 sha256=b1b7e9627ed3bacccf8c4c8f7c51aa348b4e63f3305fd7a55a043e2beb72e691
+2026-06-14 20:32:56,137 - INFO - Stored in directory: /root/.cache/pip/wheels/49/49/70/e6d1925ad78ee9aac73f5971271035247ef936bda8548fda6f
+2026-06-14 20:32:56,142 - INFO - Building wheel for alibabacloud-darabonba-encode-util (pyproject.toml): started
+2026-06-14 20:32:56,359 - INFO - Building wheel for alibabacloud-darabonba-encode-util (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:56,361 - INFO - Created wheel for alibabacloud-darabonba-encode-util: filename=alibabacloud_darabonba_encode_util-0.0.2-py3-none-any.whl size=4357 sha256=2e6d270cb7d3b3853c34516779b940e59707395c0b16e666cdd18053dd169019
+2026-06-14 20:32:56,361 - INFO - Stored in directory: /root/.cache/pip/wheels/71/ef/f7/b5617c25260f2f676f50b6a2439c31e1c51434c2d431a620cc
+2026-06-14 20:32:56,367 - INFO - Building wheel for alibabacloud-darabonba-map (pyproject.toml): started
+2026-06-14 20:32:56,595 - INFO - Building wheel for alibabacloud-darabonba-map (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:56,596 - INFO - Created wheel for alibabacloud-darabonba-map: filename=alibabacloud_darabonba_map-0.0.1-py3-none-any.whl size=2168 sha256=749fec2615a967d18c5bc463e1e0e103a97f3b09ff50a88eb82d647814b41fa2
+2026-06-14 20:32:56,597 - INFO - Stored in directory: /root/.cache/pip/wheels/32/02/ba/3186c6d95eb6704f7d34da3edea56363e341111984c0c6f51d
+2026-06-14 20:32:56,603 - INFO - Building wheel for alibabacloud-darabonba-signature-util (pyproject.toml): started
+2026-06-14 20:32:56,841 - INFO - Building wheel for alibabacloud-darabonba-signature-util (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:56,843 - INFO - Created wheel for alibabacloud-darabonba-signature-util: filename=alibabacloud_darabonba_signature_util-0.0.4-py3-none-any.whl size=4528 sha256=87414550fd17e1a61df13e9cf4c0dca5c67dd341dbe4799866cf2135826a7d3b
+2026-06-14 20:32:56,843 - INFO - Stored in directory: /root/.cache/pip/wheels/d8/17/77/29706e12e6221554a40db109f7b96a5448752c2bc8151e2b3e
+2026-06-14 20:32:56,850 - INFO - Building wheel for alibabacloud-darabonba-string (pyproject.toml): started
+2026-06-14 20:32:57,084 - INFO - Building wheel for alibabacloud-darabonba-string (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:57,086 - INFO - Created wheel for alibabacloud-darabonba-string: filename=alibabacloud_darabonba_string-0.0.4-py3-none-any.whl size=2839 sha256=49189feaeab98c91d2a531c6538d05e02110f5b1f81866fa4bb89bca54bc4c62
+2026-06-14 20:32:57,086 - INFO - Stored in directory: /root/.cache/pip/wheels/69/81/80/fa855fc9f2a10226fe4a8afe161f65a624e01f4e4892702448
+2026-06-14 20:32:57,092 - INFO - Building wheel for alibabacloud-gateway-spi (pyproject.toml): started
+2026-06-14 20:32:57,327 - INFO - Building wheel for alibabacloud-gateway-spi (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:57,328 - INFO - Created wheel for alibabacloud-gateway-spi: filename=alibabacloud_gateway_spi-0.0.3-py3-none-any.whl size=4353 sha256=52d194fef333ddcfc3ef0f0f1b462c6b42e562b6b72592fee92559aefab02ed2
+2026-06-14 20:32:57,329 - INFO - Stored in directory: /root/.cache/pip/wheels/ae/49/c6/97e3c08498ac11fea4f39dec4151b10af3ed70b3627f9a0313
+2026-06-14 20:32:57,335 - INFO - Building wheel for alibabacloud-tea-xml (pyproject.toml): started
+2026-06-14 20:32:57,565 - INFO - Building wheel for alibabacloud-tea-xml (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:57,566 - INFO - Created wheel for alibabacloud-tea-xml: filename=alibabacloud_tea_xml-0.0.3-py3-none-any.whl size=3294 sha256=ea0217a85fb20c2a3a9c84bfaeb96b0bb72408f150e7f7bb00f98408b5898e07
+2026-06-14 20:32:57,567 - INFO - Stored in directory: /root/.cache/pip/wheels/cb/50/73/47db25c053077b56d67bbc3733892762e56338d415ca4552c8
+2026-06-14 20:32:57,573 - INFO - Building wheel for alibabacloud-tea (pyproject.toml): started
+2026-06-14 20:32:57,785 - INFO - Building wheel for alibabacloud-tea (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:57,786 - INFO - Created wheel for alibabacloud-tea: filename=alibabacloud_tea-0.4.3-py3-none-any.whl size=8445 sha256=298532e748db5a8130e4c696d76404a46509f89e165a176c7464e54c091aaa0c
+2026-06-14 20:32:57,787 - INFO - Stored in directory: /root/.cache/pip/wheels/ba/df/3a/7c4b79dc78e756be3da65cc23e50d75df1bb9e9e6753cef675
+2026-06-14 20:32:57,793 - INFO - Building wheel for jieba (pyproject.toml): started
+2026-06-14 20:32:59,724 - INFO - Building wheel for jieba (pyproject.toml): finished with status 'done'
+2026-06-14 20:32:59,792 - INFO - Created wheel for jieba: filename=jieba-0.42.1-py3-none-any.whl size=19314509 sha256=83343d03a19587f81fc334d948e7438cf1db6a79c14e20b0156743decc54ba10
+2026-06-14 20:32:59,793 - INFO - Stored in directory: /root/.cache/pip/wheels/c9/69/31/d56d90b22a1777b0b231e234b00302a55be255930f8bd92dcd
+2026-06-14 20:32:59,796 - INFO - Building wheel for rouge-score (pyproject.toml): started
+2026-06-14 20:33:00,039 - INFO - Building wheel for rouge-score (pyproject.toml): finished with status 'done'
+2026-06-14 20:33:00,041 - INFO - Created wheel for rouge-score: filename=rouge_score-0.1.2-py3-none-any.whl size=24988 sha256=65fc8c59ef9ac4d9ade48b307e6a94d7eb2ca1d1245f228f907a08117c23e644
+2026-06-14 20:33:00,041 - INFO - Stored in directory: /root/.cache/pip/wheels/5f/dd/89/461065a73be61a532ff8599a28e9beef17985c9e9c31e541b4
+2026-06-14 20:33:00,046 - INFO - Successfully built agentscope alibabacloud-endpoint-util alibabacloud-credentials-api alibabacloud-darabonba-array alibabacloud-darabonba-encode-util alibabacloud-darabonba-map alibabacloud-darabonba-signature-util alibabacloud-darabonba-string alibabacloud-gateway-spi alibabacloud-tea-xml alibabacloud-tea jieba rouge-score
+2026-06-14 20:33:01,124 - INFO - Installing collected packages: sortedcontainers, pytz, pyperclip, mpmath, jieba, flatbuffers, filetype, durationpy, distlib, antlr4-python3-runtime, alibabacloud-endpoint-util, alibabacloud-darabonba-string, zipp, xxhash, XlsxWriter, websockets, websocket-client, uvloop, urllib3, uncalled-for, ujson, tzlocal, tzdata, typing-extensions, tqdm, tomli, threadpoolctl, termcolor, tenacity, tabulate, sympy, sqlglot, sphinxcontrib-serializinghtml, sphinxcontrib-qthelp, sphinxcontrib-jsmath, sphinxcontrib-htmlhelp, sphinxcontrib-devhelp, sphinxcontrib-applehelp, soupsieve, snowballstemmer, sniffio, six, shortuuid, shellingham, safetensors, rpds-py, regex, rapidfuzz, pyyaml, python-multipart, python-dotenv, pyproject_hooks, pyparsing, pymysql, pygments, pyfiglet, pycryptodome, pycparser, pybase64, pyasn1, pyarrow, py, psutil, protobuf, propcache, portalocker, pluggy, platformdirs, Pillow, pathspec, pathable, packaging, overrides, orjson, oauthlib, numpy, nodeenv, mysql-connector-python, msgpack, more-itertools, mmh3, mdurl, MarkupSafe, lxml, loguru, kiwisolver, jsonref, json5, json_repair, joblib, jiter, jeepney, iniconfig, importlib-resources, imagesize, idna, identify, hyperframe, humanfriendly, httpx-sse, httptools, hpack, hf-xet, h11, griffelib, greenlet, gepa, future, fsspec, frozenlist, fonttools, filelock, fastuuid, et-xmlfile, docutils, docstring_parser, dnspython, distro, diskcache, cycler, crc32c, colorama, cloudpickle, click, charset_normalizer, cfgv, certifi, caio, cachetools, cached-property, bidict, beartype, bcrypt, backports.tarfile, backports-asyncio-runner, backoff, babel, attrs, async-timeout, annotated-types, annotated-doc, alibabacloud-darabonba-map, alibabacloud-darabonba-encode-util, alibabacloud-darabonba-array, alibabacloud-credentials-api, alabaster, aiosqlite, aioitertools, aiohappyeyeballs, aiofiles, absl-py, wsproto, uvicorn, typing-inspection, typeguard, sqlalchemy, scipy, sacrebleu, requests, referencing, redis, python-pptx, python-frontmatter, python-docx, python-discovery, python-dateutil, python-datauri, pypika, pypdf, pymongo, pyjwt, pydantic-core, pyasn1-modules, py-key-value-aio, proto-plus, pgvector, opentelemetry-proto, opentelemetry-api, openpyxl, nltk, multidict, markdown-it-py, Levenshtein, latex2sympy2_extended, jinja2, jaraco.functools, jaraco.context, jaraco.classes, importlib_metadata, httpcore, h2, grpcio, googleapis-common-protos, fire, faiss-cpu, exceptiongroup, email-validator, elastic-transport, contourpy, coloredlogs, cffi, build, beautifulsoup4, APScheduler, aiosignal, aiomysql, aiofile, accessible-pygments, yarl, virtualenv, tiktoken, sphinx, sounddevice, simple-websocket, scikit-learn, rouge-score, rich, requests-oauthlib, python-Levenshtein, pytest, pydantic, posthog, pandas, opentelemetry-semantic-conventions, opentelemetry-exporter-otlp-proto-common, onnxruntime, milvus-lite, mdit-py-plugins, matplotlib, math-verify, jsonschema-specifications, jsonschema-path, fakeredis, cryptography, anyio, watchfiles, typer, starlette, sphinx-gallery, sphinx-basic-ng, SecretStorage, rich-rst, python-engineio, pytest-forked, pytest-asyncio, pyobvector, pymilvus, pydantic-settings, pre-commit, opentelemetry-sdk, openapi-pydantic, myst_parser, jsonschema, joserfc, httpx, google-auth, elasticsearch, asyncer, alibabacloud-darabonba-signature-util, aiohttp, tavily-python, tablestore, sse-starlette, ray, python-socketio, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, openai, ollama, kubernetes, keyring, huggingface-hub, google-api-core, furo, fastmcp-slim, fastapi, dashscope, cyclopts, authlib, anthropic, alibabacloud-tea, tokenizers, tablestore-for-agent-memory, qdrant-client, py-openjudge, opentelemetry-exporter-otlp, mcp, google-genai, darabonba-core, alibabacloud-tea-xml, alibabacloud-tea-util, alibabacloud-credentials, a2a-sdk, transformers, mem0ai, litellm, chromadb, alibabacloud-openapi-util, alibabacloud-gateway-spi, agentscope, fastmcp, dspy, alibabacloud_tea_openapi, alibabacloud-gateway-pop, flowllm, alibabacloud_kms20160120, nacos-sdk-python, reme-ai
+2026-06-14 20:34:21,880 - INFO - 
+2026-06-14 20:34:21,930 - INFO - Successfully installed APScheduler-3.11.2 Levenshtein-0.27.3 MarkupSafe-3.0.3 Pillow-12.2.0 SecretStorage-3.5.0 XlsxWriter-3.2.9 a2a-sdk-0.3.26 absl-py-2.4.0 accessible-pygments-0.0.5 agentscope-1.0.19.dev0 aiofile-3.9.0 aiofiles-24.1.0 aiohappyeyeballs-2.6.2 aiohttp-3.14.1 aioitertools-0.13.0 aiomysql-0.3.2 aiosignal-1.4.0 aiosqlite-0.22.1 alabaster-1.0.0 alibabacloud-credentials-1.0.9 alibabacloud-credentials-api-1.0.0 alibabacloud-darabonba-array-0.1.0 alibabacloud-darabonba-encode-util-0.0.2 alibabacloud-darabonba-map-0.0.1 alibabacloud-darabonba-signature-util-0.0.4 alibabacloud-darabonba-string-0.0.4 alibabacloud-endpoint-util-0.0.4 alibabacloud-gateway-pop-0.1.3 alibabacloud-gateway-spi-0.0.3 alibabacloud-openapi-util-0.2.4 alibabacloud-tea-0.4.3 alibabacloud-tea-util-0.3.14 alibabacloud-tea-xml-0.0.3 alibabacloud_kms20160120-2.4.0 alibabacloud_tea_openapi-0.4.4 annotated-doc-0.0.4 annotated-types-0.7.0 anthropic-0.109.1 antlr4-python3-runtime-4.13.2 anyio-4.13.0 async-timeout-5.0.1 asyncer-0.0.8 attrs-26.1.0 authlib-1.7.2 babel-2.18.0 backoff-2.2.1 backports-asyncio-runner-1.2.0 backports.tarfile-1.2.0 bcrypt-5.0.0 beartype-0.22.9 beautifulsoup4-4.15.0 bidict-0.23.1 build-1.5.0 cached-property-2.0.1 cachetools-7.1.4 caio-0.9.25 certifi-2026.5.20 cffi-2.0.0 cfgv-3.5.0 charset_normalizer-3.4.7 chromadb-1.5.9 click-8.4.1 cloudpickle-3.1.2 colorama-0.4.6 coloredlogs-15.0.1 contourpy-1.3.2 crc32c-2.8 cryptography-46.0.7 cycler-0.12.1 cyclopts-4.18.0 darabonba-core-1.0.6 dashscope-1.25.21 diskcache-5.6.3 distlib-0.4.3 distro-1.9.0 dnspython-2.8.0 docstring_parser-0.18.0 docutils-0.21.2 dspy-3.2.1 durationpy-0.10 elastic-transport-9.4.1 elasticsearch-9.4.1 email-validator-2.3.0 et-xmlfile-2.0.0 exceptiongroup-1.3.1 faiss-cpu-1.14.3 fakeredis-2.36.1 fastapi-0.137.0 fastmcp-3.4.2 fastmcp-slim-3.4.2 fastuuid-0.14.0 filelock-3.29.4 filetype-1.2.0 fire-0.7.1 flatbuffers-25.12.19 flowllm-0.2.0.10 fonttools-4.63.0 frozenlist-1.8.0 fsspec-2026.4.0 furo-2025.12.19 future-1.0.0 gepa-0.0.27 google-api-core-2.31.0 google-auth-2.54.0 google-genai-2.8.0 googleapis-common-protos-1.75.0 greenlet-3.5.1 griffelib-2.0.2 grpcio-1.81.1 h11-0.16.0 h2-4.3.0 hf-xet-1.5.1 hpack-4.1.0 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 httpx-sse-0.4.3 huggingface-hub-1.19.0 humanfriendly-10.0 hyperframe-6.1.0 identify-2.6.19 idna-3.18 imagesize-2.0.0 importlib-resources-7.1.0 importlib_metadata-8.9.0 iniconfig-2.3.0 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.5.0 jeepney-0.9.0 jieba-0.42.1 jinja2-3.1.6 jiter-0.15.0 joblib-1.5.3 joserfc-1.7.1 json5-0.14.0 json_repair-0.60.1 jsonref-1.1.0 jsonschema-4.26.0 jsonschema-path-0.5.0 jsonschema-specifications-2025.9.1 keyring-25.7.0 kiwisolver-1.5.0 kubernetes-36.0.2 latex2sympy2_extended-1.10.1 litellm-1.89.0 loguru-0.7.3 lxml-6.1.1 markdown-it-py-3.0.0 math-verify-0.7.0 matplotlib-3.10.9 mcp-1.27.2 mdit-py-plugins-0.6.1 mdurl-0.1.2 mem0ai-1.0.3 milvus-lite-3.0 mmh3-5.2.1 more-itertools-11.1.0 mpmath-1.3.0 msgpack-1.2.0 multidict-6.7.1 mysql-connector-python-9.7.0 myst_parser-4.0.1 nacos-sdk-python-3.2.0 nltk-3.9.4 nodeenv-1.10.0 numpy-2.2.6 oauthlib-3.3.1 ollama-0.6.2 onnxruntime-1.23.2 openai-2.41.1 openapi-pydantic-0.5.1 openpyxl-3.1.5 opentelemetry-api-1.42.1 opentelemetry-exporter-otlp-1.42.1 opentelemetry-exporter-otlp-proto-common-1.42.1 opentelemetry-exporter-otlp-proto-grpc-1.42.1 opentelemetry-exporter-otlp-proto-http-1.42.1 opentelemetry-proto-1.42.1 opentelemetry-sdk-1.42.1 opentelemetry-semantic-conventions-0.63b1 orjson-3.11.9 overrides-7.7.0 packaging-26.2 pandas-2.3.3 pathable-0.6.0 pathspec-1.1.1 pgvector-0.4.2 platformdirs-4.10.0 pluggy-1.6.0 portalocker-3.2.0 posthog-7.18.3 pre-commit-4.6.0 propcache-0.5.2 proto-plus-1.28.0 protobuf-5.29.6 psutil-7.2.2 py-1.11.0 py-key-value-aio-0.4.5 py-openjudge-0.2.4 pyarrow-24.0.0 pyasn1-0.6.3 pyasn1-modules-0.4.2 pybase64-1.4.3 pycparser-3.0 pycryptodome-3.23.0 pydantic-2.13.4 pydantic-core-2.46.4 pydantic-settings-2.14.1 pyfiglet-1.0.4 pygments-2.20.0 pyjwt-2.13.0 pymilvus-2.6.2 pymongo-4.17.0 pymysql-1.2.0 pyobvector-0.2.28 pyparsing-3.3.2 pypdf-6.5.0 pyperclip-1.11.0 pypika-0.51.1 pyproject_hooks-1.2.0 pytest-9.1.0 pytest-asyncio-1.4.0 pytest-forked-1.6.0 python-Levenshtein-0.27.3 python-datauri-3.0.2 python-dateutil-2.9.0.post0 python-discovery-1.4.2 python-docx-1.2.0 python-dotenv-1.2.2 python-engineio-4.13.2 python-frontmatter-1.3.0 python-multipart-0.0.32 python-pptx-1.0.2 python-socketio-5.16.2 pytz-2026.2 pyyaml-6.0.3 qdrant-client-1.15.1 rapidfuzz-3.14.5 ray-2.55.1 redis-8.0.0 referencing-0.37.0 regex-2026.5.9 reme-ai-0.2.0.6 requests-2.34.2 requests-oauthlib-2.0.0 rich-15.0.0 rich-rst-2.0.1 rouge-score-0.1.2 rpds-py-0.30.0 sacrebleu-2.6.0 safetensors-0.8.0 scikit-learn-1.7.2 scipy-1.15.3 shellingham-1.5.4 shortuuid-1.0.13 simple-websocket-1.1.0 six-1.17.0 sniffio-1.3.1 snowballstemmer-3.1.1 sortedcontainers-2.4.0 sounddevice-0.5.5 soupsieve-2.8.4 sphinx-8.1.3 sphinx-basic-ng-1.0.0b2 sphinx-gallery-0.21.0 sphinxcontrib-applehelp-2.0.0 sphinxcontrib-devhelp-2.0.0 sphinxcontrib-htmlhelp-2.1.0 sphinxcontrib-jsmath-1.0.1 sphinxcontrib-qthelp-2.0.0 sphinxcontrib-serializinghtml-2.0.0 sqlalchemy-2.0.50 sqlglot-30.11.0 sse-starlette-3.4.4 starlette-1.3.1 sympy-1.14.0 tablestore-6.4.6 tablestore-for-agent-memory-1.1.3 tabulate-0.10.0 tavily-python-0.7.26 tenacity-9.1.4 termcolor-3.3.0 threadpoolctl-3.6.0 tiktoken-0.13.0 tokenizers-0.22.2 tomli-2.4.1 tqdm-4.68.2 transformers-5.12.0 typeguard-4.4.3 typer-0.25.1 typing-extensions-4.15.0 typing-inspection-0.4.2 tzdata-2026.2 tzlocal-5.3.1 ujson-5.12.1 uncalled-for-0.3.2 urllib3-2.7.0 uvicorn-0.49.0 uvloop-0.22.1 virtualenv-21.5.0 watchfiles-1.2.0 websocket-client-1.9.0 websockets-16.0 wsproto-1.3.2 xxhash-3.7.0 yarl-1.24.2 zipp-4.1.0
+2026-06-14 20:34:21,931 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-14 20:35:50,549 - INFO - ---> Removed intermediate container 7de00c8f89eb
+2026-06-14 20:35:50,549 - INFO - ---> 6a38e455c21a
+2026-06-14 20:35:50,549 - INFO - Step 10/13 : RUN pip install pytest-forked coverage
+2026-06-14 20:35:50,549 - INFO - 
+2026-06-14 20:35:51,225 - INFO - ---> Running in c5ab5cce9079
+2026-06-14 20:35:52,064 - INFO - Requirement already satisfied: pytest-forked in /usr/local/lib/python3.10/site-packages (1.6.0)
+2026-06-14 20:35:52,723 - INFO - Collecting coverage
+2026-06-14 20:35:52,874 - INFO - Downloading coverage-7.14.1-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.6 kB)
+2026-06-14 20:35:52,896 - INFO - Requirement already satisfied: py in /usr/local/lib/python3.10/site-packages (from pytest-forked) (1.11.0)
+2026-06-14 20:35:52,898 - INFO - Requirement already satisfied: pytest>=3.10 in /usr/local/lib/python3.10/site-packages (from pytest-forked) (9.1.0)
+2026-06-14 20:35:52,903 - INFO - Requirement already satisfied: exceptiongroup>=1 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (1.3.1)
+2026-06-14 20:35:52,903 - INFO - Requirement already satisfied: iniconfig>=1.0.1 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (2.3.0)
+2026-06-14 20:35:52,904 - INFO - Requirement already satisfied: packaging>=22 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (26.2)
+2026-06-14 20:35:52,905 - INFO - Requirement already satisfied: pluggy<2,>=1.5 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (1.6.0)
+2026-06-14 20:35:52,906 - INFO - Requirement already satisfied: pygments>=2.7.2 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (2.20.0)
+2026-06-14 20:35:52,907 - INFO - Requirement already satisfied: tomli>=1 in /usr/local/lib/python3.10/site-packages (from pytest>=3.10->pytest-forked) (2.4.1)
+2026-06-14 20:35:52,909 - INFO - Requirement already satisfied: typing-extensions>=4.6.0 in /usr/local/lib/python3.10/site-packages (from exceptiongroup>=1->pytest>=3.10->pytest-forked) (4.15.0)
+2026-06-14 20:35:52,917 - INFO - Downloading coverage-7.14.1-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (248 kB)
+2026-06-14 20:35:53,879 - INFO - Installing collected packages: coverage
+2026-06-14 20:35:54,541 - INFO - Successfully installed coverage-7.14.1
+2026-06-14 20:35:54,541 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-14 20:35:58,784 - INFO - ---> Removed intermediate container c5ab5cce9079
+2026-06-14 20:35:58,785 - INFO - ---> 6b245882f493
+2026-06-14 20:35:58,785 - INFO - Step 11/13 : RUN pip install fakeredis
+2026-06-14 20:35:58,785 - INFO - 
+2026-06-14 20:35:59,054 - INFO - ---> Running in 968332cf5a9a
+2026-06-14 20:35:59,767 - INFO - Requirement already satisfied: fakeredis in /usr/local/lib/python3.10/site-packages (2.36.1)
+2026-06-14 20:35:59,771 - INFO - Requirement already satisfied: redis>=4.3 in /usr/local/lib/python3.10/site-packages (from fakeredis) (8.0.0)
+2026-06-14 20:35:59,772 - INFO - Requirement already satisfied: sortedcontainers>=2 in /usr/local/lib/python3.10/site-packages (from fakeredis) (2.4.0)
+2026-06-14 20:35:59,772 - INFO - Requirement already satisfied: typing-extensions>=4.7 in /usr/local/lib/python3.10/site-packages (from fakeredis) (4.15.0)
+2026-06-14 20:35:59,776 - INFO - Requirement already satisfied: async-timeout>=4.0.3 in /usr/local/lib/python3.10/site-packages (from redis>=4.3->fakeredis) (5.0.1)
+2026-06-14 20:36:00,480 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-06-14 20:36:02,479 - INFO - ---> Removed intermediate container 968332cf5a9a
+2026-06-14 20:36:02,480 - INFO - ---> 159b979ec9c4
+2026-06-14 20:36:02,480 - INFO - Step 12/13 : ENV GRPC_VERBOSITY=ERROR
+2026-06-14 20:36:02,481 - INFO - 
+2026-06-14 20:36:02,549 - INFO - ---> Running in e9adbcba3742
+2026-06-14 20:36:02,604 - INFO - ---> Removed intermediate container e9adbcba3742
+2026-06-14 20:36:02,605 - INFO - ---> 6c05bdc0c302
+2026-06-14 20:36:02,605 - INFO - Step 13/13 : RUN pip cache purge &&     apt-get clean
+2026-06-14 20:36:02,605 - INFO - 
+2026-06-14 20:36:02,671 - INFO - ---> Running in 69ff2f05d5c3
+2026-06-14 20:36:03,433 - INFO - Files removed: 1932 (524.1 MB)
+2026-06-14 20:36:03,433 - INFO - Directories removed: 60
+2026-06-14 20:36:07,042 - INFO - ---> Removed intermediate container 69ff2f05d5c3
+2026-06-14 20:36:07,042 - INFO - ---> c233920f5274
+2026-06-14 20:36:07,042 - INFO - Successfully built c233920f5274
+2026-06-14 20:36:07,045 - INFO - Successfully tagged setup.agentscope-ai__agentscope-1390:latest
+2026-06-14 20:36:07,046 - INFO - Image built successfully!

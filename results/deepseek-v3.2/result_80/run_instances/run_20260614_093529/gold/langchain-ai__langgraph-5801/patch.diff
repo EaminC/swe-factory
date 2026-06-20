@@ -1,0 +1,158 @@
+diff --git a/libs/langgraph/langgraph/pregel/_scratchpad.py b/libs/langgraph/langgraph/_internal/_scratchpad.py
+similarity index 100%
+rename from libs/langgraph/langgraph/pregel/_scratchpad.py
+rename to libs/langgraph/langgraph/_internal/_scratchpad.py
+diff --git a/libs/langgraph/langgraph/graph/state.py b/libs/langgraph/langgraph/graph/state.py
+--- a/libs/langgraph/langgraph/graph/state.py
++++ b/libs/langgraph/langgraph/graph/state.py
+@@ -1390,6 +1390,14 @@ def _is_field_managed_value(name: str, typ: type[Any]) -> ManagedValueSpec | Non
+             if is_managed_value(decoration):
+                 return decoration
+ 
++    # Handle Required, NotRequired, etc wrapped types by extracting the inner type
++    if (
++        get_origin(typ) is not None
++        and (args := get_args(typ))
++        and (inner_type := args[0])
++    ):
++        return _is_field_managed_value(name, inner_type)
++
+     return None
+ 
+ 
+diff --git a/libs/langgraph/langgraph/managed/base.py b/libs/langgraph/langgraph/managed/base.py
+--- a/libs/langgraph/langgraph/managed/base.py
++++ b/libs/langgraph/langgraph/managed/base.py
+@@ -8,7 +8,7 @@
+ 
+ from typing_extensions import TypeGuard
+ 
+-from langgraph.pregel._scratchpad import PregelScratchpad
++from langgraph._internal._scratchpad import PregelScratchpad
+ 
+ V = TypeVar("V")
+ U = TypeVar("U")
+diff --git a/libs/langgraph/langgraph/managed/is_last_step.py b/libs/langgraph/langgraph/managed/is_last_step.py
+--- a/libs/langgraph/langgraph/managed/is_last_step.py
++++ b/libs/langgraph/langgraph/managed/is_last_step.py
+@@ -1,7 +1,7 @@
+ from typing import Annotated
+ 
++from langgraph._internal._scratchpad import PregelScratchpad
+ from langgraph.managed.base import ManagedValue
+-from langgraph.pregel._scratchpad import PregelScratchpad
+ 
+ __all__ = ("IsLastStep", "RemainingStepsManager")
+ 
+diff --git a/libs/langgraph/langgraph/pregel/_algo.py b/libs/langgraph/langgraph/pregel/_algo.py
+--- a/libs/langgraph/langgraph/pregel/_algo.py
++++ b/libs/langgraph/langgraph/pregel/_algo.py
+@@ -53,6 +53,7 @@
+     RETURN,
+     TASKS,
+ )
++from langgraph._internal._scratchpad import PregelScratchpad
+ from langgraph._internal._typing import EMPTY_SEQ, MISSING
+ from langgraph.channels.base import BaseChannel
+ from langgraph.channels.topic import Topic
+@@ -69,7 +70,6 @@
+ from langgraph.pregel._io import read_channels
+ from langgraph.pregel._log import logger
+ from langgraph.pregel._read import INPUT_CACHE_KEY_TYPE, PregelNode
+-from langgraph.pregel._scratchpad import PregelScratchpad
+ from langgraph.runtime import DEFAULT_RUNTIME, Runtime
+ from langgraph.store.base import BaseStore
+ from langgraph.types import (
+diff --git a/libs/langgraph/langgraph/pregel/_loop.py b/libs/langgraph/langgraph/pregel/_loop.py
+--- a/libs/langgraph/langgraph/pregel/_loop.py
++++ b/libs/langgraph/langgraph/pregel/_loop.py
+@@ -48,6 +48,7 @@
+     PUSH,
+     RESUME,
+ )
++from langgraph._internal._scratchpad import PregelScratchpad
+ from langgraph._internal._typing import EMPTY_SEQ, MISSING
+ from langgraph.cache.base import BaseCache
+ from langgraph.channels.base import BaseChannel
+@@ -100,7 +101,6 @@
+     read_channels,
+ )
+ from langgraph.pregel._read import PregelNode
+-from langgraph.pregel._scratchpad import PregelScratchpad
+ from langgraph.pregel._utils import get_new_channel_versions, is_xxh3_128_hexdigest
+ from langgraph.pregel.debug import (
+     map_debug_checkpoint,
+diff --git a/libs/langgraph/langgraph/pregel/_runner.py b/libs/langgraph/langgraph/pregel/_runner.py
+--- a/libs/langgraph/langgraph/pregel/_runner.py
++++ b/libs/langgraph/langgraph/pregel/_runner.py
+@@ -30,13 +30,13 @@
+     RETURN,
+ )
+ from langgraph._internal._future import chain_future, run_coroutine_threadsafe
++from langgraph._internal._scratchpad import PregelScratchpad
+ from langgraph._internal._typing import MISSING
+ from langgraph.constants import TAG_HIDDEN
+ from langgraph.errors import GraphBubbleUp, GraphInterrupt
+ from langgraph.pregel._algo import Call
+ from langgraph.pregel._executor import Submit
+ from langgraph.pregel._retry import arun_with_retry, run_with_retry
+-from langgraph.pregel._scratchpad import PregelScratchpad
+ from langgraph.types import (
+     CachePolicy,
+     PregelExecutableTask,
+diff --git a/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py b/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
+--- a/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
++++ b/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
+@@ -34,7 +34,7 @@
+ )
+ from langchain_core.tools import BaseTool
+ from pydantic import BaseModel
+-from typing_extensions import Annotated, TypedDict
++from typing_extensions import Annotated, NotRequired, TypedDict
+ 
+ from langgraph._internal._runnable import RunnableCallable, RunnableLike
+ from langgraph._internal._typing import MISSING
+@@ -42,7 +42,7 @@
+ from langgraph.graph import END, StateGraph
+ from langgraph.graph.message import add_messages
+ from langgraph.graph.state import CompiledStateGraph
+-from langgraph.managed import IsLastStep, RemainingSteps
++from langgraph.managed import RemainingSteps
+ from langgraph.prebuilt._internal import ToolCallWithContext
+ from langgraph.prebuilt.tool_node import ToolNode
+ from langgraph.runtime import Runtime
+@@ -65,9 +65,7 @@ class AgentState(TypedDict):
+ 
+     messages: Annotated[Sequence[BaseMessage], add_messages]
+ 
+-    is_last_step: IsLastStep
+-
+-    remaining_steps: RemainingSteps
++    remaining_steps: NotRequired[RemainingSteps]
+ 
+ 
+ class AgentStatePydantic(BaseModel):
+@@ -571,16 +569,13 @@ def _are_more_steps_needed(state: StateSchema, response: BaseMessage) -> bool:
+             else False
+         )
+         remaining_steps = _get_state_value(state, "remaining_steps", None)
+-        is_last_step = _get_state_value(state, "is_last_step", False)
+-        return (
+-            (remaining_steps is None and is_last_step and has_tool_calls)
+-            or (
+-                remaining_steps is not None
+-                and remaining_steps < 1
+-                and all_tools_return_direct
+-            )
+-            or (remaining_steps is not None and remaining_steps < 2 and has_tool_calls)
+-        )
++        if remaining_steps is not None:
++            if remaining_steps < 1 and all_tools_return_direct:
++                return True
++            elif remaining_steps < 2 and has_tool_calls:
++                return True
++
++        return False
+ 
+     def _get_model_input_state(state: StateSchema) -> StateSchema:
+         if pre_model_hook is not None:

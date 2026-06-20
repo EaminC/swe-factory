@@ -1,0 +1,215 @@
++ cd /testbed
++ export PATH=/root/.local/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ PATH=/root/.local/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 2 paths from 25e14e4ba
++ git apply -v -
+Checking patch tests/config/agents.yaml...
+Checking patch tests/project_test.py...
+Applied patch tests/config/agents.yaml cleanly.
+Applied patch tests/project_test.py cleanly.
++ uv run pytest tests/project_test.py -vv
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+   Building crewai @ file:///testbed
+      Built crewai @ file:///testbed
+Uninstalled 1 package in 3ms
+Installed 1 package in 3ms
+/testbed/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.12.8, pytest-8.3.3, pluggy-1.5.0 -- /testbed/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: subprocess-1.5.2, vcr-1.0.2, anyio-4.6.2.post1, asyncio-0.24.0
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 9 items
+
+tests/project_test.py::test_agent_memoization PASSED                     [ 11%]
+tests/project_test.py::test_task_memoization PASSED                      [ 22%]
+tests/project_test.py::test_crew_memoization PASSED                      [ 33%]
+tests/project_test.py::test_task_name PASSED                             [ 44%]
+tests/project_test.py::test_agent_function_calling_llm PASSED            [ 55%]
+tests/project_test.py::test_before_kickoff_modification PASSED           [ 66%]
+tests/project_test.py::test_after_kickoff_modification PASSED            [ 77%]
+tests/project_test.py::test_before_kickoff_with_none_input PASSED        [ 88%]
+tests/project_test.py::test_multiple_before_after_kickoff PASSED         [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:291
+  /testbed/.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:291: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.9/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.12/site-packages/litellm/utils.py:162
+  /testbed/.venv/lib/python3.12/site-packages/litellm/utils.py:162: DeprecationWarning: open_text is deprecated. Use files() instead. Refer to https://importlib-resources.readthedocs.io/en/latest/using.html#migrating-from-legacy for migration advice.
+    with resources.open_text(
+
+tests/project_test.py::test_before_kickoff_modification
+  /testbed/.venv/lib/python3.12/site-packages/_pytest/threadexception.py:82: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-1 (check_agentops_update)
+  
+  Traceback (most recent call last):
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/testbed/.venv/lib/python3.12/site-packages/agentops/helpers.py", line 133, in check_agentops_update
+      response = conn.getresponse()
+                 ^^^^^^^^^^^^^^^^^^
+    File "/testbed/.venv/lib/python3.12/site-packages/vcr/stubs/__init__.py", line 263, in getresponse
+      raise CannotOverwriteExistingCassetteException(
+  vcr.errors.CannotOverwriteExistingCassetteException: Can't overwrite existing cassette ('/testbed/tests/cassettes/test_before_kickoff_modification.yaml') in your current record mode (<RecordMode.ONCE: 'once'>).
+  No match for the request (<Request (GET) https://pypi.org/pypi/agentops/json>) was found.
+  Found 2 similar requests with 3 different matcher(s) :
+  
+  1 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  2 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/project_test.py::test_after_kickoff_modification
+  /testbed/.venv/lib/python3.12/site-packages/_pytest/threadexception.py:82: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-2 (check_agentops_update)
+  
+  Traceback (most recent call last):
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/testbed/.venv/lib/python3.12/site-packages/agentops/helpers.py", line 133, in check_agentops_update
+      response = conn.getresponse()
+                 ^^^^^^^^^^^^^^^^^^
+    File "/testbed/.venv/lib/python3.12/site-packages/vcr/stubs/__init__.py", line 263, in getresponse
+      raise CannotOverwriteExistingCassetteException(
+  vcr.errors.CannotOverwriteExistingCassetteException: Can't overwrite existing cassette ('/testbed/tests/cassettes/test_after_kickoff_modification.yaml') in your current record mode (<RecordMode.ONCE: 'once'>).
+  No match for the request (<Request (GET) https://pypi.org/pypi/agentops/json>) was found.
+  Found 2 similar requests with 3 different matcher(s) :
+  
+  1 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  2 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/project_test.py::test_before_kickoff_with_none_input
+  /testbed/.venv/lib/python3.12/site-packages/_pytest/threadexception.py:82: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-3 (check_agentops_update)
+  
+  Traceback (most recent call last):
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/testbed/.venv/lib/python3.12/site-packages/agentops/helpers.py", line 133, in check_agentops_update
+      response = conn.getresponse()
+                 ^^^^^^^^^^^^^^^^^^
+    File "/testbed/.venv/lib/python3.12/site-packages/vcr/stubs/__init__.py", line 263, in getresponse
+      raise CannotOverwriteExistingCassetteException(
+  vcr.errors.CannotOverwriteExistingCassetteException: Can't overwrite existing cassette ('/testbed/tests/cassettes/test_before_kickoff_with_none_input.yaml') in your current record mode (<RecordMode.ONCE: 'once'>).
+  No match for the request (<Request (GET) https://pypi.org/pypi/agentops/json>) was found.
+  Found 2 similar requests with 3 different matcher(s) :
+  
+  1 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  2 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/project_test.py::test_multiple_before_after_kickoff
+  /testbed/.venv/lib/python3.12/site-packages/_pytest/threadexception.py:82: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-4 (check_agentops_update)
+  
+  Traceback (most recent call last):
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/testbed/.venv/lib/python3.12/site-packages/agentops/helpers.py", line 133, in check_agentops_update
+      response = conn.getresponse()
+                 ^^^^^^^^^^^^^^^^^^
+    File "/testbed/.venv/lib/python3.12/site-packages/vcr/stubs/__init__.py", line 263, in getresponse
+      raise CannotOverwriteExistingCassetteException(
+  vcr.errors.CannotOverwriteExistingCassetteException: Can't overwrite existing cassette ('/testbed/tests/cassettes/test_multiple_before_after_kickoff.yaml') in your current record mode (<RecordMode.ONCE: 'once'>).
+  No match for the request (<Request (GET) https://pypi.org/pypi/agentops/json>) was found.
+  Found 2 similar requests with 3 different matcher(s) :
+  
+  1 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  2 - (<Request (POST) https://api.openai.com/v1/chat/completions>).
+  Matchers succeeded : ['scheme', 'port', 'query']
+  Matchers failed :
+  method - assertion failure :
+  GET != POST
+  host - assertion failure :
+  pypi.org != api.openai.com
+  path - assertion failure :
+  /pypi/agentops/json != /v1/chat/completions
+  
+  
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 9 passed, 6 warnings in 10.60s ========================
++ rc=0
++ echo OMNIGRIL_EXIT_CODE=0
+OMNIGRIL_EXIT_CODE=0
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 2 paths from 25e14e4ba

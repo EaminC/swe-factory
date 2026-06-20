@@ -1,0 +1,399 @@
++ cd /testbed
++ export PATH=/root/.local/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ PATH=/root/.local/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 2 paths from 25e14e4ba
++ git apply -v -
+Checking patch tests/config/agents.yaml...
+Checking patch tests/project_test.py...
+Applied patch tests/config/agents.yaml cleanly.
+Applied patch tests/project_test.py cleanly.
++ uv run pytest tests/project_test.py -vv
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+   Building crewai @ file:///testbed
+      Built crewai @ file:///testbed
+Uninstalled 1 package in 2ms
+Installed 1 package in 3ms
+/testbed/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.12.8, pytest-8.3.3, pluggy-1.5.0 -- /testbed/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: subprocess-1.5.2, vcr-1.0.2, anyio-4.6.2.post1, asyncio-0.24.0
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 9 items
+
+tests/project_test.py::test_agent_memoization PASSED                     [ 11%]
+tests/project_test.py::test_task_memoization PASSED                      [ 22%]
+tests/project_test.py::test_crew_memoization FAILED                      [ 33%]
+tests/project_test.py::test_task_name PASSED                             [ 44%]
+tests/project_test.py::test_agent_function_calling_llm FAILED            [ 55%]
+tests/project_test.py::test_before_kickoff_modification FAILED           [ 66%]
+tests/project_test.py::test_after_kickoff_modification FAILED            [ 77%]
+tests/project_test.py::test_before_kickoff_with_none_input FAILED        [ 88%]
+tests/project_test.py::test_multiple_before_after_kickoff FAILED         [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_crew_memoization _____________________________
+
+    def test_crew_memoization():
+>       crew = InternalCrew()
+
+tests/project_test.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645ec3b0>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method InternalCrew.reporting_analyst of <crewai.project.crew_base.CrewBase(InternalCrew)...: <bound method InternalCrew.researcher of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645ec3b0>>}
+llms = {'local_llm': <bound method InternalCrew.local_llm of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645ec3b0>>}
+tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+_______________________ test_agent_function_calling_llm ________________________
+
+    def test_agent_function_calling_llm():
+>       crew = InternalCrew()
+
+tests/project_test.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664630230>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method InternalCrew.reporting_analyst of <crewai.project.crew_base.CrewBase(InternalCrew)...: <bound method InternalCrew.researcher of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664630230>>}
+llms = {'local_llm': <bound method InternalCrew.local_llm of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664630230>>}
+tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+_______________________ test_before_kickoff_modification _______________________
+
+    @pytest.mark.vcr(filter_headers=["authorization"])
+    def test_before_kickoff_modification():
+>       crew = InternalCrew()
+
+tests/project_test.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664631d30>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method InternalCrew.reporting_analyst of <crewai.project.crew_base.CrewBase(InternalCrew)...: <bound method InternalCrew.researcher of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664631d30>>}
+llms = {'local_llm': <bound method InternalCrew.local_llm of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f0664631d30>>}
+tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+_______________________ test_after_kickoff_modification ________________________
+
+    @pytest.mark.vcr(filter_headers=["authorization"])
+    def test_after_kickoff_modification():
+>       crew = InternalCrew()
+
+tests/project_test.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06646331a0>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method InternalCrew.reporting_analyst of <crewai.project.crew_base.CrewBase(InternalCrew)...: <bound method InternalCrew.researcher of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06646331a0>>}
+llms = {'local_llm': <bound method InternalCrew.local_llm of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06646331a0>>}
+tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+_____________________ test_before_kickoff_with_none_input ______________________
+
+    @pytest.mark.vcr(filter_headers=["authorization"])
+    def test_before_kickoff_with_none_input():
+>       crew = InternalCrew()
+
+tests/project_test.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645c2f30>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method InternalCrew.reporting_analyst of <crewai.project.crew_base.CrewBase(InternalCrew)...: <bound method InternalCrew.researcher of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645c2f30>>}
+llms = {'local_llm': <bound method InternalCrew.local_llm of <crewai.project.crew_base.CrewBase(InternalCrew) object at 0x7f06645c2f30>>}
+tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+______________________ test_multiple_before_after_kickoff ______________________
+
+    @pytest.mark.vcr(filter_headers=["authorization"])
+    def test_multiple_before_after_kickoff():
+        @CrewBase
+        class MultipleHooksCrew:
+            agents_config = "config/agents.yaml"
+            tasks_config = "config/tasks.yaml"
+    
+            @agent
+            def researcher(self):
+                return Agent(config=self.agents_config["researcher"])
+    
+            @agent
+            def reporting_analyst(self):
+                return Agent(config=self.agents_config["reporting_analyst"])
+    
+            @task
+            def research_task(self):
+                return Task(config=self.tasks_config["research_task"])
+    
+            @task
+            def reporting_task(self):
+                return Task(config=self.tasks_config["reporting_task"])
+    
+            @before_kickoff
+            def first_before(self, inputs):
+                inputs["topic"] = "Bicycles"
+                return inputs
+    
+            @before_kickoff
+            def second_before(self, inputs):
+                inputs["topic"] = "plants"
+                return inputs
+    
+            @after_kickoff
+            def first_after(self, outputs):
+                outputs.raw = outputs.raw + " processed first"
+                return outputs
+    
+            @after_kickoff
+            def second_after(self, outputs):
+                outputs.raw = outputs.raw + " processed second"
+                return outputs
+    
+            @crew
+            def crew(self):
+                return Crew(agents=self.agents, tasks=self.tasks, verbose=True)
+    
+>       crew = MultipleHooksCrew()
+
+tests/project_test.py:211: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/crewai/project/crew_base.py:35: in __init__
+    self.map_all_agent_variables()
+src/crewai/project/crew_base.py:143: in map_all_agent_variables
+    self._map_agent_variables(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <crewai.project.crew_base.CrewBase(MultipleHooksCrew) object at 0x7f0664463f50>
+agent_name = 'researcher'
+agent_info = {'backstory': "You're a seasoned researcher with a knack for uncovering the latest developments in {topic}. Known for ...'local_llm', 'goal': 'Uncover cutting-edge developments in {topic}\n', 'role': '{topic} Senior Data Researcher\n', ...}
+agents = {'reporting_analyst': <bound method test_multiple_before_after_kickoff.<locals>.MultipleHooksCrew.reporting_analyst of...cals>.MultipleHooksCrew.researcher of <crewai.project.crew_base.CrewBase(MultipleHooksCrew) object at 0x7f0664463f50>>}
+llms = {}, tool_functions = {}, cache_handler_functions = {}, callbacks = {}
+
+    def _map_agent_variables(
+        self,
+        agent_name: str,
+        agent_info: Dict[str, Any],
+        agents: Dict[str, Callable],
+        llms: Dict[str, Callable],
+        tool_functions: Dict[str, Callable],
+        cache_handler_functions: Dict[str, Callable],
+        callbacks: Dict[str, Callable],
+    ) -> None:
+        if llm := agent_info.get("llm"):
+            try:
+                self.agents_config[agent_name]["llm"] = llms[llm]()
+            except KeyError:
+                self.agents_config[agent_name]["llm"] = llm
+    
+        if tools := agent_info.get("tools"):
+            self.agents_config[agent_name]["tools"] = [
+                tool_functions[tool]() for tool in tools
+            ]
+    
+        if function_calling_llm := agent_info.get("function_calling_llm"):
+>           self.agents_config[agent_name]["function_calling_llm"] = agents[
+                function_calling_llm
+            ]()
+E           KeyError: 'local_llm'
+
+src/crewai/project/crew_base.py:175: KeyError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:291
+  /testbed/.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:291: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.9/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.12/site-packages/litellm/utils.py:162
+  /testbed/.venv/lib/python3.12/site-packages/litellm/utils.py:162: DeprecationWarning: open_text is deprecated. Use files() instead. Refer to https://importlib-resources.readthedocs.io/en/latest/using.html#migrating-from-legacy for migration advice.
+    with resources.open_text(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/project_test.py::test_crew_memoization - KeyError: 'local_llm'
+FAILED tests/project_test.py::test_agent_function_calling_llm - KeyError: 'local_llm'
+FAILED tests/project_test.py::test_before_kickoff_modification - KeyError: 'local_llm'
+FAILED tests/project_test.py::test_after_kickoff_modification - KeyError: 'local_llm'
+FAILED tests/project_test.py::test_before_kickoff_with_none_input - KeyError: 'local_llm'
+FAILED tests/project_test.py::test_multiple_before_after_kickoff - KeyError: 'local_llm'
+=================== 6 failed, 3 passed, 2 warnings in 7.20s ====================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
+OMNIGRIL_EXIT_CODE=1
++ git checkout b992ee9d6b604993b3cc09ae366e314f68f78705 tests/config/agents.yaml tests/project_test.py
+Updated 2 paths from 25e14e4ba
