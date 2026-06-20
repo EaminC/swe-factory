@@ -526,8 +526,9 @@ def create_tuzi_model(
 
 
 TUZI_MODEL_IDS = [
-    "tuzi/gpt-4.1-mini",
-    "tuzi/deepseek-v3.2",
+    "tuzi-baseline/deepseek-v3.2",
+    "tuzi-baseline/gpt-4.1-mini",
+    "tuzi-baseline/kimi-k2.5",
 ]
 
 
