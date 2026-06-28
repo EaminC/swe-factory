@@ -1,0 +1,2054 @@
++ cd /testbed
++ git checkout 69dd20e523c4c392d751034384afab275dcf305f libs/langgraph/tests/test_large_cases.py libs/langgraph/tests/__snapshots__/test_large_cases.ambr libs/langgraph/tests/test_managed_values.py
+error: pathspec 'libs/langgraph/tests/test_managed_values.py' did not match any file(s) known to git
++ git apply -v -
+Checking patch libs/langgraph/tests/__snapshots__/test_large_cases.ambr...
+Checking patch libs/langgraph/tests/test_managed_values.py...
+Applied patch libs/langgraph/tests/__snapshots__/test_large_cases.ambr cleanly.
+Applied patch libs/langgraph/tests/test_managed_values.py cleanly.
++ cd /testbed/libs/langgraph
++ uv run pytest --no-header -rA --tb=short -p no:cacheprovider -k 'not postgres' tests/test_large_cases.py tests/test_managed_values.py
+============================= test session starts ==============================
+collected 130 items / 54 deselected / 76 selected
+
+tests/test_large_cases.py ............F................................. [ 60%]
+.............................                                            [ 98%]
+tests/test_managed_values.py F                                           [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_prebuilt_tool_chat ____________________________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7fdcd9fe1d80>
+when = 'call'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>       lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    )
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <HookCaller 'pytest_runtest_call'>
+kwargs = {'item': <Function test_prebuilt_tool_chat>}, firstresult = False
+
+    def __call__(self, **kwargs: object) -> Any:
+        """Call the hook.
+    
+        Only accepts keyword arguments, which should match the hook
+        specification.
+    
+        Returns the result(s) of calling all registered plugins, see
+        :ref:`calling`.
+        """
+        assert not self.is_historic(), (
+            "Cannot directly call a historic hook - use call_historic instead."
+        )
+        self._verify_all_args_are_provided(kwargs)
+        firstresult = self.spec.opts.get("firstresult", False) if self.spec else False
+        # Copy because plugins may register other plugins during iteration (#438).
+>       return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_hooks.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.config.PytestPluginManager object at 0x7fdcddfa94e0>
+hook_name = 'pytest_runtest_call'
+methods = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+kwargs = {'item': <Function test_prebuilt_tool_chat>}, firstresult = False
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        # called from all hookcaller instances.
+        # enable_tracing will set its own wrapping function at self._inner_hookexec
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_manager.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+                            teardown.throw(exception)
+                        except RuntimeError as re:
+                            # StopIteration from generator causes RuntimeError
+                            # even for coroutine usage - see #544
+                            if (
+                                isinstance(exception, StopIteration)
+                                and re.__cause__ is exception
+                            ):
+                                teardown.close()
+                                continue
+                            else:
+                                raise
+                    else:
+                        teardown.send(result)
+                    # Following is unreachable for a well behaved hook wrapper.
+                    # Try to force finalizers otherwise postponed till GC action.
+                    # Note: close() may raise if generator handles GeneratorExit.
+                    teardown.close()
+                except StopIteration as si:
+                    result = si.value
+                    exception = None
+                    continue
+                except BaseException as e:
+                    exception = e
+                    continue
+                _raise_wrapfail(teardown, "has second yield")
+    
+        if exception is not None:
+>           raise exception
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.logging.LoggingPlugin object at 0x7fdcdcc20f70>
+item = <Function test_prebuilt_tool_chat>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(self, item: nodes.Item) -> Generator[None]:
+        self.log_cli_handler.set_when("call")
+    
+        with self._runtest_for(item, "call"):
+>           yield
+
+.venv/lib/python3.10/site-packages/_pytest/logging.py:850: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io....xtIOWrapper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+item = <Function test_prebuilt_tool_chat>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(self, item: Item) -> Generator[None]:
+        with self.item_capture("call", item):
+>           return (yield)
+
+.venv/lib/python3.10/site-packages/_pytest/capture.py:900: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_impl = <HookImpl plugin_name='langsmith_plugin', plugin=<module 'langsmith.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/langsmith/pytest_plugin.py'>>
+hook_name = 'pytest_runtest_call', args = [<Function test_prebuilt_tool_chat>]
+
+    def run_old_style_hookwrapper(
+        hook_impl: HookImpl, hook_name: str, args: Sequence[object]
+    ) -> Teardown:
+        """
+        backward compatibility wrapper to run a old style hookwrapper as a wrapper
+        """
+    
+        teardown: Teardown = cast(Teardown, hook_impl.function(*args))
+        try:
+            next(teardown)
+        except StopIteration:
+            _raise_wrapfail(teardown, "did not yield")
+        try:
+            res = yield
+            result = Result(res, None)
+        except BaseException as exc:
+            result = Result(None, exc)
+        try:
+            teardown.send(result)
+        except StopIteration:
+            pass
+        except BaseException as e:
+            _warn_teardown_exception(hook_name, hook_impl, e)
+            raise
+        else:
+            _raise_wrapfail(teardown, "has second yield")
+        finally:
+            teardown.close()
+>       return result.get_result()
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pluggy._result.Result object at 0x7fdcd8a80600>
+
+    def get_result(self) -> ResultType:
+        """Get the result(s) for this hook call.
+    
+        If the hook was marked as a ``firstresult`` only a single value
+        will be returned, otherwise a list of results.
+        """
+        __tracebackhide__ = True
+        exc = self._exception
+        tb = self._traceback
+        if exc is None:
+            return cast(ResultType, self._result)
+        else:
+>           raise exc.with_traceback(tb)
+
+.venv/lib/python3.10/site-packages/pluggy/_result.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_impl = <HookImpl plugin_name='langsmith_plugin', plugin=<module 'langsmith.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/langsmith/pytest_plugin.py'>>
+hook_name = 'pytest_runtest_call', args = [<Function test_prebuilt_tool_chat>]
+
+    def run_old_style_hookwrapper(
+        hook_impl: HookImpl, hook_name: str, args: Sequence[object]
+    ) -> Teardown:
+        """
+        backward compatibility wrapper to run a old style hookwrapper as a wrapper
+        """
+    
+        teardown: Teardown = cast(Teardown, hook_impl.function(*args))
+        try:
+            next(teardown)
+        except StopIteration:
+            _raise_wrapfail(teardown, "did not yield")
+        try:
+>           res = yield
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+item = <Function test_prebuilt_tool_chat>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(item: Item) -> Generator[None]:
+        xfailed = item.stash.get(xfailed_key, None)
+        if xfailed is None:
+            item.stash[xfailed_key] = xfailed = evaluate_xfail_marks(item)
+    
+        if xfailed and not item.config.option.runxfail and not xfailed.run:
+            xfail("[NOTRUN] " + xfailed.reason)
+    
+        try:
+>           return (yield)
+
+.venv/lib/python3.10/site-packages/_pytest/skipping.py:263: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_prebuilt_tool_chat>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+>                       res = hook_impl.function(*args)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+item = <Function test_prebuilt_tool_chat>
+
+    def pytest_runtest_call(item: Item) -> None:
+        _update_current_test_var(item, "call")
+        try:
+            del sys.last_type
+            del sys.last_value
+            del sys.last_traceback
+            if sys.version_info >= (3, 12, 0):
+                del sys.last_exc  # type:ignore[attr-defined]
+        except AttributeError:
+            pass
+        try:
+>           item.runtest()
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:178: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Function test_prebuilt_tool_chat>
+
+    def runtest(self) -> None:
+        """Execute the underlying test function."""
+>       self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+
+.venv/lib/python3.10/site-packages/_pytest/python.py:1671: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <HookCaller 'pytest_pyfunc_call'>
+kwargs = {'pyfuncitem': <Function test_prebuilt_tool_chat>}, firstresult = True
+
+    def __call__(self, **kwargs: object) -> Any:
+        """Call the hook.
+    
+        Only accepts keyword arguments, which should match the hook
+        specification.
+    
+        Returns the result(s) of calling all registered plugins, see
+        :ref:`calling`.
+        """
+        assert not self.is_historic(), (
+            "Cannot directly call a historic hook - use call_historic instead."
+        )
+        self._verify_all_args_are_provided(kwargs)
+        firstresult = self.spec.opts.get("firstresult", False) if self.spec else False
+        # Copy because plugins may register other plugins during iteration (#438).
+>       return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_hooks.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.config.PytestPluginManager object at 0x7fdcddfa94e0>
+hook_name = 'pytest_pyfunc_call'
+methods = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+kwargs = {'pyfuncitem': <Function test_prebuilt_tool_chat>}, firstresult = True
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        # called from all hookcaller instances.
+        # enable_tracing will set its own wrapping function at self._inner_hookexec
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_manager.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_pyfunc_call'
+hook_impls = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+caller_kwargs = {'pyfuncitem': <Function test_prebuilt_tool_chat>}
+firstresult = True
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+                            teardown.throw(exception)
+                        except RuntimeError as re:
+                            # StopIteration from generator causes RuntimeError
+                            # even for coroutine usage - see #544
+                            if (
+                                isinstance(exception, StopIteration)
+                                and re.__cause__ is exception
+                            ):
+                                teardown.close()
+                                continue
+                            else:
+                                raise
+                    else:
+                        teardown.send(result)
+                    # Following is unreachable for a well behaved hook wrapper.
+                    # Try to force finalizers otherwise postponed till GC action.
+                    # Note: close() may raise if generator handles GeneratorExit.
+                    teardown.close()
+                except StopIteration as si:
+                    result = si.value
+                    exception = None
+                    continue
+                except BaseException as e:
+                    exception = e
+                    continue
+                _raise_wrapfail(teardown, "has second yield")
+    
+        if exception is not None:
+>           raise exception
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_pyfunc_call'
+hook_impls = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+caller_kwargs = {'pyfuncitem': <Function test_prebuilt_tool_chat>}
+firstresult = True
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+>                       res = hook_impl.function(*args)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pyfuncitem = <Function test_prebuilt_tool_chat>
+
+    @hookimpl(trylast=True)
+    def pytest_pyfunc_call(pyfuncitem: Function) -> object | None:
+        testfunction = pyfuncitem.obj
+        if is_async_function(testfunction):
+            async_fail(pyfuncitem.nodeid)
+        funcargs = pyfuncitem.funcargs
+        testargs = {arg: funcargs[arg] for arg in pyfuncitem._fixtureinfo.argnames}
+>       result = testfunction(**testargs)
+
+.venv/lib/python3.10/site-packages/_pytest/python.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+snapshot = '{"$defs": {"BaseMessage": {"additionalProperties": true, "description": "Base abstract message class.\\n\\nMessages a...: {"title": "Remaining Steps", "type": "integer"}}, "required": ["messages"], "title": "AgentState", "type": "object"}'
+
+    def test_prebuilt_tool_chat(snapshot: SnapshotAssertion) -> None:
+        from langchain_core.messages import AIMessage, HumanMessage
+        from langchain_core.tools import tool
+    
+        @tool()
+        def search_api(query: str) -> str:
+            """Searches the API for the query."""
+            return f"result for {query}"
+    
+        tools = [search_api]
+    
+        model = FakeChatModel(
+            messages=[
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "id": "tool_call123",
+                            "name": "search_api",
+                            "args": {"query": "query"},
+                        },
+                    ],
+                ),
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "id": "tool_call234",
+                            "name": "search_api",
+                            "args": {"query": "another"},
+                        },
+                        {
+                            "id": "tool_call567",
+                            "name": "search_api",
+                            "args": {"query": "a third one"},
+                        },
+                    ],
+                ),
+                AIMessage(content="answer"),
+            ]
+        )
+    
+        app = create_react_agent(model, tools)
+    
+>       assert json.dumps(app.get_input_jsonschema()) == snapshot
+E       assert [+ received] == [- snapshot]
+E         - ... {"BaseMessage": {"additionalProperties": true, "description": "Base abstract message class.\\n\\nMessages are the inputs and outputs of ChatModels.", "properties": {"content": {"anyOf": [{"type": "string"}, {"items": {"anyOf": [{"type": "string"}, {"additionalProperties": true, "type": "object"}]}, "type": "array"}], "title": "Content"}, "additional_kwargs": {"additionalProperties": true, "title": "Additional Kwargs", "type": "object"}, "response_metadata": {"additionalProperties": true, "title": "Response Metadata", "type": "object"}, "type": {"title": "Type", "type": "string"}, "name": {"anyOf": [...
+E         
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/test_large_cases.py:1304: AssertionError
+________________________ test_managed_values_recognized ________________________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7fdcd820c430>
+when = 'call'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>       lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    )
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <HookCaller 'pytest_runtest_call'>
+kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def __call__(self, **kwargs: object) -> Any:
+        """Call the hook.
+    
+        Only accepts keyword arguments, which should match the hook
+        specification.
+    
+        Returns the result(s) of calling all registered plugins, see
+        :ref:`calling`.
+        """
+        assert not self.is_historic(), (
+            "Cannot directly call a historic hook - use call_historic instead."
+        )
+        self._verify_all_args_are_provided(kwargs)
+        firstresult = self.spec.opts.get("firstresult", False) if self.spec else False
+        # Copy because plugins may register other plugins during iteration (#438).
+>       return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_hooks.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.config.PytestPluginManager object at 0x7fdcddfa94e0>
+hook_name = 'pytest_runtest_call'
+methods = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        # called from all hookcaller instances.
+        # enable_tracing will set its own wrapping function at self._inner_hookexec
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_manager.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+                            teardown.throw(exception)
+                        except RuntimeError as re:
+                            # StopIteration from generator causes RuntimeError
+                            # even for coroutine usage - see #544
+                            if (
+                                isinstance(exception, StopIteration)
+                                and re.__cause__ is exception
+                            ):
+                                teardown.close()
+                                continue
+                            else:
+                                raise
+                    else:
+                        teardown.send(result)
+                    # Following is unreachable for a well behaved hook wrapper.
+                    # Try to force finalizers otherwise postponed till GC action.
+                    # Note: close() may raise if generator handles GeneratorExit.
+                    teardown.close()
+                except StopIteration as si:
+                    result = si.value
+                    exception = None
+                    continue
+                except BaseException as e:
+                    exception = e
+                    continue
+                _raise_wrapfail(teardown, "has second yield")
+    
+        if exception is not None:
+>           raise exception
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.logging.LoggingPlugin object at 0x7fdcdcc20f70>
+item = <Function test_managed_values_recognized>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(self, item: nodes.Item) -> Generator[None]:
+        self.log_cli_handler.set_when("call")
+    
+        with self._runtest_for(item, "call"):
+>           yield
+
+.venv/lib/python3.10/site-packages/_pytest/logging.py:850: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io....xtIOWrapper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+item = <Function test_managed_values_recognized>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(self, item: Item) -> Generator[None]:
+        with self.item_capture("call", item):
+>           return (yield)
+
+.venv/lib/python3.10/site-packages/_pytest/capture.py:900: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_impl = <HookImpl plugin_name='langsmith_plugin', plugin=<module 'langsmith.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/langsmith/pytest_plugin.py'>>
+hook_name = 'pytest_runtest_call'
+args = [<Function test_managed_values_recognized>]
+
+    def run_old_style_hookwrapper(
+        hook_impl: HookImpl, hook_name: str, args: Sequence[object]
+    ) -> Teardown:
+        """
+        backward compatibility wrapper to run a old style hookwrapper as a wrapper
+        """
+    
+        teardown: Teardown = cast(Teardown, hook_impl.function(*args))
+        try:
+            next(teardown)
+        except StopIteration:
+            _raise_wrapfail(teardown, "did not yield")
+        try:
+            res = yield
+            result = Result(res, None)
+        except BaseException as exc:
+            result = Result(None, exc)
+        try:
+            teardown.send(result)
+        except StopIteration:
+            pass
+        except BaseException as e:
+            _warn_teardown_exception(hook_name, hook_impl, e)
+            raise
+        else:
+            _raise_wrapfail(teardown, "has second yield")
+        finally:
+            teardown.close()
+>       return result.get_result()
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pluggy._result.Result object at 0x7fdcd87ef040>
+
+    def get_result(self) -> ResultType:
+        """Get the result(s) for this hook call.
+    
+        If the hook was marked as a ``firstresult`` only a single value
+        will be returned, otherwise a list of results.
+        """
+        __tracebackhide__ = True
+        exc = self._exception
+        tb = self._traceback
+        if exc is None:
+            return cast(ResultType, self._result)
+        else:
+>           raise exc.with_traceback(tb)
+
+.venv/lib/python3.10/site-packages/pluggy/_result.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_impl = <HookImpl plugin_name='langsmith_plugin', plugin=<module 'langsmith.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/langsmith/pytest_plugin.py'>>
+hook_name = 'pytest_runtest_call'
+args = [<Function test_managed_values_recognized>]
+
+    def run_old_style_hookwrapper(
+        hook_impl: HookImpl, hook_name: str, args: Sequence[object]
+    ) -> Teardown:
+        """
+        backward compatibility wrapper to run a old style hookwrapper as a wrapper
+        """
+    
+        teardown: Teardown = cast(Teardown, hook_impl.function(*args))
+        try:
+            next(teardown)
+        except StopIteration:
+            _raise_wrapfail(teardown, "did not yield")
+        try:
+>           res = yield
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+>                           teardown.throw(exception)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+item = <Function test_managed_values_recognized>
+
+    @hookimpl(wrapper=True)
+    def pytest_runtest_call(item: Item) -> Generator[None]:
+        xfailed = item.stash.get(xfailed_key, None)
+        if xfailed is None:
+            item.stash[xfailed_key] = xfailed = evaluate_xfail_marks(item)
+    
+        if xfailed and not item.config.option.runxfail and not xfailed.run:
+            xfail("[NOTRUN] " + xfailed.reason)
+    
+        try:
+>           return (yield)
+
+.venv/lib/python3.10/site-packages/_pytest/skipping.py:263: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_runtest_call'
+hook_impls = [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/testbed/libs/langgraph/.venv...pper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>>, ...]
+caller_kwargs = {'item': <Function test_managed_values_recognized>}
+firstresult = False
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+>                       res = hook_impl.function(*args)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+item = <Function test_managed_values_recognized>
+
+    def pytest_runtest_call(item: Item) -> None:
+        _update_current_test_var(item, "call")
+        try:
+            del sys.last_type
+            del sys.last_value
+            del sys.last_traceback
+            if sys.version_info >= (3, 12, 0):
+                del sys.last_exc  # type:ignore[attr-defined]
+        except AttributeError:
+            pass
+        try:
+>           item.runtest()
+
+.venv/lib/python3.10/site-packages/_pytest/runner.py:178: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Function test_managed_values_recognized>
+
+    def runtest(self) -> None:
+        """Execute the underlying test function."""
+>       self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+
+.venv/lib/python3.10/site-packages/_pytest/python.py:1671: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <HookCaller 'pytest_pyfunc_call'>
+kwargs = {'pyfuncitem': <Function test_managed_values_recognized>}
+firstresult = True
+
+    def __call__(self, **kwargs: object) -> Any:
+        """Call the hook.
+    
+        Only accepts keyword arguments, which should match the hook
+        specification.
+    
+        Returns the result(s) of calling all registered plugins, see
+        :ref:`calling`.
+        """
+        assert not self.is_historic(), (
+            "Cannot directly call a historic hook - use call_historic instead."
+        )
+        self._verify_all_args_are_provided(kwargs)
+        firstresult = self.spec.opts.get("firstresult", False) if self.spec else False
+        # Copy because plugins may register other plugins during iteration (#438).
+>       return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_hooks.py:512: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.config.PytestPluginManager object at 0x7fdcddfa94e0>
+hook_name = 'pytest_pyfunc_call'
+methods = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+kwargs = {'pyfuncitem': <Function test_managed_values_recognized>}
+firstresult = True
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        # called from all hookcaller instances.
+        # enable_tracing will set its own wrapping function at self._inner_hookexec
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+
+.venv/lib/python3.10/site-packages/pluggy/_manager.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_pyfunc_call'
+hook_impls = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+caller_kwargs = {'pyfuncitem': <Function test_managed_values_recognized>}
+firstresult = True
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+                        res = hook_impl.function(*args)
+                        if res is not None:
+                            results.append(res)
+                            if firstresult:  # halt further impl calls
+                                break
+            except BaseException as exc:
+                exception = exc
+        finally:
+            if firstresult:  # first result hooks return a single value
+                result = results[0] if results else None
+            else:
+                result = results
+    
+            # run all wrapper post-yield blocks
+            for teardown in reversed(teardowns):
+                try:
+                    if exception is not None:
+                        try:
+                            teardown.throw(exception)
+                        except RuntimeError as re:
+                            # StopIteration from generator causes RuntimeError
+                            # even for coroutine usage - see #544
+                            if (
+                                isinstance(exception, StopIteration)
+                                and re.__cause__ is exception
+                            ):
+                                teardown.close()
+                                continue
+                            else:
+                                raise
+                    else:
+                        teardown.send(result)
+                    # Following is unreachable for a well behaved hook wrapper.
+                    # Try to force finalizers otherwise postponed till GC action.
+                    # Note: close() may raise if generator handles GeneratorExit.
+                    teardown.close()
+                except StopIteration as si:
+                    result = si.value
+                    exception = None
+                    continue
+                except BaseException as e:
+                    exception = e
+                    continue
+                _raise_wrapfail(teardown, "has second yield")
+    
+        if exception is not None:
+>           raise exception
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+hook_name = 'pytest_pyfunc_call'
+hook_impls = [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/testbed/libs/langgraph/.venv/lib/python3.10/si...odule 'anyio.pytest_plugin' from '/testbed/libs/langgraph/.venv/lib/python3.10/site-packages/anyio/pytest_plugin.py'>>]
+caller_kwargs = {'pyfuncitem': <Function test_managed_values_recognized>}
+firstresult = True
+
+    def _multicall(
+        hook_name: str,
+        hook_impls: Sequence[HookImpl],
+        caller_kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+        """Execute a call into multiple python functions/methods and return the
+        result(s).
+    
+        ``caller_kwargs`` comes from HookCaller.__call__().
+        """
+        __tracebackhide__ = True
+        results: list[object] = []
+        exception = None
+        try:  # run impl and wrapper setup functions in a loop
+            teardowns: list[Teardown] = []
+            try:
+                for hook_impl in reversed(hook_impls):
+                    try:
+                        args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    except KeyError as e:
+                        # coverage bug - this is tested
+                        for argname in hook_impl.argnames:  # pragma: no cover
+                            if argname not in caller_kwargs:
+                                raise HookCallError(
+                                    f"hook call must provide argument {argname!r}"
+                                ) from e
+    
+                    if hook_impl.hookwrapper:
+                        function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    
+                        next(function_gen)  # first yield
+                        teardowns.append(function_gen)
+    
+                    elif hook_impl.wrapper:
+                        try:
+                            # If this cast is not valid, a type error is raised below,
+                            # which is the desired response.
+                            res = hook_impl.function(*args)
+                            function_gen = cast(Generator[None, object, object], res)
+                            next(function_gen)  # first yield
+                            teardowns.append(function_gen)
+                        except StopIteration:
+                            _raise_wrapfail(function_gen, "did not yield")
+                    else:
+>                       res = hook_impl.function(*args)
+
+.venv/lib/python3.10/site-packages/pluggy/_callers.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pyfuncitem = <Function test_managed_values_recognized>
+
+    @hookimpl(trylast=True)
+    def pytest_pyfunc_call(pyfuncitem: Function) -> object | None:
+        testfunction = pyfuncitem.obj
+        if is_async_function(testfunction):
+            async_fail(pyfuncitem.nodeid)
+        funcargs = pyfuncitem.funcargs
+        testargs = {arg: funcargs[arg] for arg in pyfuncitem._fixtureinfo.argnames}
+>       result = testfunction(**testargs)
+
+.venv/lib/python3.10/site-packages/_pytest/python.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def test_managed_values_recognized() -> None:
+        graph = StateGraph(StatePlain)
+        assert "remaining_steps" in graph.managed
+    
+        graph = StateGraph(StateNotRequired)
+>       assert "remaining_steps" in graph.managed
+E       AssertionError: assert 'remaining_steps' in {}
+E        +  where {} = <langgraph.graph.state.StateGraph object at 0x7fdcd9778b50>.managed
+
+tests/test_managed_values.py:24: AssertionError
+==================================== PASSES ====================================
+_____________________ test_conditional_state_graph[memory] _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'input': 'what is weather in sf', 'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+______________ test_conditional_state_graph[memory_migrate_sends] ______________
+----------------------------- Captured stdout call -----------------------------
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'input': 'what is weather in sf', 'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+_____________________ test_conditional_state_graph[sqlite] _____________________
+----------------------------- Captured stdout call -----------------------------
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'input': 'what is weather in sf', 'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+___________________ test_conditional_state_graph[sqlite_aes] ___________________
+----------------------------- Captured stdout call -----------------------------
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'input': 'what is weather in sf', 'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:a different query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'input': 'what is weather in sf', 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'intermediate_steps': []}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': []}
+[1m[updates][0m {'tools': {'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'agent': {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction')}}
+[1m[values][0m {'agent_outcome': AgentAction(tool='search_api', tool_input='another', log='tool:search_api:another', type='AgentAction'), 'intermediate_steps': [[AgentAction(tool='search_api', tool_input='query', log='tool:search_api:query', type='AgentAction'), 'result for query']]}
+[1m[updates][0m {'__interrupt__': ()}
+--------------------------- snapshot report summary ----------------------------
+1 snapshot failed. 10 snapshots passed.
+============================= slowest 5 durations ==============================
+1.02s call     tests/test_large_cases.py::test_state_graph_packets[sqlite_aes]
+0.92s call     tests/test_large_cases.py::test_state_graph_packets[sqlite]
+0.92s call     tests/test_large_cases.py::test_state_graph_packets[memory_migrate_sends]
+0.91s call     tests/test_large_cases.py::test_state_graph_packets[memory]
+0.47s call     tests/test_large_cases.py::test_partial_pending_checkpoint[sqlite_aes]
+=========================== short test summary info ============================
+PASSED tests/test_large_cases.py::test_invoke_two_processes_in_out_interrupt[memory]
+PASSED tests/test_large_cases.py::test_invoke_two_processes_in_out_interrupt[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_invoke_two_processes_in_out_interrupt[sqlite]
+PASSED tests/test_large_cases.py::test_invoke_two_processes_in_out_interrupt[sqlite_aes]
+PASSED tests/test_large_cases.py::test_fork_always_re_runs_nodes[memory]
+PASSED tests/test_large_cases.py::test_fork_always_re_runs_nodes[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_fork_always_re_runs_nodes[sqlite]
+PASSED tests/test_large_cases.py::test_fork_always_re_runs_nodes[sqlite_aes]
+PASSED tests/test_large_cases.py::test_conditional_state_graph[memory]
+PASSED tests/test_large_cases.py::test_conditional_state_graph[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_conditional_state_graph[sqlite]
+PASSED tests/test_large_cases.py::test_conditional_state_graph[sqlite_aes]
+PASSED tests/test_large_cases.py::test_state_graph_packets[memory]
+PASSED tests/test_large_cases.py::test_state_graph_packets[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_state_graph_packets[sqlite]
+PASSED tests/test_large_cases.py::test_state_graph_packets[sqlite_aes]
+PASSED tests/test_large_cases.py::test_message_graph[memory]
+PASSED tests/test_large_cases.py::test_message_graph[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_message_graph[sqlite]
+PASSED tests/test_large_cases.py::test_message_graph[sqlite_aes]
+PASSED tests/test_large_cases.py::test_root_graph[memory]
+PASSED tests/test_large_cases.py::test_root_graph[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_root_graph[sqlite]
+PASSED tests/test_large_cases.py::test_root_graph[sqlite_aes]
+PASSED tests/test_large_cases.py::test_in_one_fan_out_out_one_graph_state
+PASSED tests/test_large_cases.py::test_dynamic_interrupt[memory]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt[sqlite]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt[sqlite_aes]
+PASSED tests/test_large_cases.py::test_partial_pending_checkpoint[memory]
+PASSED tests/test_large_cases.py::test_partial_pending_checkpoint[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_partial_pending_checkpoint[sqlite]
+PASSED tests/test_large_cases.py::test_partial_pending_checkpoint[sqlite_aes]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt_subgraph[memory]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt_subgraph[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt_subgraph[sqlite]
+PASSED tests/test_large_cases.py::test_dynamic_interrupt_subgraph[sqlite_aes]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory-sync]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory-async]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory-exit]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory_migrate_sends-sync]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory_migrate_sends-async]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[memory_migrate_sends-exit]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite-sync]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite-async]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite-exit]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite_aes-sync]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite_aes-async]
+PASSED tests/test_large_cases.py::test_send_dedupe_on_resume[sqlite_aes-exit]
+PASSED tests/test_large_cases.py::test_nested_graph_state[memory]
+PASSED tests/test_large_cases.py::test_nested_graph_state[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_nested_graph_state[sqlite]
+PASSED tests/test_large_cases.py::test_nested_graph_state[sqlite_aes]
+PASSED tests/test_large_cases.py::test_doubly_nested_graph_state[memory]
+PASSED tests/test_large_cases.py::test_doubly_nested_graph_state[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_doubly_nested_graph_state[sqlite]
+PASSED tests/test_large_cases.py::test_doubly_nested_graph_state[sqlite_aes]
+PASSED tests/test_large_cases.py::test_send_to_nested_graphs[memory]
+PASSED tests/test_large_cases.py::test_send_to_nested_graphs[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_send_to_nested_graphs[sqlite]
+PASSED tests/test_large_cases.py::test_send_to_nested_graphs[sqlite_aes]
+PASSED tests/test_large_cases.py::test_send_react_interrupt[memory]
+PASSED tests/test_large_cases.py::test_send_react_interrupt[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_send_react_interrupt[sqlite]
+PASSED tests/test_large_cases.py::test_send_react_interrupt[sqlite_aes]
+PASSED tests/test_large_cases.py::test_send_react_interrupt_control[memory]
+PASSED tests/test_large_cases.py::test_send_react_interrupt_control[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_send_react_interrupt_control[sqlite]
+PASSED tests/test_large_cases.py::test_send_react_interrupt_control[sqlite_aes]
+PASSED tests/test_large_cases.py::test_weather_subgraph[memory]
+PASSED tests/test_large_cases.py::test_weather_subgraph[memory_migrate_sends]
+PASSED tests/test_large_cases.py::test_weather_subgraph[sqlite]
+PASSED tests/test_large_cases.py::test_weather_subgraph[sqlite_aes]
+PASSED tests/test_large_cases.py::test_subgraph_to_end_does_not_warn
+FAILED tests/test_large_cases.py::test_prebuilt_tool_chat - assert [+ receive...
+FAILED tests/test_managed_values.py::test_managed_values_recognized - Asserti...
+================= 2 failed, 74 passed, 54 deselected in 11.22s =================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ cd /testbed
++ git checkout 69dd20e523c4c392d751034384afab275dcf305f libs/langgraph/tests/test_large_cases.py libs/langgraph/tests/__snapshots__/test_large_cases.ambr libs/langgraph/tests/test_managed_values.py
+error: pathspec 'libs/langgraph/tests/test_managed_values.py' did not match any file(s) known to git

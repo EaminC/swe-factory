@@ -1,0 +1,110 @@
++ cd /testbed
++ git checkout 5212369bd0791806083f183cb19ccce024db8790 libs/prebuilt/tests/test_tool_node.py
+Updated 1 path from b6a0e7593
++ git apply -v -
+Checking patch libs/prebuilt/tests/test_tool_node.py...
+Applied patch libs/prebuilt/tests/test_tool_node.py cleanly.
++ cd /testbed/libs/prebuilt
++ LANGGRAPH_TEST_FAST=1
++ uv run pytest --no-header -rA --tb=short -p no:cacheprovider tests/test_tool_node.py
+Downloading ruff (13.4MiB)
+Downloading mypy (12.9MiB)
+ Downloaded ruff
+ Downloaded mypy
+Installed 6 packages in 57ms
+============================= test session starts ==============================
+collecting ... collected 28 items
+
+tests/test_tool_node.py::test_tool_node PASSED                           [  3%]
+tests/test_tool_node.py::test_tool_node_tool_call_input PASSED           [  7%]
+tests/test_tool_node.py::test_tool_node_error_handling_default_invocation PASSED [ 10%]
+tests/test_tool_node.py::test_tool_node_error_handling_default_exception PASSED [ 14%]
+tests/test_tool_node.py::test_tool_node_error_handling PASSED            [ 17%]
+tests/test_tool_node.py::test_tool_node_error_handling_callable PASSED   [ 21%]
+tests/test_tool_node.py::test_tool_node_handle_tool_errors_false PASSED  [ 25%]
+tests/test_tool_node.py::test_tool_node_individual_tool_error_handling PASSED [ 28%]
+tests/test_tool_node.py::test_tool_node_incorrect_tool_name PASSED       [ 32%]
+tests/test_tool_node.py::test_tool_node_node_interrupt PASSED            [ 35%]
+tests/test_tool_node.py::test_tool_node_command[dict] PASSED             [ 39%]
+tests/test_tool_node.py::test_tool_node_command[tool_calls] PASSED       [ 42%]
+tests/test_tool_node.py::test_tool_node_command_list_input PASSED        [ 46%]
+tests/test_tool_node.py::test_tool_node_parent_command_with_send PASSED  [ 50%]
+tests/test_tool_node.py::test_tool_node_command_remove_all_messages PASSED [ 53%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema] PASSED [ 57%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticV2Schema] PASSED [ 60%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStateDataclassSchema] PASSED [ 64%]
+tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticSchema] PASSED [ 67%]
+tests/test_tool_node.py::test_tool_node_inject_store PASSED              [ 71%]
+tests/test_tool_node.py::test_tool_node_ensure_utf8 PASSED               [ 75%]
+tests/test_tool_node.py::test_tool_node_messages_key PASSED              [ 78%]
+tests/test_tool_node.py::test_tool_node_stream_writer PASSED             [ 82%]
+tests/test_tool_node.py::test_tool_call_request_setattr_deprecation_warning PASSED [ 85%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_signature_only PASSED [ 89%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_decorator PASSED [ 92%]
+tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_schema PASSED [ 96%]
+tests/test_tool_node.py::test_tool_node_tool_runtime_generic FAILED      [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_tool_node_tool_runtime_generic ______________________
+tests/test_tool_node.py:1903: in test_tool_node_tool_runtime_generic
+    assert tool_message.content == "test_info"
+E   assert "Error invoking tool 'get_info' with kwargs {} with error:\n rt: Field required\n Please fix the error and try again." == 'test_info'
+E     
+E     - test_info
+E     + Error invoking tool 'get_info' with kwargs {} with error:
+E     +  rt: Field required
+E     +  Please fix the error and try again.
+=============================== warnings summary ===============================
+tests/conftest.py:31
+  /testbed/libs/prebuilt/tests/conftest.py:31: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.memory_assert
+    pytest.register_assert_rewrite("tests.memory_assert")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+============================= slowest 5 durations ==============================
+0.06s call     tests/test_tool_node.py::test_tool_node_error_handling_callable
+0.04s call     tests/test_tool_node.py::test_tool_node_command_list_input
+0.04s call     tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema]
+0.04s call     tests/test_tool_node.py::test_tool_node_command[dict]
+0.04s call     tests/test_tool_node.py::test_tool_node_command[tool_calls]
+=========================== short test summary info ============================
+PASSED tests/test_tool_node.py::test_tool_node
+PASSED tests/test_tool_node.py::test_tool_node_tool_call_input
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_default_invocation
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_default_exception
+PASSED tests/test_tool_node.py::test_tool_node_error_handling
+PASSED tests/test_tool_node.py::test_tool_node_error_handling_callable
+PASSED tests/test_tool_node.py::test_tool_node_handle_tool_errors_false
+PASSED tests/test_tool_node.py::test_tool_node_individual_tool_error_handling
+PASSED tests/test_tool_node.py::test_tool_node_incorrect_tool_name
+PASSED tests/test_tool_node.py::test_tool_node_node_interrupt
+PASSED tests/test_tool_node.py::test_tool_node_command[dict]
+PASSED tests/test_tool_node.py::test_tool_node_command[tool_calls]
+PASSED tests/test_tool_node.py::test_tool_node_command_list_input
+PASSED tests/test_tool_node.py::test_tool_node_parent_command_with_send
+PASSED tests/test_tool_node.py::test_tool_node_command_remove_all_messages
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectStateSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticV2Schema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStateDataclassSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_state[_InjectedStatePydanticSchema]
+PASSED tests/test_tool_node.py::test_tool_node_inject_store
+PASSED tests/test_tool_node.py::test_tool_node_ensure_utf8
+PASSED tests/test_tool_node.py::test_tool_node_messages_key
+PASSED tests/test_tool_node.py::test_tool_node_stream_writer
+PASSED tests/test_tool_node.py::test_tool_call_request_setattr_deprecation_warning
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_signature_only
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_decorator
+PASSED tests/test_tool_node.py::test_tool_node_inject_async_all_types_with_schema
+FAILED tests/test_tool_node.py::test_tool_node_tool_runtime_generic - assert "Error invoking tool 'get_info' with kwargs {} with error:\n rt: Field required\n Please fix the error and try again." == 'test_info'
+  
+  - test_info
+  + Error invoking tool 'get_info' with kwargs {} with error:
+  +  rt: Field required
+  +  Please fix the error and try again.
+=================== 1 failed, 27 passed, 1 warning in 1.00s ====================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ cd /testbed
++ git checkout 5212369bd0791806083f183cb19ccce024db8790 libs/prebuilt/tests/test_tool_node.py
+Updated 1 path from b6a0e7593

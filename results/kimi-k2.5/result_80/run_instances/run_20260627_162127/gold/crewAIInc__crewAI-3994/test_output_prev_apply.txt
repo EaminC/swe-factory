@@ -1,0 +1,98 @@
++ cd /testbed
++ git checkout 4d8eec96e8432eda570207a601655ec29e9d1d6e lib/crewai/tests/test_project.py
+Updated 1 path from 5d15953f5
++ git apply -v -
+Checking patch lib/crewai/tests/test_project.py...
+Applied patch lib/crewai/tests/test_project.py cleanly.
++ cd lib/crewai
++ uv run pytest tests/test_project.py --block-network --timeout=30 --tb=short -v
+============================= test session starts ==============================
+platform linux -- Python 3.11.13, pytest-8.4.2, pluggy-1.6.0 -- /testbed/.venv/bin/python3
+cachedir: .pytest_cache
+Using --randomly-seed=1515046770
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: singlestoredb-1.15.8, mock-3.15.1, asyncio-1.2.0, split-0.10.0, langsmith-0.4.37, anyio-4.11.0, timeout-2.4.0, subprocess-1.5.3, Faker-37.11.0, recording-0.13.4, randomly-4.0.1, xdist-3.8.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+timeout: 30.0s
+timeout method: signal
+timeout func_only: False
+collecting ... collected 17 items
+
+tests/test_project.py::test_crew_memoization PASSED                      [  5%]
+tests/test_project.py::test_multiple_before_after_kickoff PASSED         [ 11%]
+tests/test_project.py::test_agent_memoization PASSED                     [ 17%]
+tests/test_project.py::test_after_kickoff_modification PASSED            [ 23%]
+tests/test_project.py::test_crew_name PASSED                             [ 29%]
+tests/test_project.py::test_task_guardrail PASSED                        [ 35%]
+tests/test_project.py::test_agent_function_calling_llm PASSED            [ 41%]
+tests/test_project.py::test_task_memoization PASSED                      [ 47%]
+tests/test_project.py::test_before_kickoff_with_none_input PASSED        [ 52%]
+tests/test_project.py::test_before_kickoff_modification PASSED           [ 58%]
+tests/test_project.py::test_task_name PASSED                             [ 64%]
+tests/test_project.py::test_internal_crew_with_mcp PASSED                [ 70%]
+tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_memoization FAILED [ 76%]
+tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_returns_task_not_coroutine FAILED [ 82%]
+tests/test_project.py::TestAsyncDecoratorSupport::test_async_agent_memoization FAILED [ 88%]
+tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_name_inference FAILED [ 94%]
+tests/test_project.py::TestAsyncDecoratorSupport::test_async_agent_returns_agent_not_coroutine FAILED [100%]
+
+=================================== FAILURES ===================================
+____________ TestAsyncDecoratorSupport.test_async_task_memoization _____________
+tests/test_project.py:312: in test_async_task_memoization
+    first_call = crew.async_task()
+                 ^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:239: in __call__
+    return self._task_method.ensure_task_name(result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:265: in ensure_task_name
+    if not result.name:
+           ^^^^^^^^^^^
+E   AttributeError: 'coroutine' object has no attribute 'name'
+_____ TestAsyncDecoratorSupport.test_async_task_returns_task_not_coroutine _____
+tests/test_project.py:363: in test_async_task_returns_task_not_coroutine
+    result = crew.typed_async_task()
+             ^^^^^^^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:239: in __call__
+    return self._task_method.ensure_task_name(result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:265: in ensure_task_name
+    if not result.name:
+           ^^^^^^^^^^^
+E   AttributeError: 'coroutine' object has no attribute 'name'
+____________ TestAsyncDecoratorSupport.test_async_agent_memoization ____________
+tests/test_project.py:296: in test_async_agent_memoization
+    assert AsyncAgentCrew.call_count == 1, "Async agent called more than once"
+E   AssertionError: Async agent called more than once
+E   assert 0 == 1
+E    +  where 0 = <class 'tests.test_project.TestAsyncDecoratorSupport.test_async_agent_memoization.<locals>.AsyncAgentCrew'>.call_count
+___________ TestAsyncDecoratorSupport.test_async_task_name_inference ___________
+tests/test_project.py:329: in test_async_task_name_inference
+    task_instance = crew.my_async_task()
+                    ^^^^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:239: in __call__
+    return self._task_method.ensure_task_name(result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/crewai/project/wrappers.py:265: in ensure_task_name
+    if not result.name:
+           ^^^^^^^^^^^
+E   AttributeError: 'coroutine' object has no attribute 'name'
+____ TestAsyncDecoratorSupport.test_async_agent_returns_agent_not_coroutine ____
+tests/test_project.py:348: in test_async_agent_returns_agent_not_coroutine
+    assert isinstance(result, Agent), (
+E   AssertionError: Expected Agent, got coroutine
+E   assert False
+E    +  where False = isinstance(<coroutine object TestAsyncDecoratorSupport.test_async_agent_returns_agent_not_coroutine.<locals>.AsyncAgentTypeCrew.typed_async_agent at 0x7fc64f993e60>, Agent)
+=========================== short test summary info ============================
+FAILED tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_memoization
+FAILED tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_returns_task_not_coroutine
+FAILED tests/test_project.py::TestAsyncDecoratorSupport::test_async_agent_memoization
+FAILED tests/test_project.py::TestAsyncDecoratorSupport::test_async_task_name_inference
+FAILED tests/test_project.py::TestAsyncDecoratorSupport::test_async_agent_returns_agent_not_coroutine
+======================== 5 failed, 12 passed in 19.84s =========================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ cd /testbed
+OMNIGRIL_EXIT_CODE=1
++ git checkout 4d8eec96e8432eda570207a601655ec29e9d1d6e lib/crewai/tests/test_project.py
+Updated 1 path from 5d15953f5

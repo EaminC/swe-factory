@@ -1,0 +1,131 @@
++ cd /testbed
++ git checkout b0958115c1887d93bfd25229b307406920038cc4 libs/checkpoint-postgres/tests/test_async.py libs/checkpoint-postgres/tests/test_sync.py
+Updated 2 paths from c960db024
++ git apply -v -
+Checking patch libs/checkpoint-postgres/tests/test_async.py...
+Checking patch libs/checkpoint-postgres/tests/test_sync.py...
+Applied patch libs/checkpoint-postgres/tests/test_async.py cleanly.
+Applied patch libs/checkpoint-postgres/tests/test_sync.py cleanly.
++ su - postgres -c '/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/logfile start'
+waiting for server to start.... done
+server started
++ for i in {1..30}
++ pg_isready -h localhost -p 5441 -U postgres
++ echo 'PostgreSQL is ready on port 5441'
++ break
++ su - postgres -c 'psql -p 5441 -c '\''CREATE EXTENSION IF NOT EXISTS vector;'\'''
+PostgreSQL is ready on port 5441
+CREATE EXTENSION
+NOTICE:  extension "vector" already exists, skipping
++ cd /testbed/libs/checkpoint-postgres
++ uv run pytest tests/test_async.py tests/test_sync.py --no-header -rA --tb=short -p no:cacheprovider
+============================= test session starts ==============================
+collecting ... collected 37 items
+
+tests/test_async.py::test_combined_metadata[base] PASSED                 [  2%]
+tests/test_async.py::test_combined_metadata[pool] PASSED                 [  5%]
+tests/test_async.py::test_combined_metadata[pipe] PASSED                 [  8%]
+tests/test_async.py::test_combined_metadata[shallow] PASSED              [ 10%]
+tests/test_async.py::test_asearch[base] PASSED                           [ 13%]
+tests/test_async.py::test_asearch[pool] PASSED                           [ 16%]
+tests/test_async.py::test_asearch[pipe] PASSED                           [ 18%]
+tests/test_async.py::test_asearch[shallow] PASSED                        [ 21%]
+tests/test_async.py::test_null_chars[base] PASSED                        [ 24%]
+tests/test_async.py::test_null_chars[pool] PASSED                        [ 27%]
+tests/test_async.py::test_null_chars[pipe] PASSED                        [ 29%]
+tests/test_async.py::test_null_chars[shallow] PASSED                     [ 32%]
+tests/test_async.py::test_pending_sends_migration[base] PASSED           [ 35%]
+tests/test_async.py::test_pending_sends_migration[pool] PASSED           [ 37%]
+tests/test_async.py::test_pending_sends_migration[pipe] PASSED           [ 40%]
+tests/test_async.py::test_get_checkpoint_no_channel_values[base] PASSED  [ 43%]
+tests/test_async.py::test_get_checkpoint_no_channel_values[pool] PASSED  [ 45%]
+tests/test_async.py::test_get_checkpoint_no_channel_values[pipe] PASSED  [ 48%]
+tests/test_sync.py::test_combined_metadata[base] PASSED                  [ 51%]
+tests/test_sync.py::test_combined_metadata[pool] PASSED                  [ 54%]
+tests/test_sync.py::test_combined_metadata[pipe] PASSED                  [ 56%]
+tests/test_sync.py::test_combined_metadata[shallow] PASSED               [ 59%]
+tests/test_sync.py::test_search[base] PASSED                             [ 62%]
+tests/test_sync.py::test_search[pool] PASSED                             [ 64%]
+tests/test_sync.py::test_search[pipe] PASSED                             [ 67%]
+tests/test_sync.py::test_search[shallow] PASSED                          [ 70%]
+tests/test_sync.py::test_null_chars[base] PASSED                         [ 72%]
+tests/test_sync.py::test_null_chars[pool] PASSED                         [ 75%]
+tests/test_sync.py::test_null_chars[pipe] PASSED                         [ 78%]
+tests/test_sync.py::test_null_chars[shallow] PASSED                      [ 81%]
+tests/test_sync.py::test_nonnull_migrations PASSED                       [ 83%]
+tests/test_sync.py::test_pending_sends_migration[base] PASSED            [ 86%]
+tests/test_sync.py::test_pending_sends_migration[pool] PASSED            [ 89%]
+tests/test_sync.py::test_pending_sends_migration[pipe] PASSED            [ 91%]
+tests/test_sync.py::test_get_checkpoint_no_channel_values[base] PASSED   [ 94%]
+tests/test_sync.py::test_get_checkpoint_no_channel_values[pool] PASSED   [ 97%]
+tests/test_sync.py::test_get_checkpoint_no_channel_values[pipe] PASSED   [100%]
+
+=============================== warnings summary ===============================
+tests/test_async.py::test_combined_metadata[shallow]
+tests/test_async.py::test_asearch[shallow]
+tests/test_async.py::test_null_chars[shallow]
+  /testbed/libs/checkpoint-postgres/tests/test_async.py:131: DeprecationWarning: AsyncShallowPostgresSaver is deprecated as of version 2.0.20 and will be removed in 3.0.0. Use AsyncPostgresSaver instead, and invoke the graph with `await graph.ainvoke(..., durability='exit')`.
+    checkpointer = AsyncShallowPostgresSaver(conn)
+
+tests/test_sync.py::test_combined_metadata[shallow]
+tests/test_sync.py::test_search[shallow]
+tests/test_sync.py::test_null_chars[shallow]
+  /testbed/libs/checkpoint-postgres/tests/test_sync.py:115: DeprecationWarning: ShallowPostgresSaver is deprecated as of version 2.0.20 and will be removed in 3.0.0. Use PostgresSaver instead, and invoke the graph with `graph.invoke(..., durability='exit')`.
+    checkpointer = ShallowPostgresSaver(conn)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+============================= slowest 5 durations ==============================
+0.30s call     tests/test_async.py::test_combined_metadata[base]
+0.20s call     tests/test_async.py::test_combined_metadata[pool]
+0.17s call     tests/test_sync.py::test_search[pool]
+0.16s call     tests/test_async.py::test_asearch[pool]
+0.15s call     tests/test_sync.py::test_search[base]
+=========================== short test summary info ============================
+PASSED tests/test_async.py::test_combined_metadata[base]
+PASSED tests/test_async.py::test_combined_metadata[pool]
+PASSED tests/test_async.py::test_combined_metadata[pipe]
+PASSED tests/test_async.py::test_combined_metadata[shallow]
+PASSED tests/test_async.py::test_asearch[base]
+PASSED tests/test_async.py::test_asearch[pool]
+PASSED tests/test_async.py::test_asearch[pipe]
+PASSED tests/test_async.py::test_asearch[shallow]
+PASSED tests/test_async.py::test_null_chars[base]
+PASSED tests/test_async.py::test_null_chars[pool]
+PASSED tests/test_async.py::test_null_chars[pipe]
+PASSED tests/test_async.py::test_null_chars[shallow]
+PASSED tests/test_async.py::test_pending_sends_migration[base]
+PASSED tests/test_async.py::test_pending_sends_migration[pool]
+PASSED tests/test_async.py::test_pending_sends_migration[pipe]
+PASSED tests/test_async.py::test_get_checkpoint_no_channel_values[base]
+PASSED tests/test_async.py::test_get_checkpoint_no_channel_values[pool]
+PASSED tests/test_async.py::test_get_checkpoint_no_channel_values[pipe]
+PASSED tests/test_sync.py::test_combined_metadata[base]
+PASSED tests/test_sync.py::test_combined_metadata[pool]
+PASSED tests/test_sync.py::test_combined_metadata[pipe]
+PASSED tests/test_sync.py::test_combined_metadata[shallow]
+PASSED tests/test_sync.py::test_search[base]
+PASSED tests/test_sync.py::test_search[pool]
+PASSED tests/test_sync.py::test_search[pipe]
+PASSED tests/test_sync.py::test_search[shallow]
+PASSED tests/test_sync.py::test_null_chars[base]
+PASSED tests/test_sync.py::test_null_chars[pool]
+PASSED tests/test_sync.py::test_null_chars[pipe]
+PASSED tests/test_sync.py::test_null_chars[shallow]
+PASSED tests/test_sync.py::test_nonnull_migrations
+PASSED tests/test_sync.py::test_pending_sends_migration[base]
+PASSED tests/test_sync.py::test_pending_sends_migration[pool]
+PASSED tests/test_sync.py::test_pending_sends_migration[pipe]
+PASSED tests/test_sync.py::test_get_checkpoint_no_channel_values[base]
+PASSED tests/test_sync.py::test_get_checkpoint_no_channel_values[pool]
+PASSED tests/test_sync.py::test_get_checkpoint_no_channel_values[pipe]
+======================== 37 passed, 6 warnings in 5.71s ========================
+OMNIGRIL_EXIT_CODE=0
++ rc=0
++ echo OMNIGRIL_EXIT_CODE=0
++ su - postgres -c '/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/data stop'
+waiting for server to shut down.... done
+server stopped
++ cd /testbed
++ git checkout b0958115c1887d93bfd25229b307406920038cc4 libs/checkpoint-postgres/tests/test_async.py libs/checkpoint-postgres/tests/test_sync.py
+Updated 2 paths from c960db024
