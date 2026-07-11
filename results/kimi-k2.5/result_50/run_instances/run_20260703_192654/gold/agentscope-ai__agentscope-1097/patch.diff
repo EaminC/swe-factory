@@ -1,0 +1,536 @@
+diff --git a/src/agentscope/_utils/_common.py b/src/agentscope/_utils/_common.py
+--- a/src/agentscope/_utils/_common.py
++++ b/src/agentscope/_utils/_common.py
+@@ -48,28 +48,23 @@ def _json_loads_with_repair(
+             Returns an empty dict if all repair attempts fail.
+     """
+     try:
+-        repaired = repair_json(json_str)
++        repaired = repair_json(json_str, stream_stable=True)
+         result = json.loads(repaired)
+         if isinstance(result, dict):
+             return result
++
+     except Exception:
+-        pass
++        if len(json_str) > 100:
++            log_str = json_str[:100] + "..."
++        else:
++            log_str = json_str
+ 
+-    for i in range(len(json_str) - 1, 0, -1):
+-        try:
+-            repaired = repair_json(json_str[:i])
+-            result = json.loads(repaired)
+-            if isinstance(result, dict):
+-                return result
+-        except Exception:
+-            continue
++        logger.warning(
++            "Failed to load JSON dict from string: %s. Returning empty dict "
++            "instead.",
++            log_str,
++        )
+ 
+-    logger.warning(
+-        "Failed to parse JSON string `%s`. "
+-        "All repair attempts (original + truncation) failed. "
+-        "Returning empty dict.",
+-        json_str,
+-    )
+     return {}
+ 
+ 
+diff --git a/src/agentscope/message/_message_block.py b/src/agentscope/message/_message_block.py
+--- a/src/agentscope/message/_message_block.py
++++ b/src/agentscope/message/_message_block.py
+@@ -87,6 +87,8 @@ class ToolUseBlock(TypedDict, total=False):
+     """The name of the tool"""
+     input: Required[dict[str, object]]
+     """The input of the tool"""
++    raw_input: str
++    """The raw string input of the tool from the model API"""
+ 
+ 
+ class ToolResultBlock(TypedDict, total=False):
+diff --git a/src/agentscope/model/_anthropic_model.py b/src/agentscope/model/_anthropic_model.py
+--- a/src/agentscope/model/_anthropic_model.py
++++ b/src/agentscope/model/_anthropic_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches, too-many-statements
+ """The Anthropic API model classes."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -45,6 +47,7 @@ def __init__(
+         max_tokens: int = 2048,
+         stream: bool = True,
+         thinking: dict | None = None,
++        stream_tool_parsing: bool = True,
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         **kwargs: Any,
+@@ -71,6 +74,12 @@ def __init__(
+                         "budget_tokens": 1024
+                     }
+ 
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+              optional):
+                 The extra keyword arguments to initialize the Anthropic client.
+@@ -121,6 +130,7 @@ def __init__(
+         )
+         self.max_tokens = max_tokens
+         self.thinking = thinking
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -381,9 +391,13 @@ async def _parse_anthropic_stream_completion_response(
+         thinking_signature = ""
+         tool_calls = OrderedDict()
+         tool_call_buffers = {}
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         res = None
+         metadata = None
+ 
++        # Record the last yielded content to parse the tools' input
++        last_content = None
++
+         async for event in response:
+             content_changed = False
+             thinking_changed = False
+@@ -457,24 +471,38 @@ async def _parse_anthropic_stream_completion_response(
+                     )
+                 for block_index, tool_call in tool_calls.items():
+                     input_str = tool_call["input"]
+-                    try:
+-                        input_obj = _json_loads_with_repair(input_str or "{}")
+-                        if not isinstance(input_obj, dict):
+-                            input_obj = {}
+-
+-                    except Exception:
+-                        input_obj = {}
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        repaired_input = {}
+ 
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+                             id=tool_call["id"],
+                             name=tool_call["name"],
+-                            input=input_obj,
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
++
+                     if structured_model:
+-                        metadata = input_obj
++                        metadata = repaired_input
++
+                 if contents:
+                     res = ChatResponse(
+                         content=contents,
+@@ -482,6 +510,26 @@ async def _parse_anthropic_stream_completion_response(
+                         metadata=metadata,
+                     )
+                     yield res
++                    last_content = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and last_content and tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        block.get("raw_input") or "{}",
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _format_tools_json_schemas(
+         self,
+diff --git a/src/agentscope/model/_dashscope_model.py b/src/agentscope/model/_dashscope_model.py
+--- a/src/agentscope/model/_dashscope_model.py
++++ b/src/agentscope/model/_dashscope_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """The dashscope API model classes."""
++import copy
+ import collections
+ import json
+ import os
+@@ -58,6 +59,7 @@ def __init__(
+         enable_thinking: bool | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+         base_http_api_url: str | None = None,
++        stream_tool_parsing: bool = True,
+         **_kwargs: Any,
+     ) -> None:
+         """Initialize the DashScope chat model.
+@@ -81,6 +83,12 @@ def __init__(
+             base_http_api_url (`str | None`, optional):
+                 The base URL for DashScope API requests. If not provided,
+                 the default base URL from the DashScope SDK will be used.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON in streaming mode
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts (`{"a": "x"}`) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             **_kwargs (`Any`):
+                 Additional keyword arguments.
+         """
+@@ -96,6 +104,7 @@ def __init__(
+         self.api_key = api_key
+         self.enable_thinking = enable_thinking
+         self.generate_kwargs = generate_kwargs or {}
++        self.stream_tool_parsing = stream_tool_parsing
+ 
+         if base_http_api_url is not None:
+             import dashscope
+@@ -251,7 +260,7 @@ async def __call__(
+ 
+         return parsed_response
+ 
+-    # pylint: disable=too-many-branches
++    # pylint: disable=too-many-branches, too-many-statements
+     async def _parse_dashscope_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -289,7 +298,10 @@ async def _parse_dashscope_stream_response(
+         """
+         acc_content, acc_thinking_content = "", ""
+         acc_tool_calls = collections.defaultdict(dict)
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata = None
++        last_content = None
++        usage = None
+ 
+         async for chunk in giter(response):
+             if chunk.status_code != HTTPStatus.OK:
+@@ -336,8 +348,9 @@ async def _parse_dashscope_stream_response(
+                             + func["arguments"]
+                         )
+ 
+-            # to content blocks
++            # Build content blocks (always include thinking and text)
+             content_blocks: list[TextBlock | ToolUseBlock | ThinkingBlock] = []
++
+             if acc_thinking_content:
+                 content_blocks.append(
+                     ThinkingBlock(
+@@ -355,26 +368,42 @@ async def _parse_dashscope_stream_response(
+                 )
+ 
+             for tool_call in acc_tool_calls.values():
+-                repaired_input = _json_loads_with_repair(
+-                    tool_call.get("arguments", "{}") or "{}",
+-                )
+-
+-                if not isinstance(repaired_input, dict):
++                # Only add intermediate tool use blocks if
++                # stream_tool_parsing is True
++                tool_id = tool_call.get("id", "")
++                input_str = tool_call.get("arguments")
++
++                # If parsing the tool input in streaming mode
++                if self.stream_tool_parsing:
++                    repaired_input = _json_loads_with_repair(
++                        input_str or "{}",
++                    )
++                    # If the new repaired input is shorter than one in the last
++                    # chunk, use the last one to avoid regression
++                    last_input = last_input_objs.get(tool_id, {})
++                    if len(json.dumps(last_input)) > len(
++                        json.dumps(repaired_input),
++                    ):
++                        repaired_input = last_input
++                    last_input_objs[tool_id] = repaired_input
++
++                else:
++                    # Otherwise, keep input as empty dict until the final chunk
+                     repaired_input = {}
+ 
+                 content_blocks.append(
+                     ToolUseBlock(
+                         type="tool_use",
+-                        id=tool_call.get("id", ""),
++                        id=tool_id,
+                         name=tool_call.get("name", ""),
+                         input=repaired_input,
++                        raw_input=input_str,
+                     ),
+                 )
+ 
+                 if structured_model:
+                     metadata = repaired_input
+ 
+-            usage = None
+             if chunk.usage:
+                 usage = ChatUsage(
+                     input_tokens=chunk.usage.input_tokens,
+@@ -383,12 +412,34 @@ async def _parse_dashscope_stream_response(
+                     metadata=chunk.usage,
+                 )
+ 
+-            parsed_chunk = ChatResponse(
+-                content=content_blocks,
++            if content_blocks:
++                parsed_chunk = ChatResponse(
++                    content=content_blocks,
++                    usage=usage,
++                    metadata=metadata,
++                )
++                yield parsed_chunk
++                last_content = copy.deepcopy(content_blocks)
++
++        # If stream_tool_parsing is False, we need to parse the final tool
++        # use inputs here
++        if not self.stream_tool_parsing and last_content and acc_tool_calls:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_content:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
++
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_content,
+                 usage=usage,
+                 metadata=metadata,
+             )
+-            yield parsed_chunk
+ 
+     async def _parse_dashscope_generation_response(
+         self,
+diff --git a/src/agentscope/model/_gemini_model.py b/src/agentscope/model/_gemini_model.py
+--- a/src/agentscope/model/_gemini_model.py
++++ b/src/agentscope/model/_gemini_model.py
+@@ -2,6 +2,7 @@
+ # mypy: disable-error-code="dict-item"
+ """The Google Gemini model in agentscope."""
+ import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -362,6 +363,7 @@ async def _parse_gemini_stream_generation_response(
+                             id=function_call.id,
+                             name=function_call.name,
+                             input=function_call.args or {},
++                            raw_input=json.dumps(function_call.args or {}),
+                         ),
+                     )
+ 
+@@ -460,6 +462,7 @@ def _parse_gemini_generation_response(
+                         id=tool_call.id,
+                         name=tool_call.name,
+                         input=tool_call.args or {},
++                        raw_input=json.dumps(tool_call.args or {}),
+                     ),
+                 )
+ 
+diff --git a/src/agentscope/model/_ollama_model.py b/src/agentscope/model/_ollama_model.py
+--- a/src/agentscope/model/_ollama_model.py
++++ b/src/agentscope/model/_ollama_model.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ """Model wrapper for Ollama models."""
++import json
+ from datetime import datetime
+ from typing import (
+     Any,
+@@ -219,6 +220,7 @@ async def _parse_ollama_stream_completion_response(
+                     "id": tool_id,
+                     "name": function.name,
+                     "input": function.arguments,
++                    "raw_input": json.dumps(function.arguments),
+                 }
+             # Calculate usage statistics
+             current_time = (datetime.now() - start_datetime).total_seconds()
+@@ -325,6 +327,7 @@ async def _parse_ollama_completion_response(
+                     id=f"{idx}_{tool_call.function.name}",
+                     name=tool_call.function.name,
+                     input=tool_call.function.arguments,
++                    raw_input=json.dumps(tool_call.function.arguments),
+                 ),
+             )
+ 
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -1,6 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # pylint: disable=too-many-branches
+ """OpenAI Chat model class."""
++import copy
++import json
+ import warnings
+ from datetime import datetime
+ from typing import (
+@@ -73,6 +75,7 @@ def __init__(
+         stream: bool = True,
+         reasoning_effort: Literal["low", "medium", "high"] | None = None,
+         organization: str = None,
++        stream_tool_parsing: bool = True,
+         client_type: Literal["openai", "azure"] = "openai",
+         client_kwargs: dict[str, JSONSerializableObject] | None = None,
+         generate_kwargs: dict[str, JSONSerializableObject] | None = None,
+@@ -97,6 +100,12 @@ def __init__(
+             organization (`str`, default `None`):
+                 The organization ID for OpenAI API. If not specified, it will
+                 be read from the environment variable `OPENAI_ORGANIZATION`.
++            stream_tool_parsing (`bool`, default to `True`):
++                Whether to parse incomplete tool use JSON during streaming
++                with auto-repair. If True, partial JSON (e.g., `'{"a": "x'`)
++                is repaired to valid dicts ({"a": "x"}) in real-time for
++                immediate tool function input. Otherwise, the input field
++                remains {} until the final chunk arrives.
+             client_type (`Literal["openai", "azure"]`, default `openai`):
+                 Selects which OpenAI-compatible client to initialize.
+             client_kwargs (`dict[str, JSONSerializableObject] | None`, \
+@@ -156,6 +165,7 @@ def __init__(
+             )
+ 
+         self.reasoning_effort = reasoning_effort
++        self.stream_tool_parsing = stream_tool_parsing
+         self.generate_kwargs = generate_kwargs or {}
+ 
+     @trace_llm
+@@ -294,6 +304,7 @@ async def __call__(
+ 
+         return parsed_response
+ 
++    # pylint: disable=too-many-statements
+     async def _parse_openai_stream_response(
+         self,
+         start_datetime: datetime,
+@@ -327,10 +338,12 @@ async def _parse_openai_stream_response(
+         thinking = ""
+         audio = ""
+         tool_calls = OrderedDict()
++        last_input_objs = {}  # Store last input_obj for each tool_call
+         metadata: dict | None = None
+         contents: List[
+             TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
+         ] = []
++        last_contents = None
+ 
+         async with response as stream:
+             async for item in stream:
+@@ -432,26 +445,65 @@ async def _parse_openai_stream_response(
+                         metadata = _json_loads_with_repair(text)
+ 
+                 for tool_call in tool_calls.values():
++                    input_str = tool_call["input"]
++                    tool_id = tool_call["id"]
++
++                    # If parsing the tool input in streaming mode
++                    if self.stream_tool_parsing:
++                        repaired_input = _json_loads_with_repair(
++                            input_str or "{}",
++                        )
++                        # If the new repaired input is shorter than one in the
++                        # last chunk, use the last one to avoid regression
++                        last_input = last_input_objs.get(tool_id, {})
++                        if len(json.dumps(last_input)) > len(
++                            json.dumps(repaired_input),
++                        ):
++                            repaired_input = last_input
++                        last_input_objs[tool_id] = repaired_input
++
++                    else:
++                        # Otherwise, keep input as empty dict until the final
++                        # chunk
++                        repaired_input = {}
++
+                     contents.append(
+                         ToolUseBlock(
+                             type=tool_call["type"],
+-                            id=tool_call["id"],
++                            id=tool_id,
+                             name=tool_call["name"],
+-                            input=_json_loads_with_repair(
+-                                tool_call["input"] or "{}",
+-                            ),
++                            input=repaired_input,
++                            raw_input=input_str,
+                         ),
+                     )
+ 
+-                if not contents:
+-                    continue
++                if contents:
++                    res = ChatResponse(
++                        content=contents,
++                        usage=usage,
++                        metadata=metadata,
++                    )
++                    yield res
++                    last_contents = copy.deepcopy(contents)
++
++        # If stream_tool_parsing is False, yield last contents
++        if not self.stream_tool_parsing and tool_calls and last_contents:
++            metadata = None
++            # Update tool use blocks in last_contents inplace
++            for block in last_contents:
++                if block.get("type") == "tool_use":
++                    block["input"] = input_obj = _json_loads_with_repair(
++                        str(block.get("raw_input") or "{}"),
++                    )
+ 
+-                res = ChatResponse(
+-                    content=contents,
+-                    usage=usage,
+-                    metadata=metadata,
+-                )
+-                yield res
++                    if structured_model:
++                        metadata = input_obj
++
++            yield ChatResponse(
++                content=last_contents,
++                usage=usage,
++                metadata=metadata,
++            )
+ 
+     def _parse_openai_completion_response(
+         self,
