@@ -531,6 +531,24 @@ TUZI_MODEL_IDS = [
     "tuzi-baseline/kimi-k2.5",
 ]
 
+def create_openrouter_model(
+    model_id: str,
+    max_output_token: int = 8192,
+    cost_per_input: float = 0.0,
+    cost_per_output: float = 0.0,
+) -> OpenaiModel:
+    """为 openrouter 网关创建 OpenaiModel 实例，--model 使用 model_id 即可。"""
+    safe_name = "openrouter_" + model_id.replace("/", "_").replace(".", "_").replace("-", "_").replace("@", "_")
+    class _OpenrouterModel(OpenaiModel):
+        def __init__(self):
+            super().__init__(model_id, max_output_token, cost_per_input, cost_per_output, parallel_tool_call=True)
+    _OpenrouterModel.__name__ = safe_name
+    return _OpenrouterModel()
+
+
+OPENROUTER_MODEL_IDS = [
+    "openrouter/openai/gpt-4.1-mini",
+]
 
 class Gpt5_mini(OpenaiModel):
     def __init__(self):
