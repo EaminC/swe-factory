@@ -1,0 +1,139 @@
++ cd /testbed
++ git config --global --add safe.directory /testbed
++ git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+Note: switching to 'b95f56b446a2fe55247eee717ab85fe45f857d27'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at b95f56b Merge pull request #183 from MLSysOps/fix/web-ui
++ git apply -v -
+Checking patch tests/test_cli_report_mode.py...
+Applied patch tests/test_cli_report_mode.py cleanly.
++ source /testbed/testbed-env/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/testbed-env
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/testbed/testbed-env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/testbed-env/bin:/testbed/testbed-env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed-env) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed-env) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ pip install pytest
+Collecting pytest
+  Downloading pytest-9.2.0-py3-none-any.whl.metadata (7.9 kB)
+Collecting iniconfig>=2 (from pytest)
+  Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: packaging>=24 in ./testbed-env/lib/python3.11/site-packages (from pytest) (26.3)
+Collecting pluggy<2,>=1.6 (from pytest)
+  Downloading pluggy-1.7.0-py3-none-any.whl.metadata (5.0 kB)
+Requirement already satisfied: pygments>=2.15 in ./testbed-env/lib/python3.11/site-packages (from pytest) (2.21.0)
+Downloading pytest-9.2.0-py3-none-any.whl (411 kB)
+Downloading pluggy-1.7.0-py3-none-any.whl (27 kB)
+Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+Installing collected packages: pluggy, iniconfig, pytest
+
+Successfully installed iniconfig-2.3.1 pluggy-1.7.0 pytest-9.2.0
++ '[' -f tests/test_cli_report_mode.py ']'
++ pytest tests/test_cli_report_mode.py
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-9.2.0, pluggy-1.7.0
+rootdir: /testbed
+plugins: anyio-4.16.0
+collected 1 item
+
+tests/test_cli_report_mode.py F                                          [100%]
+
+=================================== FAILURES ===================================
+_______________ test_start_report_mode_invokes_report_and_serve ________________
+
+obj = <module 'mle.cli' from '/testbed/mle/cli.py'>, name = 'web'
+ann = 'mle.cli'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'mle.cli' has no attribute 'web'
+
+testbed-env/lib/python3.11/site-packages/_pytest/monkeypatch.py:95: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79ca47545a90>
+runner = <click.testing.CliRunner object at 0x79ca45a00f10>
+
+    def test_start_report_mode_invokes_report_and_serve(monkeypatch, runner):
+        called = {}
+    
+        def fake_report(ctx, repo=None, model=None, user=None, visualize=False):
+            called['report'] = True
+            assert visualize is False
+            return True
+    
+        def fake_serve(ctx):
+            called['serve'] = True
+            return True
+    
+        def fake_web(ctx):
+            called['web'] = True
+            return True
+    
+        monkeypatch.setattr('mle.cli.report', fake_report)
+        monkeypatch.setattr('mle.cli.serve', fake_serve)
+>       monkeypatch.setattr('mle.cli.web', fake_web)
+
+tests/test_cli_report_mode.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+testbed-env/lib/python3.11/site-packages/_pytest/monkeypatch.py:109: in derive_importpath
+    annotated_getattr(target, attr, ann=module)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = <module 'mle.cli' from '/testbed/mle/cli.py'>, name = 'web'
+ann = 'mle.cli'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+            obj = getattr(obj, name)
+        except AttributeError as e:
+>           raise AttributeError(
+                f"{type(obj).__name__!r} object at {ann} has no attribute {name!r}"
+            ) from e
+E           AttributeError: 'module' object at mle.cli has no attribute 'web'
+
+testbed-env/lib/python3.11/site-packages/_pytest/monkeypatch.py:97: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_cli_report_mode.py::test_start_report_mode_invokes_report_and_serve
+============================== 1 failed in 2.06s ===============================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+OMNIGRIL_EXIT_CODE=1
+HEAD is now at b95f56b Merge pull request #183 from MLSysOps/fix/web-ui
