@@ -1,0 +1,32 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout d63b15dc4721d48cb8368fe9011398df417fbc32 
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Check installed packages for debugging
+echo "=== Poetry show installed packages ==="
+poetry show
+
+echo "=== Checking import of langgraph package ==="
+python3 -c "import langgraph"
+
+# Initialize PYTHONPATH properly to avoid unbound variable error
+export PYTHONPATH=/testbed${PYTHONPATH:+:$PYTHONPATH}
+
+# Run only the target test file with pytest, concise output with test status
+poetry run pytest --no-header -rA --tb=short libs/checkpoint-postgres/tests/test_continue_thread.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup changes after test run
+git restore libs/checkpoint-postgres/tests/test_continue_thread.py || true
+git clean -fd || true
+
+git reset --hard d63b15dc4721d48cb8368fe9011398df417fbc32

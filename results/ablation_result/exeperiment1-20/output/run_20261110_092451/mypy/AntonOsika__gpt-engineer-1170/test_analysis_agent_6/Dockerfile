@@ -1,0 +1,59 @@
+# Use python 3.10 bullseye image for better compatibility and avoid missing system binaries errors
+FROM python:3.10-bullseye
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies and tools (git, curl, build-essential)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    locales \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Create necessary directory structure and set permissions for Poetry installation
+RUN mkdir -p /root/.local/share/pypoetry && \
+    chown -R root:root /root/.local
+
+# Download Poetry installation script separately and explicitly run it to better handle errors and layer snapshot issues
+RUN curl -sSL https://install.python-poetry.org -o install-poetry.py && \
+    python3 install-poetry.py --version 1.9.6 && \
+    rm install-poetry.py
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Verify poetry installation by printing version (fail early if install failed)
+RUN poetry --version
+
+# Clone the repository, checkout the given commit
+WORKDIR /testbed/
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    git reset --hard 3e589bf1356024fb471a9d17738e4626f21a953b
+
+# Configure Poetry to create virtual env inside project, install dependencies, then install package in editable mode
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-root --only main,dev
+
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install -e ."
+
+# Set default shell as bash
+SHELL ["/bin/bash", "-c"]
+
+# Default workdir
+WORKDIR /testbed/
+
+# Expose HOME environment to ensure Poetry and virtual env works smoothly
+ENV HOME=/root
+
+# Provide a bashrc line to activate poetry shell (virtual env) automatically for convenience during interactive use
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc

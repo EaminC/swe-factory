@@ -1,0 +1,57 @@
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    build-essential \
+    libffi-dev \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN python3.11 -m pip install --upgrade pip
+
+# Install UV (UV dependency manager) - since 'uv' is a Python tool, install it using pip
+RUN python3.11 -m pip install uv
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone target repository, checkout commit, create venv with python3.11, install dependencies
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed \
+    && cd /testbed \
+    && git reset --hard 3878daffd68d14ee0379d11c19bef63c4dc02edc
+
+# Set up Python virtual environment and install dependencies using uv commands and local development mode install
+RUN python3.11 -m venv /testbed/testbed-venv \
+    && source /testbed/testbed-venv/bin/activate \
+    && pip install --upgrade pip setuptools wheel \
+    && uv lock \
+    && uv sync \
+    && uv build \
+    && uv venv \
+    && pip install dist/*.tar.gz \
+    && pip install -e . \
+    && pip install 'crewai[tools]'
+
+# Make sure to activate the env on interactive shells by default
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set default working directory
+WORKDIR /testbed
+
+ENV PATH="/testbed/testbed-venv/bin:$PATH"
+
+# Note: testing commands or ENTRYPOINT not included as per requirements

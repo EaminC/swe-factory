@@ -1,0 +1,87 @@
+[BUG] TypeError in _extract_thought Due to NoneType Input
+### Description
+
+When executing the Crew, a `TypeError` occurs in the `_extract_thought` method of `parser.py`. The error arises because the text variable is None when passed to `re.search()`, which expects a string or bytes-like object. This leads to an unhandled exception that terminates the application. This does not occur with Crew version 0.5X.
+
+### Steps to Reproduce
+
+Create a crew with a forced output file:
+
+```python
+    @task
+    def reporting_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["reporting_task"],
+            output_file=f"{self.output_dir}/report.md",
+        )
+```
+
+Observe a `TypeError`:
+```
+  File "/Users/some_user/Library/Caches/pypoetry/virtualenvs/mycrew-agqGppDS-py3.12/lib/python3.12/site-packages/crewai/agents/parser.py", line 123, in _extract_thought
+    thought_match = re.search(regex, text, re.DOTALL)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/re/__init__.py", line 177, in search
+    return _compile(pattern, flags).search(string)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: expected string or bytes-like object, got 'NoneType'
+```
+
+### Expected behavior
+
+The _extract_thought method should receive a valid string for the text parameter and successfully perform regex search operations without raising exceptions. Output is then written to the specified directory.
+
+### Screenshots/Code snippets
+
+NA
+
+### Operating System
+
+macOS Monterey
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.76.2
+
+### crewAI Tools Version
+
+0.13.2
+
+### Virtual Environment
+
+Poetry
+
+### Evidence
+
+  File "/Users/some_user/Library/Caches/pypoetry/virtualenvs/mycrew-agqGppDS-py3.12/lib/python3.12/site-packages/crewai/agents/parser.py", line 123, in _extract_thought
+    thought_match = re.search(regex, text, re.DOTALL)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/re/__init__.py", line 177, in search
+    return _compile(pattern, flags).search(string)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: expected string or bytes-like object, got 'NoneType'
+
+### Possible Solution
+
+NA
+
+### Additional context
+
+Issue is caused by `None` `text` input to the following function:
+
+```python
+def _extract_thought(self, text: str) -> str:
+    regex = r"(.*?)(?:\n\nAction|\n\nFinal Answer)"
+    print("Debug: text is:", repr(text))
+    if text is None:
+        print("Error: text is None")
+        return ""
+    thought_match = re.search(regex, text, re.DOTALL)
+    if thought_match:
+        return thought_match.group(1).strip()
+    return ""
+```

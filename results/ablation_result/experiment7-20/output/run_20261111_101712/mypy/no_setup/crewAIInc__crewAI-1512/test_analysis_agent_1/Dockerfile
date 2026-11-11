@@ -1,0 +1,69 @@
+# Use ubuntu 22.04 as base image with bash support
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: python3.11, git, curl, build essentials, and tools
+RUN apt update && apt install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    locales \
+    locales-all \
+    tzdata \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip and install virtualenv to manage venv
+RUN python3 -m pip install --upgrade pip setuptools virtualenv
+
+# Set workdir to /testbed (will clone repo here)
+WORKDIR /testbed/
+
+# Clone the repo and checkout specific commit
+# The build arg REPO_COMMIT must be provided at build time with the commit SHA
+ARG REPO_COMMIT=f29f4abdd7ea4d3b4afeb8e1b403360ad7309ace
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed && \
+    git checkout ${REPO_COMMIT}
+
+# Create Python virtual environment named testbed
+RUN python3 -m venv /testbed/.venv
+
+# Activate venv and upgrade pip inside it
+RUN /testbed/.venv/bin/pip install --upgrade pip setuptools
+
+# Install uv tool globally in venv for dependency management (as recommended)
+RUN /testbed/.venv/bin/pip install uv
+
+# Use uv tool to create & sync the environment and install dependencies, then install repo in editable mode
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && \
+    uv lock && \
+    uv sync && \
+    pip install -e . && \
+    pip install 'crewai[tools]' || true"
+
+# Install development dependencies (pytest, pytest-asyncio, mypy, etc.) separately for test environment completeness
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && \
+    pip install pytest pytest-asyncio mypy pre-commit ruff"
+
+# Setup pre-commit hooks as per instructions
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pre-commit install || true"
+
+# Provide environment variables placeholders for runtime (did not set here - to be set at runtime)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Add activation of virtual environment to bashrc for convenience
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default shell is bash
+CMD ["/bin/bash"]

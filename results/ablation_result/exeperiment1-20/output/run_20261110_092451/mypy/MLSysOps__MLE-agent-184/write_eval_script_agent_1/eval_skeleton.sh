@@ -1,0 +1,25 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Reset to the target commit to ensure clean state
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /testbed/testbed/bin/activate
+
+# Run only the specified test file with unittest module for concise output with test file name
+python -m unittest -v tests/test_cli_report_mode.py
+rc=$?
+
+# Echo exit code for test log analysis
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any changes made by patch to maintain clean state
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27

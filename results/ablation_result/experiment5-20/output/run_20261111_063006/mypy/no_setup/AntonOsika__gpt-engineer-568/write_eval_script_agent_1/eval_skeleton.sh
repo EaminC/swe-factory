@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout f84754d54ee311146c4f52b5e3ceb0fa8d0b731b
+
+# Apply the test patch (content replaced at runtime)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate python venv environment
+source /testbed/testbed/bin/activate
+
+# Run only the specified test file, disable pytest cache, show concise output of test file with status
+pytest --no-header --tb=short --disable-warnings -r a tests/test_language_choice.py --cov=gpt_engineer
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to remove any patch side effects
+git checkout f84754d54ee311146c4f52b5e3ceb0fa8d0b731b tests/test_language_choice.py

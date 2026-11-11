@@ -1,0 +1,20 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 3878daffd68d14ee0379d11c19bef63c4dc02edc
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the python virtual environment
+source /testbed/testbed-venv/bin/activate
+
+# Run only the specified test file using uv run pytest, with concise output of tests in that file
+uv run pytest --tb=short -rA --disable-warnings tests/test_parser.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the applied patch after test run
+git checkout 3878daffd68d14ee0379d11c19bef63c4dc02edc

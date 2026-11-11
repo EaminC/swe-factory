@@ -1,0 +1,55 @@
+# Base image specification with Ubuntu 20.04 and bash environment
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install software-properties-common to manage PPAs and add deadsnakes PPA for Python 3.11
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update
+
+# Install system dependencies: git, python3.11, venv, distutils, pip dependencies, build essentials, curl, wget
+RUN apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    locales \
+    tzdata \
+    ca-certificates \
+    libffi-dev \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.11
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Upgrade pip and install virtualenv to create isolated python environment
+RUN python3.11 -m pip install --upgrade pip virtualenv
+
+# Create a python virtual environment named testbed
+RUN python3.11 -m virtualenv /testbed/testbed
+
+# Set working directory to /testbed
+WORKDIR /testbed
+
+# Clone the repository and checkout the specified commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed \
+    && cd /testbed \
+    && git reset --hard b95f56b446a2fe55247eee717ab85fe45f857d27
+
+# Install python dependencies inside the virtual environment; using -e . to install local repository only
+RUN source /testbed/testbed/bin/activate \
+    && pip install --upgrade pip setuptools wheel \
+    && pip install -r requirements.txt \
+    && pip install -e .
+
+# Add virtual environment activation to bashrc for interactive sessions
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# Default environment variable to ensure usage of virtual env if container is run interactively
+ENV VIRTUAL_ENV=/testbed/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"

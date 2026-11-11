@@ -1,0 +1,30 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 9bae29c0727b7af51e0715ba6c20b00f7adefe33
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Confirm patch applied by listing the test directory contents
+echo "Listing files under platform/reworkd_platform/tests/agent/:"
+ls -l platform/reworkd_platform/tests/agent/ || echo "No such directory or files."
+
+# No Python environment or test framework found; no pytest or python setup available.
+# Also, the repository is Node.js/TypeScript and no test framework or test scripts are declared.
+# Because test file is Python but not actually present in repo before patch, 
+# and due to no Python environment, running the Python test is impossible.
+
+# Thus, skip test execution but explicitly fail after patch application to mark no valid tests ran.
+
+echo "No Python environment or test runner available."
+echo "No test execution performed."
+rc=1
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset repository to clear patch
+git checkout 9bae29c0727b7af51e0715ba6c20b00f7adefe33

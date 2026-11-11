@@ -1,0 +1,49 @@
+2026-11-11 05:48:22,627 - INFO - Checking if image mlsysops__mle-agent-221-dockerfile9:latest exists locally...
+2026-11-11 05:48:23,101 - INFO - Image mlsysops__mle-agent-221-dockerfile9:latest found locally.
+2026-11-11 05:48:23,101 - INFO - Creating container for mlsysops__mle-agent-221...
+2026-11-11 05:48:23,692 - INFO - Container for mlsysops__mle-agent-221 started: 9b3d2b3bb56e3a540177c0923de27187ab651028d7905632c39b7d561bdd1979
+2026-11-11 05:48:23,694 - INFO - Intermediate patch for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_9/patch.diff, now applying to container...
+2026-11-11 05:48:24,325 - INFO - Apply patch success:
+Checking patch mle/utils/system.py...
+Applied patch mle/utils/system.py cleanly.
+
+2026-11-11 05:48:24,526 - INFO - Git diff before:
+diff --git a/mle/utils/system.py b/mle/utils/system.py
+index c7c94b7..bbaf8dd 100644
+--- a/mle/utils/system.py
++++ b/mle/utils/system.py
+@@ -89,15 +89,20 @@ def check_config(console: Optional[Console] = None):
+         os.makedirs(config_dir, exist_ok=True)
+         shutil.move(old_config_path, config_path)
+ 
+-    if not os.path.exists(config_path):
++    try:
++        with open(config_path, 'r') as file:
++            data = yaml.safe_load(file)
++            if data is None:
++                raise yaml.YAMLError
++    except FileNotFoundError:
+         console.log("Configuration file not found. Please run 'mle new' first.")
+         return False
++    except yaml.YAMLError:
++        console.log("Configuration file could not be loaded.")
++        return False
+ 
+-    with open(config_path, 'r') as file:
+-        data = yaml.safe_load(file)
+-        if data.get('search_key'):
+-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
+-
++    if data.get('search_key'):
++        os.environ["SEARCH_API_KEY"] = data.get('search_key')
+     return True
+2026-11-11 05:48:24,527 - INFO - Eval script for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_9/patch.diff, now applying to container...
+2026-11-11 05:48:30,764 - INFO - Test output for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_9/test_output.txt
+2026-11-11 05:48:30,865 - INFO - Git diff after:
+
+2026-11-11 05:48:30,866 - INFO - Git diff changed after running eval script
+2026-11-11 05:48:30,866 - INFO - Attempting to stop container mlsysops__mle-agent-221-test5...
+2026-11-11 05:48:46,148 - INFO - Attempting to remove container mlsysops__mle-agent-221-test5...
+2026-11-11 05:48:46,223 - INFO - Container mlsysops__mle-agent-221-test5 removed.
+2026-11-11 05:48:46,223 - INFO - Attempting to remove image mlsysops__mle-agent-221-dockerfile9:latest...
+2026-11-11 05:48:51,208 - INFO - Image mlsysops__mle-agent-221-dockerfile9:latest removed.

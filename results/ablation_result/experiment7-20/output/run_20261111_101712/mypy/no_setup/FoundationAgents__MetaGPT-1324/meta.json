@@ -1,0 +1,22 @@
+{
+    "task_id": "FoundationAgents__MetaGPT-1324",
+    "setup_info": {
+        "repo_path": "testbed/FoundationAgents__MetaGPT-1324_2026-11-11_10-29-01",
+        "repo_cache_path": "testbed/FoundationAgents/MetaGPT_cache"
+    },
+    "task_info": {
+        "repo": "FoundationAgents/MetaGPT",
+        "pull_number": 1324,
+        "instance_id": "FoundationAgents__MetaGPT-1324",
+        "issue_numbers": [
+            "1220"
+        ],
+        "base_commit": "5e8bd105177e08848990d32b9ea636daa639be19",
+        "patch": "diff --git a/metagpt/configs/llm_config.py b/metagpt/configs/llm_config.py\nindex 12bb8541e6..0284c89938 100644\n--- a/metagpt/configs/llm_config.py\n+++ b/metagpt/configs/llm_config.py\n@@ -12,7 +12,7 @@\n \n from metagpt.const import LLM_API_TIMEOUT\n from metagpt.utils.yaml_model import YamlModel\n-\n+from metagpt.const import METAGPT_ROOT, CONFIG_ROOT\n \n class LLMType(Enum):\n     OPENAI = \"openai\"\n@@ -94,7 +94,15 @@ class LLMConfig(YamlModel):\n     @classmethod\n     def check_llm_key(cls, v):\n         if v in [\"\", None, \"YOUR_API_KEY\"]:\n-            raise ValueError(\"Please set your API key in config2.yaml\")\n+            repo_config_path = METAGPT_ROOT / \"config/config2.yaml\"\n+            root_config_path = CONFIG_ROOT / \"config2.yaml\"\n+            if root_config_path.exists():\n+                 raise ValueError(\n+                    f\"Please set your API key in {root_config_path}. If you also set your config in {repo_config_path}, \\nthe former will overwrite the latter. This may cause unexpected result.\\n\")\n+            elif repo_config_path.exists():\n+                raise ValueError(f\"Please set your API key in {repo_config_path}\")\n+            else:\n+                raise ValueError(f\"Please set your API key in config2.yaml\")\n         return v\n \n     @field_validator(\"timeout\")\n",
+        "test_patch": "diff --git a/tests/test_llm_config.py b/tests/test_llm_config.py\nnew file mode 100644\nindex 0000000..e69de29\n--- /dev/null\n+++ b/tests/test_llm_config.py\n@@ -0,0 +1,20 @@\n+import pytest\n+from metagpt.configs.llm_config import LLMConfig\n+from pydantic import ValidationError\n+\n+def test_check_llm_key_raises_on_default_key(monkeypatch):\n+    # Patch METAGPT_ROOT and CONFIG_ROOT to simulate config file presence\n+    from pathlib import Path\n+    import metagpt.configs.llm_config as llm_config\n+\n+    class DummyPath(Path):\n+        def exists(self):\n+            return True\n+\n+    monkeypatch.setattr(llm_config, \"METAGPT_ROOT\", DummyPath(\"/fake/metagpt_root\"))\n+    monkeypatch.setattr(llm_config, \"CONFIG_ROOT\", DummyPath(\"/fake/config_root\"))\n+\n+    # The key is 'YOUR_API_KEY' which should raise ValidationError\n+    with pytest.raises(ValidationError) as excinfo:\n+        LLMConfig(api_key=\"YOUR_API_KEY\")\n+    assert \"Please set your API key\" in str(excinfo.value)\n",
+        "problem_statement": "pydantic_core._pydantic_core.ValidationError: 1 validation error for Config\nD:\\MetaGPT-main\\venv\\Scripts\\python.exe D:/MetaGPT-main/test.py\n2024-04-23 17:14:39.661 | INFO     | metagpt.const:get_metagpt_package_root:29 - Package root set to D:\\MetaGPT-main\nTraceback (most recent call last):\n  File \"D:\\MetaGPT-main\\test.py\", line 3, in <module>\n    repo: ProjectRepo = generate_repo(\"Create a 2048 game\")  # or ProjectRepo(\"<path>\")\n  File \"D:\\MetaGPT-main\\metagpt\\software_company.py\", line 30, in generate_repo\n    from metagpt.config2 import config\n  File \"D:\\MetaGPT-main\\metagpt\\config2.py\", line 164, in <module>\n    config = Config.default()\n  File \"D:\\MetaGPT-main\\metagpt\\config2.py\", line 106, in default\n    return Config(**final)\n  File \"D:\\MetaGPT-main\\venv\\lib\\site-packages\\pydantic\\main.py\", line 164, in __init__\n    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)\npydantic_core._pydantic_core.ValidationError: 1 validation error for Config\nllm.api_key\n  Value error, Please set your API key in config2.yaml [type=value_error, input_value='YOUR_API_KEY', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.5/v/value_error\n\nI've written the config as to why this is still the case\uff1f\uff1f\uff1f\n![\u5fae\u4fe1\u56fe\u7247_20240423172525](https://github.com/geekan/MetaGPT/assets/91006305/804b3f17-98b4-4137-9487-475ead58560b)",
+        "hints_text": "",
+        "created_at": "2024-04-23T09:29:06Z",
+        "version": "0.8"
+    }
+}

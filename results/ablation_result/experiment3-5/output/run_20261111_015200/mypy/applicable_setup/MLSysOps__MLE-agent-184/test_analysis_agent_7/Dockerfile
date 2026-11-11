@@ -1,0 +1,55 @@
+# Base image specifying Ubuntu 22.04 with bash shell environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Update and install essential system tools and libraries needed for development and runtime
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.11 and install pip accordingly
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 -
+
+# Create directory for the repository with proper ownership
+RUN mkdir /testbed && chown -R 1000:1000 /testbed
+
+# Create a non-root user for safer operations (optional, but recommended)
+RUN useradd -m -u 1000 testuser
+USER testuser
+WORKDIR /testbed
+
+# Clone target repository and checkout specific commit as testuser (has ownership of /testbed)
+RUN git clone https://github.com/MLSysOps/MLE-agent.git . && \
+    git config --global --add safe.directory /testbed && \
+    git reset --hard b95f56b446a2fe55247eee717ab85fe45f857d27 && \
+    git config --global --add safe.directory /testbed
+
+# Create and activate python virtual environment, upgrade pip and setuptools, install all dependencies and the repo in editable mode
+RUN python3 -m venv testbed-env
+ENV VIRTUAL_ENV=/testbed/testbed-env
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN /bin/bash -c " \
+    python -m pip install --upgrade pip setuptools wheel && \
+    pip install --upgrade 'openai~=1.34.0' 'pandas~=2.2.2' 'numexpr~=2.10.1' 'bottleneck~=1.4.0' 'google-api-python-client~=2.143.0' 'google-auth-httplib2~=0.2.0' 'google-auth-oauthlib~=1.2.1' rich click pyyaml fastapi uvicorn requests chromadb onnxruntime questionary tavily-python instructor setuptools && \
+    pip install -e . \
+"
+
+# Final working directory
+WORKDIR /testbed
+
+# Ensure bash is the default shell to avoid runtime issues
+SHELL ["/bin/bash", "-c"]

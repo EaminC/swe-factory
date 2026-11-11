@@ -1,0 +1,19 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout a1ee111f912c54fb0678b608b98c47f5f8d17942 
+
+# Apply the test patch before running the tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified target test file with uv run pytest
+uv run pytest --no-header -rA --tb=short python/valuecell/adapters/assets/tests/test_dashscope_provider.py
+
+rc=$?            # Save exit code
+ 
+echo "OMNIGRIL_EXIT_CODE=$rc" # Echo test status
+
+# Reset the patched test file to avoid side effects
+git checkout a1ee111f912c54fb0678b608b98c47f5f8d17942 python/valuecell/adapters/assets/tests/test_dashscope_provider.py

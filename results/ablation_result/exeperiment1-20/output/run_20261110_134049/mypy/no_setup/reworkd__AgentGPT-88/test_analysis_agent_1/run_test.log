@@ -1,0 +1,654 @@
+2026-11-10 15:25:23,255 - INFO - Checking if image reworkd__agentgpt-88-dockerfile1:latest exists locally...
+2026-11-10 15:25:23,286 - INFO - Image reworkd__agentgpt-88-dockerfile1:latest found locally.
+2026-11-10 15:25:23,286 - INFO - Creating container for reworkd__agentgpt-88...
+2026-11-10 15:25:27,384 - INFO - Container for reworkd__agentgpt-88 started: a20608dcb0209fc4c1278a6bf969a19a0b6ddd197ca7dba9721592713563b594
+2026-11-10 15:25:27,385 - INFO - Intermediate patch for reworkd__agentgpt-88 written to /root/swe-factory/output/run_20261110_134049/mypy/reworkd__AgentGPT-88/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-10 15:25:27,606 - INFO - Apply patch success:
+Checking patch src/components/AutonomousAgent.ts...
+Checking patch src/components/Input.tsx...
+Checking patch src/components/SettingsDialog.tsx...
+Checking patch src/pages/api/chain.ts...
+Checking patch src/pages/api/create.ts...
+Checking patch src/pages/api/execute.ts...
+Checking patch src/pages/index.tsx...
+Checking patch src/utils/chain.ts...
+Applied patch src/components/AutonomousAgent.ts cleanly.
+Applied patch src/components/Input.tsx cleanly.
+Applied patch src/components/SettingsDialog.tsx cleanly.
+Applied patch src/pages/api/chain.ts cleanly.
+Applied patch src/pages/api/create.ts cleanly.
+Applied patch src/pages/api/execute.ts cleanly.
+Applied patch src/pages/index.tsx cleanly.
+Applied patch src/utils/chain.ts cleanly.
+
+2026-11-10 15:25:27,689 - INFO - Git diff before:
+diff --git a/src/components/AutonomousAgent.ts b/src/components/AutonomousAgent.ts
+index 71ae2847..e6ff52f0 100644
+--- a/src/components/AutonomousAgent.ts
++++ b/src/components/AutonomousAgent.ts
+@@ -6,6 +6,7 @@ class AutonomousAgent {
+   goal: string;
+   tasks: string[] = [];
+   customApiKey: string;
++  customModelName: string;
+   isRunning = true;
+   sendMessage: (message: Message) => void;
+   shutdown: () => void;
+@@ -16,13 +17,15 @@ class AutonomousAgent {
+     goal: string,
+     addMessage: (message: Message) => void,
+     shutdown: () => void,
+-    customApiKey: string
++    customApiKey: string,
++    customModelName: string
+   ) {
+     this.name = name;
+     this.goal = goal;
+     this.sendMessage = addMessage;
+     this.shutdown = shutdown;
+     this.customApiKey = customApiKey;
++    this.customModelName = customModelName;
+   }
+ 
+   async run() {
+@@ -118,10 +121,12 @@ class AutonomousAgent {
+   async getInitialTasks(): Promise<string[]> {
+     const res = await axios.post(`/api/chain`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+     });
++
+     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-argument
+-    return res.data.tasks as string[];
++    return res.data.newTasks as string[];
+   }
+ 
+   async getAdditionalTasks(
+@@ -130,18 +135,20 @@ class AutonomousAgent {
+   ): Promise<string[]> {
+     const res = await axios.post(`/api/create`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+       tasks: this.tasks,
+       lastTask: currentTask,
+       result: result,
+     });
+     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
+-    return res.data.tasks as string[];
++    return res.data.newTasks as string[];
+   }
+ 
+   async executeTask(task: string): Promise<string> {
+     const res = await axios.post(`/api/execute`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+       task: task,
+     });
+diff --git a/src/components/Input.tsx b/src/components/Input.tsx
+index 46992aa2..b2c59635 100644
+--- a/src/components/Input.tsx
++++ b/src/components/Input.tsx
+@@ -19,7 +19,7 @@ const Input = ({
+   return (
+     <div className="z-10 flex w-full items-center rounded-xl bg-[#3a3a3a] font-mono text-lg text-white/75 shadow-xl">
+       {left && (
+-        <div className="center flex items-center rounded-xl rounded-r-none border-[2px] border-r-0 border-white/10 px-5 py-2 text-lg font-semibold tracking-wider transition-all sm:py-3">
++        <div className="center flex w-1/4 items-center rounded-xl rounded-r-none border-[2px] border-r-0 border-white/10 px-5 py-2 text-lg font-semibold tracking-wider transition-all sm:py-3">
+           {left}
+         </div>
+       )}
+diff --git a/src/components/SettingsDialog.tsx b/src/components/SettingsDialog.tsx
+index 909ced26..24587967 100644
+--- a/src/components/SettingsDialog.tsx
++++ b/src/components/SettingsDialog.tsx
+@@ -1,6 +1,6 @@
+ import React from "react";
+ import Button from "./Button";
+-import { FaKey } from "react-icons/fa";
++import { FaKey, FaMicrochip } from "react-icons/fa";
+ import Dialog from "./Dialog";
+ import Input from "./Input";
+ 
+@@ -9,11 +9,15 @@ export default function SettingsDialog({
+   close,
+   customApiKey,
+   setCustomApiKey,
++  customModelName,
++  setCustomModelName,
+ }: {
+   show: boolean;
+   close: () => void;
+   customApiKey: string;
+   setCustomApiKey: (key: string) => void;
++  customModelName: string;
++  setCustomModelName: (key: string) => void;
+ }) {
+   const [key, setKey] = React.useState<string>(customApiKey);
+ 
+@@ -56,11 +60,23 @@ export default function SettingsDialog({
+             link.
+           </a>
+         </p>
++        <Input
++          left={
++            <>
++              <FaMicrochip />
++              <span className="ml-2">Model:</span>
++            </>
++          }
++          placeholder={"gpt-3.5-turbo"}
++          value={customModelName}
++          onChange={(e) => setCustomModelName(e.target.value)}
++        />
++        <br />
+         <Input
+           left={
+             <>
+               <FaKey />
+-              <span className="ml-2">Key:</span>
++              <span className="ml-2">Key: </span>
+             </>
+           }
+           placeholder={"sk-..."}
+diff --git a/src/pages/api/chain.ts b/src/pages/api/chain.ts
+index 5654d80f..b0d43066 100644
+--- a/src/pages/api/chain.ts
++++ b/src/pages/api/chain.ts
+@@ -13,23 +13,26 @@ export const config = {
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+ }
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal } =
++      (await request.json()) as RequestBody;
+     const completion = await startGoalAgent(
+-      createModel(data.customApiKey),
+-      data.goal
++      createModel({ customApiKey, customModelName }),
++      goal
+     );
+ 
+-    const tasks = extractArray(completion.text as string).filter(
++    const newTasks = extractArray(completion.text as string).filter(
+       realTasksFilter
+     );
+-    return NextResponse.json({ tasks });
++    return NextResponse.json({ newTasks });
+   } catch (e) {}
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/api/create.ts b/src/pages/api/create.ts
+index 9959cb33..4d5c7d78 100644
+--- a/src/pages/api/create.ts
++++ b/src/pages/api/create.ts
+@@ -13,29 +13,32 @@ export const config = {
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+   tasks: string[];
+   lastTask: string;
+   result: string;
+ }
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal, tasks, lastTask, result } =
++      (await request.json()) as RequestBody;
+     const completion = await executeCreateTaskAgent(
+-      createModel(data.customApiKey),
+-      data.goal,
+-      data.tasks,
+-      data.lastTask,
+-      data.result
++      createModel({ customApiKey, customModelName }),
++      goal,
++      tasks,
++      lastTask,
++      result
+     );
+ 
+-    const tasks = extractArray(completion.text as string).filter(
++    const newTasks = extractArray(completion.text as string).filter(
+       realTasksFilter
+     );
+-    return NextResponse.json({ tasks });
++    return NextResponse.json({ newTasks });
+   } catch (e) {}
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/api/execute.ts b/src/pages/api/execute.ts
+index 51b52481..0d8839e9 100644
+--- a/src/pages/api/execute.ts
++++ b/src/pages/api/execute.ts
+@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+   task: string;
+ }
+@@ -11,14 +12,14 @@ export const config = {
+   runtime: "edge",
+ };
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal, task } =
++      (await request.json()) as RequestBody;
+     const completion = await executeTaskAgent(
+-      createModel(data.customApiKey),
+-      data.goal,
+-      data.task
++      createModel({ customApiKey, customModelName }),
++      goal,
++      task
+     );
+ 
+     return NextResponse.json({
+@@ -28,3 +29,5 @@ export default async (request: NextRequest) => {
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/index.tsx b/src/pages/index.tsx
+index e928380b..7b5eaf5d 100644
+--- a/src/pages/index.tsx
++++ b/src/pages/index.tsx
+@@ -20,6 +20,7 @@ const Home: NextPage = () => {
+   const [goalInput, setGoalInput] = React.useState<string>("");
+   const [agent, setAgent] = React.useState<AutonomousAgent | null>(null);
+   const [customApiKey, setCustomApiKey] = React.useState<string>("");
++  const [customModelName, setCustomModelName] = React.useState<string>("");
+   const [shouldAgentStop, setShouldAgentStop] = React.useState(false);
+ 
+   const [messages, setMessages] = React.useState<Message[]>([]);
+@@ -57,7 +58,8 @@ const Home: NextPage = () => {
+       goalInput,
+       addMessage,
+       () => setAgent(null),
+-      customApiKey
++      customApiKey,
++      customModelName
+     );
+     setAgent(agent);
+     agent.run().then(console.log).catch(console.error);
+@@ -77,6 +79,8 @@ const Home: NextPage = () => {
+       <SettingsDialog
+         customApiKey={customApiKey}
+         setCustomApiKey={setCustomApiKey}
++        customModelName={customModelName}
++        setCustomModelName={setCustomModelName}
+         show={showSettingsDialog}
+         close={() => setShowSettingsDialog(false)}
+       />
+diff --git a/src/utils/chain.ts b/src/utils/chain.ts
+index c13e64e8..0faddc77 100644
+--- a/src/utils/chain.ts
++++ b/src/utils/chain.ts
+@@ -2,12 +2,18 @@ import { OpenAI } from "langchain/llms/openai";
+ import { PromptTemplate } from "langchain/prompts";
+ import { LLMChain } from "langchain/chains";
+ 
+-export const createModel = (customApiKey: string) =>
++type ModelOptions = {
++  customApiKey: string;
++  customModelName: string;
++};
++
++export const createModel = (opts: ModelOptions) =>
+   new OpenAI({
+     openAIApiKey:
+-      customApiKey === "" ? process.env.OPENAI_API_KEY : customApiKey,
++      opts.customApiKey === "" ? process.env.OPENAI_API_KEY : opts.customApiKey,
+     temperature: 0.9,
+-    modelName: "gpt-3.5-turbo",
++    modelName:
++      opts.customModelName === "" ? "gpt-3.5-turbo" : opts.customModelName,
+     maxTokens: 300,
+   });
+2026-11-10 15:25:27,828 - INFO - Eval script for reworkd__agentgpt-88 written to /root/swe-factory/output/run_20261110_134049/mypy/reworkd__AgentGPT-88/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-10 15:25:56,391 - INFO - Test output for reworkd__agentgpt-88 written to /root/swe-factory/output/run_20261110_134049/mypy/reworkd__AgentGPT-88/test_analysis_agent_1/test_output.txt
+2026-11-10 15:25:56,480 - INFO - Git diff after:
+diff --git a/src/components/AutonomousAgent.ts b/src/components/AutonomousAgent.ts
+index 71ae2847..e6ff52f0 100644
+--- a/src/components/AutonomousAgent.ts
++++ b/src/components/AutonomousAgent.ts
+@@ -6,6 +6,7 @@ class AutonomousAgent {
+   goal: string;
+   tasks: string[] = [];
+   customApiKey: string;
++  customModelName: string;
+   isRunning = true;
+   sendMessage: (message: Message) => void;
+   shutdown: () => void;
+@@ -16,13 +17,15 @@ class AutonomousAgent {
+     goal: string,
+     addMessage: (message: Message) => void,
+     shutdown: () => void,
+-    customApiKey: string
++    customApiKey: string,
++    customModelName: string
+   ) {
+     this.name = name;
+     this.goal = goal;
+     this.sendMessage = addMessage;
+     this.shutdown = shutdown;
+     this.customApiKey = customApiKey;
++    this.customModelName = customModelName;
+   }
+ 
+   async run() {
+@@ -118,10 +121,12 @@ class AutonomousAgent {
+   async getInitialTasks(): Promise<string[]> {
+     const res = await axios.post(`/api/chain`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+     });
++
+     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-argument
+-    return res.data.tasks as string[];
++    return res.data.newTasks as string[];
+   }
+ 
+   async getAdditionalTasks(
+@@ -130,18 +135,20 @@ class AutonomousAgent {
+   ): Promise<string[]> {
+     const res = await axios.post(`/api/create`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+       tasks: this.tasks,
+       lastTask: currentTask,
+       result: result,
+     });
+     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
+-    return res.data.tasks as string[];
++    return res.data.newTasks as string[];
+   }
+ 
+   async executeTask(task: string): Promise<string> {
+     const res = await axios.post(`/api/execute`, {
+       customApiKey: this.customApiKey,
++      customModelName: this.customModelName,
+       goal: this.goal,
+       task: task,
+     });
+diff --git a/src/components/Input.tsx b/src/components/Input.tsx
+index 46992aa2..b2c59635 100644
+--- a/src/components/Input.tsx
++++ b/src/components/Input.tsx
+@@ -19,7 +19,7 @@ const Input = ({
+   return (
+     <div className="z-10 flex w-full items-center rounded-xl bg-[#3a3a3a] font-mono text-lg text-white/75 shadow-xl">
+       {left && (
+-        <div className="center flex items-center rounded-xl rounded-r-none border-[2px] border-r-0 border-white/10 px-5 py-2 text-lg font-semibold tracking-wider transition-all sm:py-3">
++        <div className="center flex w-1/4 items-center rounded-xl rounded-r-none border-[2px] border-r-0 border-white/10 px-5 py-2 text-lg font-semibold tracking-wider transition-all sm:py-3">
+           {left}
+         </div>
+       )}
+diff --git a/src/components/SettingsDialog.tsx b/src/components/SettingsDialog.tsx
+index 909ced26..24587967 100644
+--- a/src/components/SettingsDialog.tsx
++++ b/src/components/SettingsDialog.tsx
+@@ -1,6 +1,6 @@
+ import React from "react";
+ import Button from "./Button";
+-import { FaKey } from "react-icons/fa";
++import { FaKey, FaMicrochip } from "react-icons/fa";
+ import Dialog from "./Dialog";
+ import Input from "./Input";
+ 
+@@ -9,11 +9,15 @@ export default function SettingsDialog({
+   close,
+   customApiKey,
+   setCustomApiKey,
++  customModelName,
++  setCustomModelName,
+ }: {
+   show: boolean;
+   close: () => void;
+   customApiKey: string;
+   setCustomApiKey: (key: string) => void;
++  customModelName: string;
++  setCustomModelName: (key: string) => void;
+ }) {
+   const [key, setKey] = React.useState<string>(customApiKey);
+ 
+@@ -56,11 +60,23 @@ export default function SettingsDialog({
+             link.
+           </a>
+         </p>
++        <Input
++          left={
++            <>
++              <FaMicrochip />
++              <span className="ml-2">Model:</span>
++            </>
++          }
++          placeholder={"gpt-3.5-turbo"}
++          value={customModelName}
++          onChange={(e) => setCustomModelName(e.target.value)}
++        />
++        <br />
+         <Input
+           left={
+             <>
+               <FaKey />
+-              <span className="ml-2">Key:</span>
++              <span className="ml-2">Key: </span>
+             </>
+           }
+           placeholder={"sk-..."}
+diff --git a/src/pages/api/chain.ts b/src/pages/api/chain.ts
+index 5654d80f..b0d43066 100644
+--- a/src/pages/api/chain.ts
++++ b/src/pages/api/chain.ts
+@@ -13,23 +13,26 @@ export const config = {
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+ }
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal } =
++      (await request.json()) as RequestBody;
+     const completion = await startGoalAgent(
+-      createModel(data.customApiKey),
+-      data.goal
++      createModel({ customApiKey, customModelName }),
++      goal
+     );
+ 
+-    const tasks = extractArray(completion.text as string).filter(
++    const newTasks = extractArray(completion.text as string).filter(
+       realTasksFilter
+     );
+-    return NextResponse.json({ tasks });
++    return NextResponse.json({ newTasks });
+   } catch (e) {}
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/api/create.ts b/src/pages/api/create.ts
+index 9959cb33..4d5c7d78 100644
+--- a/src/pages/api/create.ts
++++ b/src/pages/api/create.ts
+@@ -13,29 +13,32 @@ export const config = {
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+   tasks: string[];
+   lastTask: string;
+   result: string;
+ }
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal, tasks, lastTask, result } =
++      (await request.json()) as RequestBody;
+     const completion = await executeCreateTaskAgent(
+-      createModel(data.customApiKey),
+-      data.goal,
+-      data.tasks,
+-      data.lastTask,
+-      data.result
++      createModel({ customApiKey, customModelName }),
++      goal,
++      tasks,
++      lastTask,
++      result
+     );
+ 
+-    const tasks = extractArray(completion.text as string).filter(
++    const newTasks = extractArray(completion.text as string).filter(
+       realTasksFilter
+     );
+-    return NextResponse.json({ tasks });
++    return NextResponse.json({ newTasks });
+   } catch (e) {}
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/api/execute.ts b/src/pages/api/execute.ts
+index 51b52481..0d8839e9 100644
+--- a/src/pages/api/execute.ts
++++ b/src/pages/api/execute.ts
+@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
+ 
+ interface RequestBody {
+   customApiKey: string;
++  customModelName: string;
+   goal: string;
+   task: string;
+ }
+@@ -11,14 +12,14 @@ export const config = {
+   runtime: "edge",
+ };
+ 
+-export default async (request: NextRequest) => {
+-  let data: RequestBody | null = null;
++const handler = async (request: NextRequest) => {
+   try {
+-    data = (await request.json()) as RequestBody;
++    const { customApiKey, customModelName, goal, task } =
++      (await request.json()) as RequestBody;
+     const completion = await executeTaskAgent(
+-      createModel(data.customApiKey),
+-      data.goal,
+-      data.task
++      createModel({ customApiKey, customModelName }),
++      goal,
++      task
+     );
+ 
+     return NextResponse.json({
+@@ -28,3 +29,5 @@ export default async (request: NextRequest) => {
+ 
+   return NextResponse.error();
+ };
++
++export default handler;
+diff --git a/src/pages/index.tsx b/src/pages/index.tsx
+index e928380b..7b5eaf5d 100644
+--- a/src/pages/index.tsx
++++ b/src/pages/index.tsx
+@@ -20,6 +20,7 @@ const Home: NextPage = () => {
+   const [goalInput, setGoalInput] = React.useState<string>("");
+   const [agent, setAgent] = React.useState<AutonomousAgent | null>(null);
+   const [customApiKey, setCustomApiKey] = React.useState<string>("");
++  const [customModelName, setCustomModelName] = React.useState<string>("");
+   const [shouldAgentStop, setShouldAgentStop] = React.useState(false);
+ 
+   const [messages, setMessages] = React.useState<Message[]>([]);
+@@ -57,7 +58,8 @@ const Home: NextPage = () => {
+       goalInput,
+       addMessage,
+       () => setAgent(null),
+-      customApiKey
++      customApiKey,
++      customModelName
+     );
+     setAgent(agent);
+     agent.run().then(console.log).catch(console.error);
+@@ -77,6 +79,8 @@ const Home: NextPage = () => {
+       <SettingsDialog
+         customApiKey={customApiKey}
+         setCustomApiKey={setCustomApiKey}
++        customModelName={customModelName}
++        setCustomModelName={setCustomModelName}
+         show={showSettingsDialog}
+         close={() => setShowSettingsDialog(false)}
+       />
+diff --git a/src/utils/chain.ts b/src/utils/chain.ts
+index c13e64e8..0faddc77 100644
+--- a/src/utils/chain.ts
++++ b/src/utils/chain.ts
+@@ -2,12 +2,18 @@ import { OpenAI } from "langchain/llms/openai";
+ import { PromptTemplate } from "langchain/prompts";
+ import { LLMChain } from "langchain/chains";
+ 
+-export const createModel = (customApiKey: string) =>
++type ModelOptions = {
++  customApiKey: string;
++  customModelName: string;
++};
++
++export const createModel = (opts: ModelOptions) =>
+   new OpenAI({
+     openAIApiKey:
+-      customApiKey === "" ? process.env.OPENAI_API_KEY : customApiKey,
++      opts.customApiKey === "" ? process.env.OPENAI_API_KEY : opts.customApiKey,
+     temperature: 0.9,
+-    modelName: "gpt-3.5-turbo",
++    modelName:
++      opts.customModelName === "" ? "gpt-3.5-turbo" : opts.customModelName,
+     maxTokens: 300,
+   });
+2026-11-10 15:25:56,480 - INFO - Attempting to stop container reworkd__agentgpt-88-test1...
+2026-11-10 15:26:13,394 - INFO - Attempting to remove container reworkd__agentgpt-88-test1...
+2026-11-10 15:26:15,774 - INFO - Container reworkd__agentgpt-88-test1 removed.
+2026-11-10 15:26:15,774 - INFO - Attempting to remove image reworkd__agentgpt-88-dockerfile1:latest...
+2026-11-10 15:26:23,327 - INFO - Image reworkd__agentgpt-88-dockerfile1:latest removed.

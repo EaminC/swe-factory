@@ -1,0 +1,329 @@
+diff --git a/.env.example b/.env.example
+index d8a8c1d..b0a4757 100644
+--- a/.env.example
++++ b/.env.example
+@@ -60,5 +60,8 @@ OPENAI_API_KEY=
+ OPENAI_COMPATIBLE_API_KEY=
+ OPENAI_COMPATIBLE_BASE_URL=
+ 
++# Get your API key from: https://bailian.console.aliyun.com/#/home
++DASHSCOPE_API_KEY=
++
+ SEC_EMAIL=your.name@example.com
+ 
+diff --git a/docs/CONFIGURATION_GUIDE.md b/docs/CONFIGURATION_GUIDE.md
+index fdb0b6e..2605a65 100644
+--- a/docs/CONFIGURATION_GUIDE.md
++++ b/docs/CONFIGURATION_GUIDE.md
+@@ -27,6 +27,7 @@ ValueCell supports multiple LLM providers. Choose at least one:
+ | **SiliconFlow** | [siliconflow.cn](https://www.siliconflow.cn/)       |
+ | **Google**      | [ai.google.dev](https://ai.google.dev/)             |
+ | **OpenAI**      | [platform.openai.com](https://platform.openai.com/) |
++| **DashScope**   | [bailian.console.aliyun.com](https://bailian.console.aliyun.com/#/home) |
+ 
+ ### Step 2: Configure .env File
+ 
+@@ -86,6 +87,7 @@ python/
+ │   ├── providers/
+ │   │   ├── openrouter.yaml           # OpenRouter provider config
+ │   │   ├── siliconflow.yaml          # SiliconFlow provider config
++│   │   ├── dashscope.yaml            # DashScope (Alibaba Cloud) provider config
+ │   │   └── other_provider.yaml
+ │   ├── agents/
+ │   │   ├── super_agent.yaml          # Super Agent configuration
+@@ -195,6 +197,9 @@ models:
+     google:
+       config_file: "providers/google.yaml"
+       api_key_env: "GOOGLE_API_KEY"
++    dashscope:
++      config_file: "providers/dashscope.yaml"
++      api_key_env: "DASHSCOPE_API_KEY"
+ 
+ # Agent registry
+ agents:
+@@ -324,7 +329,10 @@ The selection logic is implemented in `python/valuecell/config/manager.py`:
+ 1. OpenRouter
+ 2. SiliconFlow
+ 3. Google
+-4. Other configured providers
++4. OpenAI
++5. OpenAI-Compatible
++6. Azure
++7. Other configured providers (including DashScope, DeepSeek, etc.)
+ 
+ Override this with an environment variable:
+ 
+@@ -417,6 +425,9 @@ GOOGLE_API_KEY=AIzaSyDxxxxxxxxxxxxx
+ AZURE_OPENAI_API_KEY=xxxxxxxxxxxxx
+ AZURE_OPENAI_ENDPOINT=https://xxxxx.openai.azure.com/
+ OPENAI_API_VERSION=2024-10-21
++
++# DashScope (Alibaba Cloud Qwen3 models)
++DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxx
+ ```
+ 
+ ### Model Configuration
+@@ -462,6 +473,7 @@ AGENT_DEBUG_MODE=true
+ OPENROUTER_API_KEY=sk-or-v1-xxxxx        # Primary: access to many models
+ SILICONFLOW_API_KEY=sk-xxxxx             # Fallback: cost-effective
+ GOOGLE_API_KEY=AIzaSyD-xxxxx             # Second fallback: specialized
++DASHSCOPE_API_KEY=sk-xxxxx               # DashScope: Qwen3 models (Chinese optimized)
+ 
+ # config.yaml
+ models:
+diff --git a/frontend/src/assets/png/index.ts b/frontend/src/assets/png/index.ts
+index 13fabba..afa19c9 100644
+--- a/frontend/src/assets/png/index.ts
++++ b/frontend/src/assets/png/index.ts
+@@ -32,6 +32,7 @@ export { default as OkxPng } from "./exchanges/okx.png";
+ export { default as IconGroupPng } from "./icon-group.png";
+ export { default as MessageGroupPng } from "./message-group.png";
+ export { default as AzurePng } from "./model-providers/azure.png";
++export { default as DashScopePng } from "./model-providers/dashscope.png";
+ export { default as DeepSeekPng } from "./model-providers/deepseek.png";
+ export { default as GooglePng } from "./model-providers/google.png";
+ export { default as OpenAiPng } from "./model-providers/openai.png";
+diff --git a/frontend/src/assets/png/model-providers/dashscope.png b/frontend/src/assets/png/model-providers/dashscope.png
+new file mode 100644
+index 0000000..7880368
+Binary files /dev/null and b/frontend/src/assets/png/model-providers/dashscope.png differ
+diff --git a/frontend/src/constants/icons.ts b/frontend/src/constants/icons.ts
+index ddfa0a6..d573e49 100644
+--- a/frontend/src/constants/icons.ts
++++ b/frontend/src/constants/icons.ts
+@@ -3,6 +3,7 @@ import {
+   BinancePng,
+   BlockchainPng,
+   CoinbasePng,
++  DashScopePng,
+   DeepSeekPng,
+   GatePng,
+   GooglePng,
+@@ -23,6 +24,7 @@ export const MODEL_PROVIDER_ICONS = {
+   deepseek: DeepSeekPng,
+   google: GooglePng,
+   azure: AzurePng,
++  dashscope: DashScopePng,
+ };
+ 
+ export const EXCHANGE_ICONS = {
+diff --git a/python/configs/config.yaml b/python/configs/config.yaml
+index c034c1f..f081770 100644
+--- a/python/configs/config.yaml
++++ b/python/configs/config.yaml
+@@ -46,6 +46,10 @@ models:
+     deepseek:
+       config_file: "providers/deepseek.yaml"
+       api_key_env: "DEEPSEEK_API_KEY"
++    
++    dashscope:
++      config_file: "providers/dashscope.yaml"
++      api_key_env: "DASHSCOPE_API_KEY"
+ 
+ # Agent Configuration
+ agents:
+diff --git a/python/configs/providers/dashscope.yaml b/python/configs/providers/dashscope.yaml
+new file mode 100644
+index 0000000..95d816c
+--- /dev/null
++++ b/python/configs/providers/dashscope.yaml
+@@ -0,0 +1,85 @@
++# ============================================
++# DashScope Provider Configuration
++# ============================================
++# DashScope (Alibaba Cloud Bailian) exposes an OpenAI-compatible API for Qwen3 models.
++# Configure the API key via DASHSCOPE_API_KEY or override using env vars at runtime.
++
++name: DashScope
++provider_type: dashscope
++enabled: true
++
++# Connection parameters for DashScope compatible-mode endpoint.
++connection:
++  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
++  api_key_env: DASHSCOPE_API_KEY
++
++# Default chat model used when no model_id is specified.
++default_model: qwen3-max
++
++# Global default inference parameters.
++defaults:
++  temperature: 0.7
++  max_tokens: 16384
++
++# Commonly used Qwen3 models available via DashScope.
++models:
++  - id: qwen3-max
++    name: Qwen3 Max
++    context_length: 256000
++    max_output_tokens: 16384
++    description: Qwen3 Max model with strongest performance
++    supported_inputs:
++      - text
++    supported_outputs:
++      - text
++
++  - id: qwen3-max-preview
++    name: Qwen3 Max Preview
++    context_length: 256000
++    max_output_tokens: 16384
++    description: Qwen3 Max preview model
++    supported_inputs:
++      - text
++    supported_outputs:
++      - text
++
++  - id: qwen-plus
++    name: Qwen Plus
++    context_length: 256000
++    max_output_tokens: 16384
++    description: Qwen Plus model with balanced performance
++    supported_inputs:
++      - text
++    supported_outputs:
++      - text
++
++  - id: qwen-flash
++    name: Qwen Flash
++    context_length: 256000
++    max_output_tokens: 16384
++    description: Qwen Flash model optimized for fast response
++    supported_inputs:
++      - text
++    supported_outputs:
++      - text
++
++# Embedding configuration for DashScope text embedding models.
++embedding:
++  default_model: text-embedding-v4
++
++  defaults:
++    dimensions: 2048
++    encoding_format: "float"
++
++  models:
++    - id: text-embedding-v4
++      name: Text Embedding V4
++      dimensions: 2048
++      max_input: 8192
++      description: DashScope text embedding v4 model (latest)
++
++    - id: text-embedding-v3
++      name: Text Embedding V3
++      dimensions: 1024
++      max_input: 8192
++      description: DashScope text embedding v3 model
+\ No newline at end of file
+diff --git a/python/valuecell/adapters/models/__init__.py b/python/valuecell/adapters/models/__init__.py
+index 562247e..eca9560 100644
+--- a/python/valuecell/adapters/models/__init__.py
++++ b/python/valuecell/adapters/models/__init__.py
+@@ -21,6 +21,7 @@ Usage:
+ 
+ from valuecell.adapters.models.factory import (
+     AzureProvider,
++    DashScopeProvider,
+     DeepSeekProvider,
+     GoogleProvider,
+     ModelFactory,
+@@ -47,6 +48,7 @@ __all__ = [
+     "AzureProvider",
+     "SiliconFlowProvider",
+     "DeepSeekProvider",
++    "DashScopeProvider",
+     # Convenience functions
+     "create_model",
+     "create_model_for_agent",
+diff --git a/python/valuecell/adapters/models/factory.py b/python/valuecell/adapters/models/factory.py
+index 11c8896..15835a8 100644
+--- a/python/valuecell/adapters/models/factory.py
++++ b/python/valuecell/adapters/models/factory.py
+@@ -503,6 +503,68 @@ class DeepSeekProvider(ModelProvider):
+         )
+ 
+ 
++class DashScopeProvider(ModelProvider):
++    """DashScope model provider (native)"""
++
++    def create_model(self, model_id: Optional[str] = None, **kwargs):
++        """Create DashScope model via agno (native)"""
++        try:
++            from agno.models.dashscope import DashScope
++        except ImportError:
++            raise ImportError(
++                "agno package not installed. Install with: pip install agno"
++            )
++
++        model_id = model_id or self.config.default_model
++        params = {**self.config.parameters, **kwargs}
++
++        # Prefer native endpoint; ignore compatible-mode base_url if present
++        base_url = self.config.base_url
++        if base_url and "compatible-mode" in base_url:
++            base_url = None
++
++        logger.info(f"Creating DashScope (native) model: {model_id}")
++
++        return DashScope(
++            id=model_id,
++            api_key=self.config.api_key,
++            base_url=base_url,
++            temperature=params.get("temperature"),
++            max_tokens=params.get("max_tokens"),
++            top_p=params.get("top_p"),
++        )
++
++    def create_embedder(self, model_id: Optional[str] = None, **kwargs):
++        """Create embedder via DashScope (OpenAI-compatible)"""
++        try:
++            from agno.knowledge.embedder.openai import OpenAIEmbedder
++        except ImportError:
++            raise ImportError("agno package not installed")
++
++        # Use provided model_id or default embedding model
++        model_id = model_id or self.config.default_embedding_model
++
++        if not model_id:
++            raise ValueError(
++                f"No embedding model specified for provider '{self.config.name}'"
++            )
++
++        # Merge parameters: provider embedding defaults < kwargs
++        params = {**self.config.embedding_parameters, **kwargs}
++
++        logger.info(f"Creating DashScope embedder: {model_id}")
++
++        return OpenAIEmbedder(
++            id=model_id,
++            api_key=self.config.api_key,
++            base_url=self.config.base_url,
++            dimensions=int(params.get("dimensions", 2048))
++            if params.get("dimensions")
++            else None,
++            encoding_format=params.get("encoding_format", "float"),
++        )
++
++
+ class ModelFactory:
+     """
+     Factory for creating model instances with provider abstraction
+@@ -523,6 +585,7 @@ class ModelFactory:
+         "openai": OpenAIProvider,
+         "openai-compatible": OpenAICompatibleProvider,
+         "deepseek": DeepSeekProvider,
++        "dashscope": DashScopeProvider,
+     }
+ 
+     def __init__(self, config_manager: Optional[ConfigManager] = None):
+diff --git a/python/valuecell/server/api/routers/models.py b/python/valuecell/server/api/routers/models.py
+index c0ffe7a..b55390c 100644
+--- a/python/valuecell/server/api/routers/models.py
++++ b/python/valuecell/server/api/routers/models.py
+@@ -131,6 +131,7 @@ def create_models_router() -> APIRouter:
+             "azure": "https://azure.microsoft.com/en-us/products/ai-foundry/models/openai/",
+             "siliconflow": "https://cloud.siliconflow.cn/account/ak",
+             "deepseek": "https://platform.deepseek.com/api_keys",
++            "dashscope": "https://bailian.console.aliyun.com/#/home",
+         }
+         return mapping.get(provider)
+ 

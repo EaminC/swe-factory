@@ -1,0 +1,60 @@
+# Use official Python 3.12 slim-bullseye image as base (Debian bookworm slim does not yet have python3.12)
+FROM python:3.12.0-slim-bookworm
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies: git, netcat-traditional, build tools, curl, bash-completion, locales for UTF8, and cleanup apt caches
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    netcat-traditional \
+    build-essential \
+    curl \
+    bash-completion \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup UTF-8 locale
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Install Poetry 1.8.3 according to official recommended way
+ENV POETRY_VERSION=1.8.3
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3 - --version $POETRY_VERSION \
+    && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+# Set working directory
+WORKDIR /testbed
+
+# Clone the repository and checkout the specific commit (build argument)
+ARG REPO=https://github.com/Canner/WrenAI.git
+ARG COMMIT_SHA=9b589c65fed699a48d1c93fe74c9e57bc361b70d
+
+RUN git clone $REPO . \
+ && git reset --hard $COMMIT_SHA
+
+# Configure Poetry to create virtualenvs inside the project folder
+RUN poetry config virtualenvs.in-project true
+
+# Install dependencies with Poetry, excluding dev, eval, test groups as per environment information
+RUN poetry install --no-interaction --no-ansi --without dev --without eval --without test
+
+# Install the package in editable/development mode to ensure local code is used
+RUN poetry run pip install -e .
+
+# Make sure poetry's virtualenv is activated in bash sessions by default
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default environment variable for Python to run in unbuffered mode
+ENV PYTHONUNBUFFERED=1
+
+# Just install just 1.36.0 (used for setup and testing commands)
+RUN curl -Ls https://github.com/casey/just/releases/download/1.36.0/just-1.36.0-x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin just
+
+# Expose working directory and entrypoint note: ENTRYPOINT disallowed per instructions
+
+# Final working dir
+WORKDIR /testbed

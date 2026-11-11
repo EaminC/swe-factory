@@ -1,0 +1,23 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout cc7d248e9ec8f9359d7454017ddc6a31bde840b4
+
+# Apply test patch (content to be replaced during execution)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment and run only the specified test file with unittest
+source /opt/testbed/bin/activate
+
+python -m unittest tests/test_cache.py -v
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to clean any patch effect
+git checkout cc7d248e9ec8f9359d7454017ddc6a31bde840b4 tests/test_cache.py
+</script>

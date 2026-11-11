@@ -1,0 +1,155 @@
+[BUG] fix: Improve tool description generation in Agent class for better LLM comprehension
+### Description
+
+## Issue
+The current implementation of `_render_text_description_and_args` in `agent.py` generates obscure and hard-to-parse tool descriptions for LLMs. It directly uses `str(tool.args)`, which results in exposing internal Pydantic field information that is not useful for LLMs:
+
+```python
+# Current output example:
+Tool Arguments: {
+    'name': FieldInfo(annotation=str, required=True),
+    'description': FieldInfo(annotation=str, required=False, default=''),
+    # ... many internal fields exposed
+}
+```
+
+This significantly reduces tool calling success rate as LLMs struggle to parse and understand the argument structure.
+
+Proposed Change
+Update the implementation to align with the clearer format used in tool_usage.py:
+
+```
+def _render_text_description_and_args(self, tools: List[Any]) -> str:
+    tool_strings = []
+    for tool in tools:
+        args_schema = {
+            name: {
+                "description": field.description,
+                "type": field.annotation.__name__,
+            }
+            for name, field in tool.args_schema.model_fields.items()
+        }
+        description = f"Tool Name: {tool.name}\nTool Description: {tool.description}"
+        tool_strings.append(f"{description}\nTool Arguments: {args_schema}")
+
+    return "\n".join(tool_strings)
+```
+
+This will generate clearer, LLM-friendly output like:
+
+```
+Tool Name: search_web
+Tool Description: Searches the web for information
+Tool Arguments: {
+    "query": {
+        "type": "string",
+        "description": "The search query to look up"
+    }
+}
+```
+
+
+
+### Steps to Reproduce
+
+1. Define a crew with multiple agents and tools
+2. Run it
+
+### Expected behavior
+
+Better tool calling success rate
+
+### Screenshots/Code snippets
+
+NA
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+0.76.2
+
+### crewAI Tools Version
+
+0.12.1
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+```
+# Agent: task_agent
+## Thought: It seems there was an error in updating the area of focus, likely due to a system issue. Let's attempt to update just the description, and then align the projects related to "XL Innovations Capital."
+To proceed, I will focus on ensuring that the "XL Innovations Capital" area includes the important projects such as "Finalize Fund Raising" and "Keep Fund Compliant" appropriately. I will check the current projects and align them with this area of focus.
+## Using tool: ListProjectTool
+## Tool Input: 
+"{}"
+## Tool Output: 
+Area of Focus: Friends and family (5ce4219a-72ee-4f02-aea6-256ad7701988)
+Status: Active
+Priority: Medium
+
+
+You ONLY have access to the following tools, and should NEVER make up tools that are not listed here:
+
+Tool Name: CreateTaskTool(name: str = None, description: str = None, due_date: str = None, priority: modules.todo.models.task.TaskPriority = None, project_id: str = None)
+Tool Description: CreateTaskTool(name: 'string') -      Create a task in the user's todo list.      Args:         name: The name of the task.         description (optional): The description of the task.         due_date (optional): The due date of the task in ISO 8601 format (YYYY-MM-DDThh:mm:ss±0000).         priority (optional): The priority of the task. Options are Low, Medium, High.         project_id (optional): The ID of the project the task belongs to.      
+Tool Arguments: {'name': FieldInfo(annotation=str, required=True), 'description': FieldInfo(annotation=str, required=False, default=''), 'args_schema': FieldInfo(annotation=type[BaseModel], required=True, description='The tool schema.', metadata=[SkipValidation()]), 'return_direct': FieldInfo(annotation=bool, required=False, default=False), 'verbose': FieldInfo(annotation=bool, required=False, default=False), 'callbacks': FieldInfo(annotation=Union[list[BaseCallbackHandler], BaseCallbackManager, NoneType], required=False, default=None, exclude=True), 'callback_manager': FieldInfo(annotation=Union[BaseCallbackManager, NoneType], required=False, default=None, description='.. deprecated:: 0.1.7 Use :meth:`~callbacks` instead.\n\nCallback manager to add to the run trace.', exclude=True), 'tags': FieldInfo(annotation=Union[list[str], NoneType], required=False, default=None), 'metadata': FieldInfo(annotation=Union[dict[str, Any], NoneType], required=False, default=None), 'handle_tool_error': FieldInfo(annotation=Union[bool, str, Callable[list, str], NoneType], required=False, default=False), 'handle_validation_error': FieldInfo(annotation=Union[bool, str, Callable[list, str], NoneType], required=False, default=False), 'response_format': FieldInfo(annotation=Literal['content', 'content_and_artifact'], required=False, default='content'), 'func': FieldInfo(annotation=Union[Callable[..., Any], NoneType], required=False, default=None), 'coroutine': FieldInfo(annotation=Union[Callable[..., Awaitable[Any]], NoneType], required=False, default=None)}
+Tool Name: UpdateTaskTool(id: str, name: str = None, description: str = None, due_date: str = None, priority: modules.todo.models.task.TaskPriority = None, project_id: str = None, clear_project_id: bool = False)
+Tool Description: UpdateTaskTool(id: 'string')
+
+Use the following format:
+
+Thought: you should always think about what to do
+Action: the action to take, only one name of [CreateTaskTool, UpdateTaskTool, ListTaskTool, DeleteTaskTool, CreateAreaOfFocusTool, UpdateAreaOfFocusTool, ListAreaOfFocusTool, DeleteAreaOfFocusTool, CreateProjectTool, UpdateProjectTool, ListProjectTool, DeleteProjectTool], just the name, exactly as it's written.
+Action Input: the input to the action, just a simple python dictionary, enclosed in curly braces, using " to wrap keys and values.
+Observation: the result of the action
+
+Once all necessary information is gathered:
+
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+ Error parsing LLM output, agent will retry: I did it wrong. Invalid Format: I missed the 'Action:' after 'Thought:'. I will do right next, and don't use a tool I have already used.
+
+If you don't need to use any more tools, you must give your best complete final answer, make sure it satisfy the expect criteria, use the EXACT format below:
+
+Thought: I now can give a great answer
+Final Answer: my best complete final answer to the task.
+```
+
+
+### Possible Solution
+
+
+Proposed Change
+Update the implementation to align with the clearer format used in tool_usage.py:
+
+```
+def _render_text_description_and_args(self, tools: List[Any]) -> str:
+    tool_strings = []
+    for tool in tools:
+        args_schema = {
+            name: {
+                "description": field.description,
+                "type": field.annotation.__name__,
+            }
+            for name, field in tool.args_schema.model_fields.items()
+        }
+        description = f"Tool Name: {tool.name}\nTool Description: {tool.description}"
+        tool_strings.append(f"{description}\nTool Arguments: {args_schema}")
+
+    return "\n".join(tool_strings)
+```
+
+### Additional context
+
+NA

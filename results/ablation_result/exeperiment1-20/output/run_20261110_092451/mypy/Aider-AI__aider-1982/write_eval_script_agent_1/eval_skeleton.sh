@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4
+
+# Apply test patch before running tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /testbed/testbed/bin/activate
+
+# Run the specified test file only, print concise test results with file and status per test
+pytest -q --disable-warnings --tb=short --maxfail=1 tests/basic/test_io.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset any changes caused by patch or tests
+git checkout 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4 tests/basic/test_io.py

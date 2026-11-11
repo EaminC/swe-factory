@@ -1,0 +1,21 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 27e2566cff7e3dcf79f37b5271efbc1c0c01c3e0
+
+# Apply test patch if required
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file with pytest
+pytest --tb=short --capture=no -q tests/test_self_heal.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to its original state after testing
+git checkout 27e2566cff7e3dcf79f37b5271efbc1c0c01c3e0 tests/test_self_heal.py
+</script>

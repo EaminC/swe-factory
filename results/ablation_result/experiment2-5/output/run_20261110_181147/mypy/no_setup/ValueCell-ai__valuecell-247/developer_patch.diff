@@ -1,0 +1,215 @@
+diff --git a/.env.example b/.env.example
+index f19dca7..88419e4 100644
+--- a/.env.example
++++ b/.env.example
+@@ -50,7 +50,7 @@ GOOGLE_API_KEY=
+ # If you obtained your key from https://siliconflow.com, you need to update siliconflow.yaml manually.
+ SILICONFLOW_API_KEY=
+ 
+-# Get your API key from: https://platform.openai.com/api-keys TODO: will support in next PR. 
++# Get your API key from: https://platform.openai.com/api-keys
+ OPENAI_API_KEY=
+ 
+ 
+diff --git a/python/configs/config.yaml b/python/configs/config.yaml
+index 4c5e148..454b062 100644
+--- a/python/configs/config.yaml
++++ b/python/configs/config.yaml
+@@ -30,6 +30,10 @@ models:
+     google:
+       config_file: "providers/google.yaml"
+       api_key_env: "GOOGLE_API_KEY"
++    
++    openai:
++      config_file: "providers/openai.yaml"
++      api_key_env: "OPENAI_API_KEY"
+ 
+ # Agent Configuration
+ agents:
+diff --git a/python/configs/providers/openai.yaml b/python/configs/providers/openai.yaml
+new file mode 100644
+index 0000000..603b566
+--- /dev/null
++++ b/python/configs/providers/openai.yaml
+@@ -0,0 +1,69 @@
++# ============================================
++# OpenAI Provider Configuration
++# ============================================
++name: "OpenAI"
++provider_type: "openai"
++
++enabled: true # Default is true if not specified
++
++# Connection Configuration
++connection:
++  base_url: "https://api.openai.com/v1"
++  api_key_env: "OPENAI_API_KEY"
++
++# Default model if none specified
++default_model: "gpt-5-2025-08-07"
++
++# Available Models
++models:
++
++  - id: "gpt-5-2025-08-07"
++    name: "GPT-5 2025-08-07"
++    context_length: 400000
++    max_output_tokens: 128000
++    description: "Most capable GPT-5 model with 400K context window"
++    supported_inputs: ["text"]
++    supported_outputs: ["text"]
++
++  - id: "gpt-5-mini-2025-08-07"
++    name: "GPT-5 Mini 2025-08-07"
++    context_length: 400000
++    max_output_tokens: 128000
++    description: "Lightweight GPT-5 model optimized for efficiency"
++    supported_inputs: ["text"]
++    supported_outputs: ["text"]
++
++  - id: "gpt-4.1-2025-04-14"
++    name: "GPT-4.1 2025-04-14"
++    context_length: 1047576
++    max_output_tokens: 32768
++    description: "Most capable GPT-4.1 model with 1M context window (without organization verification)"
++    supported_inputs: ["text"]
++    supported_outputs: ["text"]
++
++# ============================================
++# Embedding Models Configuration
++# ============================================
++embedding:
++  # Default embedding model
++  default_model: "text-embedding-3-small"
++  
++  # Default parameters
++  defaults:
++    encoding_format: "float"
++  
++  # Available embedding models
++  models:
++    - id: "text-embedding-3-small"
++      name: "Text Embedding 3 Small"
++      dimensions: 1536
++      max_input: 8192
++      performance_mteb: 62.3
++      description: "Small embedding model with good performance and efficiency"
++
++    - id: "text-embedding-3-large"
++      name: "Text Embedding 3 Large"
++      dimensions: 3072
++      max_input: 8192
++      performance_mteb: 64.6
++      description: "Large embedding model with higher performance"
+diff --git a/python/valuecell/adapters/models/factory.py b/python/valuecell/adapters/models/factory.py
+index 850e742..15a838a 100644
+--- a/python/valuecell/adapters/models/factory.py
++++ b/python/valuecell/adapters/models/factory.py
+@@ -252,6 +252,63 @@ class SiliconFlowProvider(ModelProvider):
+         )
+ 
+ 
++class OpenAIProvider(ModelProvider):
++    """OpenAI model provider"""
++
++    def create_model(self, model_id: Optional[str] = None, **kwargs):
++        """Create OpenAI model via agno"""
++        try:
++            from agno.models.openai import OpenAIChat
++        except ImportError:
++            raise ImportError(
++                "agno package not installed. Install with: pip install agno"
++            )
++
++        model_id = model_id or self.config.default_model
++        params = {**self.config.parameters, **kwargs}
++
++        logger.info(f"Creating OpenAI model: {model_id}")
++
++        return OpenAIChat(
++            id=model_id,
++            api_key=self.config.api_key,
++            temperature=params.get("temperature"),
++            max_tokens=params.get("max_tokens"),
++            top_p=params.get("top_p"),
++            frequency_penalty=params.get("frequency_penalty"),
++            presence_penalty=params.get("presence_penalty"),
++        )
++
++    def create_embedder(self, model_id: Optional[str] = None, **kwargs):
++        """Create embedder via OpenAI"""
++        try:
++            from agno.knowledge.embedder.openai import OpenAIEmbedder
++        except ImportError:
++            raise ImportError("agno package not installed")
++
++        # Use provided model_id or default embedding model
++        model_id = model_id or self.config.default_embedding_model
++
++        if not model_id:
++            raise ValueError(
++                f"No embedding model specified for provider '{self.config.name}'"
++            )
++
++        # Merge parameters: provider embedding defaults < kwargs
++        params = {**self.config.embedding_parameters, **kwargs}
++
++        logger.info(f"Creating OpenAI embedder: {model_id}")
++
++        return OpenAIEmbedder(
++            id=model_id,
++            api_key=self.config.api_key,
++            dimensions=int(params.get("dimensions", 1536))
++            if params.get("dimensions")
++            else None,
++            encoding_format=params.get("encoding_format", "float"),
++        )
++
++
+ class ModelFactory:
+     """
+     Factory for creating model instances with provider abstraction
+@@ -269,6 +326,7 @@ class ModelFactory:
+         "google": GoogleProvider,
+         "azure": AzureProvider,
+         "siliconflow": SiliconFlowProvider,
++        "openai": OpenAIProvider,
+     }
+ 
+     def __init__(self, config_manager: Optional[ConfigManager] = None):
+diff --git a/python/valuecell/config/manager.py b/python/valuecell/config/manager.py
+index e15a8c5..aece715 100644
+--- a/python/valuecell/config/manager.py
++++ b/python/valuecell/config/manager.py
+@@ -132,6 +132,7 @@ class ConfigManager:
+                     "openrouter",
+                     "siliconflow",
+                     "google",
++                    "openai",
+                 ]
+ 
+                 for preferred in preferred_order:
+diff --git a/python/valuecell/utils/model.py b/python/valuecell/utils/model.py
+index 3bd4fa7..86ba950 100644
+--- a/python/valuecell/utils/model.py
++++ b/python/valuecell/utils/model.py
+@@ -15,6 +15,7 @@ from typing import Optional
+ 
+ from agno.models.base import Model as AgnoModel
+ from agno.models.google import Gemini as AgnoGeminiModel
++from agno.models.openai import OpenAIChat as AgnoOpenAIChatModel
+ 
+ from valuecell.adapters.models.factory import (
+     create_embedder,
+@@ -32,6 +33,11 @@ def model_should_use_json_mode(model: AgnoModel) -> bool:
+         name = getattr(model, "name", None)
+         if provider == AgnoGeminiModel.provider and name == AgnoGeminiModel.name:
+             return True
++        if (
++            provider == AgnoOpenAIChatModel.provider
++            and name == AgnoOpenAIChatModel.name
++        ):
++            return True
+     except Exception:
+         # Any unexpected condition falls back to standard (non-JSON) mode
+         return False

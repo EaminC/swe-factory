@@ -1,0 +1,116 @@
+2026-11-11 15:52:26,298 - INFO - Checking if image crewaiinc__crewai-4824-dockerfile8:latest exists locally...
+2026-11-11 15:52:26,367 - INFO - Image crewaiinc__crewai-4824-dockerfile8:latest found locally.
+2026-11-11 15:52:26,367 - INFO - Creating container for crewaiinc__crewai-4824...
+2026-11-11 15:52:27,401 - INFO - Container for crewaiinc__crewai-4824 started: c278f7808631dd852e4ca569cd9f41fa942ab7e8b3e1b71a78bb375dff173781
+2026-11-11 15:52:27,401 - INFO - Intermediate patch for crewaiinc__crewai-4824 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4824/test_analysis_agent_8/patch.diff, now applying to container...
+2026-11-11 15:52:27,988 - INFO - Apply patch success:
+Checking patch lib/crewai/src/crewai/task.py...
+Checking patch lib/crewai/src/crewai/utilities/streaming.py...
+Applied patch lib/crewai/src/crewai/task.py cleanly.
+Applied patch lib/crewai/src/crewai/utilities/streaming.py cleanly.
+
+2026-11-11 15:52:31,272 - INFO - Git diff before:
+diff --git a/lib/crewai/src/crewai/task.py b/lib/crewai/src/crewai/task.py
+index cfcb01799..fb0275364 100644
+--- a/lib/crewai/src/crewai/task.py
++++ b/lib/crewai/src/crewai/task.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import asyncio
++import contextvars
+ from concurrent.futures import Future
+ from copy import copy as shallow_copy
+ import datetime
+@@ -524,10 +525,11 @@ class Task(BaseModel):
+     ) -> Future[TaskOutput]:
+         """Execute the task asynchronously."""
+         future: Future[TaskOutput] = Future()
++        ctx = contextvars.copy_context()
+         threading.Thread(
+             daemon=True,
+-            target=self._execute_task_async,
+-            args=(agent, context, tools, future),
++            target=ctx.run,
++            args=(self._execute_task_async, agent, context, tools, future),
+         ).start()
+         return future
+ 
+diff --git a/lib/crewai/src/crewai/utilities/streaming.py b/lib/crewai/src/crewai/utilities/streaming.py
+index 8f43e8ef0..ded67527d 100644
+--- a/lib/crewai/src/crewai/utilities/streaming.py
++++ b/lib/crewai/src/crewai/utilities/streaming.py
+@@ -2,6 +2,7 @@
+ 
+ import asyncio
+ from collections.abc import AsyncIterator, Callable, Iterator
++import contextvars
+ import queue
+ import threading
+ from typing import Any, NamedTuple
+@@ -240,7 +241,8 @@ def create_chunk_generator(
+     Yields:
+         StreamChunk objects as they arrive.
+     """
+-    thread = threading.Thread(target=run_func, daemon=True)
++    ctx = contextvars.copy_context()
++    thread = threading.Thread(target=ctx.run, args=(run_func,), daemon=True)
+     thread.start()
+ 
+     try:
+2026-11-11 15:52:31,272 - INFO - Eval script for crewaiinc__crewai-4824 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4824/test_analysis_agent_8/patch.diff, now applying to container...
+2026-11-11 15:52:32,003 - INFO - Test output for crewaiinc__crewai-4824 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4824/test_analysis_agent_8/test_output.txt
+2026-11-11 15:52:32,242 - INFO - Git diff after:
+diff --git a/lib/crewai/src/crewai/task.py b/lib/crewai/src/crewai/task.py
+index cfcb01799..fb0275364 100644
+--- a/lib/crewai/src/crewai/task.py
++++ b/lib/crewai/src/crewai/task.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import asyncio
++import contextvars
+ from concurrent.futures import Future
+ from copy import copy as shallow_copy
+ import datetime
+@@ -524,10 +525,11 @@ class Task(BaseModel):
+     ) -> Future[TaskOutput]:
+         """Execute the task asynchronously."""
+         future: Future[TaskOutput] = Future()
++        ctx = contextvars.copy_context()
+         threading.Thread(
+             daemon=True,
+-            target=self._execute_task_async,
+-            args=(agent, context, tools, future),
++            target=ctx.run,
++            args=(self._execute_task_async, agent, context, tools, future),
+         ).start()
+         return future
+ 
+diff --git a/lib/crewai/src/crewai/utilities/streaming.py b/lib/crewai/src/crewai/utilities/streaming.py
+index 8f43e8ef0..ded67527d 100644
+--- a/lib/crewai/src/crewai/utilities/streaming.py
++++ b/lib/crewai/src/crewai/utilities/streaming.py
+@@ -2,6 +2,7 @@
+ 
+ import asyncio
+ from collections.abc import AsyncIterator, Callable, Iterator
++import contextvars
+ import queue
+ import threading
+ from typing import Any, NamedTuple
+@@ -240,7 +241,8 @@ def create_chunk_generator(
+     Yields:
+         StreamChunk objects as they arrive.
+     """
+-    thread = threading.Thread(target=run_func, daemon=True)
++    ctx = contextvars.copy_context()
++    thread = threading.Thread(target=ctx.run, args=(run_func,), daemon=True)
+     thread.start()
+ 
+     try:
+2026-11-11 15:52:32,242 - INFO - Attempting to stop container crewaiinc__crewai-4824-test3...
+2026-11-11 15:52:47,703 - INFO - Attempting to remove container crewaiinc__crewai-4824-test3...
+2026-11-11 15:52:47,863 - INFO - Container crewaiinc__crewai-4824-test3 removed.
+2026-11-11 15:52:47,863 - INFO - Attempting to remove image crewaiinc__crewai-4824-dockerfile8:latest...
+2026-11-11 15:52:57,656 - INFO - Image crewaiinc__crewai-4824-dockerfile8:latest removed.

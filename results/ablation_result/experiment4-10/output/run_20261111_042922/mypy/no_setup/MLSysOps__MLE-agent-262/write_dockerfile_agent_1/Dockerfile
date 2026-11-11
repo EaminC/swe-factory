@@ -1,0 +1,54 @@
+# Use Ubuntu 20.04 as base image as requested, with bash and python3.11 setup
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system packages including python3.11, git, curl, and build tools
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    curl \
+    wget \
+    git \
+    build-essential \
+    locales \
+    tzdata \
+    ca-certificates \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
+# Add deadsnakes PPA to get python3.11 packages (if not exists by default)
+RUN add-apt-repository ppa:deadsnakes/ppa -y && apt-get update && \
+    apt-get install -y python3.11 python3.11-venv python3.11-distutils python3-pip && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    python3 -m pip install --upgrade pip setuptools
+
+# Create a virtual environment named testbed and activate it before installing deps
+RUN python3 -m venv /opt/testbed
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Upgrade pip within venv
+RUN pip install --upgrade pip setuptools wheel
+
+# Clone the MLSysOps/MLE-agent repository and checkout the specific commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed/ && \
+    cd /testbed && \
+    git reset --hard 96a84c48ce271d37749c6304866e42a24e6647ac
+
+WORKDIR /testbed/
+
+# Install the project dependencies and the package itself in editable mode
+# Using pip install . which will use requirements.txt as per provided info
+RUN pip install -e . 
+
+# Ensure bashrc activates virtual environment automatically on shell start
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Default environment variables to ensure correct encoding and path
+ENV PYTHONUNBUFFERED=1
+
+# Do not run tests or entrypoint here per instructions

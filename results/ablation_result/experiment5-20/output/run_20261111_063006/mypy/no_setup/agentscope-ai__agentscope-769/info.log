@@ -1,0 +1,3203 @@
+2026-11-11 07:29:12.133 | INFO     | Model API request cost info: input_tokens=1346, output_tokens=33, cost=0.000000
+2026-11-11 07:29:12.159 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:29:13.378 | INFO     | Model API request cost info: input_tokens=646, output_tokens=58, cost=0.000000
+2026-11-11 07:29:13.393 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"README.md\", \"environment setup and test commands\")"],
+  "collected_information": "Extracted environment setup and test execution information from README.md to understand project requirements and test commands.",
+  "terminate": false
+}
+2026-11-11 07:29:13.393 | DEBUG    | Extracted a valid json
+2026-11-11 07:29:13.417 | INFO     | entering browse
+2026-11-11 07:29:13.418 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+[**中文主页**](https://github.com/agentscope-ai/agentscope/blob/main/README_zh.md) | [**Tutorial**](https://doc.agentscope.io/) | [**Roadmap**](https://github.com/agentscope-ai/agentscope/blob/main/docs/roadmap.md) | [**FAQ**](https://doc.agentscope.io/tutorial/faq.html)
+
+<p align="center">
+  <img
+    src="https://img.alicdn.com/imgextra/i1/O1CN01nTg6w21NqT5qFKH1u_!!6000000001621-55-tps-550-550.svg"
+    alt="AgentScope Logo"
+    width="200"
+  />
+</p>
+
+<h2 align="center">AgentScope: Agent-Oriented Programming for Building LLM Applications</h2>
+
+<p align="center">
+    <a href="https://arxiv.org/abs/2402.14034">
+        <img
+            src="https://img.shields.io/badge/cs.MA-2402.14034-B31C1C?logo=arxiv&logoColor=B31C1C"
+            alt="arxiv"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/python-3.10+-blue?logo=python"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fagentscope%2Fjson&query=%24.info.version&prefix=v&logo=pypi&label=version"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://doc.agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/Docs-English%7C%E4%B8%AD%E6%96%87-blue?logo=markdown"
+            alt="docs"
+        />
+    </a>
+    <a href="https://agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/GUI-AgentScope_Studio-blue?logo=look&logoColor=green&color=dark-green"
+            alt="workstation"
+        />
+    </a>
+    <a href="./LICENSE">
+        <img
+            src="https://img.shields.io/badge/license-Apache--2.0-black"
+            alt="license"
+        />
+    </a>
+</p>
+
+<p align="center">
+<img src="https://trendshift.io/api/badge/repositories/10079" alt="modelscope%2Fagentscope | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+</p>
+
+## ✨ Why AgentScope?
+
+Easy for beginners, powerful for experts.
+
+<p align="center">
+<img src="./assets/images/agentscope_v1_0822.png" alt="AgentScope Framework" width="80%"/>
+</p>
+
+- **Transparent to Developers**: Transparent is our **FIRST principle**. Prompt engineering, API invocation, agent building, workflow orchestration, all are visible and controllable for developers. No deep encapsulation or implicit magic.
+- **[Realtime Steering](https://doc.agentscope.io/tutorial/task_agent.html#realtime-steering)**: Native support for realtime interruption and customized handling.
+- **More Agentic**: Support [agentic tools management](https://doc.agentscope.io/tutorial/task_tool.html), [agentic long-term memory control](https://doc.agentscope.io/tutorial/task_long_term_memory.html) and agentic RAG, etc.
+- **Model Agnostic**: Programming once, run with all models.
+- **LEGO-style Agent Building**: All components are **modular** and **independent**.
+- **Multi-Agent Oriented**: Designed for **multi-agent**, **explicit** message passing and workflow orchestration, NO deep encapsulation.
+- **Highly Customizable**: Tools, prompt, agent, workflow, third-party libs & visualization, customization is encouraged everywhere.
+
+Quick overview of important features in **AgentScope 1.0**:
+
+| Module     | Feature                                                                            | Tutorial                                                                |
+|------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| model      | Support async invocation                                                           | [Model](https://doc.agentscope.io/tutorial/task_model.html)             |
+|            | Support reasoning model                                                            |                                                                         |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+| tool       | Support async/sync tool functions                                                  | [Tool](https://doc.agentscope.io/tutorial/task_tool.html)               |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+|            | Support user interruption                                                          |                                                                         |
+|            | Support post-processing                                                            |                                                                         |
+|            | Support group-wise tools management                                                |                                                                         |
+|            | Support agentic tools management by meta tool                                      |                                                                         |
+| MCP        | Support streamable HTTP/SSE/StdIO transport                                        | [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)                 |
+|            | Support both **stateful** and **stateless** mode MCP Client                        |                                                                         |
+|            | Support client- & function-level fine-grained control                              |                                                                         |
+| agent      | Support async execution                                                            |                                                                         |
+|            | Support parallel tool calls                                                        |                                                                         |
+|            | Support realtime steering interruption and customized handling                     |                                                                         |
+|            | Support automatic state management                                                 |                                                                         |
+|            | Support agent-controlled long-term memory                                          |                                                                         |
+|            | Support agent hooks                                                                |                                                                         |
+| tracing    | Support OpenTelemetry-based tracing in LLM, tools, agent and formatter             | [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)         |
+|            | Support connecting to third-party tracing platforms (e.g. Arize-Phoenix, Langfuse) |                                                                         |
+| memory     | Support long-term memory                                                           | [Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html) |
+| session    | Provide session/application-level automatic state management                       | [Session](https://doc.agentscope.io/tutorial/task_state.html)           |
+| evaluation | Provide distributed and parallel evaluation                                        | [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)         |
+| formatter  | Support multi-agent prompt formatting with tools API                               | [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html) |
+|            | Support truncation-based formatter strategy                                        |                                                                         |
+| plan       | Support ReAct-based long-term planning                                             | [Plan](https://doc.agentscope.io/tutorial/task_plan.html)               |
+|            | Support manual plan specification                                                 |                                                                         |
+| ...        |                                                                                    |                                                                         |
+
+## 📢 News
+- **[2025-09]** A new powerful 📋**Plan** module is online now! Check out the [tutorial](https://doc.agentscope.io/tutorial/task_plan.html) for more details.
+- **[2025-09]** **AgentScope Runtime** is open-sourced now! Enabling effective agent deployment with sandboxed tool execution for production-ready AI applications. Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-runtime).
+- **[2025-09]** **AgentScope Studio** is open-sourced now! Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-studio).
+- **[2025-08]** The new tutorial of v1 is online now! Check out the [tutorial](https://doc.agentscope.io) for more details.
+- **[2025-08]** 🎉🎉 AgentScope v1 is released now! This version fully embraces the asynchronous execution, providing many new features and improvements. Check out [changelog](https://github.com/agentscope-ai/agentscope/blob/main/docs/changelog.md) for detailed changes.
+
+## 💬 Contact
+
+Welcome to join our community on
+
+| [Discord](https://discord.gg/eYMpfnkG8h)                                                                                         | DingTalk                                                                                                                          |
+|----------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| <img src="https://gw.alicdn.com/imgextra/i1/O1CN01hhD1mu1Dd3BWVUvxN_!!6000000000238-2-tps-400-400.png" width="100" height="100"> | <img src="https://img.alicdn.com/imgextra/i1/O1CN01LxzZha1thpIN2cc2E_!!6000000005934-2-tps-497-477.png" width="100" height="100"> |
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## 📑 Table of Contents
+
+- [🚀 Quickstart](#-quickstart)
+  - [💻 Installation](#-installation)
+    - [🛠️ From source](#-from-source)
+    - [📦 From PyPi](#-from-pypi)
+- [📝 Example](#-example)
+  - [👋 Hello AgentScope!](#-hello-agentscope)
+  - [🎯 Realtime Steering](#-realtime-steering)
+  - [🛠️ Fine-Grained MCP Control](#-fine-grained-mcp-control)
+  - [🧑‍🤝‍🧑 Multi-Agent Conversation](#-multi-agent-conversation)
+  - [💻 AgentScope Studio](#-agentscope-studio)
+- [📖 Documentation](#-documentation)
+- [⚖️ License](#-license)
+- [📚 Publications](#-publications)
+- [✨ Contributors](#-contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 🚀 Quickstart
+
+### 💻 Installation
+
+> AgentScope requires **Python 3.10** or higher.
+
+#### 🛠️ From source
+
+```bash
+# Pull the source code from GitHub
+git clone -b main https://github.com/agentscope-ai/agentscope.git
+
+# Install the package in editable mode
+cd agentscope
+pip install -e .
+```
+
+#### 📦 From PyPi
+
+```bash
+pip install agentscope
+```
+
+## 📝 Example
+
+### 👋 Hello AgentScope!
+
+Start with a conversation between user and a ReAct agent 🤖 named "Friday"!
+
+```python
+from agentscope.agent import ReActAgent, UserAgent
+from agentscope.model import DashScopeChatModel
+from agentscope.formatter import DashScopeChatFormatter
+from agentscope.memory import InMemoryMemory
+from agentscope.tool import Toolkit, execute_python_code, execute_shell_command
+import os, asyncio
+
+
+async def main():
+    toolkit = Toolkit()
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(execute_shell_command)
+
+    agent = ReActAgent(
+        name="Friday",
+        sys_prompt="You're a helpful assistant named Friday.",
+        model=DashScopeChatModel(
+            model_name="qwen-max",
+            api_key=os.environ["DASHSCOPE_API_KEY"],
+            stream=True,
+        ),
+        memory=InMemoryMemory(),
+        formatter=DashScopeChatFormatter(),
+        toolkit=toolkit,
+    )
+
+    user = UserAgent(name="user")
+
+    msg = None
+    while True:
+        msg = await agent(msg)
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+
+asyncio.run(main())
+```
+
+### 🎯 Realtime Steering
+
+Natively support **realtime interruption** in ``ReActAgent`` with robust memory preservation, and convert interruption into an **observable event** for agent to seamlessly resume conversations.
+
+<p align="center">
+  <img src="./assets/images/realtime_steering_zh.gif" alt="Realtime Steering" width="49%"/>
+  <img src="./assets/images/realtime_steering_en.gif" alt="Realtime Steering" width="49%"/>
+</p>
+
+### 🛠️ Fine-Grained MCP Control
+
+Developers can obtain the MCP tool as a **local callable function**, and use it anywhere (e.g. call directly, pass to agent, wrap into a more complex tool, etc.)
+
+```python
+from agentscope.mcp import HttpStatelessClient
+from agentscope.tool import Toolkit
+import os
+
+async def fine_grained_mcp_control():
+    # Initialize the MCP client
+    client = HttpStatelessClient(
+        name="gaode_mcp",
+        transport="streamable_http",
+        url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+    )
+
+    # Obtain the MCP tool as a **local callable function**, and use it anywhere
+    func = await client.get_callable_function(func_name="maps_geo")
+
+    # Option 1: Call directly
+    await func(address="Tiananmen Square", city="Beijing")
+
+    # Option 2: Pass to agent as a tool
+    toolkit = Toolkit()
+    toolkit.register_tool_function(func)
+    # ...
+
+    # Option 3: Wrap into a more complex tool
+    # ...
+```
+
+### 🧑‍🤝‍🧑 Multi-Agent Conversation
+
+AgentScope provides ``MsgHub`` and pipelines to streamline multi-agent conversations, offering efficient message routing and seamless information sharing
+
+```python
+from agentscope.pipeline import MsgHub, sequential_pipeline
+from agentscope.message import Msg
+import asyncio
+
+async def multi_agent_conversation():
+    # Create agents
+    agent1 = ...
+    agent2 = ...
+    agent3 = ...
+    agent4 = ...
+
+    # Create a message hub to manage multi-agent conversation
+    async with MsgHub(
+        participants=[agent1, agent2, agent3],
+        announcement=Msg("Host", "Introduce yourselves.", "assistant")
+    ) as hub:
+        # Speak in a sequential manner
+        await sequential_pipeline([agent1, agent2, agent3])
+        # Dynamic manage the participants
+        hub.add(agent4)
+        hub.delete(agent3)
+        await hub.broadcast(Msg("Host", "Goodbye!", "assistant"))
+
+asyncio.run(multi_agent_conversation())
+```
+
+### 💻 AgentScope Studio
+
+Use the following command to install and start AgentScope Studio, to trace and visualize your agent application.
+
+```bash
+npm install -g @agentscope/studio
+
+as_studio
+```
+
+<p align="center">
+    <img
+        src="./assets/images/home.gif"
+        width="49%"
+        alt="home"
+    />
+    <img
+        src="./assets/images/projects.gif"
+        width="49%"
+        alt="projects"
+    />
+    <img
+        src="./assets/images/runtime.gif"
+        width="49%"
+        alt="runtime"
+    />
+    <img
+        src="./assets/images/friday.gif"
+        width="49%"
+        alt="friday"
+    />
+</p>
+
+
+## 📖 Documentation
+
+- Tutorial
+  - [Installation](https://doc.agentscope.io/tutorial/quickstart_installation.html)
+  - [Key Concepts](https://doc.agentscope.io/tutorial/quickstart_key_concept.html)
+  - [Create Message](https://doc.agentscope.io/tutorial/quickstart_message.html)
+  - [ReAct Agent](https://doc.agentscope.io/tutorial/quickstart_agent.html)
+- Workflow
+  - [Conversation](https://doc.agentscope.io/tutorial/workflow_conversation.html)
+  - [Multi-Agent Debate](https://doc.agentscope.io/tutorial/workflow_multiagent_debate.html)
+  - [Concurrent Agents](https://doc.agentscope.io/tutorial/workflow_concurrent_agents.html)
+  - [Routing](https://doc.agentscope.io/tutorial/workflow_routing.html)
+  - [Handoffs](https://doc.agentscope.io/tutorial/workflow_handoffs.html)
+- FAQ
+  - [FAQ](https://doc.agentscope.io/tutorial/faq.html)
+- Task Guides
+  - [Model](https://doc.agentscope.io/tutorial/task_model.html)
+  - [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html)
+  - [Tool](https://doc.agentscope.io/tutorial/task_tool.html)
+  - [Memory](https://doc.agentscope.io/tutorial/task_memory.html)
+  - [Long-Term Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html)
+  - [Agent](https://doc.agentscope.io/tutorial/task_agent.html)
+  - [Pipeline](https://doc.agentscope.io/tutorial/task_pipeline.html)
+  - [State/Session Management](https://doc.agentscope.io/tutorial/task_state.html)
+  - [Agent Hooks](https://doc.agentscope.io/tutorial/task_hook.html)
+  - [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)
+  - [AgentScope Studio](https://doc.agentscope.io/tutorial/task_studio.html)
+  - [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)
+  - [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)
+  - [Embedding](https://doc.agentscope.io/tutorial/task_embedding.html)
+  - [Token](https://doc.agentscope.io/tutorial/task_token.html)
+- API
+  - [API Docs](https://doc.agentscope.io/api/agentscope.html)
+- [Examples](https://github.com/agentscope-ai/agentscope/tree/main/examples)
+  - Game
+    - [Nine-player Werewolves](https://github.com/agentscope-ai/agentscope/tree/main/examples/game/werewolves)
+  - Workflow
+    - [Multi-agent Debate](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_debate)
+    - [Multi-agent Conversation](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_conversation)
+    - [Multi-agent Concurrent](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_concurrent)
+  - Evaluation
+    - [ACEBench](https://github.com/agentscope-ai/agentscope/tree/main/examples/evaluation/ace_bench)
+  - Functional
+    - [ReAct Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/react_agent)
+    - [MCP](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/mcp)
+    - [Plan](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/plan)
+    - [Structured Output](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/structured_output)
+    - [Long-Term Memory](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/long_term_memory)
+    - [Session with SQLite](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/session_with_sqlite)
+
+## ⚖️ License
+
+AgentScope is released under Apache License 2.0.
+
+## 📚 Publications
+
+If you find our work helpful for your research or application, please cite our papers.
+
+- [AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications](https://arxiv.org/abs/2508.16279)
+
+- [AgentScope: A Flexible yet Robust Multi-Agent Platform](https://arxiv.org/abs/2402.14034)
+
+```
+@article{agentscope_v1,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Yuexiang Xie,
+        Weirui Kuang,
+        Liuyi Yao,
+        Bingchen Qian,
+        Zhijian Ma,
+        Yue Cui,
+        Haohao Luo,
+        Shen Li,
+        Lu Yi,
+        Yi Yu,
+        Shiqi He,
+        Zhiling Luo,
+        Wenmeng Zhou,
+        Zhicheng Zhang,
+        Xuguang He,
+        Ziqian Chen,
+        Weikai Liao,
+        Farruh Isakulovich Kushnazarov,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications},
+    journal = {CoRR},
+    volume  = {abs/2508.16279},
+    year    = {2025},
+}
+
+@article{agentscope,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Xuchen Pan,
+        Weirui Kuang,
+        Zhijian Ma,
+        Bingchen Qian,
+        Fei Wei,
+        Wenhao Zhang,
+        Yuexiang Xie,
+        Daoyuan Chen,
+        Liuyi Yao,
+        Hongyi Peng,
+        Zeyu Zhang,
+        Lin Zhu,
+        Chen Cheng,
+        Hongzhu Shi,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope: A Flexible yet Robust Multi-Agent Platform},
+    journal = {CoRR},
+    volume  = {abs/2402.14034},
+    year    = {2024},
+}
+```
+
+## ✨ Contributors
+
+All thanks to our contributors:
+
+<a href="https://github.com/agentscope-ai/agentscope/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=agentscope-ai/agentscope&max=999&columns=12&anon=1" />
+</a>
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+2026-11-11 07:29:13.418 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:29:15.965 | INFO     | Model API request cost info: input_tokens=5158, output_tokens=221, cost=0.000000
+2026-11-11 07:29:15.968 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:29:15.968 | INFO     | ******
+2026-11-11 07:29:15.970 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]
+- Environment Setup:
+  - Requires Python 3.10 or higher.
+  - Installation options:
+    - From source:
+      - git clone -b main https://github.com/agentscope-ai/agentscope.git
+      - cd agentscope
+      - pip install -e .
+    - From PyPi:
+      - pip install agentscope
+
+- Test commands:
+  - No explicit test commands or test suite instructions present in the README.
+  - No commands specifically for running individual or specific test files are mentioned.
+
+- Additional notes:
+  - Uses environment variables like `DASHSCOPE_API_KEY` for API key configuration in examples.
+  - AgentScope Studio can be installed and started using:
+    - npm install -g @agentscope/studio
+    - as_studio
+
+No explicit prerequisites like OS packages or language runtimes beyond Python 3.10 mentioned.
+[/Key Information]
+2026-11-11 07:29:15.970 | INFO     | ******
+2026-11-11 07:29:15.970 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]\n- Environment Setup:\n  - Requires Python 3.10 or higher.\n  - Installation options:\n    - From source:\n      - git clone -b main https://github.com/agentscope-ai/agentscope.git\n      - cd agentscope\n      - pip install -e .\n    - From PyPi:\n      - pip install agentscope\n\n- Test commands:\n  - No explicit test commands or test suite instructions present in the README.\n  - No commands specifically for running individual or specific test files are mentioned.\n\n- Additional notes:\n  - Uses environment variables like `DASHSCOPE_API_KEY` for API key configuration in examples.\n  - AgentScope Studio can be installed and started using:\n    - npm install -g @agentscope/studio\n    - as_studio\n\nNo explicit prerequisites like OS packages or language runtimes beyond Python 3.10 mentioned.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:29:20.881 | INFO     | Model API request cost info: input_tokens=2244, output_tokens=64, cost=0.000000
+2026-11-11 07:29:20.914 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:29:23.513 | INFO     | Model API request cost info: input_tokens=996, output_tokens=141, cost=0.000000
+2026-11-11 07:29:23.517 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_folder(\"tests\", \"1\")",
+    "search_files_by_keyword(\"requirements\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"test instructions and environment setup\")"
+  ],
+  "collected_information": "From README.md: Python 3.10+, pip installation; no explicit test dependencies or commands identified; no requirements or test config files found yet; no CI info or test instructions found. Proposed to gather info from requirements files, CONTRIBUTING.md, .github/workflows/, and tests/ folders.",
+  "terminate": false
+}
+2026-11-11 07:29:23.517 | DEBUG    | Extracted a valid json
+2026-11-11 07:29:23.525 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\npublish-pypi.yml\n\nsphinx_docs.yml\n\nstale.yml\n\ntoc.yml\n\npre-commit.yml\n\nunittest.yml\n\n', 'folder structure collected', True)
+2026-11-11 07:29:23.527 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests. The browsing Depth is 1.\nStructure of this directory:\n\nuser_input_test.py\n\nformatter_gemini_test.py\n\ntool_test.py\n\ntoolkit_test.py\n\nembedding_cache_test.py\n\ntracer_test.py\n\nformatter_dashscope_test.py\n\ntool_openai_test.py\n\nformatter_anthropic_test.py\n\ntoken_anthropic_test.py\n\nevaluation_test.py\n\nsession_test.py\n\nformatter_deepseek_test.py\n\nreact_agent_test.py\n\nmcp_streamable_http_client_test.py\n\ntoken_huggingface_test.py\n\nmodel_openai_test.py\n\ntool_dashscope_test.py\n\nformatter_openai_test.py\n\ntoken_openai_test.py\n\nmodel_ollama_test.py\n\nhook_test.py\n\nplan_test.py\n\npipeline_test.py\n\nmodel_dashscope_test.py\n\nmodel_anthropic_test.py\n\nmodel_gemini_test.py\n\nformatter_ollama_test.py\n\nmcp_sse_client_test.py\n\n', 'folder structure collected', True)
+2026-11-11 07:29:23.533 | DEBUG    | Result of dispatch_intent: ("No files found containing the keyword 'requirements'.", 'No matching files found', True)
+2026-11-11 07:29:23.533 | INFO     | entering browse
+2026-11-11 07:29:23.533 | INFO     | File not found: File not found: 'testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/CONTRIBUTING.md'
+2026-11-11 07:29:23.533 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:29:27.845 | INFO     | Model API request cost info: input_tokens=3250, output_tokens=45, cost=0.000000
+2026-11-11 07:29:27.858 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:29:29.075 | INFO     | Model API request cost info: input_tokens=967, output_tokens=53, cost=0.000000
+2026-11-11 07:29:29.076 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\".github/workflows/unittest.yml\")",
+    "browse_file_for_environment_info(\"setup.py\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-11-11 07:29:29.076 | DEBUG    | Extracted a valid json
+2026-11-11 07:29:32.886 | INFO     | Model API request cost info: input_tokens=3905, output_tokens=43, cost=0.000000
+2026-11-11 07:29:32.899 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:29:34.416 | INFO     | Model API request cost info: input_tokens=918, output_tokens=97, cost=0.000000
+2026-11-11 07:29:34.418 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\".github/workflows/unittest.yml\", \"focus on environment setup and test execution commands\")",
+    "browse_file_for_environment_info(\"setup.py\", \"focus on dependencies and test-related information\")",
+    "browse_file_for_environment_info(\"tests/test_token_usage_vllm.py\", \"check for existence and content\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 07:29:34.418 | DEBUG    | Extracted a valid json
+2026-11-11 07:29:34.424 | INFO     | entering browse
+2026-11-11 07:29:34.424 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/.github/workflows/unittest.yml ===
+name: Python Unittest Coverage
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    if: false == contains(github.event.pull_request.title, 'WIP')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
+        python-version: ['3.10', '3.11', '3.12']
+    env:
+      OS: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@master
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@master
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Update setuptools
+      run: |
+        pip install setuptools==78.1.1 wheel==0.45.1
+    - name: Install Dev Dependencies
+      run: |
+        pip install -q -e .[dev]
+        pip install coverage pytest
+    - name: Run tests with coverage
+      run: |
+        coverage run -m pytest tests
+    - name: Generate coverage report
+      run: |
+        coverage report -m
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/.github/workflows/unittest.yml ===
+2026-11-11 07:29:34.424 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:29:37.131 | INFO     | Model API request cost info: input_tokens=839, output_tokens=242, cost=0.000000
+2026-11-11 07:29:37.132 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:29:37.132 | INFO     | ******
+2026-11-11 07:29:37.132 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/.github/workflows/unittest.yml]
+- Environment Setup:
+  - Python versions used: 3.10, 3.11, 3.12
+  - Operating Systems tested on: ubuntu-latest, windows-latest, macos-13
+  - Update setuptools and wheel packages to specific versions:
+    - setuptools==78.1.1
+    - wheel==0.45.1
+  - Install development dependencies using:
+    - pip install -q -e .[dev]
+    - pip install coverage pytest
+
+- Test Execution Commands:
+  - Run tests with coverage collection:
+    - coverage run -m pytest tests
+  - Generate coverage report:
+    - coverage report -m
+
+- Notes:
+  - Tests are run on all files under the "tests" directory via pytest.
+  - No specific commands found for running individual or specific test files.
+  
+- Environment Variables:
+  - OS: ${{ matrix.os }} (environment variable set per OS matrix item)
+  
+[/Key Information]
+2026-11-11 07:29:37.132 | INFO     | ******
+2026-11-11 07:29:37.132 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/.github/workflows/unittest.yml]\n- Environment Setup:\n  - Python versions used: 3.10, 3.11, 3.12\n  - Operating Systems tested on: ubuntu-latest, windows-latest, macos-13\n  - Update setuptools and wheel packages to specific versions:\n    - setuptools==78.1.1\n    - wheel==0.45.1\n  - Install development dependencies using:\n    - pip install -q -e .[dev]\n    - pip install coverage pytest\n\n- Test Execution Commands:\n  - Run tests with coverage collection:\n    - coverage run -m pytest tests\n  - Generate coverage report:\n    - coverage report -m\n\n- Notes:\n  - Tests are run on all files under the "tests" directory via pytest.\n  - No specific commands found for running individual or specific test files.\n  \n- Environment Variables:\n  - OS: ${{ matrix.os }} (environment variable set per OS matrix item)\n  \n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:29:37.134 | INFO     | entering browse
+2026-11-11 07:29:37.134 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+# -*- coding: utf-8 -*-
+"""Setup script for AgentScope."""
+import re
+import setuptools
+
+# obtain version from src/agentscope/_version.py
+with open("src/agentscope/_version.py", encoding="UTF-8") as f:
+    VERSION = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+        f.read(),
+        re.MULTILINE,
+    ).group(1)
+
+NAME = "agentscope"
+URL = "https://github.com/agentscope-ai/agentscope"
+
+minimal_requires = [
+    "aioitertools",
+    "anthropic",
+    "dashscope",
+    "docstring_parser",
+    "json5",
+    "json_repair",
+    "mcp>=1.13",
+    "numpy",
+    "openai",
+    "python-datauri",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp",
+    "json5",
+    "aioitertools",
+    "python-socketio",
+    "shortuuid",
+    "tiktoken",
+]
+
+extra_requires = [
+    "ollama",
+    "google-genai",
+    "Pillow",
+    "transformers",
+    "jinja2",
+    "ray",
+    "mem0ai",
+    "packaging",
+]
+
+dev_requires = [
+    "pre-commit",
+    "pytest",
+    "sphinx-gallery",
+    "furo",
+    "myst_parser",
+    "matplotlib",
+]
+
+with open("README.md", "r", encoding="UTF-8") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name=NAME,
+    version=VERSION,
+    author="SysML team of Alibaba Tongyi Lab ",
+    author_email="gaodawei.gdw@alibaba-inc.com",
+    description="AgentScope: A Flexible yet Robust Multi-Agent Platform.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url=URL,
+    download_url=f"{URL}/archive/v{VERSION}.tar.gz",
+    keywords=["deep-learning", "multi agents", "agents"],
+    package_dir={"": "src"},
+    packages=setuptools.find_packages("src"),
+    install_requires=minimal_requires,
+    extras_require={
+        "full": minimal_requires + extra_requires,
+        "dev": minimal_requires + extra_requires + dev_requires,
+    },
+    license="Apache-2.0",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.10",
+    entry_points={},
+)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+2026-11-11 07:29:37.134 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:29:40.168 | INFO     | Model API request cost info: input_tokens=1153, output_tokens=326, cost=0.000000
+2026-11-11 07:29:40.170 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:29:40.170 | INFO     | ******
+2026-11-11 07:29:40.171 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]
+- Python version requirement:
+  - python_requires=">=3.10"
+- Minimal dependencies (install_requires):
+  - aioitertools
+  - anthropic
+  - dashscope
+  - docstring_parser
+  - json5 (listed twice, but version not specified)
+  - json_repair
+  - mcp>=1.13
+  - numpy
+  - openai
+  - python-datauri
+  - opentelemetry-api
+  - opentelemetry-sdk
+  - opentelemetry-exporter-otlp
+  - python-socketio
+  - shortuuid
+  - tiktoken
+- Extra dependencies (extras_require):
+  - "full": includes minimal_requires + 
+    - ollama
+    - google-genai
+    - Pillow
+    - transformers
+    - jinja2
+    - ray
+    - mem0ai
+    - packaging
+  - "dev": includes minimal_requires + extra_requires + 
+    - pre-commit
+    - pytest
+    - sphinx-gallery
+    - furo
+    - myst_parser
+    - matplotlib
+- Test framework:
+  - pytest is included in the dev dependencies
+- No explicit test commands are specified in the setup.py
+- No environment variables or configurations related to testing detailed
+- No specific versions listed other than "mcp>=1.13"
+
+[/Key Information]
+2026-11-11 07:29:40.171 | INFO     | ******
+2026-11-11 07:29:40.171 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]\n- Python version requirement:\n  - python_requires=">=3.10"\n- Minimal dependencies (install_requires):\n  - aioitertools\n  - anthropic\n  - dashscope\n  - docstring_parser\n  - json5 (listed twice, but version not specified)\n  - json_repair\n  - mcp>=1.13\n  - numpy\n  - openai\n  - python-datauri\n  - opentelemetry-api\n  - opentelemetry-sdk\n  - opentelemetry-exporter-otlp\n  - python-socketio\n  - shortuuid\n  - tiktoken\n- Extra dependencies (extras_require):\n  - "full": includes minimal_requires + \n    - ollama\n    - google-genai\n    - Pillow\n    - transformers\n    - jinja2\n    - ray\n    - mem0ai\n    - packaging\n  - "dev": includes minimal_requires + extra_requires + \n    - pre-commit\n    - pytest\n    - sphinx-gallery\n    - furo\n    - myst_parser\n    - matplotlib\n- Test framework:\n  - pytest is included in the dev dependencies\n- No explicit test commands are specified in the setup.py\n- No environment variables or configurations related to testing detailed\n- No specific versions listed other than "mcp>=1.13"\n\n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:29:40.171 | INFO     | entering browse
+2026-11-11 07:29:40.172 | INFO     | File not found: File not found: 'testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/test_token_usage_vllm.py'
+2026-11-11 07:29:40.172 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:29:47.164 | INFO     | Model API request cost info: input_tokens=4799, output_tokens=767, cost=0.000000
+2026-11-11 07:29:47.209 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:29:51.426 | INFO     | Model API request cost info: input_tokens=1365, output_tokens=444, cost=0.000000
+2026-11-11 07:29:51.429 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"setup.py\")", "browse_file_for_environment_info(\".github/workflows/unittest.yml\")", "browse_file_for_environment_info(\"README.md\")"],
+  "collected_information": {
+    "Environment Setup from README.md": {
+      "Python Version": "3.10 or higher",
+      "Installation Options": ["pip install -e .", "pip install agentscope"],
+      "Note": "No requirements-test.txt found"
+    },
+    "Environment and Test Execution from .github/workflows/unittest.yml": {
+      "Python Versions Tested": ["3.10", "3.11", "3.12"],
+      "Operating Systems": ["ubuntu-latest", "windows-latest", "macos-13"],
+      "Dependency Installation": ["pip install -q -e .[dev]", "pip install coverage pytest"],
+      "Test Commands": ["coverage run -m pytest tests", "coverage report -m"],
+      "Notes": "Tests run on all files under the tests directory with pytest; no specific test file commands"
+    },
+    "Dependencies from setup.py": {
+      "Python Requirement": ">=3.10",
+      "Core Dependencies": ["aioitertools", "anthropic", "dashscope", "docstring_parser", "json5", "json_repair", "mcp>=1.13", "numpy", "openai", "python-datauri", "opentelemetry-api/sdk/exporter", "python-socketio", "shortuuid", "tiktoken"],
+      "Extras Full": ["ollama", "google-genai", "Pillow", "transformers", "jinja2", "ray", "mem0ai", "packaging"],
+      "Extras Dev": ["pre-commit", "pytest", "sphinx-gallery", "furo", "myst_parser", "matplotlib"],
+      "Test Framework": "pytest included in dev dependencies"
+    },
+    "Note on Test File": "The requested test file tests/test_token_usage_vllm.py was not found in the repository"
+  },
+  "terminate": true
+}
+2026-11-11 07:29:51.431 | DEBUG    | the API call 'browse_file_for_environment_info("setup.py")' has wrong number of arguments. Will retry.
+2026-11-11 07:29:51.431 | DEBUG    | Trying to select search APIs in json. Try 2 of 5.
+2026-11-11 07:29:56.013 | INFO     | Model API request cost info: input_tokens=1365, output_tokens=414, cost=0.000000
+2026-11-11 07:29:56.016 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"setup.py\")", "browse_file_for_environment_info(\".github/workflows/unittest.yml\")", "browse_file_for_environment_info(\"README.md\")"],
+  "collected_information": {
+    "environment_setup": {
+      "python_version": ">=3.10",
+      "installation": [
+        "pip install -e .",
+        "pip install agentscope"
+      ]
+    },
+    "dependencies": {
+      "core": [
+        "aioitertools", "anthropic", "dashscope", "docstring_parser", "json5",
+        "json_repair", "mcp>=1.13", "numpy", "openai", "python-datauri",
+        "opentelemetry-api/sdk/exporter", "python-socketio", "shortuuid", "tiktoken"
+      ],
+      "extras_full": [
+        "ollama", "google-genai", "Pillow", "transformers", "jinja2",
+        "ray", "mem0ai", "packaging"
+      ],
+      "extras_dev": [
+        "pre-commit", "pytest", "sphinx-gallery", "furo", "myst_parser", "matplotlib"
+      ]
+    },
+    "test_execution": {
+      "python_versions_tested": ["3.10", "3.11", "3.12"],
+      "os_matrix": ["ubuntu-latest", "windows-latest", "macos-13"],
+      "install_cmds": [
+        "pip install -q -e .[dev]",
+        "pip install coverage pytest"
+      ],
+      "test_cmds": [
+        "coverage run -m pytest tests",
+        "coverage report -m"
+      ],
+      "note": "Tests run on the entire tests directory; no special commands for individual test files."
+    },
+    "missing_test_file": "tests/test_token_usage_vllm.py does not exist"
+  },
+  "terminate": true
+}
+2026-11-11 07:29:56.016 | DEBUG    | the API call 'browse_file_for_environment_info("setup.py")' has wrong number of arguments. Will retry.
+2026-11-11 07:29:56.016 | DEBUG    | Trying to select search APIs in json. Try 3 of 5.
+2026-11-11 07:29:59.490 | INFO     | Model API request cost info: input_tokens=1365, output_tokens=391, cost=0.000000
+2026-11-11 07:29:59.492 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"setup.py\")", "browse_file_for_environment_info(\".github/workflows/unittest.yml\")", "browse_file_for_environment_info(\"README.md\")"],
+  "collected_information": {
+    "environment_setup": {
+      "python_version": ">=3.10",
+      "installation": ["pip install -e .", "pip install agentscope"],
+      "dependencies": {
+        "core": ["aioitertools", "anthropic", "dashscope", "docstring_parser", "json5", "json_repair", "mcp>=1.13", "numpy", "openai", "python-datauri", "opentelemetry-api/sdk/exporter", "python-socketio", "shortuuid", "tiktoken"],
+        "extras": {
+          "full": ["ollama", "google-genai", "Pillow", "transformers", "jinja2", "ray", "mem0ai", "packaging"],
+          "dev": ["pre-commit", "pytest", "sphinx-gallery", "furo", "myst_parser", "matplotlib"]
+        }
+      }
+    },
+    "test_execution": {
+      "ci_python_versions": ["3.10", "3.11", "3.12"],
+      "os_matrix": ["ubuntu-latest", "windows-latest", "macos-13"],
+      "install_commands": ["pip install -q -e .[dev]", "pip install coverage pytest"],
+      "test_commands": ["coverage run -m pytest tests", "coverage report -m"],
+      "notes": "Tests run on all files under the tests directory; no commands for a specific test file."
+    },
+    "missing_test_file": "tests/test_token_usage_vllm.py does not exist in the repository."
+  },
+  "terminate": true
+}
+2026-11-11 07:29:59.492 | DEBUG    | the API call 'browse_file_for_environment_info("setup.py")' has wrong number of arguments. Will retry.
+2026-11-11 07:29:59.492 | DEBUG    | Trying to select search APIs in json. Try 4 of 5.
+2026-11-11 07:30:04.179 | INFO     | Model API request cost info: input_tokens=1365, output_tokens=516, cost=0.000000
+2026-11-11 07:30:04.182 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\"setup.py\", \"dependencies and extras_require for environment and tests\")", "browse_file_for_environment_info(\".github/workflows/unittest.yml\", \"Python versions, install commands, test commands and environment setup from CI workflow\")", "browse_file_for_environment_info(\"README.md\", \"environment setup and installation instructions\")"],
+  "collected_information": {
+    "environment": {
+      "python_version": ">=3.10",
+      "installation": [
+        "pip install -e . (from source)",
+        "pip install agentscope (from PyPi)"
+      ],
+      "dependencies": {
+        "core": [
+          "aioitertools",
+          "anthropic",
+          "dashscope",
+          "docstring_parser",
+          "json5",
+          "json_repair",
+          "mcp>=1.13",
+          "numpy",
+          "openai",
+          "python-datauri",
+          "opentelemetry-api/sdk/exporter",
+          "python-socketio",
+          "shortuuid",
+          "tiktoken"
+        ],
+        "extras": {
+          "full": [
+            "ollama",
+            "google-genai",
+            "Pillow",
+            "transformers",
+            "jinja2",
+            "ray",
+            "mem0ai",
+            "packaging"
+          ],
+          "dev": [
+            "pre-commit",
+            "pytest",
+            "sphinx-gallery",
+            "furo",
+            "myst_parser",
+            "matplotlib"
+          ]
+        }
+      }
+    },
+    "test_execution": {
+      "ci_python_versions": ["3.10", "3.11", "3.12"],
+      "os_matrix": ["ubuntu-latest", "windows-latest", "macos-13"],
+      "test_installation_command": "pip install -q -e .[dev]",
+      "additional_install": "pip install coverage pytest",
+      "test_command": [
+        "coverage run -m pytest tests",
+        "coverage report -m"
+      ],
+      "note": "No specific commands for individual test files; tests run on whole tests directory."
+    },
+    "notes": {
+      "test_file_not_found": "tests/test_token_usage_vllm.py does not exist in the repository",
+      "requirements_test_txt": "Not found",
+      "no_contributing_md": "No contributing or test instructions beyond the above"
+    }
+  },
+  "terminate": true
+}
+2026-11-11 07:30:04.182 | DEBUG    | Extracted a valid json
+2026-11-11 07:30:04.189 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-11-11 07:30:08.321 | INFO     | Model API request cost info: input_tokens=2526, output_tokens=418, cost=0.000000
+2026-11-11 07:30:08.322 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-11-11 07:30:08.336 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 07:30:11.342 | INFO     | Model API request cost info: input_tokens=2360, output_tokens=204, cost=0.000000
+2026-11-11 07:30:11.343 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 08:03:13.810 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 1e8caeebccdadd31342b5ede8024738339142dc543bcf287de9cbd84d95775da started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image agentscope-ai__agentscope-769-dockerfile1:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 08:03:13.816 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 08:03:18.506 | INFO     | Model API request cost info: input_tokens=2689, output_tokens=390, cost=0.000000
+2026-11-11 08:03:18.514 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed because pytest does not recognize the '--cov=agentscope' argument, indicating that the pytest-cov plugin is not installed in the Python environment. Also, the error 'pathspec 'tests/test_token_usage_vllm.py' did not match any file(s) known to git' indicates that after applying the patch, the test file 'tests/test_token_usage_vllm.py' does not properly exist or the patch has removed or renamed it, which should be handled carefully.\n\nPlease update the eval script to ensure that pytest-cov is installed in the virtual environment before running pytest, by adding 'pip install pytest-cov' or adding it to the initial pip install commands in Dockerfile or eval script. Alternatively, you can modify pytest command to run without coverage if coverage is not supported.\n\nAlso, revise the git checkout/reset commands on the specific test file to correctly clean up the applied patch or handle cases when the file is not present or renamed. Consider safely ignoring errors if the test file doesn't exist after patch application.\n\nMake sure that the test file tests/test_token_usage_vllm.py actually exists after patch application and is the target file for pytest execution to produce test output.\n\nIn summary, fix the eval script to:\n1. Install 'pytest-cov' plugin in the environment before running pytest.\n2. Confirm the test file exists after patch application before running pytest and before running 'git checkout' to reset.\n3. Ensure pytest command runs tests and outputs test results without error.\n4. Properly capture and echo the exit code as done.\n\nThese changes will help in running the tests successfully and getting valid test output.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-11-11 08:03:18.514 | DEBUG    | Extracted a valid json
+2026-11-11 08:03:18.538 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 08:03:22.178 | INFO     | Model API request cost info: input_tokens=3795, output_tokens=263, cost=0.000000
+2026-11-11 08:03:22.183 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 08:15:53.632 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 973e02c6adf3dbc7c07f31ee96c4d805f7d643e759a8738d80d6e7684715a2f1 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image agentscope-ai__agentscope-769-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 08:15:53.641 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 08:15:57.997 | INFO     | Model API request cost info: input_tokens=3817, output_tokens=437, cost=0.000000
+2026-11-11 08:15:57.997 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test failed to execute successfully due to an ImportError: \"cannot import name 'streamablehttp_client' from 'mcp.client.streamable_http'\" while collecting tests/test_token_usage_vllm.py. This error implies that the installed 'mcp' package version in the environment is either outdated or incompatible with the test code expecting this symbol to be present. Please update the evaluation script to verify and ensure that the correct version of all dependencies, especially 'mcp', that the tests depend on is installed. This could involve explicitly installing the 'mcp' package with a compatible version, or adjusting the installation commands to install dependencies exactly as expected by the tests or force-reinstall dependencies to pick up the right ones. Additionally, consider adding debugging commands to print installed package versions (e.g., pip show mcp) before running pytest to diagnose version mismatches. The current eval script installs only 'pytest-cov' after activating the venv; dependency versions are managed in Dockerfile but the logs suggest missing or wrong version for 'mcp.client.streamable_http'. Without fixing this dependency issue, tests cannot proceed beyond import errors.",
+  "guidance_for_context_retrieval_agent": "To resolve the import error related to 'mcp.client.streamable_http', please retrieve the following from the target repository 'agentscope-ai/agentscope':\n1. Dependency management files such as 'requirements.txt', 'setup.py', 'pyproject.toml', or any 'environment.yml' that specify exact package versions, especially for 'mcp' or related dependencies.\n2. Any documentation or README sections that explain setup or installation steps explicitly mentioning third-party dependencies or submodules like 'mcp'.\n3. Investigation of whether 'mcp' is a submodule, local package, or external dependency and how it should be installed or included in the environment.\nThis information is critical to determine the correct way to install or setup the environment so that imports in the test file will succeed."
+}
+2026-11-11 08:15:57.997 | DEBUG    | Extracted a valid json
+2026-11-11 08:16:01.209 | INFO     | Model API request cost info: input_tokens=1673, output_tokens=75, cost=0.000000
+2026-11-11 08:16:01.234 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:16:03.192 | INFO     | Model API request cost info: input_tokens=782, output_tokens=110, cost=0.000000
+2026-11-11 08:16:03.193 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"\", \"1\")"
+  ],
+  "collected_information": "Started by browsing the root directory with depth 1 to locate dependency management files like requirements.txt, setup.py, pyproject.toml, environment.yml, and documentation files such as README.md to gather information about the 'mcp' package and related setup instructions. This step will help to identify the presence of 'mcp' as a dependency or local package and guide subsequent exploration.",
+  "terminate": false
+}
+2026-11-11 08:16:03.193 | DEBUG    | Extracted a valid json
+2026-11-11 08:16:03.200 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50. The browsing Depth is 1.\nStructure of this directory:\n\n.pre-commit-config.yaml\n\nREADME.md\n\nsetup.py\n\n.gitignore\n\nLICENSE\n\nREADME_zh.md\n\ndocs/\n\n.git/\n\nassets/\n\nsrc/\n\ntests/\n\n.github/\n\nexamples/\n\n', 'folder structure collected', True)
+2026-11-11 08:16:07.462 | INFO     | Model API request cost info: input_tokens=2329, output_tokens=87, cost=0.000000
+2026-11-11 08:16:07.476 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:16:08.787 | INFO     | Model API request cost info: input_tokens=892, output_tokens=68, cost=0.000000
+2026-11-11 08:16:08.791 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"setup.py\", \"dependency declarations including 'mcp'\")",
+    "browse_file_for_environment_info(\"README.md\", \"installation instructions and dependencies including 'mcp'\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 08:16:08.791 | DEBUG    | Extracted a valid json
+2026-11-11 08:16:08.794 | INFO     | entering browse
+2026-11-11 08:16:08.798 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+# -*- coding: utf-8 -*-
+"""Setup script for AgentScope."""
+import re
+import setuptools
+
+# obtain version from src/agentscope/_version.py
+with open("src/agentscope/_version.py", encoding="UTF-8") as f:
+    VERSION = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+        f.read(),
+        re.MULTILINE,
+    ).group(1)
+
+NAME = "agentscope"
+URL = "https://github.com/agentscope-ai/agentscope"
+
+minimal_requires = [
+    "aioitertools",
+    "anthropic",
+    "dashscope",
+    "docstring_parser",
+    "json5",
+    "json_repair",
+    "mcp>=1.13",
+    "numpy",
+    "openai",
+    "python-datauri",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp",
+    "json5",
+    "aioitertools",
+    "python-socketio",
+    "shortuuid",
+    "tiktoken",
+]
+
+extra_requires = [
+    "ollama",
+    "google-genai",
+    "Pillow",
+    "transformers",
+    "jinja2",
+    "ray",
+    "mem0ai",
+    "packaging",
+]
+
+dev_requires = [
+    "pre-commit",
+    "pytest",
+    "sphinx-gallery",
+    "furo",
+    "myst_parser",
+    "matplotlib",
+]
+
+with open("README.md", "r", encoding="UTF-8") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name=NAME,
+    version=VERSION,
+    author="SysML team of Alibaba Tongyi Lab ",
+    author_email="gaodawei.gdw@alibaba-inc.com",
+    description="AgentScope: A Flexible yet Robust Multi-Agent Platform.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url=URL,
+    download_url=f"{URL}/archive/v{VERSION}.tar.gz",
+    keywords=["deep-learning", "multi agents", "agents"],
+    package_dir={"": "src"},
+    packages=setuptools.find_packages("src"),
+    install_requires=minimal_requires,
+    extras_require={
+        "full": minimal_requires + extra_requires,
+        "dev": minimal_requires + extra_requires + dev_requires,
+    },
+    license="Apache-2.0",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.10",
+    entry_points={},
+)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+2026-11-11 08:16:08.798 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:16:11.106 | INFO     | Model API request cost info: input_tokens=1152, output_tokens=203, cost=0.000000
+2026-11-11 08:16:11.107 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:16:11.107 | INFO     | ******
+2026-11-11 08:16:11.107 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]
+- Dependency declarations including 'mcp':
+  - minimal_requires list includes "mcp>=1.13"
+- Full minimal_requires packages:
+  - aioitertools
+  - anthropic
+  - dashscope
+  - docstring_parser
+  - json5
+  - json_repair
+  - mcp>=1.13
+  - numpy
+  - openai
+  - python-datauri
+  - opentelemetry-api
+  - opentelemetry-sdk
+  - opentelemetry-exporter-otlp
+  - python-socketio
+  - shortuuid
+  - tiktoken
+- extra_requires (does not include mcp)
+- dev_requires (does not include mcp)
+- Python version requirement: >=3.10
+[/Key Information]
+2026-11-11 08:16:11.107 | INFO     | ******
+2026-11-11 08:16:11.108 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]\n- Dependency declarations including \'mcp\':\n  - minimal_requires list includes "mcp>=1.13"\n- Full minimal_requires packages:\n  - aioitertools\n  - anthropic\n  - dashscope\n  - docstring_parser\n  - json5\n  - json_repair\n  - mcp>=1.13\n  - numpy\n  - openai\n  - python-datauri\n  - opentelemetry-api\n  - opentelemetry-sdk\n  - opentelemetry-exporter-otlp\n  - python-socketio\n  - shortuuid\n  - tiktoken\n- extra_requires (does not include mcp)\n- dev_requires (does not include mcp)\n- Python version requirement: >=3.10\n[/Key Information]', 'Get File Info', True)
+2026-11-11 08:16:11.108 | INFO     | entering browse
+2026-11-11 08:16:11.109 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+[**中文主页**](https://github.com/agentscope-ai/agentscope/blob/main/README_zh.md) | [**Tutorial**](https://doc.agentscope.io/) | [**Roadmap**](https://github.com/agentscope-ai/agentscope/blob/main/docs/roadmap.md) | [**FAQ**](https://doc.agentscope.io/tutorial/faq.html)
+
+<p align="center">
+  <img
+    src="https://img.alicdn.com/imgextra/i1/O1CN01nTg6w21NqT5qFKH1u_!!6000000001621-55-tps-550-550.svg"
+    alt="AgentScope Logo"
+    width="200"
+  />
+</p>
+
+<h2 align="center">AgentScope: Agent-Oriented Programming for Building LLM Applications</h2>
+
+<p align="center">
+    <a href="https://arxiv.org/abs/2402.14034">
+        <img
+            src="https://img.shields.io/badge/cs.MA-2402.14034-B31C1C?logo=arxiv&logoColor=B31C1C"
+            alt="arxiv"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/python-3.10+-blue?logo=python"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fagentscope%2Fjson&query=%24.info.version&prefix=v&logo=pypi&label=version"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://doc.agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/Docs-English%7C%E4%B8%AD%E6%96%87-blue?logo=markdown"
+            alt="docs"
+        />
+    </a>
+    <a href="https://agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/GUI-AgentScope_Studio-blue?logo=look&logoColor=green&color=dark-green"
+            alt="workstation"
+        />
+    </a>
+    <a href="./LICENSE">
+        <img
+            src="https://img.shields.io/badge/license-Apache--2.0-black"
+            alt="license"
+        />
+    </a>
+</p>
+
+<p align="center">
+<img src="https://trendshift.io/api/badge/repositories/10079" alt="modelscope%2Fagentscope | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+</p>
+
+## ✨ Why AgentScope?
+
+Easy for beginners, powerful for experts.
+
+<p align="center">
+<img src="./assets/images/agentscope_v1_0822.png" alt="AgentScope Framework" width="80%"/>
+</p>
+
+- **Transparent to Developers**: Transparent is our **FIRST principle**. Prompt engineering, API invocation, agent building, workflow orchestration, all are visible and controllable for developers. No deep encapsulation or implicit magic.
+- **[Realtime Steering](https://doc.agentscope.io/tutorial/task_agent.html#realtime-steering)**: Native support for realtime interruption and customized handling.
+- **More Agentic**: Support [agentic tools management](https://doc.agentscope.io/tutorial/task_tool.html), [agentic long-term memory control](https://doc.agentscope.io/tutorial/task_long_term_memory.html) and agentic RAG, etc.
+- **Model Agnostic**: Programming once, run with all models.
+- **LEGO-style Agent Building**: All components are **modular** and **independent**.
+- **Multi-Agent Oriented**: Designed for **multi-agent**, **explicit** message passing and workflow orchestration, NO deep encapsulation.
+- **Highly Customizable**: Tools, prompt, agent, workflow, third-party libs & visualization, customization is encouraged everywhere.
+
+Quick overview of important features in **AgentScope 1.0**:
+
+| Module     | Feature                                                                            | Tutorial                                                                |
+|------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| model      | Support async invocation                                                           | [Model](https://doc.agentscope.io/tutorial/task_model.html)             |
+|            | Support reasoning model                                                            |                                                                         |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+| tool       | Support async/sync tool functions                                                  | [Tool](https://doc.agentscope.io/tutorial/task_tool.html)               |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+|            | Support user interruption                                                          |                                                                         |
+|            | Support post-processing                                                            |                                                                         |
+|            | Support group-wise tools management                                                |                                                                         |
+|            | Support agentic tools management by meta tool                                      |                                                                         |
+| MCP        | Support streamable HTTP/SSE/StdIO transport                                        | [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)                 |
+|            | Support both **stateful** and **stateless** mode MCP Client                        |                                                                         |
+|            | Support client- & function-level fine-grained control                              |                                                                         |
+| agent      | Support async execution                                                            |                                                                         |
+|            | Support parallel tool calls                                                        |                                                                         |
+|            | Support realtime steering interruption and customized handling                     |                                                                         |
+|            | Support automatic state management                                                 |                                                                         |
+|            | Support agent-controlled long-term memory                                          |                                                                         |
+|            | Support agent hooks                                                                |                                                                         |
+| tracing    | Support OpenTelemetry-based tracing in LLM, tools, agent and formatter             | [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)         |
+|            | Support connecting to third-party tracing platforms (e.g. Arize-Phoenix, Langfuse) |                                                                         |
+| memory     | Support long-term memory                                                           | [Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html) |
+| session    | Provide session/application-level automatic state management                       | [Session](https://doc.agentscope.io/tutorial/task_state.html)           |
+| evaluation | Provide distributed and parallel evaluation                                        | [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)         |
+| formatter  | Support multi-agent prompt formatting with tools API                               | [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html) |
+|            | Support truncation-based formatter strategy                                        |                                                                         |
+| plan       | Support ReAct-based long-term planning                                             | [Plan](https://doc.agentscope.io/tutorial/task_plan.html)               |
+|            | Support manual plan specification                                                 |                                                                         |
+| ...        |                                                                                    |                                                                         |
+
+## 📢 News
+- **[2025-09]** A new powerful 📋**Plan** module is online now! Check out the [tutorial](https://doc.agentscope.io/tutorial/task_plan.html) for more details.
+- **[2025-09]** **AgentScope Runtime** is open-sourced now! Enabling effective agent deployment with sandboxed tool execution for production-ready AI applications. Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-runtime).
+- **[2025-09]** **AgentScope Studio** is open-sourced now! Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-studio).
+- **[2025-08]** The new tutorial of v1 is online now! Check out the [tutorial](https://doc.agentscope.io) for more details.
+- **[2025-08]** 🎉🎉 AgentScope v1 is released now! This version fully embraces the asynchronous execution, providing many new features and improvements. Check out [changelog](https://github.com/agentscope-ai/agentscope/blob/main/docs/changelog.md) for detailed changes.
+
+## 💬 Contact
+
+Welcome to join our community on
+
+| [Discord](https://discord.gg/eYMpfnkG8h)                                                                                         | DingTalk                                                                                                                          |
+|----------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| <img src="https://gw.alicdn.com/imgextra/i1/O1CN01hhD1mu1Dd3BWVUvxN_!!6000000000238-2-tps-400-400.png" width="100" height="100"> | <img src="https://img.alicdn.com/imgextra/i1/O1CN01LxzZha1thpIN2cc2E_!!6000000005934-2-tps-497-477.png" width="100" height="100"> |
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## 📑 Table of Contents
+
+- [🚀 Quickstart](#-quickstart)
+  - [💻 Installation](#-installation)
+    - [🛠️ From source](#-from-source)
+    - [📦 From PyPi](#-from-pypi)
+- [📝 Example](#-example)
+  - [👋 Hello AgentScope!](#-hello-agentscope)
+  - [🎯 Realtime Steering](#-realtime-steering)
+  - [🛠️ Fine-Grained MCP Control](#-fine-grained-mcp-control)
+  - [🧑‍🤝‍🧑 Multi-Agent Conversation](#-multi-agent-conversation)
+  - [💻 AgentScope Studio](#-agentscope-studio)
+- [📖 Documentation](#-documentation)
+- [⚖️ License](#-license)
+- [📚 Publications](#-publications)
+- [✨ Contributors](#-contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 🚀 Quickstart
+
+### 💻 Installation
+
+> AgentScope requires **Python 3.10** or higher.
+
+#### 🛠️ From source
+
+```bash
+# Pull the source code from GitHub
+git clone -b main https://github.com/agentscope-ai/agentscope.git
+
+# Install the package in editable mode
+cd agentscope
+pip install -e .
+```
+
+#### 📦 From PyPi
+
+```bash
+pip install agentscope
+```
+
+## 📝 Example
+
+### 👋 Hello AgentScope!
+
+Start with a conversation between user and a ReAct agent 🤖 named "Friday"!
+
+```python
+from agentscope.agent import ReActAgent, UserAgent
+from agentscope.model import DashScopeChatModel
+from agentscope.formatter import DashScopeChatFormatter
+from agentscope.memory import InMemoryMemory
+from agentscope.tool import Toolkit, execute_python_code, execute_shell_command
+import os, asyncio
+
+
+async def main():
+    toolkit = Toolkit()
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(execute_shell_command)
+
+    agent = ReActAgent(
+        name="Friday",
+        sys_prompt="You're a helpful assistant named Friday.",
+        model=DashScopeChatModel(
+            model_name="qwen-max",
+            api_key=os.environ["DASHSCOPE_API_KEY"],
+            stream=True,
+        ),
+        memory=InMemoryMemory(),
+        formatter=DashScopeChatFormatter(),
+        toolkit=toolkit,
+    )
+
+    user = UserAgent(name="user")
+
+    msg = None
+    while True:
+        msg = await agent(msg)
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+
+asyncio.run(main())
+```
+
+### 🎯 Realtime Steering
+
+Natively support **realtime interruption** in ``ReActAgent`` with robust memory preservation, and convert interruption into an **observable event** for agent to seamlessly resume conversations.
+
+<p align="center">
+  <img src="./assets/images/realtime_steering_zh.gif" alt="Realtime Steering" width="49%"/>
+  <img src="./assets/images/realtime_steering_en.gif" alt="Realtime Steering" width="49%"/>
+</p>
+
+### 🛠️ Fine-Grained MCP Control
+
+Developers can obtain the MCP tool as a **local callable function**, and use it anywhere (e.g. call directly, pass to agent, wrap into a more complex tool, etc.)
+
+```python
+from agentscope.mcp import HttpStatelessClient
+from agentscope.tool import Toolkit
+import os
+
+async def fine_grained_mcp_control():
+    # Initialize the MCP client
+    client = HttpStatelessClient(
+        name="gaode_mcp",
+        transport="streamable_http",
+        url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+    )
+
+    # Obtain the MCP tool as a **local callable function**, and use it anywhere
+    func = await client.get_callable_function(func_name="maps_geo")
+
+    # Option 1: Call directly
+    await func(address="Tiananmen Square", city="Beijing")
+
+    # Option 2: Pass to agent as a tool
+    toolkit = Toolkit()
+    toolkit.register_tool_function(func)
+    # ...
+
+    # Option 3: Wrap into a more complex tool
+    # ...
+```
+
+### 🧑‍🤝‍🧑 Multi-Agent Conversation
+
+AgentScope provides ``MsgHub`` and pipelines to streamline multi-agent conversations, offering efficient message routing and seamless information sharing
+
+```python
+from agentscope.pipeline import MsgHub, sequential_pipeline
+from agentscope.message import Msg
+import asyncio
+
+async def multi_agent_conversation():
+    # Create agents
+    agent1 = ...
+    agent2 = ...
+    agent3 = ...
+    agent4 = ...
+
+    # Create a message hub to manage multi-agent conversation
+    async with MsgHub(
+        participants=[agent1, agent2, agent3],
+        announcement=Msg("Host", "Introduce yourselves.", "assistant")
+    ) as hub:
+        # Speak in a sequential manner
+        await sequential_pipeline([agent1, agent2, agent3])
+        # Dynamic manage the participants
+        hub.add(agent4)
+        hub.delete(agent3)
+        await hub.broadcast(Msg("Host", "Goodbye!", "assistant"))
+
+asyncio.run(multi_agent_conversation())
+```
+
+### 💻 AgentScope Studio
+
+Use the following command to install and start AgentScope Studio, to trace and visualize your agent application.
+
+```bash
+npm install -g @agentscope/studio
+
+as_studio
+```
+
+<p align="center">
+    <img
+        src="./assets/images/home.gif"
+        width="49%"
+        alt="home"
+    />
+    <img
+        src="./assets/images/projects.gif"
+        width="49%"
+        alt="projects"
+    />
+    <img
+        src="./assets/images/runtime.gif"
+        width="49%"
+        alt="runtime"
+    />
+    <img
+        src="./assets/images/friday.gif"
+        width="49%"
+        alt="friday"
+    />
+</p>
+
+
+## 📖 Documentation
+
+- Tutorial
+  - [Installation](https://doc.agentscope.io/tutorial/quickstart_installation.html)
+  - [Key Concepts](https://doc.agentscope.io/tutorial/quickstart_key_concept.html)
+  - [Create Message](https://doc.agentscope.io/tutorial/quickstart_message.html)
+  - [ReAct Agent](https://doc.agentscope.io/tutorial/quickstart_agent.html)
+- Workflow
+  - [Conversation](https://doc.agentscope.io/tutorial/workflow_conversation.html)
+  - [Multi-Agent Debate](https://doc.agentscope.io/tutorial/workflow_multiagent_debate.html)
+  - [Concurrent Agents](https://doc.agentscope.io/tutorial/workflow_concurrent_agents.html)
+  - [Routing](https://doc.agentscope.io/tutorial/workflow_routing.html)
+  - [Handoffs](https://doc.agentscope.io/tutorial/workflow_handoffs.html)
+- FAQ
+  - [FAQ](https://doc.agentscope.io/tutorial/faq.html)
+- Task Guides
+  - [Model](https://doc.agentscope.io/tutorial/task_model.html)
+  - [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html)
+  - [Tool](https://doc.agentscope.io/tutorial/task_tool.html)
+  - [Memory](https://doc.agentscope.io/tutorial/task_memory.html)
+  - [Long-Term Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html)
+  - [Agent](https://doc.agentscope.io/tutorial/task_agent.html)
+  - [Pipeline](https://doc.agentscope.io/tutorial/task_pipeline.html)
+  - [State/Session Management](https://doc.agentscope.io/tutorial/task_state.html)
+  - [Agent Hooks](https://doc.agentscope.io/tutorial/task_hook.html)
+  - [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)
+  - [AgentScope Studio](https://doc.agentscope.io/tutorial/task_studio.html)
+  - [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)
+  - [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)
+  - [Embedding](https://doc.agentscope.io/tutorial/task_embedding.html)
+  - [Token](https://doc.agentscope.io/tutorial/task_token.html)
+- API
+  - [API Docs](https://doc.agentscope.io/api/agentscope.html)
+- [Examples](https://github.com/agentscope-ai/agentscope/tree/main/examples)
+  - Game
+    - [Nine-player Werewolves](https://github.com/agentscope-ai/agentscope/tree/main/examples/game/werewolves)
+  - Workflow
+    - [Multi-agent Debate](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_debate)
+    - [Multi-agent Conversation](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_conversation)
+    - [Multi-agent Concurrent](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_concurrent)
+  - Evaluation
+    - [ACEBench](https://github.com/agentscope-ai/agentscope/tree/main/examples/evaluation/ace_bench)
+  - Functional
+    - [ReAct Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/react_agent)
+    - [MCP](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/mcp)
+    - [Plan](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/plan)
+    - [Structured Output](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/structured_output)
+    - [Long-Term Memory](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/long_term_memory)
+    - [Session with SQLite](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/session_with_sqlite)
+
+## ⚖️ License
+
+AgentScope is released under Apache License 2.0.
+
+## 📚 Publications
+
+If you find our work helpful for your research or application, please cite our papers.
+
+- [AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications](https://arxiv.org/abs/2508.16279)
+
+- [AgentScope: A Flexible yet Robust Multi-Agent Platform](https://arxiv.org/abs/2402.14034)
+
+```
+@article{agentscope_v1,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Yuexiang Xie,
+        Weirui Kuang,
+        Liuyi Yao,
+        Bingchen Qian,
+        Zhijian Ma,
+        Yue Cui,
+        Haohao Luo,
+        Shen Li,
+        Lu Yi,
+        Yi Yu,
+        Shiqi He,
+        Zhiling Luo,
+        Wenmeng Zhou,
+        Zhicheng Zhang,
+        Xuguang He,
+        Ziqian Chen,
+        Weikai Liao,
+        Farruh Isakulovich Kushnazarov,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications},
+    journal = {CoRR},
+    volume  = {abs/2508.16279},
+    year    = {2025},
+}
+
+@article{agentscope,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Xuchen Pan,
+        Weirui Kuang,
+        Zhijian Ma,
+        Bingchen Qian,
+        Fei Wei,
+        Wenhao Zhang,
+        Yuexiang Xie,
+        Daoyuan Chen,
+        Liuyi Yao,
+        Hongyi Peng,
+        Zeyu Zhang,
+        Lin Zhu,
+        Chen Cheng,
+        Hongzhu Shi,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope: A Flexible yet Robust Multi-Agent Platform},
+    journal = {CoRR},
+    volume  = {abs/2402.14034},
+    year    = {2024},
+}
+```
+
+## ✨ Contributors
+
+All thanks to our contributors:
+
+<a href="https://github.com/agentscope-ai/agentscope/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=agentscope-ai/agentscope&max=999&columns=12&anon=1" />
+</a>
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+2026-11-11 08:16:11.109 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:16:15.277 | INFO     | Model API request cost info: input_tokens=5161, output_tokens=461, cost=0.000000
+2026-11-11 08:16:15.278 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:16:15.279 | INFO     | ******
+2026-11-11 08:16:15.279 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]
+- Installation Requirements:
+  - Python version: 3.10 or higher (explicitly stated requirement)
+- Installation Instructions:
+  - From source:
+    - Clone repo: `git clone -b main https://github.com/agentscope-ai/agentscope.git`
+    - Enter directory: `cd agentscope`
+    - Install in editable mode: `pip install -e .`
+  - From PyPI (simpler option):
+    - Install with pip: `pip install agentscope`
+- MCP (Multi-Channel Protocol) related details:
+  - The `mcp` module is part of AgentScope and supports streamable HTTP/SSE/StdIO transport.
+  - Supports both stateful and stateless client modes.
+  - Provides fine-grained control at client and function level.
+  - Typical usage example shows:
+    - Initializing MCP client with `HttpStatelessClient`
+    - Using MCP client to get callable functions asynchronously.
+    - Using environment variables such as `GAODE_API_KEY` for MCP client URL configuration.
+  - Example code snippet:
+    ```python
+    from agentscope.mcp import HttpStatelessClient
+    from agentscope.tool import Toolkit
+    import os
+
+    async def fine_grained_mcp_control():
+        client = HttpStatelessClient(
+            name="gaode_mcp",
+            transport="streamable_http",
+            url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+        )
+        func = await client.get_callable_function(func_name="maps_geo")
+        await func(address="Tiananmen Square", city="Beijing")
+    ```
+- Dependencies and Environment Variables:
+  - Uses environment variables for API keys, e.g. `DASHSCOPE_API_KEY` and `GAODE_API_KEY`.
+  - Python standard libraries like `asyncio`, `os` are used.
+- No explicit mention of OS-level prerequisites or other libraries versions in this README file.
+- The MCP usage is integrated via Python async interfaces in the agentscope package.
+
+[/Key Information]
+2026-11-11 08:16:15.279 | INFO     | ******
+2026-11-11 08:16:15.279 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]\n- Installation Requirements:\n  - Python version: 3.10 or higher (explicitly stated requirement)\n- Installation Instructions:\n  - From source:\n    - Clone repo: `git clone -b main https://github.com/agentscope-ai/agentscope.git`\n    - Enter directory: `cd agentscope`\n    - Install in editable mode: `pip install -e .`\n  - From PyPI (simpler option):\n    - Install with pip: `pip install agentscope`\n- MCP (Multi-Channel Protocol) related details:\n  - The `mcp` module is part of AgentScope and supports streamable HTTP/SSE/StdIO transport.\n  - Supports both stateful and stateless client modes.\n  - Provides fine-grained control at client and function level.\n  - Typical usage example shows:\n    - Initializing MCP client with `HttpStatelessClient`\n    - Using MCP client to get callable functions asynchronously.\n    - Using environment variables such as `GAODE_API_KEY` for MCP client URL configuration.\n  - Example code snippet:\n    ```python\n    from agentscope.mcp import HttpStatelessClient\n    from agentscope.tool import Toolkit\n    import os\n\n    async def fine_grained_mcp_control():\n        client = HttpStatelessClient(\n            name="gaode_mcp",\n            transport="streamable_http",\n            url=f"https://mcp.amap.com/mcp?key={os.environ[\'GAODE_API_KEY\']}",\n        )\n        func = await client.get_callable_function(func_name="maps_geo")\n        await func(address="Tiananmen Square", city="Beijing")\n    ```\n- Dependencies and Environment Variables:\n  - Uses environment variables for API keys, e.g. `DASHSCOPE_API_KEY` and `GAODE_API_KEY`.\n  - Python standard libraries like `asyncio`, `os` are used.\n- No explicit mention of OS-level prerequisites or other libraries versions in this README file.\n- The MCP usage is integrated via Python async interfaces in the agentscope package.\n\n[/Key Information]', 'Get File Info', True)
+2026-11-11 08:16:22.313 | INFO     | Model API request cost info: input_tokens=3287, output_tokens=800, cost=0.000000
+2026-11-11 08:16:22.343 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:16:26.550 | INFO     | Model API request cost info: input_tokens=1399, output_tokens=509, cost=0.000000
+2026-11-11 08:16:26.551 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "setup.py": {
+      "minimal_requires": [
+        "aioitertools",
+        "anthropic",
+        "dashscope",
+        "docstring_parser",
+        "json5",
+        "json_repair",
+        "mcp>=1.13",
+        "numpy",
+        "openai",
+        "python-datauri",
+        "opentelemetry-api",
+        "opentelemetry-sdk",
+        "opentelemetry-exporter-otlp",
+        "python-socketio",
+        "shortuuid",
+        "tiktoken"
+      ],
+      "python_version_requirement": ">=3.10"
+    },
+    "README.md": {
+      "python_version_requirement": "3.10 or higher",
+      "installation_instructions": {
+        "from_source": [
+          "git clone -b main https://github.com/agentscope-ai/agentscope.git",
+          "cd agentscope",
+          "pip install -e ."
+        ],
+        "from_pypi": "pip install agentscope"
+      },
+      "mcp_module_details": {
+        "package_dependency": "mcp>=1.13",
+        "transport_support": [
+          "streamable HTTP",
+          "SSE",
+          "StdIO"
+        ],
+        "client_modes": [
+          "stateful",
+          "stateless"
+        ],
+        "example_usage": "from agentscope.mcp import HttpStatelessClient\nimport os\n\nasync def fine_grained_mcp_control():\n    client = HttpStatelessClient(\n        name=\"gaode_mcp\",\n        transport=\"streamable_http\",\n        url=f\"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}\",\n    )\n    func = await client.get_callable_function(func_name=\"maps_geo\")\n    await func(address=\"Tiananmen Square\", city=\"Beijing\")",
+        "environment_variables": [
+          "GAODE_API_KEY"
+        ]
+      }
+    },
+    "summary": "The 'mcp' module is an external package dependency specified in setup.py with minimal version 1.13. The Python environment requirement is >=3.10. Installation can be done from source or PyPI. The README clarifies MCP usage and configuration, confirming full environment setup details have been gathered."
+  },
+  "terminate": true
+}
+2026-11-11 08:16:26.551 | DEBUG    | Extracted a valid json
+2026-11-11 08:16:26.557 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 08:16:30.808 | INFO     | Model API request cost info: input_tokens=5596, output_tokens=332, cost=0.000000
+2026-11-11 08:16:30.810 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 08:30:22.798 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer bd4bf09ba61179e692ab1c9439cd81e6a5afafccf47bb35df8226a5588639b40 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image agentscope-ai__agentscope-769-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 08:30:22.803 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 08:30:27.406 | INFO     | Model API request cost info: input_tokens=8046, output_tokens=364, cost=0.000000
+2026-11-11 08:30:27.409 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed due to an ImportError: \"cannot import name 'streamablehttp_client' from 'mcp.client.streamable_http'\" while running tests/test_token_usage_vllm.py. This suggests a mismatch or incompatibility with the installed 'mcp' package version or its API. Although 'mcp' was force-reinstalled at version 2.3.0, the expected symbol 'streamablehttp_client' is not present or exposed by the installed mcp package. Please investigate and fix the evaluation script to ensure the correct version of 'mcp' is installed that contains the required components or modify test execution to handle this dependency correctly. Also, confirm the test import paths and environment activation steps are correct as the virtual environment is activated but the import still fails. Consider adding debug steps to check the contents of the mcp package in the venv after installation.",
+  "guidance_for_context_retrieval_agent": "Collect dependency version information for 'mcp' including any version locking or API changes since the version 2.3.0 used here may not expose 'streamablehttp_client'. Please retrieve any files that specify 'mcp' version constraints or usage such as requirements.txt, setup.py, pyproject.toml, or dev-requirements.txt in the repository. Also look for documentation or changelog related to 'mcp' usage and tests related to this module. Retrieve relevant test files or modules that import 'mcp' and potentially rely on 'streamablehttp_client'. This will help verify if the dependency version should be pinned to a specific compatible version or if there is a code mismatch."
+}
+2026-11-11 08:30:27.409 | DEBUG    | Extracted a valid json
+2026-11-11 08:30:30.185 | INFO     | Model API request cost info: input_tokens=1686, output_tokens=22, cost=0.000000
+2026-11-11 08:30:30.199 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:30:31.485 | INFO     | Model API request cost info: input_tokens=812, output_tokens=47, cost=0.000000
+2026-11-11 08:30:31.486 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"setup.py\")",
+    "search_files_by_keyword(\"mcp\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 08:30:31.486 | DEBUG    | Extracted a valid json
+2026-11-11 08:30:31.489 | DEBUG    | Result of dispatch_intent: ("Found 7 files containing the keyword 'mcp':\n\n- docs/tutorial/zh_CN/src/task_mcp.py\n- docs/tutorial/en/src/task_mcp.py\n- src/agentscope/mcp/_mcp_function.py\n- tests/mcp_streamable_http_client_test.py\n- tests/mcp_sse_client_test.py\n- examples/functionality/mcp/mcp_add.py\n- examples/functionality/mcp/mcp_multiply.py", 'File search completed successfully', True)
+2026-11-11 08:30:37.585 | INFO     | Model API request cost info: input_tokens=2702, output_tokens=131, cost=0.000000
+2026-11-11 08:30:37.601 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:30:40.886 | INFO     | Model API request cost info: input_tokens=1216, output_tokens=375, cost=0.000000
+2026-11-11 08:30:40.890 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"setup.py\", \"dependency specifications, especially for 'mcp' and its version\")",
+    "browse_file_for_environment_info(\"tests/mcp_streamable_http_client_test.py\", \"imports, usage of 'mcp', and any dependency/version constraints or warnings\")",
+    "browse_file_for_environment_info(\"tests/mcp_sse_client_test.py\", \"imports, usage of 'mcp', and any dependency/version constraints or warnings\")",
+    "browse_file_for_environment_info(\"docs/tutorial/en/src/task_mcp.py\", \"notes on 'mcp' usage or version requirements\")",
+    "browse_file_for_environment_info(\"README.md\", \"environment setup instructions including test dependencies installation\")"
+  ],
+  "collected_information": {
+    "test_analysis_agent_request": "Info about 'mcp' dependency version, usage, version constraints, especially about 'streamablehttp_client' since version 2.3.0.",
+    "files_considered": [
+      "docs/tutorial/zh_CN/src/task_mcp.py",
+      "docs/tutorial/en/src/task_mcp.py",
+      "src/agentscope/mcp/_mcp_function.py",
+      "tests/mcp_streamable_http_client_test.py",
+      "tests/mcp_sse_client_test.py",
+      "examples/functionality/mcp/mcp_add.py",
+      "examples/functionality/mcp/mcp_multiply.py"
+    ],
+    "missing_env_files_note": "No requirements.txt or pyproject.toml found in root directory, setup.py is key for dependency info.",
+    "next_steps": "Browse setup.py, test files for usage and constraints, docs/tutorial for notes, README.md for environment setup and test instructions, optionally .github for CI configs."
+  },
+  "terminate": false
+}
+2026-11-11 08:30:40.890 | DEBUG    | Extracted a valid json
+2026-11-11 08:30:40.899 | INFO     | entering browse
+2026-11-11 08:30:40.900 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+# -*- coding: utf-8 -*-
+"""Setup script for AgentScope."""
+import re
+import setuptools
+
+# obtain version from src/agentscope/_version.py
+with open("src/agentscope/_version.py", encoding="UTF-8") as f:
+    VERSION = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+        f.read(),
+        re.MULTILINE,
+    ).group(1)
+
+NAME = "agentscope"
+URL = "https://github.com/agentscope-ai/agentscope"
+
+minimal_requires = [
+    "aioitertools",
+    "anthropic",
+    "dashscope",
+    "docstring_parser",
+    "json5",
+    "json_repair",
+    "mcp>=1.13",
+    "numpy",
+    "openai",
+    "python-datauri",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp",
+    "json5",
+    "aioitertools",
+    "python-socketio",
+    "shortuuid",
+    "tiktoken",
+]
+
+extra_requires = [
+    "ollama",
+    "google-genai",
+    "Pillow",
+    "transformers",
+    "jinja2",
+    "ray",
+    "mem0ai",
+    "packaging",
+]
+
+dev_requires = [
+    "pre-commit",
+    "pytest",
+    "sphinx-gallery",
+    "furo",
+    "myst_parser",
+    "matplotlib",
+]
+
+with open("README.md", "r", encoding="UTF-8") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name=NAME,
+    version=VERSION,
+    author="SysML team of Alibaba Tongyi Lab ",
+    author_email="gaodawei.gdw@alibaba-inc.com",
+    description="AgentScope: A Flexible yet Robust Multi-Agent Platform.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url=URL,
+    download_url=f"{URL}/archive/v{VERSION}.tar.gz",
+    keywords=["deep-learning", "multi agents", "agents"],
+    package_dir={"": "src"},
+    packages=setuptools.find_packages("src"),
+    install_requires=minimal_requires,
+    extras_require={
+        "full": minimal_requires + extra_requires,
+        "dev": minimal_requires + extra_requires + dev_requires,
+    },
+    license="Apache-2.0",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.10",
+    entry_points={},
+)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py ===
+2026-11-11 08:30:40.902 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:30:44.487 | INFO     | Model API request cost info: input_tokens=1158, output_tokens=282, cost=0.000000
+2026-11-11 08:30:44.487 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:30:44.488 | INFO     | ******
+2026-11-11 08:30:44.488 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]
+- Dependency specifications:
+  - Minimal requirements (install_requires):
+    - aioitertools
+    - anthropic
+    - dashscope
+    - docstring_parser
+    - json5
+    - json_repair
+    - mcp>=1.13   (**MCP version specification: minimum version 1.13**)
+    - numpy
+    - openai
+    - python-datauri
+    - opentelemetry-api
+    - opentelemetry-sdk
+    - opentelemetry-exporter-otlp
+    - python-socketio
+    - shortuuid
+    - tiktoken
+  - Extra requirements (extras_require "full"):
+    - ollama
+    - google-genai
+    - Pillow
+    - transformers
+    - jinja2
+    - ray
+    - mem0ai
+    - packaging
+  - Development requirements (extras_require "dev" includes minimal + extra + dev deps):
+    - pre-commit
+    - pytest
+    - sphinx-gallery
+    - furo
+    - myst_parser
+    - matplotlib
+- Python version requirement:
+  - Python >= 3.10
+[/Key Information]
+2026-11-11 08:30:44.488 | INFO     | ******
+2026-11-11 08:30:44.488 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/setup.py]\n- Dependency specifications:\n  - Minimal requirements (install_requires):\n    - aioitertools\n    - anthropic\n    - dashscope\n    - docstring_parser\n    - json5\n    - json_repair\n    - mcp>=1.13   (**MCP version specification: minimum version 1.13**)\n    - numpy\n    - openai\n    - python-datauri\n    - opentelemetry-api\n    - opentelemetry-sdk\n    - opentelemetry-exporter-otlp\n    - python-socketio\n    - shortuuid\n    - tiktoken\n  - Extra requirements (extras_require "full"):\n    - ollama\n    - google-genai\n    - Pillow\n    - transformers\n    - jinja2\n    - ray\n    - mem0ai\n    - packaging\n  - Development requirements (extras_require "dev" includes minimal + extra + dev deps):\n    - pre-commit\n    - pytest\n    - sphinx-gallery\n    - furo\n    - myst_parser\n    - matplotlib\n- Python version requirement:\n  - Python >= 3.10\n[/Key Information]', 'Get File Info', True)
+2026-11-11 08:30:44.488 | INFO     | entering browse
+2026-11-11 08:30:44.491 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_streamable_http_client_test.py ===
+# -*- coding: utf-8 -*-
+"""The MCP client test module in agentscope."""
+import asyncio
+from multiprocessing import Process
+from unittest.async_case import IsolatedAsyncioTestCase
+
+import mcp.types
+from mcp.server import FastMCP
+
+from agentscope.mcp import HttpStatelessClient, HttpStatefulClient
+from agentscope.message import TextBlock
+from agentscope.tool import ToolResponse
+
+
+async def tool_1(arg1: str, arg2: list[int]) -> str:
+    """A test tool function.
+
+    Args:
+        arg1 (`str`):
+            The first argument named arg1.
+        arg2 (`list[int]`):
+            The second argument named arg2.
+    """
+    return f"arg1: {arg1}, arg2: {arg2}"
+
+
+def setup_server() -> None:
+    """Set up the streamable HTTP MCP server."""
+    sse_server = FastMCP("StreamableHTTP", port=8002)
+    sse_server.tool(description="A test tool function.")(tool_1)
+    sse_server.run(transport="streamable-http")
+
+
+class StreamableHttpMCPClientTest(IsolatedAsyncioTestCase):
+    """Test class for streamable HTTP MCP client."""
+
+    async def asyncTearDown(self) -> None:
+        """Tear down the test environment."""
+        while self.process.is_alive():
+            self.process.terminate()
+            await asyncio.sleep(5)
+
+    async def asyncSetUp(self) -> None:
+        """Set up the test environment."""
+        self.port = 8002
+        self.process = Process(target=setup_server)
+        self.process.start()
+        await asyncio.sleep(10)
+
+    async def test_streamable_http_stateless_client(self) -> None:
+        """Test the MCP server connection functionality."""
+
+        client = HttpStatelessClient(
+            name="test_streamable_http_stateless_client",
+            transport="streamable_http",
+            url=f"http://127.0.0.1:{self.port}/mcp",
+        )
+
+        func_1 = await client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=False,
+        )
+        res_1: mcp.types.CallToolResult = await func_1(
+            arg1="123",
+            arg2=[1, 2, 3],
+        )
+        self.assertEqual(
+            res_1.content[0].text,
+            "arg1: 123, arg2: [1, 2, 3]",
+        )
+
+        func_2 = await client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=True,
+        )
+        res_2: ToolResponse = await func_2(arg1="345", arg2=[4, 5, 6])
+        self.assertEqual(
+            res_2,
+            ToolResponse(
+                id=res_2.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 345, arg2: [4, 5, 6]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+
+        # Test stateful client connection
+        client = HttpStatefulClient(
+            name="test_streamable_http_stateless_client",
+            transport="streamable_http",
+            url=f"http://127.0.0.1:{self.port}/mcp",
+        )
+
+        self.assertFalse(client.is_connected)
+        await client.connect()
+
+        self.assertTrue(client.is_connected)
+
+        func_1 = await client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=False,
+        )
+        res_3: mcp.types.CallToolResult = await func_1(
+            arg1="12",
+            arg2=[1, 2],
+        )
+        self.assertEqual(
+            res_3.content[0].text,
+            "arg1: 12, arg2: [1, 2]",
+        )
+
+        func_2 = await client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=True,
+        )
+        res_4: ToolResponse = await func_2(arg1="34", arg2=[4, 5])
+        self.assertEqual(
+            res_4,
+            ToolResponse(
+                id=res_4.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 34, arg2: [4, 5]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+
+        await client.close()
+        self.assertFalse(client.is_connected)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_streamable_http_client_test.py ===
+2026-11-11 08:30:44.492 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:30:48.385 | INFO     | Model API request cost info: input_tokens=1532, output_tokens=332, cost=0.000000
+2026-11-11 08:30:48.387 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:30:48.387 | INFO     | ******
+2026-11-11 08:30:48.387 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_streamable_http_client_test.py]
+- Imports:
+  - Standard libraries:
+    - asyncio
+    - multiprocessing.Process
+    - unittest.async_case.IsolatedAsyncioTestCase
+  - Third-party or project-specific imports:
+    - mcp.types
+    - mcp.server.FastMCP
+    - agentscope.mcp.HttpStatelessClient, agentscope.mcp.HttpStatefulClient
+    - agentscope.message.TextBlock
+    - agentscope.tool.ToolResponse
+
+- Usage of 'mcp':
+  - Used as a namespace for types (mcp.types.CallToolResult)
+  - Used FastMCP class to create and run a streamable HTTP MCP server on port 8002
+  - The test code validates MCP clients (HttpStatelessClient and HttpStatefulClient) interacting with this server
+  - Calls tools registered on the MCP server, receiving typed CallToolResult responses
+
+- Dependency/Version constraints or warnings:
+  - No explicit version constraints or warnings mentioned in the file
+  - Requires Python 3.8+ due to:
+    - usage of 'asyncio'
+    - usage of 'unittest.async_case.IsolatedAsyncioTestCase' (introduced in Python 3.8)
+  - The server listens on port 8002, which must be free for tests to run successfully
+  - Since multiprocessing.Process is used to spawn the server, the underlying OS should support multiprocessing reliably
+
+[/Key Information]
+2026-11-11 08:30:48.387 | INFO     | ******
+2026-11-11 08:30:48.387 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_streamable_http_client_test.py]\n- Imports:\n  - Standard libraries:\n    - asyncio\n    - multiprocessing.Process\n    - unittest.async_case.IsolatedAsyncioTestCase\n  - Third-party or project-specific imports:\n    - mcp.types\n    - mcp.server.FastMCP\n    - agentscope.mcp.HttpStatelessClient, agentscope.mcp.HttpStatefulClient\n    - agentscope.message.TextBlock\n    - agentscope.tool.ToolResponse\n\n- Usage of 'mcp':\n  - Used as a namespace for types (mcp.types.CallToolResult)\n  - Used FastMCP class to create and run a streamable HTTP MCP server on port 8002\n  - The test code validates MCP clients (HttpStatelessClient and HttpStatefulClient) interacting with this server\n  - Calls tools registered on the MCP server, receiving typed CallToolResult responses\n\n- Dependency/Version constraints or warnings:\n  - No explicit version constraints or warnings mentioned in the file\n  - Requires Python 3.8+ due to:\n    - usage of 'asyncio'\n    - usage of 'unittest.async_case.IsolatedAsyncioTestCase' (introduced in Python 3.8)\n  - The server listens on port 8002, which must be free for tests to run successfully\n  - Since multiprocessing.Process is used to spawn the server, the underlying OS should support multiprocessing reliably\n\n[/Key Information]", 'Get File Info', True)
+2026-11-11 08:30:48.387 | INFO     | entering browse
+2026-11-11 08:30:48.389 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_sse_client_test.py ===
+# -*- coding: utf-8 -*-
+"""The MCP client test module in agentscope."""
+import asyncio
+from multiprocessing import Process
+from unittest.async_case import IsolatedAsyncioTestCase
+
+import mcp.types
+from mcp.server import FastMCP
+
+from agentscope.mcp import HttpStatelessClient, HttpStatefulClient
+from agentscope.message import TextBlock, ToolUseBlock
+from agentscope.tool import ToolResponse, Toolkit
+
+
+async def tool_1(arg1: str, arg2: list[int]) -> str:
+    """A test tool function.
+
+    Args:
+        arg1 (`str`):
+            The first argument named arg1.
+        arg2 (`list[int]`):
+            The second argument named arg2.
+    """
+    return f"arg1: {arg1}, arg2: {arg2}"
+
+
+def setup_server() -> None:
+    """Set up the streamable HTTP MCP server."""
+    sse_server = FastMCP("SSE", port=8003)
+    sse_server.tool(description="A test tool function.")(tool_1)
+    sse_server.run(transport="sse")
+
+
+class SseMCPClientTest(IsolatedAsyncioTestCase):
+    """Test class for MCP server functionality."""
+
+    async def asyncTearDown(self) -> None:
+        """Tear down the test environment."""
+        del self.toolkit
+
+        while self.process.is_alive():
+            self.process.terminate()
+            await asyncio.sleep(5)
+
+    async def asyncSetUp(self) -> None:
+        """Set up the test environment."""
+        self.port = 8003
+        self.process = Process(target=setup_server)
+        self.process.start()
+        await asyncio.sleep(10)
+
+        self.toolkit = Toolkit()
+        self.schemas_wo_arg1 = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "tool_1",
+                    "description": "A test tool function.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "arg2": {
+                                "items": {
+                                    "type": "integer",
+                                },
+                                "title": "Arg2",
+                                "type": "array",
+                            },
+                        },
+                        "required": [
+                            "arg2",
+                        ],
+                    },
+                },
+            },
+        ]
+        self.schemas = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "tool_1",
+                    "description": "A test tool function.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "arg1": {
+                                "title": "Arg1",
+                                "type": "string",
+                            },
+                            "arg2": {
+                                "items": {
+                                    "type": "integer",
+                                },
+                                "title": "Arg2",
+                                "type": "array",
+                            },
+                        },
+                        "required": [
+                            "arg1",
+                            "arg2",
+                        ],
+                    },
+                },
+            },
+        ]
+
+    async def test_stateless_client(self) -> None:
+        """Test the stateless sse MCP client."""
+        stateless_client = HttpStatelessClient(
+            name="test_sse_client",
+            transport="sse",
+            url=f"http://127.0.0.1:{self.port}/sse",
+        )
+
+        func_1 = await stateless_client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=False,
+        )
+        res_1: mcp.types.CallToolResult = await func_1(
+            arg1="123",
+            arg2=[1, 2, 3],
+        )
+        self.assertEqual(
+            res_1.content[0].text,
+            "arg1: 123, arg2: [1, 2, 3]",
+        )
+
+        func_2 = await stateless_client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=True,
+        )
+        # Repeat to ensure idempotency
+        res_2: ToolResponse = await func_2(arg1="345", arg2=[4, 5, 6])
+        res_3: ToolResponse = await func_2(arg1="345", arg2=[4, 5, 6])
+        res_4: ToolResponse = await func_2(arg1="345", arg2=[4, 5, 6])
+        self.assertEqual(
+            res_2,
+            ToolResponse(
+                id=res_2.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 345, arg2: [4, 5, 6]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+        self.assertEqual(
+            res_3,
+            ToolResponse(
+                id=res_3.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 345, arg2: [4, 5, 6]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+        self.assertEqual(
+            res_4,
+            ToolResponse(
+                id=res_4.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 345, arg2: [4, 5, 6]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+
+        self.toolkit.register_tool_function(
+            func_2,
+        )
+
+        schemas = self.toolkit.get_json_schemas()
+        self.assertListEqual(
+            schemas,
+            self.schemas,
+        )
+
+        res_gen = await self.toolkit.call_tool_function(
+            ToolUseBlock(
+                id="xx",
+                type="tool_use",
+                name="tool_1",
+                input={
+                    "arg1": "789",
+                    "arg2": [7, 8, 9],
+                },
+            ),
+        )
+
+        async for chunk in res_gen:
+            self.assertEqual(
+                chunk,
+                ToolResponse(
+                    id=chunk.id,
+                    content=[
+                        TextBlock(
+                            text="arg1: 789, arg2: [7, 8, 9]",
+                            type="text",
+                        ),
+                    ],
+                ),
+            )
+
+        self.toolkit.clear()
+        self.assertDictEqual(self.toolkit.tools, {})
+
+        # Try to add the mcp client
+        await self.toolkit.register_mcp_client(stateless_client)
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            self.schemas,
+        )
+
+        self.toolkit.clear()
+        await self.toolkit.register_mcp_client(
+            stateless_client,
+            preset_kwargs_mapping={
+                "tool_1": {
+                    "arg1": "default_value",
+                },
+            },
+        )
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            self.schemas_wo_arg1,
+        )
+        res_gen = await self.toolkit.call_tool_function(
+            ToolUseBlock(
+                id="xx",
+                type="tool_use",
+                name="tool_1",
+                input={
+                    "arg2": [11, 12],
+                },
+            ),
+        )
+        async for chunk in res_gen:
+            self.assertEqual(
+                chunk,
+                ToolResponse(
+                    id=chunk.id,
+                    content=[
+                        TextBlock(
+                            text="arg1: default_value, arg2: [11, 12]",
+                            type="text",
+                        ),
+                    ],
+                ),
+            )
+
+    async def test_stateful_client(self) -> None:
+        """Test the stateful sse MCP client."""
+
+        # Test stateful client
+        stateful_client = HttpStatefulClient(
+            name="test_sse_client_stateful",
+            transport="sse",
+            url=f"http://127.0.0.1:{self.port}/sse",
+        )
+
+        self.assertFalse(stateful_client.is_connected)
+        await stateful_client.connect()
+
+        self.assertTrue(stateful_client.is_connected)
+
+        func_1 = await stateful_client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=False,
+        )
+        res_1: mcp.types.CallToolResult = await func_1(
+            arg1="12",
+            arg2=[1, 2],
+        )
+        self.assertEqual(
+            res_1.content[0].text,
+            "arg1: 12, arg2: [1, 2]",
+        )
+
+        func_2 = await stateful_client.get_callable_function(
+            "tool_1",
+            wrap_tool_result=True,
+        )
+        res_2: ToolResponse = await func_2(arg1="34", arg2=[4, 5])
+        res_3: ToolResponse = await func_2(arg1="34", arg2=[4, 5])
+        res_4: ToolResponse = await func_2(arg1="34", arg2=[4, 5])
+        self.assertEqual(
+            res_2,
+            ToolResponse(
+                id=res_2.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 34, arg2: [4, 5]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+        self.assertEqual(
+            res_3,
+            ToolResponse(
+                id=res_3.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 34, arg2: [4, 5]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+        self.assertEqual(
+            res_4,
+            ToolResponse(
+                id=res_4.id,
+                content=[
+                    TextBlock(
+                        text="arg1: 34, arg2: [4, 5]",
+                        type="text",
+                    ),
+                ],
+            ),
+        )
+
+        # with toolkit
+        self.toolkit.register_tool_function(func_2)
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            self.schemas,
+        )
+
+        res_gen = await self.toolkit.call_tool_function(
+            ToolUseBlock(
+                id="xx",
+                type="tool_use",
+                name="tool_1",
+                input={
+                    "arg1": "56",
+                    "arg2": [5, 6],
+                },
+            ),
+        )
+        async for chunk in res_gen:
+            self.assertEqual(
+                chunk,
+                ToolResponse(
+                    id=chunk.id,
+                    content=[
+                        TextBlock(
+                            text="arg1: 56, arg2: [5, 6]",
+                            type="text",
+                        ),
+                    ],
+                ),
+            )
+
+        # mcp client level test
+        self.toolkit.clear()
+        self.assertDictEqual(self.toolkit.tools, {})
+
+        await self.toolkit.register_mcp_client(stateful_client)
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            self.schemas,
+        )
+
+        self.toolkit.clear()
+        await self.toolkit.register_mcp_client(
+            stateful_client,
+            preset_kwargs_mapping={
+                "tool_1": {
+                    "arg1": "default_value",
+                },
+            },
+        )
+        self.assertListEqual(
+            self.toolkit.get_json_schemas(),
+            self.schemas_wo_arg1,
+        )
+        res_gen = await self.toolkit.call_tool_function(
+            ToolUseBlock(
+                id="xx",
+                type="tool_use",
+                name="tool_1",
+                input={
+                    "arg2": [11, 12],
+                },
+            ),
+        )
+        async for chunk in res_gen:
+            self.assertEqual(
+                chunk,
+                ToolResponse(
+                    id=chunk.id,
+                    content=[
+                        TextBlock(
+                            text="arg1: default_value, arg2: [11, 12]",
+                            type="text",
+                        ),
+                    ],
+                ),
+            )
+
+        await stateful_client.close()
+        self.assertFalse(stateful_client.is_connected)
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_sse_client_test.py ===
+2026-11-11 08:30:48.389 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:30:51.485 | INFO     | Model API request cost info: input_tokens=3041, output_tokens=149, cost=0.000000
+2026-11-11 08:30:51.486 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:30:51.487 | INFO     | ******
+2026-11-11 08:30:51.487 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_sse_client_test.py]
+- Imports related to 'mcp':
+  - import mcp.types
+  - from mcp.server import FastMCP
+- Usage of 'mcp':
+  - 'mcp.types.CallToolResult' is used as the type hint for results returned by tool calls.
+  - 'FastMCP' is used to set up and run a streamable HTTP MCP server instance with SSE transport.
+- No explicit version constraints or warnings related to 'mcp' or any other dependencies are mentioned.
+[/Key Information]
+2026-11-11 08:30:51.487 | INFO     | ******
+2026-11-11 08:30:51.487 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/tests/mcp_sse_client_test.py]\n- Imports related to 'mcp':\n  - import mcp.types\n  - from mcp.server import FastMCP\n- Usage of 'mcp':\n  - 'mcp.types.CallToolResult' is used as the type hint for results returned by tool calls.\n  - 'FastMCP' is used to set up and run a streamable HTTP MCP server instance with SSE transport.\n- No explicit version constraints or warnings related to 'mcp' or any other dependencies are mentioned.\n[/Key Information]", 'Get File Info', True)
+2026-11-11 08:30:51.487 | INFO     | entering browse
+2026-11-11 08:30:51.490 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/docs/tutorial/en/src/task_mcp.py ===
+# -*- coding: utf-8 -*-
+"""
+.. _mcp:
+
+MCP
+=========================
+
+The tutorial covers the following features of AgentScope in support of the MCP (Model Context Protocol):
+
+- Support both **HTTP** (streamable HTTP and SSE) and **StdIO** MCP servers
+- Provide both **stateful** and **stateless** MCP clients
+- Provide both **server-level** and **function-level** MCP tool management
+
+Here the stateful/stateless distinction refers to whether the client maintains a persistent session with the MCP server or not.
+The table below summarizes the supported MCP client types and protocols:
+
+.. list-table:: Supported MCP client types and protocols
+    :header-rows: 1
+
+    * - Client Type
+      - HTTP (Streamable HTTP and SSE)
+      - StdIO
+    * - Stateful Client
+      - ``HttpStatefulClient``
+      - ``HttpStatelessClient``
+    * - Stateless Client
+      - ``StdIOStatefulClient``
+      -
+
+"""
+import asyncio
+import json
+import os
+
+from agentscope.mcp import HttpStatefulClient, HttpStatelessClient
+from agentscope.tool import Toolkit
+
+# %%
+# MCP Client
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# In AgentScope, MCP clients are responsible for
+#
+# - connecting to the MCP server,
+# - obtaining tool functions from the server, and
+# - calling tool functions in the MCP server.
+#
+# There are two types of MCP clients in AgentScope: **Stateful** and **Stateless**.
+# They only differ in how to manage the session with the MCP server.
+#
+# - Stateful Client: The stateful MCP client **maintains a persistent session** with the MCP server within its lifetime. The developers should explicitly call ``connect()`` and ``close()`` methods to manage the connection lifecycle.
+# - Stateless Client: The stateless MCP client creates a new session when calling the tool function, and destroys the session right after the tool function call, which is much more lightweight.
+#
+# .. note:: - The StdIO MCP server only has stateful client, when ``connect()`` is called, it will start the MCP server locally and then connect to it.
+#  - For stateful clients, developers must ensure the client is connected when calling the tool functions.
+#  - When multiple `HttpStatefulClients` or `StdIOStatefulClients` are connected, they should be closed in Last In First Out (LIFO) order to prevent errors.
+#
+# Taking Gaode map MCP server as an example, the creation of stateful and stateless clients are very similar:
+#
+
+stateful_client = HttpStatefulClient(
+    # The name to identify the MCP
+    name="mcp_services_stateful",
+    transport="streamable_http",
+    url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+)
+
+stateless_client = HttpStatelessClient(
+    # The name to identify the MCP
+    name="mcp_services_stateless",
+    transport="streamable_http",
+    url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+)
+
+# %%
+# Both stateful and stateless clients provide the following methods:
+#
+# .. list-table:: MCP Client Methods
+#    :header-rows: 1
+#
+#    * - Method
+#      - Description
+#    * - ``list_tools``
+#      - List all tools available in the MCP server.
+#    * - ``get_callable_function``
+#      - Get a callable function object from the MCP server by its name.
+#
+# MCP as Tool
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# AgentScope provides fine-grained management of MCP tools, including both server-level and function-level management.
+#
+# Server-Level Management
+# --------------------------------
+# You can register all tools from an MCP server into ``Toolkit`` as follows.
+#
+# .. tip:: Optionally, you can specify a group name to organize the tools. Refer to :ref:`tool` section for group-wise tools management.
+#
+
+toolkit = Toolkit()
+
+
+async def example_register_stateless_mcp() -> None:
+    """Example of registering MCP tools from a stateless client."""
+    # Register all tools from the MCP server
+    await toolkit.register_mcp_client(
+        stateless_client,
+        # group_name="map_services",  # Optional group name
+    )
+
+    print(
+        "Total number of MCP tools registered:",
+        len(toolkit.get_json_schemas()),
+    )
+
+    maps_geo = next(
+        tool
+        for tool in toolkit.get_json_schemas()
+        if tool["function"]["name"] == "maps_geo"
+    )
+    print("\nThe example ``maps_geo`` function:")
+    print(
+        json.dumps(
+            maps_geo,
+            indent=4,
+            ensure_ascii=False,
+        ),
+    )
+
+
+asyncio.run(example_register_stateless_mcp())
+
+# %%
+# To remove the registered tools, you can use the ``remove_tool_function`` to remove a specific tool function, or ``remove_mcp_clients`` to remove all tools from a specific MCP.
+#
+
+
+async def example_remove_mcp_tools() -> None:
+    """Example of removing MCP tools."""
+    print(
+        "Total number of tools before removal: ",
+        len(toolkit.get_json_schemas()),
+    )
+
+    # Remove a specific tool function by its name
+    toolkit.remove_tool_function("maps_geo")
+    print("Number of tools: ", len(toolkit.get_json_schemas()))
+
+    # Remove all tools from the MCP client by its name
+    await toolkit.remove_mcp_clients(client_names=["mcp_services_stateless"])
+    print("Number of tools: ", len(toolkit.get_json_schemas()))
+
+
+asyncio.run(example_remove_mcp_tools())
+
+# %%
+# Function-Level Management
+# --------------------------------
+# We notice the demand for more fine-grained control over MCP tools, such as post-processing the tool results, or use them to create a more complex tool function.
+#
+# Therefore, AgentScope supports to obtain the callable function object from MCP by its name, so that you can
+#
+# - call it directly,
+# - wrap it into your own function, or anyway you like.
+#
+# Additionally, you can specify whether to wrap the tool result into ``ToolResponse`` object in AgentScope, so that you can use it seamlessly with the ``Toolkit``.
+# If you set ``wrap_tool_result=False``, the raw result type ``mcp.types.CallToolResult`` will be returned.
+#
+# Taking the ``maps_geo`` function as an example, you can obtain it as a callable function object as follows:
+#
+
+
+async def example_function_level_usage() -> None:
+    """Example of using function-level MCP tool."""
+    func_obj = await stateless_client.get_callable_function(
+        func_name="maps_geo",
+        # Whether to wrap the tool result into ToolResponse in AgentScope
+        wrap_tool_result=True,
+    )
+
+    # You can obtain its name, description and json schema
+    print("Function name:", func_obj.name)
+    print("Function description:", func_obj.description)
+    print(
+        "Function JSON schema:",
+        json.dumps(func_obj.json_schema, indent=4, ensure_ascii=False),
+    )
+
+    # Call the function object directly
+    res = await func_obj(
+        address="Tiananmen Square",
+        city="Beijing",
+    )
+    print("\nFunction call result:")
+    print(res)
+
+
+asyncio.run(example_function_level_usage())
+
+# %%
+# Further Reading
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# For more details, see:
+#
+# - :ref:`tool`
+# - :ref:`agent`
+#
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/docs/tutorial/en/src/task_mcp.py ===
+2026-11-11 08:30:51.490 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:30:54.486 | INFO     | Model API request cost info: input_tokens=2187, output_tokens=317, cost=0.000000
+2026-11-11 08:30:54.487 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:30:54.487 | INFO     | ******
+2026-11-11 08:30:54.488 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/docs/tutorial/en/src/task_mcp.py]
+- Usage notes on MCP (Model Context Protocol):
+  - MCP supports both HTTP (streamable HTTP and SSE) and StdIO MCP servers.
+  - MCP clients can be stateful or stateless:
+    - Stateful clients maintain a persistent session and require explicit connect() and close() calls.
+    - Stateless clients create and destroy a session for each tool function call, being more lightweight.
+  - StdIO protocol only supports stateful client.
+  - When multiple stateful clients are connected, they should be closed in Last In First Out (LIFO) order.
+  - MCP clients provide methods like list_tools and get_callable_function to interact with MCP servers.
+  - MCP tools can be managed at server-level via Toolkit, allowing registration and removal of tools.
+  - Function-level tool management allows direct callable access to MCP tools, enabling wrapping or custom handling of results.
+  - Tool results can optionally be wrapped in AgentScope's ToolResponse objects.
+- Environment variables:
+  - GAODE_API_KEY is required to construct the MCP server URL for HTTP clients.
+- Packages/Libraries:
+  - agentscope.mcp module is used, specifically HttpStatefulClient, HttpStatelessClient.
+  - agentscope.tool Toolkit for tool management.
+- No explicit version requirements or installation instructions for 'mcp' module or AgentScope were mentioned.
+[/Key Information]
+2026-11-11 08:30:54.488 | INFO     | ******
+2026-11-11 08:30:54.488 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/docs/tutorial/en/src/task_mcp.py]\n- Usage notes on MCP (Model Context Protocol):\n  - MCP supports both HTTP (streamable HTTP and SSE) and StdIO MCP servers.\n  - MCP clients can be stateful or stateless:\n    - Stateful clients maintain a persistent session and require explicit connect() and close() calls.\n    - Stateless clients create and destroy a session for each tool function call, being more lightweight.\n  - StdIO protocol only supports stateful client.\n  - When multiple stateful clients are connected, they should be closed in Last In First Out (LIFO) order.\n  - MCP clients provide methods like list_tools and get_callable_function to interact with MCP servers.\n  - MCP tools can be managed at server-level via Toolkit, allowing registration and removal of tools.\n  - Function-level tool management allows direct callable access to MCP tools, enabling wrapping or custom handling of results.\n  - Tool results can optionally be wrapped in AgentScope's ToolResponse objects.\n- Environment variables:\n  - GAODE_API_KEY is required to construct the MCP server URL for HTTP clients.\n- Packages/Libraries:\n  - agentscope.mcp module is used, specifically HttpStatefulClient, HttpStatelessClient.\n  - agentscope.tool Toolkit for tool management.\n- No explicit version requirements or installation instructions for 'mcp' module or AgentScope were mentioned.\n[/Key Information]", 'Get File Info', True)
+2026-11-11 08:30:54.488 | INFO     | entering browse
+2026-11-11 08:30:54.489 | INFO     | === FILE START: testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+[**中文主页**](https://github.com/agentscope-ai/agentscope/blob/main/README_zh.md) | [**Tutorial**](https://doc.agentscope.io/) | [**Roadmap**](https://github.com/agentscope-ai/agentscope/blob/main/docs/roadmap.md) | [**FAQ**](https://doc.agentscope.io/tutorial/faq.html)
+
+<p align="center">
+  <img
+    src="https://img.alicdn.com/imgextra/i1/O1CN01nTg6w21NqT5qFKH1u_!!6000000001621-55-tps-550-550.svg"
+    alt="AgentScope Logo"
+    width="200"
+  />
+</p>
+
+<h2 align="center">AgentScope: Agent-Oriented Programming for Building LLM Applications</h2>
+
+<p align="center">
+    <a href="https://arxiv.org/abs/2402.14034">
+        <img
+            src="https://img.shields.io/badge/cs.MA-2402.14034-B31C1C?logo=arxiv&logoColor=B31C1C"
+            alt="arxiv"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/python-3.10+-blue?logo=python"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://pypi.org/project/agentscope/">
+        <img
+            src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fagentscope%2Fjson&query=%24.info.version&prefix=v&logo=pypi&label=version"
+            alt="pypi"
+        />
+    </a>
+    <a href="https://doc.agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/Docs-English%7C%E4%B8%AD%E6%96%87-blue?logo=markdown"
+            alt="docs"
+        />
+    </a>
+    <a href="https://agentscope.io/">
+        <img
+            src="https://img.shields.io/badge/GUI-AgentScope_Studio-blue?logo=look&logoColor=green&color=dark-green"
+            alt="workstation"
+        />
+    </a>
+    <a href="./LICENSE">
+        <img
+            src="https://img.shields.io/badge/license-Apache--2.0-black"
+            alt="license"
+        />
+    </a>
+</p>
+
+<p align="center">
+<img src="https://trendshift.io/api/badge/repositories/10079" alt="modelscope%2Fagentscope | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+</p>
+
+## ✨ Why AgentScope?
+
+Easy for beginners, powerful for experts.
+
+<p align="center">
+<img src="./assets/images/agentscope_v1_0822.png" alt="AgentScope Framework" width="80%"/>
+</p>
+
+- **Transparent to Developers**: Transparent is our **FIRST principle**. Prompt engineering, API invocation, agent building, workflow orchestration, all are visible and controllable for developers. No deep encapsulation or implicit magic.
+- **[Realtime Steering](https://doc.agentscope.io/tutorial/task_agent.html#realtime-steering)**: Native support for realtime interruption and customized handling.
+- **More Agentic**: Support [agentic tools management](https://doc.agentscope.io/tutorial/task_tool.html), [agentic long-term memory control](https://doc.agentscope.io/tutorial/task_long_term_memory.html) and agentic RAG, etc.
+- **Model Agnostic**: Programming once, run with all models.
+- **LEGO-style Agent Building**: All components are **modular** and **independent**.
+- **Multi-Agent Oriented**: Designed for **multi-agent**, **explicit** message passing and workflow orchestration, NO deep encapsulation.
+- **Highly Customizable**: Tools, prompt, agent, workflow, third-party libs & visualization, customization is encouraged everywhere.
+
+Quick overview of important features in **AgentScope 1.0**:
+
+| Module     | Feature                                                                            | Tutorial                                                                |
+|------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| model      | Support async invocation                                                           | [Model](https://doc.agentscope.io/tutorial/task_model.html)             |
+|            | Support reasoning model                                                            |                                                                         |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+| tool       | Support async/sync tool functions                                                  | [Tool](https://doc.agentscope.io/tutorial/task_tool.html)               |
+|            | Support streaming/non-streaming returns                                            |                                                                         |
+|            | Support user interruption                                                          |                                                                         |
+|            | Support post-processing                                                            |                                                                         |
+|            | Support group-wise tools management                                                |                                                                         |
+|            | Support agentic tools management by meta tool                                      |                                                                         |
+| MCP        | Support streamable HTTP/SSE/StdIO transport                                        | [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)                 |
+|            | Support both **stateful** and **stateless** mode MCP Client                        |                                                                         |
+|            | Support client- & function-level fine-grained control                              |                                                                         |
+| agent      | Support async execution                                                            |                                                                         |
+|            | Support parallel tool calls                                                        |                                                                         |
+|            | Support realtime steering interruption and customized handling                     |                                                                         |
+|            | Support automatic state management                                                 |                                                                         |
+|            | Support agent-controlled long-term memory                                          |                                                                         |
+|            | Support agent hooks                                                                |                                                                         |
+| tracing    | Support OpenTelemetry-based tracing in LLM, tools, agent and formatter             | [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)         |
+|            | Support connecting to third-party tracing platforms (e.g. Arize-Phoenix, Langfuse) |                                                                         |
+| memory     | Support long-term memory                                                           | [Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html) |
+| session    | Provide session/application-level automatic state management                       | [Session](https://doc.agentscope.io/tutorial/task_state.html)           |
+| evaluation | Provide distributed and parallel evaluation                                        | [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)         |
+| formatter  | Support multi-agent prompt formatting with tools API                               | [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html) |
+|            | Support truncation-based formatter strategy                                        |                                                                         |
+| plan       | Support ReAct-based long-term planning                                             | [Plan](https://doc.agentscope.io/tutorial/task_plan.html)               |
+|            | Support manual plan specification                                                 |                                                                         |
+| ...        |                                                                                    |                                                                         |
+
+## 📢 News
+- **[2025-09]** A new powerful 📋**Plan** module is online now! Check out the [tutorial](https://doc.agentscope.io/tutorial/task_plan.html) for more details.
+- **[2025-09]** **AgentScope Runtime** is open-sourced now! Enabling effective agent deployment with sandboxed tool execution for production-ready AI applications. Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-runtime).
+- **[2025-09]** **AgentScope Studio** is open-sourced now! Check out the [GitHub repo](https://github.com/agentscope-ai/agentscope-studio).
+- **[2025-08]** The new tutorial of v1 is online now! Check out the [tutorial](https://doc.agentscope.io) for more details.
+- **[2025-08]** 🎉🎉 AgentScope v1 is released now! This version fully embraces the asynchronous execution, providing many new features and improvements. Check out [changelog](https://github.com/agentscope-ai/agentscope/blob/main/docs/changelog.md) for detailed changes.
+
+## 💬 Contact
+
+Welcome to join our community on
+
+| [Discord](https://discord.gg/eYMpfnkG8h)                                                                                         | DingTalk                                                                                                                          |
+|----------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| <img src="https://gw.alicdn.com/imgextra/i1/O1CN01hhD1mu1Dd3BWVUvxN_!!6000000000238-2-tps-400-400.png" width="100" height="100"> | <img src="https://img.alicdn.com/imgextra/i1/O1CN01LxzZha1thpIN2cc2E_!!6000000005934-2-tps-497-477.png" width="100" height="100"> |
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## 📑 Table of Contents
+
+- [🚀 Quickstart](#-quickstart)
+  - [💻 Installation](#-installation)
+    - [🛠️ From source](#-from-source)
+    - [📦 From PyPi](#-from-pypi)
+- [📝 Example](#-example)
+  - [👋 Hello AgentScope!](#-hello-agentscope)
+  - [🎯 Realtime Steering](#-realtime-steering)
+  - [🛠️ Fine-Grained MCP Control](#-fine-grained-mcp-control)
+  - [🧑‍🤝‍🧑 Multi-Agent Conversation](#-multi-agent-conversation)
+  - [💻 AgentScope Studio](#-agentscope-studio)
+- [📖 Documentation](#-documentation)
+- [⚖️ License](#-license)
+- [📚 Publications](#-publications)
+- [✨ Contributors](#-contributors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 🚀 Quickstart
+
+### 💻 Installation
+
+> AgentScope requires **Python 3.10** or higher.
+
+#### 🛠️ From source
+
+```bash
+# Pull the source code from GitHub
+git clone -b main https://github.com/agentscope-ai/agentscope.git
+
+# Install the package in editable mode
+cd agentscope
+pip install -e .
+```
+
+#### 📦 From PyPi
+
+```bash
+pip install agentscope
+```
+
+## 📝 Example
+
+### 👋 Hello AgentScope!
+
+Start with a conversation between user and a ReAct agent 🤖 named "Friday"!
+
+```python
+from agentscope.agent import ReActAgent, UserAgent
+from agentscope.model import DashScopeChatModel
+from agentscope.formatter import DashScopeChatFormatter
+from agentscope.memory import InMemoryMemory
+from agentscope.tool import Toolkit, execute_python_code, execute_shell_command
+import os, asyncio
+
+
+async def main():
+    toolkit = Toolkit()
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(execute_shell_command)
+
+    agent = ReActAgent(
+        name="Friday",
+        sys_prompt="You're a helpful assistant named Friday.",
+        model=DashScopeChatModel(
+            model_name="qwen-max",
+            api_key=os.environ["DASHSCOPE_API_KEY"],
+            stream=True,
+        ),
+        memory=InMemoryMemory(),
+        formatter=DashScopeChatFormatter(),
+        toolkit=toolkit,
+    )
+
+    user = UserAgent(name="user")
+
+    msg = None
+    while True:
+        msg = await agent(msg)
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+
+asyncio.run(main())
+```
+
+### 🎯 Realtime Steering
+
+Natively support **realtime interruption** in ``ReActAgent`` with robust memory preservation, and convert interruption into an **observable event** for agent to seamlessly resume conversations.
+
+<p align="center">
+  <img src="./assets/images/realtime_steering_zh.gif" alt="Realtime Steering" width="49%"/>
+  <img src="./assets/images/realtime_steering_en.gif" alt="Realtime Steering" width="49%"/>
+</p>
+
+### 🛠️ Fine-Grained MCP Control
+
+Developers can obtain the MCP tool as a **local callable function**, and use it anywhere (e.g. call directly, pass to agent, wrap into a more complex tool, etc.)
+
+```python
+from agentscope.mcp import HttpStatelessClient
+from agentscope.tool import Toolkit
+import os
+
+async def fine_grained_mcp_control():
+    # Initialize the MCP client
+    client = HttpStatelessClient(
+        name="gaode_mcp",
+        transport="streamable_http",
+        url=f"https://mcp.amap.com/mcp?key={os.environ['GAODE_API_KEY']}",
+    )
+
+    # Obtain the MCP tool as a **local callable function**, and use it anywhere
+    func = await client.get_callable_function(func_name="maps_geo")
+
+    # Option 1: Call directly
+    await func(address="Tiananmen Square", city="Beijing")
+
+    # Option 2: Pass to agent as a tool
+    toolkit = Toolkit()
+    toolkit.register_tool_function(func)
+    # ...
+
+    # Option 3: Wrap into a more complex tool
+    # ...
+```
+
+### 🧑‍🤝‍🧑 Multi-Agent Conversation
+
+AgentScope provides ``MsgHub`` and pipelines to streamline multi-agent conversations, offering efficient message routing and seamless information sharing
+
+```python
+from agentscope.pipeline import MsgHub, sequential_pipeline
+from agentscope.message import Msg
+import asyncio
+
+async def multi_agent_conversation():
+    # Create agents
+    agent1 = ...
+    agent2 = ...
+    agent3 = ...
+    agent4 = ...
+
+    # Create a message hub to manage multi-agent conversation
+    async with MsgHub(
+        participants=[agent1, agent2, agent3],
+        announcement=Msg("Host", "Introduce yourselves.", "assistant")
+    ) as hub:
+        # Speak in a sequential manner
+        await sequential_pipeline([agent1, agent2, agent3])
+        # Dynamic manage the participants
+        hub.add(agent4)
+        hub.delete(agent3)
+        await hub.broadcast(Msg("Host", "Goodbye!", "assistant"))
+
+asyncio.run(multi_agent_conversation())
+```
+
+### 💻 AgentScope Studio
+
+Use the following command to install and start AgentScope Studio, to trace and visualize your agent application.
+
+```bash
+npm install -g @agentscope/studio
+
+as_studio
+```
+
+<p align="center">
+    <img
+        src="./assets/images/home.gif"
+        width="49%"
+        alt="home"
+    />
+    <img
+        src="./assets/images/projects.gif"
+        width="49%"
+        alt="projects"
+    />
+    <img
+        src="./assets/images/runtime.gif"
+        width="49%"
+        alt="runtime"
+    />
+    <img
+        src="./assets/images/friday.gif"
+        width="49%"
+        alt="friday"
+    />
+</p>
+
+
+## 📖 Documentation
+
+- Tutorial
+  - [Installation](https://doc.agentscope.io/tutorial/quickstart_installation.html)
+  - [Key Concepts](https://doc.agentscope.io/tutorial/quickstart_key_concept.html)
+  - [Create Message](https://doc.agentscope.io/tutorial/quickstart_message.html)
+  - [ReAct Agent](https://doc.agentscope.io/tutorial/quickstart_agent.html)
+- Workflow
+  - [Conversation](https://doc.agentscope.io/tutorial/workflow_conversation.html)
+  - [Multi-Agent Debate](https://doc.agentscope.io/tutorial/workflow_multiagent_debate.html)
+  - [Concurrent Agents](https://doc.agentscope.io/tutorial/workflow_concurrent_agents.html)
+  - [Routing](https://doc.agentscope.io/tutorial/workflow_routing.html)
+  - [Handoffs](https://doc.agentscope.io/tutorial/workflow_handoffs.html)
+- FAQ
+  - [FAQ](https://doc.agentscope.io/tutorial/faq.html)
+- Task Guides
+  - [Model](https://doc.agentscope.io/tutorial/task_model.html)
+  - [Prompt Formatter](https://doc.agentscope.io/tutorial/task_prompt.html)
+  - [Tool](https://doc.agentscope.io/tutorial/task_tool.html)
+  - [Memory](https://doc.agentscope.io/tutorial/task_memory.html)
+  - [Long-Term Memory](https://doc.agentscope.io/tutorial/task_long_term_memory.html)
+  - [Agent](https://doc.agentscope.io/tutorial/task_agent.html)
+  - [Pipeline](https://doc.agentscope.io/tutorial/task_pipeline.html)
+  - [State/Session Management](https://doc.agentscope.io/tutorial/task_state.html)
+  - [Agent Hooks](https://doc.agentscope.io/tutorial/task_hook.html)
+  - [MCP](https://doc.agentscope.io/tutorial/task_mcp.html)
+  - [AgentScope Studio](https://doc.agentscope.io/tutorial/task_studio.html)
+  - [Tracing](https://doc.agentscope.io/tutorial/task_tracing.html)
+  - [Evaluation](https://doc.agentscope.io/tutorial/task_eval.html)
+  - [Embedding](https://doc.agentscope.io/tutorial/task_embedding.html)
+  - [Token](https://doc.agentscope.io/tutorial/task_token.html)
+- API
+  - [API Docs](https://doc.agentscope.io/api/agentscope.html)
+- [Examples](https://github.com/agentscope-ai/agentscope/tree/main/examples)
+  - Game
+    - [Nine-player Werewolves](https://github.com/agentscope-ai/agentscope/tree/main/examples/game/werewolves)
+  - Workflow
+    - [Multi-agent Debate](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_debate)
+    - [Multi-agent Conversation](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_conversation)
+    - [Multi-agent Concurrent](https://github.com/agentscope-ai/agentscope/tree/main/examples/workflows/multiagent_concurrent)
+  - Evaluation
+    - [ACEBench](https://github.com/agentscope-ai/agentscope/tree/main/examples/evaluation/ace_bench)
+  - Functional
+    - [ReAct Agent](https://github.com/agentscope-ai/agentscope/tree/main/examples/react_agent)
+    - [MCP](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/mcp)
+    - [Plan](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/plan)
+    - [Structured Output](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/structured_output)
+    - [Long-Term Memory](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/long_term_memory)
+    - [Session with SQLite](https://github.com/agentscope-ai/agentscope/tree/main/examples/functionality/session_with_sqlite)
+
+## ⚖️ License
+
+AgentScope is released under Apache License 2.0.
+
+## 📚 Publications
+
+If you find our work helpful for your research or application, please cite our papers.
+
+- [AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications](https://arxiv.org/abs/2508.16279)
+
+- [AgentScope: A Flexible yet Robust Multi-Agent Platform](https://arxiv.org/abs/2402.14034)
+
+```
+@article{agentscope_v1,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Yuexiang Xie,
+        Weirui Kuang,
+        Liuyi Yao,
+        Bingchen Qian,
+        Zhijian Ma,
+        Yue Cui,
+        Haohao Luo,
+        Shen Li,
+        Lu Yi,
+        Yi Yu,
+        Shiqi He,
+        Zhiling Luo,
+        Wenmeng Zhou,
+        Zhicheng Zhang,
+        Xuguang He,
+        Ziqian Chen,
+        Weikai Liao,
+        Farruh Isakulovich Kushnazarov,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope 1.0: A Developer-Centric Framework for Building Agentic Applications},
+    journal = {CoRR},
+    volume  = {abs/2508.16279},
+    year    = {2025},
+}
+
+@article{agentscope,
+    author  = {
+        Dawei Gao,
+        Zitao Li,
+        Xuchen Pan,
+        Weirui Kuang,
+        Zhijian Ma,
+        Bingchen Qian,
+        Fei Wei,
+        Wenhao Zhang,
+        Yuexiang Xie,
+        Daoyuan Chen,
+        Liuyi Yao,
+        Hongyi Peng,
+        Zeyu Zhang,
+        Lin Zhu,
+        Chen Cheng,
+        Hongzhu Shi,
+        Yaliang Li,
+        Bolin Ding,
+        Jingren Zhou}
+    title   = {AgentScope: A Flexible yet Robust Multi-Agent Platform},
+    journal = {CoRR},
+    volume  = {abs/2402.14034},
+    year    = {2024},
+}
+```
+
+## ✨ Contributors
+
+All thanks to our contributors:
+
+<a href="https://github.com/agentscope-ai/agentscope/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=agentscope-ai/agentscope&max=999&columns=12&anon=1" />
+</a>
+
+=== FILE END:   testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md ===
+2026-11-11 08:30:54.489 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 08:30:57.285 | INFO     | Model API request cost info: input_tokens=5160, output_tokens=271, cost=0.000000
+2026-11-11 08:30:57.288 | SUCCESS  | Successfully extracted environment config
+2026-11-11 08:30:57.288 | INFO     | ******
+2026-11-11 08:30:57.288 | INFO     | [Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]
+- Runtime Requirements:
+  - Python 3.10 or higher
+
+- Environment Setup Instructions:
+  - From source installation:
+    - Clone repo: `git clone -b main https://github.com/agentscope-ai/agentscope.git`
+    - Change directory: `cd agentscope`
+    - Install package in editable mode: `pip install -e .`
+  - From PyPi installation:
+    - Install package: `pip install agentscope`
+
+- Test Dependencies Installation:
+  - No explicit test dependencies or test setup commands mentioned in the README.
+
+- Additional tools:
+  - For AgentScope Studio visualization:
+    - Install via npm: `npm install -g @agentscope/studio`
+    - Start studio with command: `as_studio`
+
+- No specific environment variables for general setup besides the example mentioning API keys for environment variables such as:
+  - `DASHSCOPE_API_KEY`
+  - `GAODE_API_KEY`
+  (These are for example usage; not mandatory for environment setup)
+
+- No test commands or scripts provided, including no commands for running all or individual tests are present in this README.
+
+[/Key Information]
+2026-11-11 08:30:57.288 | INFO     | ******
+2026-11-11 08:30:57.288 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/agentscope-ai__agentscope-769_2026-11-11_06-32-50/README.md]\n- Runtime Requirements:\n  - Python 3.10 or higher\n\n- Environment Setup Instructions:\n  - From source installation:\n    - Clone repo: `git clone -b main https://github.com/agentscope-ai/agentscope.git`\n    - Change directory: `cd agentscope`\n    - Install package in editable mode: `pip install -e .`\n  - From PyPi installation:\n    - Install package: `pip install agentscope`\n\n- Test Dependencies Installation:\n  - No explicit test dependencies or test setup commands mentioned in the README.\n\n- Additional tools:\n  - For AgentScope Studio visualization:\n    - Install via npm: `npm install -g @agentscope/studio`\n    - Start studio with command: `as_studio`\n\n- No specific environment variables for general setup besides the example mentioning API keys for environment variables such as:\n  - `DASHSCOPE_API_KEY`\n  - `GAODE_API_KEY`\n  (These are for example usage; not mandatory for environment setup)\n\n- No test commands or scripts provided, including no commands for running all or individual tests are present in this README.\n\n[/Key Information]', 'Get File Info', True)
+2026-11-11 08:31:05.485 | INFO     | Model API request cost info: input_tokens=4430, output_tokens=938, cost=0.000000
+2026-11-11 08:31:05.511 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 08:31:09.385 | INFO     | Model API request cost info: input_tokens=1536, output_tokens=439, cost=0.000000
+2026-11-11 08:31:09.388 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "dependency_version_and_usage": {
+      "setup.py": {
+        "python_version": ">=3.10",
+        "mcp_dependency": "mcp>=1.13",
+        "other_dependencies": ["aioitertools", "anthropic", "dashscope", "numpy", "openai", "opentelemetry"],
+        "dev_dependencies": ["pytest", "pre-commit"]
+      },
+      "test_mcp_streamable_http_client_test.py": {
+        "imports": ["mcp.types", "mcp.server.FastMCP"],
+        "features": [
+          "local streamable HTTP MCP server on port 8002",
+          "HttpStatelessClient and HttpStatefulClient tests",
+          "asyncio with IsolatedAsyncioTestCase",
+          "multiprocessing for server start"
+        ],
+        "version_constraints_warnings": "none"
+      },
+      "test_mcp_sse_client_test.py": {
+        "imports": ["mcp.types", "mcp.server.FastMCP"],
+        "features": [
+          "streamable HTTP MCP server with SSE transport",
+          "uses types.CallToolResult",
+          "no version warnings"
+        ]
+      },
+      "docs/tutorial/en/src/task_mcp.py": {
+        "usage_notes": [
+          "MCP supports HTTP (streamable and SSE) and StdIO",
+          "clients stateful/stateless",
+          "tools registered at server/function level",
+          "no version or installation specifics"
+        ],
+        "env_variables": ["GAODE_API_KEY"]
+      },
+      "README.md": {
+        "python_version": ">=3.10",
+        "install_method": "pip install -e .",
+        "test_commands": "none documented",
+        "npm_for_visualization": "AgentScope Studio",
+        "optional_env_vars": ["DASHSCOPE_API_KEY", "GAODE_API_KEY"]
+      }
+    },
+    "general_notes": "No explicit test run commands or test dependency files found; no additional unexplored requirements."
+  },
+  "terminate": true
+}
+2026-11-11 08:31:09.389 | DEBUG    | Extracted a valid json
+2026-11-11 08:31:09.394 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 08:31:13.787 | INFO     | Model API request cost info: input_tokens=7353, output_tokens=301, cost=0.000000
+2026-11-11 08:31:13.788 | INFO     | Raw script and produced in try 1. Writing script into file.

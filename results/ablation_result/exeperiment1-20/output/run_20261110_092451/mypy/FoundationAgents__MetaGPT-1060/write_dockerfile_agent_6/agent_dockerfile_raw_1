@@ -1,0 +1,61 @@
+<dockerfile>
+FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, Python, Node.js, and tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    gnupg \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    build-essential \
+    libgomp1 \
+    chromium-browser \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    libxss1 \
+    python3 \
+    python3-venv \
+    python3-distutils \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 -
+
+# Set environment variables required for chromium and puppeteer
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    puppeteer_config=/app/metagpt/config/puppeteer-config.json
+
+# Set working directory
+WORKDIR /app/metagpt
+
+# Clone the repo and checkout specific commit in one layer
+ARG COMMIT_SHA=0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea
+RUN git clone https://github.com/FoundationAgents/MetaGPT.git /app/metagpt && \
+    cd /app/metagpt && \
+    git reset --hard ${COMMIT_SHA} && \
+    chmod -R a+rw /app/metagpt
+
+# Create and activate virtual environment, upgrade pip, install dependencies and package
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pytest pytest-asyncio pytest-cov pytest-mock pytest-html pytest-xdist pytest-timeout && \
+    pip install --no-cache-dir -e .
+
+# Install Node global packages
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Default command to keep container alive for post-build testing
+CMD ["tail", "-f", "/dev/null"]
+</dockerfile>

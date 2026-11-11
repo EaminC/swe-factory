@@ -1,0 +1,198 @@
+2026-11-10 11:23:28,794 - INFO - Building image aider-ai__aider-1852
+Using dockerfile:
+# Use an official Ubuntu base image with bash and broad compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Install minimal base dependencies first to reduce memory pressure and isolate potential build layer issues
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    locales \
+    tzdata \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set timezone environment variable after installing tzdata
+ENV TZ=Etc/UTC
+
+# Generate locale separately to reduce layers and isolate locale config
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Install Python and build dependencies in a separate step for clarity and layer isolation
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-venv \
+    python3-distutils \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a Python virtual environment named "testbed" with python3.10 explicitly
+RUN python3.10 -m venv /opt/testbed
+
+# Add virtual environment binaries to PATH
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Install pip inside the virtual environment using get-pip.py for latest pip version independently of system pip
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | /opt/testbed/bin/python -
+
+# Upgrade pip, setuptools, and wheel inside the virtual environment only
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Clone the repository and checkout the specified commit
+RUN git clone https://github.com/paul-gauthier/aider.git /testbed \
+    && cd /testbed \
+    && git reset --hard 9789668ca4d14d3b6c24e56f3fe956147ea78039
+
+# Install project dependencies and the project itself in editable mode inside the virtual environment
+RUN /opt/testbed/bin/pip install -r /testbed/requirements.txt \
+    && /opt/testbed/bin/pip install -r /testbed/requirements/requirements-dev.txt \
+    && /opt/testbed/bin/pip install -e /testbed
+
+# Set the working directory
+WORKDIR /testbed/
+
+# Configure bash to auto-activate the virtual environment on shell login (optional)
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+2026-11-10 11:23:28,800 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:23:28,931 - INFO - Step 1/17 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 11:23:29,322 - INFO -  ---> 076e7bf82319
+2026-11-10 11:23:29,322 - INFO - Step 2/17 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:23:35,655 - INFO -  ---> Running in 0d473d16e83f
+2026-11-10 11:23:51,222 - INFO -  ---> Removed intermediate container 0d473d16e83f
+2026-11-10 11:23:51,223 - INFO -  ---> 0746eab6d97c
+2026-11-10 11:23:51,223 - INFO - Step 3/17 : SHELL ["/bin/bash", "-c"]
+2026-11-10 11:23:54,957 - INFO -  ---> Running in 91d9a2085a26
+2026-11-10 11:24:22,971 - INFO -  ---> Removed intermediate container 91d9a2085a26
+2026-11-10 11:24:22,971 - INFO -  ---> b7b98c7ad080
+2026-11-10 11:24:22,971 - INFO - Step 4/17 : RUN apt-get update && apt-get install -y     ca-certificates     locales     tzdata     curl     git     && rm -rf /var/lib/apt/lists/*
+2026-11-10 11:24:33,051 - INFO -  ---> Running in ee76a61acc17
+2026-11-10 11:24:39,676 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 11:24:39,679 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 11:24:40,739 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 11:24:40,750 - INFO - Get:4 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 11:24:41,049 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 11:24:41,361 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 11:24:41,465 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 11:24:41,533 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 11:24:42,266 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 11:24:42,359 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 11:24:42,361 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 11:24:42,940 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 11:24:43,009 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 11:24:43,561 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 11:24:43,561 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 11:24:43,899 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 11:24:43,973 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 11:24:43,975 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 11:24:44,862 - INFO - Fetched 49.4 MB in 6s (8595 kB/s)
+2026-11-10 11:24:46,330 - INFO - Reading package lists...
+2026-11-10 11:24:47,756 - INFO - Reading package lists...
+2026-11-10 11:24:48,143 - INFO - Building dependency tree...
+2026-11-10 11:24:48,143 - INFO - Reading state information...
+2026-11-10 11:24:48,434 - INFO - The following additional packages will be installed:
+2026-11-10 11:24:48,434 - INFO -   git-man less libbrotli1 libbsd0 libcbor0.8 libcurl3-gnutls libcurl4 libedit2
+2026-11-10 11:24:48,434 - INFO -   liberror-perl libexpat1 libfido2-1 libgdbm-compat4 libgdbm6 libldap-2.5-0
+2026-11-10 11:24:48,434 - INFO -   libldap-common libmd0 libnghttp2-14 libperl5.34 libpsl5 librtmp1 libsasl2-2
+2026-11-10 11:24:48,434 - INFO -   libsasl2-modules libsasl2-modules-db libssh-4 libx11-6 libx11-data libxau6
+2026-11-10 11:24:48,435 - INFO -   libxcb1 libxdmcp6 libxext6 libxmuu1 netbase openssh-client openssl patch
+2026-11-10 11:24:48,435 - INFO -   perl perl-base perl-modules-5.34 publicsuffix xauth
+2026-11-10 11:24:48,436 - INFO - Suggested packages:
+2026-11-10 11:24:48,436 - INFO -   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+2026-11-10 11:24:48,436 - INFO -   gitk gitweb git-cvs git-mediawiki git-svn gdbm-l10n
+2026-11-10 11:24:48,436 - INFO -   libsasl2-modules-gssapi-mit | libsasl2-modules-gssapi-heimdal
+2026-11-10 11:24:48,436 - INFO -   libsasl2-modules-ldap libsasl2-modules-otp libsasl2-modules-sql keychain
+2026-11-10 11:24:48,436 - INFO -   libpam-ssh monkeysphere ssh-askpass ed diffutils-doc perl-doc
+2026-11-10 11:24:48,436 - INFO -   libterm-readline-gnu-perl | libterm-readline-perl-perl make
+2026-11-10 11:24:48,436 - INFO -   libtap-harness-archive-perl
+2026-11-10 11:24:48,573 - INFO - The following NEW packages will be installed:
+2026-11-10 11:24:48,574 - INFO -   ca-certificates curl git git-man less libbrotli1 libbsd0 libcbor0.8
+2026-11-10 11:24:48,574 - INFO -   libcurl3-gnutls libcurl4 libedit2 liberror-perl libexpat1 libfido2-1
+2026-11-10 11:24:48,574 - INFO -   libgdbm-compat4 libgdbm6 libldap-2.5-0 libldap-common libmd0 libnghttp2-14
+2026-11-10 11:24:48,574 - INFO -   libperl5.34 libpsl5 librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db
+2026-11-10 11:24:48,575 - INFO -   libssh-4 libx11-6 libx11-data libxau6 libxcb1 libxdmcp6 libxext6 libxmuu1
+2026-11-10 11:24:48,575 - INFO -   locales netbase openssh-client openssl patch perl perl-modules-5.34
+2026-11-10 11:24:48,575 - INFO -   publicsuffix tzdata xauth
+2026-11-10 11:24:48,578 - INFO - The following packages will be upgraded:
+2026-11-10 11:24:48,578 - INFO -   perl-base
+2026-11-10 11:24:48,933 - INFO - 1 upgraded, 44 newly installed, 0 to remove and 3 not upgraded.
+2026-11-10 11:24:48,933 - INFO - Need to get 24.3 MB of archives.
+2026-11-10 11:24:48,933 - INFO - After this operation, 107 MB of additional disk space will be used.
+2026-11-10 11:24:48,933 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl-base amd64 5.34.0-3ubuntu1.10 [1763 kB]
+2026-11-10 11:24:50,424 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl-modules-5.34 all 5.34.0-3ubuntu1.10 [2977 kB]
+2026-11-10 11:24:50,933 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy/main amd64 libgdbm6 amd64 1.23-1 [33.9 kB]
+2026-11-10 11:24:50,934 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy/main amd64 libgdbm-compat4 amd64 1.23-1 [6606 B]
+2026-11-10 11:24:50,934 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libperl5.34 amd64 5.34.0-3ubuntu1.10 [4796 kB]
+2026-11-10 11:24:51,126 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl amd64 5.34.0-3ubuntu1.10 [232 kB]
+2026-11-10 11:24:51,130 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 openssl amd64 3.0.2-0ubuntu1.30 [1186 kB]
+2026-11-10 11:24:51,159 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 ca-certificates all 20260816ubuntu0.22.04.2 [140 kB]
+2026-11-10 11:24:51,162 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 less amd64 590-1ubuntu0.22.04.3 [142 kB]
+2026-11-10 11:24:51,165 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/main amd64 libmd0 amd64 1.0.4-1build1 [23.0 kB]
+2026-11-10 11:24:51,167 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/main amd64 libbsd0 amd64 0.11.5-1 [44.8 kB]
+2026-11-10 11:24:51,167 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libexpat1 amd64 2.4.7-1ubuntu0.9 [96.9 kB]
+2026-11-10 11:24:51,265 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 locales all 2.35-0ubuntu3.15 [4245 kB]
+2026-11-10 11:24:51,361 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy/main amd64 netbase all 6.3 [12.9 kB]
+2026-11-10 11:24:51,455 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 tzdata all 2026e-0ubuntu0.22.04.1 [346 kB]
+2026-11-10 11:24:51,457 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy/main amd64 libcbor0.8 amd64 0.8.0-2ubuntu1 [24.6 kB]
+2026-11-10 11:24:51,457 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy/main amd64 libedit2 amd64 3.1-20210910-1build1 [96.8 kB]
+2026-11-10 11:24:51,458 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy/main amd64 libfido2-1 amd64 1.10.0-1 [82.8 kB]
+2026-11-10 11:24:51,459 - INFO - Get:19 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libnghttp2-14 amd64 1.43.0-1ubuntu0.4 [76.9 kB]
+2026-11-10 11:24:51,460 - INFO - Get:20 http://archive.ubuntu.com/ubuntu jammy/main amd64 libpsl5 amd64 0.21.0-1.2build2 [58.4 kB]
+2026-11-10 11:24:51,461 - INFO - Get:21 http://archive.ubuntu.com/ubuntu jammy/main amd64 libxau6 amd64 1:1.0.9-1build5 [7634 B]
+2026-11-10 11:24:51,474 - INFO - Get:22 http://archive.ubuntu.com/ubuntu jammy/main amd64 libxdmcp6 amd64 1:1.1.3-0ubuntu5 [10.9 kB]
+2026-11-10 11:24:51,594 - INFO - Get:23 http://archive.ubuntu.com/ubuntu jammy/main amd64 libxcb1 amd64 1.14-3ubuntu3 [49.0 kB]
+2026-11-10 11:24:51,595 - INFO - Get:24 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx11-data all 2:1.7.5-1ubuntu0.4 [120 kB]
+2026-11-10 11:24:51,762 - INFO - Get:25 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx11-6 amd64 2:1.7.5-1ubuntu0.4 [668 kB]
+2026-11-10 11:24:51,773 - INFO - Get:26 http://archive.ubuntu.com/ubuntu jammy/main amd64 libxext6 amd64 2:1.3.4-1build1 [31.8 kB]
+2026-11-10 11:24:51,774 - INFO - Get:27 http://archive.ubuntu.com/ubuntu jammy/main amd64 libxmuu1 amd64 2:1.1.3-3 [10.2 kB]
+2026-11-10 11:24:51,776 - INFO - Get:28 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 openssh-client amd64 1:8.9p1-3ubuntu0.18 [905 kB]
+2026-11-10 11:24:51,791 - INFO - Get:29 http://archive.ubuntu.com/ubuntu jammy/main amd64 publicsuffix all 20211207.1025-1 [129 kB]
+2026-11-10 11:24:51,794 - INFO - Get:30 http://archive.ubuntu.com/ubuntu jammy/main amd64 xauth amd64 1:1.1-1build2 [27.5 kB]
+2026-11-10 11:24:51,794 - INFO - Get:31 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libbrotli1 amd64 1.0.9-2ubuntu0.1 [315 kB]
+2026-11-10 11:24:51,797 - INFO - Get:32 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsasl2-modules-db amd64 2.1.27+dfsg2-3ubuntu1.2 [20.5 kB]
+2026-11-10 11:24:51,924 - INFO - Get:33 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsasl2-2 amd64 2.1.27+dfsg2-3ubuntu1.2 [53.8 kB]
+2026-11-10 11:24:51,925 - INFO - Get:34 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libldap-2.5-0 amd64 2.5.20+dfsg-0ubuntu0.22.04.1 [184 kB]
+2026-11-10 11:24:52,097 - INFO - Get:35 http://archive.ubuntu.com/ubuntu jammy/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2build4 [58.2 kB]
+2026-11-10 11:24:52,099 - INFO - Get:36 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libssh-4 amd64 0.9.6-2ubuntu0.22.04.8 [189 kB]
+2026-11-10 11:24:52,106 - INFO - Get:37 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcurl4 amd64 7.81.0-1ubuntu1.30 [293 kB]
+2026-11-10 11:24:52,107 - INFO - Get:38 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 curl amd64 7.81.0-1ubuntu1.30 [194 kB]
+2026-11-10 11:24:52,109 - INFO - Get:39 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcurl3-gnutls amd64 7.81.0-1ubuntu1.30 [287 kB]
+2026-11-10 11:24:52,113 - INFO - Get:40 http://archive.ubuntu.com/ubuntu jammy/main amd64 liberror-perl all 0.17029-1 [26.5 kB]
+2026-11-10 11:24:52,115 - INFO - Get:41 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 git-man all 1:2.34.1-1ubuntu1.18 [954 kB]
+2026-11-10 11:24:52,123 - INFO - Get:42 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 git amd64 1:2.34.1-1ubuntu1.18 [3174 kB]
+2026-11-10 11:24:52,271 - INFO - Get:43 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libldap-common all 2.5.20+dfsg-0ubuntu0.22.04.1 [16.4 kB]
+2026-11-10 11:24:52,271 - INFO - Get:44 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsasl2-modules amd64 2.1.27+dfsg2-3ubuntu1.2 [68.8 kB]
+2026-11-10 11:24:52,461 - INFO - Get:45 http://archive.ubuntu.com/ubuntu jammy/main amd64 patch amd64 2.7.6-7build2 [109 kB]
+2026-11-10 11:24:53,462 - INFO - debconf: delaying package configuration, since apt-utils is not installed
+2026-11-10 11:24:53,912 - INFO - Fetched 24.3 MB in 4s (6262 kB/s)
+2026-11-10 11:24:55,265 - INFO - (Reading database ... 
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 5%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 10%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 15%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 20%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 25%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 30%
+2026-11-10 11:24:55,268 - INFO - (Reading database ... 35%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 40%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 45%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 50%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 55%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 60%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 65%
+2026-11-10 11:24:55,269 - INFO - (Reading database ... 70%
+2026-11-10 11:24:55,271 - INFO - (Reading database ... 75%
+2026-11-10 11:24:55,272 - INFO - (Reading database ... 80%
+2026-11-10 11:24:55,273 - INFO - (Reading database ... 85%
+2026-11-10 11:24:55,273 - INFO - (Reading database ... 90%
+2026-11-10 11:24:55,274 - INFO - (Reading database ... 95%
+2026-11-10 11:24:55,275 - INFO - (Reading database ... 100%
+2026-11-10 11:24:55,275 - INFO - (Reading database ... 4393 files and directories currently installed.)
+2026-11-10 11:24:55,275 - INFO - Preparing to unpack .../perl-base_5.34.0-3ubuntu1.10_amd64.deb ...
+2026-11-10 11:24:56,954 - INFO - Unpacking perl-base (5.34.0-3ubuntu1.10) over (5.34.0-3ubuntu1.9) ...

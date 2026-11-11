@@ -1,0 +1,21 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 9b589c65fed699a48d1c93fe74c9e57bc361b70d 
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate poetry virtual environment
+source /testbed/.venv/bin/activate
+
+# Run only the specified test file using pytest so that output shows target test file names and results clearly
+pytest --no-header -rA --tb=short tests/test_sql_correction_instructions.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 9b589c65fed699a48d1c93fe74c9e57bc361b70d tests/test_sql_correction_instructions.py
+</script>

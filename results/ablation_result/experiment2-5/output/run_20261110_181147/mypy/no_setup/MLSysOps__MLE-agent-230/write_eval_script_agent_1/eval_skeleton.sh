@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+git checkout 985c24e1b2b8e9463aacfb2c8a47f27fa4523c
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+
+# Run only the specified target test file with unittest, showing test file names and results clearly
+python -m unittest -v tests/test_gemini_model.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 985c24e1b2b8e9463aacfb2c8a47f27fa4523c

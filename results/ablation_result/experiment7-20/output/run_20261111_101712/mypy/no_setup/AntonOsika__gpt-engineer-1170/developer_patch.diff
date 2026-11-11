@@ -1,0 +1,41 @@
+diff --git a/.github/CONTRIBUTING.md b/.github/CONTRIBUTING.md
+index fd274d4e55..704f169684 100644
+--- a/.github/CONTRIBUTING.md
++++ b/.github/CONTRIBUTING.md
+@@ -112,6 +112,21 @@ Now your file has been committed and you can push your changes.
+ 
+ At the beginning this might seem like a tedious process (having to add the file again after `black` and `ruff` have modified it) but it is actually very useful. It allows you to see what changes `black` and `ruff` have made to your files and make sure that they are correct before you commit them.
+ 
++### Important Note When `pre-commit` Fails in the Build Pipeline
++Sometimes `pre-commit` will seemingly run successfully, as follows:
++
++```bash
++black................................................(no files to check)Skipped
++ruff.................................................(no files to check)Skipped
++check toml...........................................(no files to check)Skipped
++check yaml...........................................(no files to check)Skipped
++detect private key...................................(no files to check)Skipped
++fix end of files.....................................(no files to check)Skipped
++trim trailing whitespace.............................(no files to check)Skipped
++```
++
++However, you may see `pre-commit` fail in the build pipeline upon submitting a PR.  The solution to this is to run `pre-commit run --all-files` to force `pre-commit` to execute these checks, and make any necessary file modifications, to all files.
++
+ 
+ ## Licensing
+ 
+diff --git a/gpt_engineer/core/ai.py b/gpt_engineer/core/ai.py
+index 5db26eb439..ae86f63364 100644
+--- a/gpt_engineer/core/ai.py
++++ b/gpt_engineer/core/ai.py
+@@ -346,7 +346,9 @@ def _create_chat_model(self) -> BaseChatModel:
+         if self.azure_endpoint:
+             return AzureChatOpenAI(
+                 azure_endpoint=self.azure_endpoint,
+-                openai_api_version=os.getenv("OPENAI_API_VERSION", "2023-05-15"),
++                openai_api_version=os.getenv(
++                    "OPENAI_API_VERSION", "2024-05-01-preview"
++                ),
+                 deployment_name=self.model_name,
+                 openai_api_type="azure",
+                 streaming=self.streaming,

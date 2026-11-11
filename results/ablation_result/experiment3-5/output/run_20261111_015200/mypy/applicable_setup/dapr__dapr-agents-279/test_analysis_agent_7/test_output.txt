@@ -1,0 +1,84 @@
++ source /opt/testbed/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/opt/testbed
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/opt/testbed/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ cd /testbed
++ git checkout 13feed2c2c00249344c4e5151a1e3b2cdaf6d428
+Note: switching to '13feed2c2c00249344c4e5151a1e3b2cdaf6d428'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 13feed2c fix: clean up venvs after each qs dir test to help run in ci (#274)
+M	dapr_agents/agents/orchestrators/base.py
+M	dapr_agents/agents/orchestrators/llm/orchestrator.py
+M	dapr_agents/agents/orchestrators/random.py
+M	dapr_agents/agents/orchestrators/roundrobin.py
++ git apply -v -
+Checking patch tests/test_workflow_completion_callback.py...
+Applied patch tests/test_workflow_completion_callback.py cleanly.
++ pytest -v --tb=short tests/test_workflow_completion_callback.py
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-7.4.4, pluggy-1.7.0 -- /opt/testbed/bin/python3
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: cov-4.1.0, mock-3.17.0, asyncio-0.23.8, anyio-4.16.0, timeout-2.4.0, xdist-3.8.0
+asyncio: mode=auto
+collecting ... collected 1 item
+
+tests/test_workflow_completion_callback.py::test_final_summary_callback_invoked FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_final_summary_callback_invoked ______________________
+tests/test_workflow_completion_callback.py:23: in test_final_summary_callback_invoked
+    orchestrator = DummyOrchestrator(final_summary_callback=on_workflow_complete)
+tests/test_workflow_completion_callback.py:8: in __init__
+    super().__init__(*args, **kwargs)
+dapr_agents/agents/orchestrators/llm/orchestrator.py:63: in __init__
+    super().__init__(name=name, execution=execution, **kwargs)
+E   TypeError: LLMOrchestratorBase.__init__() got an unexpected keyword argument 'final_summary_callback'
+=========================== short test summary info ============================
+FAILED tests/test_workflow_completion_callback.py::test_final_summary_callback_invoked
+============================== 1 failed in 1.98s ===============================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 13feed2c2c00249344c4e5151a1e3b2cdaf6d428
+OMNIGRIL_EXIT_CODE=1
+HEAD is now at 13feed2c fix: clean up venvs after each qs dir test to help run in ci (#274)
+M	dapr_agents/agents/orchestrators/base.py
+M	dapr_agents/agents/orchestrators/llm/orchestrator.py
+M	dapr_agents/agents/orchestrators/random.py
+M	dapr_agents/agents/orchestrators/roundrobin.py

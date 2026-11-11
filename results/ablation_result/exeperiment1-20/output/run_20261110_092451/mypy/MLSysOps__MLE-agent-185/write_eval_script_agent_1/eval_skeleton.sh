@@ -1,0 +1,19 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5
+
+# Apply the patch to modify the target test files if needed
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file using unittest, capturing detailed test names and outcomes
+python3.11 -m unittest -v tests.test_github_token
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset the test file to original state after test execution
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5 tests/test_github_token.py

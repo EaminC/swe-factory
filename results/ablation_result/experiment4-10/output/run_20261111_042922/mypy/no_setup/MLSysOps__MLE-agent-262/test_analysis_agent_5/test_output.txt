@@ -1,0 +1,146 @@
++ cd /testbed
++ git checkout 96a84c48ce271d37749c6304866e42a24e6647ac
+Note: switching to '96a84c48ce271d37749c6304866e42a24e6647ac'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 96a84c4 Merge pull request #261 from MLSysOps/huangyz0918-patch-1
+M	mle/cli.py
+M	mle/utils/memory.py
+M	requirements.txt
++ git apply -v -
+Checking patch tests/test_memory_lancedb.py...
+Applied patch tests/test_memory_lancedb.py cleanly.
++ source /opt/testbed/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/opt/testbed
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/opt/testbed/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/opt/testbed/bin:/opt/testbed/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(testbed) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(testbed) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ pytest -v tests/test_memory_lancedb.py
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-9.2.0, pluggy-1.7.0 -- /opt/testbed/bin/python3
+cachedir: .pytest_cache
+rootdir: /testbed
+plugins: anyio-4.16.0, platformdirs-4.14.5
+collecting ... collected 2 items
+
+tests/test_memory_lancedb.py::test_add_and_query ERROR                   [ 50%]
+tests/test_memory_lancedb.py::test_delete ERROR                          [100%]
+
+==================================== ERRORS ====================================
+_____________________ ERROR at setup of test_add_and_query _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_add_and_query0')
+
+    @pytest.fixture
+    def memory(tmp_path):
+        # Use a temporary directory for project path
+>       mem = LanceDBMemory(str(tmp_path))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_lancedb.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <mle.utils.memory.LanceDBMemory object at 0x7e9ab03a9d90>
+project_path = '/tmp/pytest-of-root/pytest-0/test_add_and_query0'
+
+    def __init__(
+        self,
+        project_path: str,
+    ):
+        """
+        Memory: A base class for memory and external knowledge management.
+        Args:
+            project_path: the path to store the data.
+        """
+        self.db_name = '.mle'
+        self.table_name = 'memory'
+        self.client = lancedb.connect(uri=self.db_name)
+    
+        config = get_config(project_path)
+        if config["platform"] == "OpenAI":
+>           self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'DummyEmbedding' object has no attribute 'create'
+
+mle/utils/memory.py:178: AttributeError
+________________________ ERROR at setup of test_delete _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_delete0')
+
+    @pytest.fixture
+    def memory(tmp_path):
+        # Use a temporary directory for project path
+>       mem = LanceDBMemory(str(tmp_path))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_lancedb.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <mle.utils.memory.LanceDBMemory object at 0x7e9ab03a0990>
+project_path = '/tmp/pytest-of-root/pytest-0/test_delete0'
+
+    def __init__(
+        self,
+        project_path: str,
+    ):
+        """
+        Memory: A base class for memory and external knowledge management.
+        Args:
+            project_path: the path to store the data.
+        """
+        self.db_name = '.mle'
+        self.table_name = 'memory'
+        self.client = lancedb.connect(uri=self.db_name)
+    
+        config = get_config(project_path)
+        if config["platform"] == "OpenAI":
+>           self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'DummyEmbedding' object has no attribute 'create'
+
+mle/utils/memory.py:178: AttributeError
+=========================== short test summary info ============================
+ERROR tests/test_memory_lancedb.py::test_add_and_query - AttributeError: 'Dum...
+ERROR tests/test_memory_lancedb.py::test_delete - AttributeError: 'DummyEmbed...
+============================== 2 errors in 4.84s ===============================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 96a84c48ce271d37749c6304866e42a24e6647ac
+HEAD is now at 96a84c4 Merge pull request #261 from MLSysOps/huangyz0918-patch-1
+M	mle/cli.py
+M	mle/utils/memory.py
+M	requirements.txt

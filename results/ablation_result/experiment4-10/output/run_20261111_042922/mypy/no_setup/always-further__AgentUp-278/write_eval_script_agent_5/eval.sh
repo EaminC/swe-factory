@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout a78ff2c52f20238958c078f51732ec95b22cd935 tests/test_core/test_llm_ollama.py
+
+# No test patch to apply as none modifies this file
+
+# Activate the virtual environment
+source /opt/testbed/bin/activate
+
+# Export PYTHONPATH to include src directory as expected by test file
+export PYTHONPATH=/testbed/src
+
+# Output pytest version to verify environment
+pytest --version
+
+# Print first 40 lines of test file to verify contents
+head -40 tests/test_core/test_llm_ollama.py
+
+# Run pytest with detailed verbosity, no output capture, and no skipping of warnings to capture any issues
+pytest tests/test_core/test_llm_ollama.py -s -v --tb=short --disable-warnings
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: revert test file to original committed state
+git checkout a78ff2c52f20238958c078f51732ec95b22cd935 tests/test_core/test_llm_ollama.py

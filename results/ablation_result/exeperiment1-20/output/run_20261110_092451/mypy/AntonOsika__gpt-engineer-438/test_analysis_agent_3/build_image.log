@@ -1,0 +1,1072 @@
+2026-11-10 11:01:56,106 - INFO - Building image antonosika__gpt-engineer-438
+Using dockerfile:
+# Use official Python slim image to avoid venv and permission issues
+FROM --platform=linux/x86_64 python:3.10-slim
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies and tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip, setuptools, and wheel globally
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+ARG COMMIT_SHA=2b8e056d5d4d14665b88a01c41356253c94b9259
+RUN git clone https://github.com/AntonOsika/gpt-engineer /testbed/ && \
+    git reset --hard $COMMIT_SHA && \
+    chmod -R a+rwx /testbed/
+
+# Install project and all specified dependencies globally without using a virtual environment
+# Install in editable mode to reference local source code
+# Install only dependencies that are not the project itself and not duplicated from the repo
+RUN python -m pip install --no-cache-dir -e . && \
+    python -m pip install --no-cache-dir \
+    pytest pytest-cov pre-commit ruff mypy openai termcolor typer rudder-sdk-python dataclasses-json tabulate
+
+# Set bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Set working directory explicitly
+WORKDIR /testbed/
+
+# Note: No tests or commands to run tests inside Dockerfile per instructions
+
+2026-11-10 11:01:56,113 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:01:56,125 - INFO - Step 1/15 : FROM --platform=linux/x86_64 python:3.10-slim
+2026-11-10 11:01:57,120 - INFO -  ---> 6ff506466f8b
+2026-11-10 11:01:57,120 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:02:08,971 - INFO -  ---> Running in 0bf5ba0d1e47
+2026-11-10 11:02:36,906 - INFO -  ---> Removed intermediate container 0bf5ba0d1e47
+2026-11-10 11:02:36,906 - INFO -  ---> f1f6779743f2
+2026-11-10 11:02:36,906 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-10 11:02:47,779 - INFO -  ---> Running in 23e44bb4a038
+2026-11-10 11:03:19,939 - INFO -  ---> Removed intermediate container 23e44bb4a038
+2026-11-10 11:03:19,943 - INFO -  ---> 5a56f7fb0419
+2026-11-10 11:03:19,943 - INFO - Step 4/15 : RUN apt-get update && apt-get install -y --no-install-recommends     git     build-essential     curl     ca-certificates     locales     && rm -rf /var/lib/apt/lists/*
+2026-11-10 11:03:30,988 - INFO -  ---> Running in 722823b4c2ef
+2026-11-10 11:03:35,248 - INFO - Hit:1 http://deb.debian.org/debian trixie InRelease
+2026-11-10 11:03:35,250 - INFO - Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-11-10 11:03:35,262 - INFO - Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-11-10 11:03:35,373 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9678 kB]
+2026-11-10 11:03:35,581 - INFO - Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [1108 B]
+2026-11-10 11:03:35,581 - INFO - Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [301 kB]
+2026-11-10 11:03:37,595 - INFO - Fetched 10.1 MB in 2s (4032 kB/s)
+2026-11-10 11:03:39,110 - INFO - Reading package lists...
+2026-11-10 11:03:41,065 - INFO - Reading package lists...
+2026-11-10 11:03:42,288 - INFO - Building dependency tree...
+2026-11-10 11:03:42,290 - INFO - Reading state information...
+2026-11-10 11:03:43,618 - INFO - The following additional packages will be installed:
+2026-11-10 11:03:43,619 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu bzip2 cpp cpp-14
+2026-11-10 11:03:43,619 - INFO -   cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev g++ g++-14
+2026-11-10 11:03:43,619 - INFO -   g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-11-10 11:03:43,622 - INFO -   gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu git-man libasan8 libatomic1
+2026-11-10 11:03:43,622 - INFO -   libbinutils libbrotli1 libc-dev-bin libc-l10n libc6-dev libcc1-0 libcom-err2
+2026-11-10 11:03:43,622 - INFO -   libcrypt-dev libctf-nobfd0 libctf0 libcurl3t64-gnutls libcurl4t64
+2026-11-10 11:03:43,622 - INFO -   libdpkg-perl liberror-perl libexpat1 libgcc-14-dev libgdbm-compat4t64
+2026-11-10 11:03:43,622 - INFO -   libgnutls30t64 libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0 libidn2-0
+2026-11-10 11:03:43,622 - INFO -   libisl23 libitm1 libjansson4 libk5crypto3 libkeyutils1 libkrb5-3
+2026-11-10 11:03:43,622 - INFO -   libkrb5support0 libldap2 liblsan0 liblzma5 libmpc3 libmpfr6 libnghttp2-14
+2026-11-10 11:03:43,622 - INFO -   libnghttp3-9 libngtcp2-16 libngtcp2-crypto-gnutls8 libp11-kit0 libperl5.40
+2026-11-10 11:03:43,627 - INFO -   libpsl5t64 libquadmath0 librtmp1 libsasl2-2 libsasl2-modules-db libsframe1
+2026-11-10 11:03:43,627 - INFO -   libssh2-1t64 libstdc++-14-dev libtasn1-6 libtsan2 libubsan1 libunistring5
+2026-11-10 11:03:43,627 - INFO -   linux-libc-dev make patch perl perl-modules-5.40 rpcsvc-proto xz-utils
+2026-11-10 11:03:43,630 - INFO - Suggested packages:
+2026-11-10 11:03:43,630 - INFO -   binutils-doc gprofng-gui binutils-gold bzip2-doc cpp-doc gcc-14-locales
+2026-11-10 11:03:43,630 - INFO -   cpp-14-doc debian-keyring debian-tag2upload-keyring g++-multilib
+2026-11-10 11:03:43,630 - INFO -   g++-14-multilib gcc-14-doc gcc-multilib manpages-dev autoconf automake
+2026-11-10 11:03:43,630 - INFO -   libtool flex bison gdb gcc-doc gcc-14-multilib gdb-x86-64-linux-gnu
+2026-11-10 11:03:43,630 - INFO -   gettext-base git-doc git-email git-gui gitk gitweb git-cvs git-mediawiki
+2026-11-10 11:03:43,630 - INFO -   git-svn libc-devtools glibc-doc sq | sqop | rsop | gosop | pgpainless-cli
+2026-11-10 11:03:43,630 - INFO -   | gpg-sq | gnupg sensible-utils bzr gnutls-bin krb5-doc krb5-user
+2026-11-10 11:03:43,630 - INFO -   libstdc++-14-doc make-doc ed diffutils-doc perl-doc
+2026-11-10 11:03:43,630 - INFO -   libterm-readline-gnu-perl | libterm-readline-perl-perl
+2026-11-10 11:03:43,630 - INFO -   libtap-harness-archive-perl
+2026-11-10 11:03:43,631 - INFO - Recommended packages:
+2026-11-10 11:03:43,631 - INFO -   bash-completion fakeroot sq | sqop | rsop | gosop | pgpainless-cli | gpg-sq
+2026-11-10 11:03:43,631 - INFO -   | gnupg libalgorithm-merge-perl less ssh-client manpages manpages-dev
+2026-11-10 11:03:43,631 - INFO -   libfile-fcntllock-perl liblocale-gettext-perl krb5-locales libldap-common
+2026-11-10 11:03:43,631 - INFO -   publicsuffix libsasl2-modules
+2026-11-10 11:03:44,491 - INFO - The following NEW packages will be installed:
+2026-11-10 11:03:44,491 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu build-essential bzip2 cpp
+2026-11-10 11:03:44,492 - INFO -   cpp-14 cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu curl dpkg-dev g++ g++-14
+2026-11-10 11:03:44,492 - INFO -   g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-11-10 11:03:44,492 - INFO -   gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu git git-man libasan8 libatomic1
+2026-11-10 11:03:44,492 - INFO -   libbinutils libbrotli1 libc-dev-bin libc-l10n libc6-dev libcc1-0 libcom-err2
+2026-11-10 11:03:44,492 - INFO -   libcrypt-dev libctf-nobfd0 libctf0 libcurl3t64-gnutls libcurl4t64
+2026-11-10 11:03:44,492 - INFO -   libdpkg-perl liberror-perl libexpat1 libgcc-14-dev libgdbm-compat4t64
+2026-11-10 11:03:44,492 - INFO -   libgnutls30t64 libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0 libidn2-0
+2026-11-10 11:03:44,496 - INFO -   libisl23 libitm1 libjansson4 libk5crypto3 libkeyutils1 libkrb5-3
+2026-11-10 11:03:44,496 - INFO -   libkrb5support0 libldap2 liblsan0 libmpc3 libmpfr6 libnghttp2-14
+2026-11-10 11:03:44,496 - INFO -   libnghttp3-9 libngtcp2-16 libngtcp2-crypto-gnutls8 libp11-kit0 libperl5.40
+2026-11-10 11:03:44,498 - INFO -   libpsl5t64 libquadmath0 librtmp1 libsasl2-2 libsasl2-modules-db libsframe1
+2026-11-10 11:03:44,498 - INFO -   libssh2-1t64 libstdc++-14-dev libtasn1-6 libtsan2 libubsan1 libunistring5
+2026-11-10 11:03:44,499 - INFO -   linux-libc-dev locales make patch perl perl-modules-5.40 rpcsvc-proto
+2026-11-10 11:03:44,501 - INFO -   xz-utils
+2026-11-10 11:03:44,504 - INFO - The following packages will be upgraded:
+2026-11-10 11:03:44,512 - INFO -   ca-certificates liblzma5
+2026-11-10 11:03:44,648 - INFO - 2 upgraded, 83 newly installed, 0 to remove and 4 not upgraded.
+2026-11-10 11:03:44,798 - INFO - Need to get 104 MB of archives.
+2026-11-10 11:03:44,798 - INFO - After this operation, 427 MB of additional disk space will be used.
+2026-11-10 11:03:44,799 - INFO - Get:1 http://deb.debian.org/debian-security trixie-security/main amd64 libexpat1 amd64 2.9.0-1~deb13u1 [126 kB]
+2026-11-10 11:03:44,932 - INFO - Get:2 http://deb.debian.org/debian-security trixie-security/main amd64 liblzma5 amd64 5.8.1-1+deb13u2 [310 kB]
+2026-11-10 11:03:45,012 - INFO - Get:3 http://deb.debian.org/debian trixie/main amd64 bzip2 amd64 1.0.8-6 [40.5 kB]
+2026-11-10 11:03:45,012 - INFO - Get:4 http://deb.debian.org/debian-security trixie-security/main amd64 ca-certificates all 20250419+deb13u1 [161 kB]
+2026-11-10 11:03:45,012 - INFO - Get:5 http://deb.debian.org/debian trixie/main amd64 libc-l10n all 2.41-12+deb13u4 [740 kB]
+2026-11-10 11:03:45,028 - INFO - Get:6 http://deb.debian.org/debian trixie/main amd64 locales all 2.41-12+deb13u4 [3931 kB]
+2026-11-10 11:03:45,094 - INFO - Get:7 http://deb.debian.org/debian trixie/main amd64 perl-modules-5.40 all 5.40.1-6+deb13u1 [3014 kB]
+2026-11-10 11:03:45,206 - INFO - Get:8 http://deb.debian.org/debian trixie/main amd64 libgdbm-compat4t64 amd64 1.24-2 [50.3 kB]
+2026-11-10 11:03:45,214 - INFO - Get:9 http://deb.debian.org/debian trixie/main amd64 libperl5.40 amd64 5.40.1-6+deb13u1 [4326 kB]
+2026-11-10 11:03:45,258 - INFO - Get:10 http://deb.debian.org/debian trixie/main amd64 perl amd64 5.40.1-6+deb13u1 [268 kB]
+2026-11-10 11:03:45,278 - INFO - Get:11 http://deb.debian.org/debian-security trixie-security/main amd64 xz-utils amd64 5.8.1-1+deb13u2 [660 kB]
+2026-11-10 11:03:45,333 - INFO - Get:12 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+2026-11-10 11:03:45,357 - INFO - Get:13 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+2026-11-10 11:03:45,727 - INFO - Get:14 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+2026-11-10 11:03:45,760 - INFO - Get:15 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+2026-11-10 11:03:45,808 - INFO - Get:16 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+2026-11-10 11:03:45,815 - INFO - Get:17 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+2026-11-10 11:03:45,837 - INFO - Get:18 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+2026-11-10 11:03:45,837 - INFO - Get:19 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+2026-11-10 11:03:45,866 - INFO - Get:20 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+2026-11-10 11:03:45,878 - INFO - Get:21 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u4 [60.0 kB]
+2026-11-10 11:03:45,910 - INFO - Get:22 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.116-1 [3050 kB]
+2026-11-10 11:03:45,939 - INFO - Get:23 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+2026-11-10 11:03:45,952 - INFO - Get:24 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+2026-11-10 11:03:45,961 - INFO - Get:25 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u4 [1995 kB]
+2026-11-10 11:03:46,031 - INFO - Get:26 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+2026-11-10 11:03:46,054 - INFO - Get:27 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+2026-11-10 11:03:46,095 - INFO - Get:28 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+2026-11-10 11:03:46,095 - INFO - Get:29 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+2026-11-10 11:03:46,350 - INFO - Get:30 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+2026-11-10 11:03:46,352 - INFO - Get:31 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+2026-11-10 11:03:46,371 - INFO - Get:32 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+2026-11-10 11:03:46,382 - INFO - Get:33 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+2026-11-10 11:03:46,383 - INFO - Get:34 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+2026-11-10 11:03:46,387 - INFO - Get:35 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+2026-11-10 11:03:46,387 - INFO - Get:36 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+2026-11-10 11:03:46,387 - INFO - Get:37 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+2026-11-10 11:03:46,446 - INFO - Get:38 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+2026-11-10 11:03:46,467 - INFO - Get:39 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+2026-11-10 11:03:46,519 - INFO - Get:40 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+2026-11-10 11:03:46,562 - INFO - Get:41 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+2026-11-10 11:03:46,645 - INFO - Get:42 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+2026-11-10 11:03:46,760 - INFO - Get:43 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+2026-11-10 11:03:46,962 - INFO - Get:44 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+2026-11-10 11:03:47,413 - INFO - Get:45 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+2026-11-10 11:03:47,419 - INFO - Get:46 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+2026-11-10 11:03:47,421 - INFO - Get:47 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+2026-11-10 11:03:47,424 - INFO - Get:48 http://deb.debian.org/debian trixie/main amd64 libstdc++-14-dev amd64 14.2.0-19 [2376 kB]
+2026-11-10 11:03:47,549 - INFO - Get:49 http://deb.debian.org/debian trixie/main amd64 g++-14-x86-64-linux-gnu amd64 14.2.0-19 [12.1 MB]
+2026-11-10 11:03:47,894 - INFO - Get:50 http://deb.debian.org/debian trixie/main amd64 g++-14 amd64 14.2.0-19 [22.5 kB]
+2026-11-10 11:03:47,895 - INFO - Get:51 http://deb.debian.org/debian trixie/main amd64 g++-x86-64-linux-gnu amd64 4:14.2.0-1 [1200 B]
+2026-11-10 11:03:47,895 - INFO - Get:52 http://deb.debian.org/debian trixie/main amd64 g++ amd64 4:14.2.0-1 [1344 B]
+2026-11-10 11:03:47,895 - INFO - Get:53 http://deb.debian.org/debian trixie/main amd64 make amd64 4.4.1-2 [463 kB]
+2026-11-10 11:03:47,913 - INFO - Get:54 http://deb.debian.org/debian trixie/main amd64 libdpkg-perl all 1.22.22 [651 kB]
+2026-11-10 11:03:47,918 - INFO - Get:55 http://deb.debian.org/debian trixie/main amd64 patch amd64 2.8-2 [134 kB]
+2026-11-10 11:03:48,000 - INFO - Get:56 http://deb.debian.org/debian trixie/main amd64 dpkg-dev all 1.22.22 [1337 kB]
+2026-11-10 11:03:48,025 - INFO - Get:57 http://deb.debian.org/debian trixie/main amd64 build-essential amd64 12.12 [4624 B]
+2026-11-10 11:03:48,028 - INFO - Get:58 http://deb.debian.org/debian-security trixie-security/main amd64 libbrotli1 amd64 1.1.0-2+deb13u1 [304 kB]
+2026-11-10 11:03:48,042 - INFO - Get:59 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5+deb13u1 [33.1 kB]
+2026-11-10 11:03:48,045 - INFO - Get:60 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b12 [25.0 kB]
+2026-11-10 11:03:48,047 - INFO - Get:61 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5+deb13u1 [81.2 kB]
+2026-11-10 11:03:48,063 - INFO - Get:62 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+2026-11-10 11:03:48,071 - INFO - Get:63 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5+deb13u1 [326 kB]
+2026-11-10 11:03:48,084 - INFO - Get:64 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5+deb13u1 [138 kB]
+2026-11-10 11:03:48,091 - INFO - Get:65 http://deb.debian.org/debian trixie/main amd64 libunistring5 amd64 1.3-2 [477 kB]
+2026-11-10 11:03:48,099 - INFO - Get:66 http://deb.debian.org/debian trixie/main amd64 libidn2-0 amd64 2.3.8-2 [109 kB]
+2026-11-10 11:03:48,102 - INFO - Get:67 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-9 [19.8 kB]
+2026-11-10 11:03:48,108 - INFO - Get:68 http://deb.debian.org/debian trixie/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-9 [57.5 kB]
+2026-11-10 11:03:48,113 - INFO - Get:69 http://deb.debian.org/debian trixie/main amd64 libldap2 amd64 2.6.10+dfsg-1 [194 kB]
+2026-11-10 11:03:48,121 - INFO - Get:70 http://deb.debian.org/debian trixie/main amd64 libnghttp2-14 amd64 1.64.0-1.1+deb13u1 [76.2 kB]
+2026-11-10 11:03:48,124 - INFO - Get:71 http://deb.debian.org/debian trixie/main amd64 libnghttp3-9 amd64 1.8.0-1 [67.7 kB]
+2026-11-10 11:03:48,132 - INFO - Get:72 http://deb.debian.org/debian trixie/main amd64 libpsl5t64 amd64 0.21.2-1.1+b1 [57.2 kB]
+2026-11-10 11:03:48,141 - INFO - Get:73 http://deb.debian.org/debian trixie/main amd64 libp11-kit0 amd64 0.25.5-3 [425 kB]
+2026-11-10 11:03:48,150 - INFO - Get:74 http://deb.debian.org/debian trixie/main amd64 libtasn1-6 amd64 4.20.0-2+deb13u1 [50.1 kB]
+2026-11-10 11:03:48,155 - INFO - Get:75 http://deb.debian.org/debian trixie/main amd64 libgnutls30t64 amd64 3.8.9-3+deb13u4 [1469 kB]
+2026-11-10 11:03:48,196 - INFO - Get:76 http://deb.debian.org/debian trixie/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b5 [58.8 kB]
+2026-11-10 11:03:48,204 - INFO - Get:77 http://deb.debian.org/debian trixie/main amd64 libssh2-1t64 amd64 1.11.1-1+deb13u2 [245 kB]
+2026-11-10 11:03:48,214 - INFO - Get:78 http://deb.debian.org/debian-security trixie-security/main amd64 libcurl4t64 amd64 8.14.1-2+deb13u7 [392 kB]
+2026-11-10 11:03:48,218 - INFO - Get:79 http://deb.debian.org/debian-security trixie-security/main amd64 curl amd64 8.14.1-2+deb13u7 [270 kB]
+2026-11-10 11:03:48,220 - INFO - Get:80 http://deb.debian.org/debian trixie/main amd64 libngtcp2-16 amd64 1.11.0-1+deb13u1 [132 kB]
+2026-11-10 11:03:48,222 - INFO - Get:81 http://deb.debian.org/debian trixie/main amd64 libngtcp2-crypto-gnutls8 amd64 1.11.0-1+deb13u1 [29.5 kB]
+2026-11-10 11:03:48,227 - INFO - Get:82 http://deb.debian.org/debian-security trixie-security/main amd64 libcurl3t64-gnutls amd64 8.14.1-2+deb13u7 [385 kB]
+2026-11-10 11:03:48,237 - INFO - Get:83 http://deb.debian.org/debian trixie/main amd64 liberror-perl all 0.17030-1 [26.9 kB]
+2026-11-10 11:03:48,239 - INFO - Get:84 http://deb.debian.org/debian trixie/main amd64 git-man all 1:2.47.3-0+deb13u1 [2205 kB]
+2026-11-10 11:03:48,291 - INFO - Get:85 http://deb.debian.org/debian trixie/main amd64 git amd64 1:2.47.3-0+deb13u1 [8862 kB]
+2026-11-10 11:03:57,302 - INFO - Preconfiguring packages ...
+2026-11-10 11:04:02,326 - INFO - Fetched 104 MB in 4s (25.3 MB/s)
+2026-11-10 11:04:03,472 - INFO - Selecting previously unselected package libexpat1:amd64.
+2026-11-10 11:04:03,478 - INFO - (Reading database ... 
+2026-11-10 11:04:03,491 - INFO - (Reading database ... 5%
+2026-11-10 11:04:03,491 - INFO - (Reading database ... 10%
+2026-11-10 11:04:03,491 - INFO - (Reading database ... 15%
+2026-11-10 11:04:03,508 - INFO - (Reading database ... 20%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 25%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 30%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 35%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 40%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 45%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 50%
+2026-11-10 11:04:03,512 - INFO - (Reading database ... 55%
+2026-11-10 11:04:03,513 - INFO - (Reading database ... 60%
+2026-11-10 11:04:03,513 - INFO - (Reading database ... 65%
+2026-11-10 11:04:03,513 - INFO - (Reading database ... 70%
+2026-11-10 11:04:03,534 - INFO - (Reading database ... 75%
+2026-11-10 11:04:03,554 - INFO - (Reading database ... 80%
+2026-11-10 11:04:03,571 - INFO - (Reading database ... 85%
+2026-11-10 11:04:03,591 - INFO - (Reading database ... 90%
+2026-11-10 11:04:03,607 - INFO - (Reading database ... 95%
+2026-11-10 11:04:03,624 - INFO - (Reading database ... 100%
+2026-11-10 11:04:03,624 - INFO - (Reading database ... 5660 files and directories currently installed.)
+2026-11-10 11:04:03,625 - INFO - Preparing to unpack .../libexpat1_2.9.0-1~deb13u1_amd64.deb ...
+2026-11-10 11:04:04,187 - INFO - Unpacking libexpat1:amd64 (2.9.0-1~deb13u1) ...
+2026-11-10 11:04:07,264 - INFO - Preparing to unpack .../liblzma5_5.8.1-1+deb13u2_amd64.deb ...
+2026-11-10 11:04:08,207 - INFO - Unpacking liblzma5:amd64 (5.8.1-1+deb13u2) over (5.8.1-1+deb13u1) ...
+2026-11-10 11:04:10,081 - INFO - Setting up liblzma5:amd64 (5.8.1-1+deb13u2) ...
+2026-11-10 11:04:12,474 - INFO - Selecting previously unselected package bzip2.
+2026-11-10 11:04:12,474 - INFO - (Reading database ... 
+2026-11-10 11:04:12,482 - INFO - (Reading database ... 5%
+2026-11-10 11:04:12,483 - INFO - (Reading database ... 10%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 15%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 20%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 25%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 30%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 35%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 40%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 45%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 50%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 55%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 60%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 65%
+2026-11-10 11:04:12,487 - INFO - (Reading database ... 70%
+2026-11-10 11:04:12,507 - INFO - (Reading database ... 75%
+2026-11-10 11:04:12,507 - INFO - (Reading database ... 80%
+2026-11-10 11:04:12,515 - INFO - (Reading database ... 85%
+2026-11-10 11:04:12,515 - INFO - (Reading database ... 90%
+2026-11-10 11:04:12,521 - INFO - (Reading database ... 95%
+2026-11-10 11:04:12,521 - INFO - (Reading database ... 100%
+2026-11-10 11:04:12,521 - INFO - (Reading database ... 5669 files and directories currently installed.)
+2026-11-10 11:04:12,524 - INFO - Preparing to unpack .../00-bzip2_1.0.8-6_amd64.deb ...
+2026-11-10 11:04:12,742 - INFO - Unpacking bzip2 (1.0.8-6) ...
+2026-11-10 11:04:14,070 - INFO - Preparing to unpack .../01-ca-certificates_20250419+deb13u1_all.deb ...
+2026-11-10 11:04:14,445 - INFO - Unpacking ca-certificates (20250419+deb13u1) over (20250419) ...
+2026-11-10 11:04:45,540 - INFO - Selecting previously unselected package libc-l10n.
+2026-11-10 11:04:45,541 - INFO - Preparing to unpack .../02-libc-l10n_2.41-12+deb13u4_all.deb ...
+2026-11-10 11:04:45,697 - INFO - Unpacking libc-l10n (2.41-12+deb13u4) ...
+2026-11-10 11:04:49,190 - INFO - Selecting previously unselected package locales.
+2026-11-10 11:04:49,190 - INFO - Preparing to unpack .../03-locales_2.41-12+deb13u4_all.deb ...
+2026-11-10 11:04:49,230 - INFO - Unpacking locales (2.41-12+deb13u4) ...
+2026-11-10 11:04:51,643 - INFO - Selecting previously unselected package perl-modules-5.40.
+2026-11-10 11:04:51,645 - INFO - Preparing to unpack .../04-perl-modules-5.40_5.40.1-6+deb13u1_all.deb ...
+2026-11-10 11:04:51,924 - INFO - Unpacking perl-modules-5.40 (5.40.1-6+deb13u1) ...
+2026-11-10 11:04:54,812 - INFO - Selecting previously unselected package libgdbm-compat4t64:amd64.
+2026-11-10 11:04:54,816 - INFO - Preparing to unpack .../05-libgdbm-compat4t64_1.24-2_amd64.deb ...
+2026-11-10 11:04:55,204 - INFO - Unpacking libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-11-10 11:04:57,404 - INFO - Selecting previously unselected package libperl5.40:amd64.
+2026-11-10 11:04:57,405 - INFO - Preparing to unpack .../06-libperl5.40_5.40.1-6+deb13u1_amd64.deb ...
+2026-11-10 11:04:57,565 - INFO - Unpacking libperl5.40:amd64 (5.40.1-6+deb13u1) ...
+2026-11-10 11:05:00,358 - INFO - Selecting previously unselected package perl.
+2026-11-10 11:05:00,368 - INFO - Preparing to unpack .../07-perl_5.40.1-6+deb13u1_amd64.deb ...
+2026-11-10 11:05:00,683 - INFO - Unpacking perl (5.40.1-6+deb13u1) ...
+2026-11-10 11:05:03,335 - INFO - Selecting previously unselected package xz-utils.
+2026-11-10 11:05:03,338 - INFO - Preparing to unpack .../08-xz-utils_5.8.1-1+deb13u2_amd64.deb ...
+2026-11-10 11:05:03,983 - INFO - Unpacking xz-utils (5.8.1-1+deb13u2) ...
+2026-11-10 11:05:07,178 - INFO - Selecting previously unselected package libsframe1:amd64.
+2026-11-10 11:05:07,180 - INFO - Preparing to unpack .../09-libsframe1_2.44-3_amd64.deb ...
+2026-11-10 11:05:07,718 - INFO - Unpacking libsframe1:amd64 (2.44-3) ...
+2026-11-10 11:05:09,816 - INFO - Selecting previously unselected package binutils-common:amd64.
+2026-11-10 11:05:09,822 - INFO - Preparing to unpack .../10-binutils-common_2.44-3_amd64.deb ...
+2026-11-10 11:05:10,312 - INFO - Unpacking binutils-common:amd64 (2.44-3) ...
+2026-11-10 11:05:12,071 - INFO - Selecting previously unselected package libbinutils:amd64.
+2026-11-10 11:05:12,126 - INFO - Preparing to unpack .../11-libbinutils_2.44-3_amd64.deb ...
+2026-11-10 11:05:12,403 - INFO - Unpacking libbinutils:amd64 (2.44-3) ...
+2026-11-10 11:05:14,086 - INFO - Selecting previously unselected package libgprofng0:amd64.
+2026-11-10 11:05:14,102 - INFO - Preparing to unpack .../12-libgprofng0_2.44-3_amd64.deb ...
+2026-11-10 11:05:14,335 - INFO - Unpacking libgprofng0:amd64 (2.44-3) ...
+2026-11-10 11:05:16,347 - INFO - Selecting previously unselected package libctf-nobfd0:amd64.
+2026-11-10 11:05:16,350 - INFO - Preparing to unpack .../13-libctf-nobfd0_2.44-3_amd64.deb ...
+2026-11-10 11:05:16,709 - INFO - Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+2026-11-10 11:05:19,786 - INFO - Selecting previously unselected package libctf0:amd64.
+2026-11-10 11:05:19,788 - INFO - Preparing to unpack .../14-libctf0_2.44-3_amd64.deb ...
+2026-11-10 11:05:20,235 - INFO - Unpacking libctf0:amd64 (2.44-3) ...
+2026-11-10 11:05:23,303 - INFO - Selecting previously unselected package libjansson4:amd64.
+2026-11-10 11:05:23,307 - INFO - Preparing to unpack .../15-libjansson4_2.14-2+b3_amd64.deb ...
+2026-11-10 11:05:24,027 - INFO - Unpacking libjansson4:amd64 (2.14-2+b3) ...
+2026-11-10 11:05:27,361 - INFO - Selecting previously unselected package binutils-x86-64-linux-gnu.
+2026-11-10 11:05:27,367 - INFO - Preparing to unpack .../16-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+2026-11-10 11:05:28,029 - INFO - Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+2026-11-10 11:05:31,391 - INFO - Selecting previously unselected package binutils.
+2026-11-10 11:05:31,402 - INFO - Preparing to unpack .../17-binutils_2.44-3_amd64.deb ...
+2026-11-10 11:05:32,161 - INFO - Unpacking binutils (2.44-3) ...
+2026-11-10 11:05:33,396 - INFO - Selecting previously unselected package libc-dev-bin.
+2026-11-10 11:05:33,396 - INFO - Preparing to unpack .../18-libc-dev-bin_2.41-12+deb13u4_amd64.deb ...
+2026-11-10 11:05:33,501 - INFO - Unpacking libc-dev-bin (2.41-12+deb13u4) ...
+2026-11-10 11:05:34,602 - INFO - Selecting previously unselected package linux-libc-dev.
+2026-11-10 11:05:34,645 - INFO - Preparing to unpack .../19-linux-libc-dev_6.12.116-1_all.deb ...
+2026-11-10 11:05:34,981 - INFO - Unpacking linux-libc-dev (6.12.116-1) ...
+2026-11-10 11:05:38,496 - INFO - Selecting previously unselected package libcrypt-dev:amd64.
+2026-11-10 11:05:38,496 - INFO - Preparing to unpack .../20-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+2026-11-10 11:05:38,809 - INFO - Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-11-10 11:05:41,420 - INFO - Selecting previously unselected package rpcsvc-proto.
+2026-11-10 11:05:41,421 - INFO - Preparing to unpack .../21-rpcsvc-proto_1.4.3-1_amd64.deb ...
+2026-11-10 11:05:42,042 - INFO - Unpacking rpcsvc-proto (1.4.3-1) ...
+2026-11-10 11:05:45,064 - INFO - Selecting previously unselected package libc6-dev:amd64.
+2026-11-10 11:05:45,200 - INFO - Preparing to unpack .../22-libc6-dev_2.41-12+deb13u4_amd64.deb ...
+2026-11-10 11:05:45,836 - INFO - Unpacking libc6-dev:amd64 (2.41-12+deb13u4) ...
+2026-11-10 11:05:50,626 - INFO - Selecting previously unselected package libisl23:amd64.
+2026-11-10 11:05:50,626 - INFO - Preparing to unpack .../23-libisl23_0.27-1_amd64.deb ...
+2026-11-10 11:05:51,193 - INFO - Unpacking libisl23:amd64 (0.27-1) ...
+2026-11-10 11:05:56,636 - INFO - Selecting previously unselected package libmpfr6:amd64.
+2026-11-10 11:05:56,636 - INFO - Preparing to unpack .../24-libmpfr6_4.2.2-1_amd64.deb ...
+2026-11-10 11:05:57,505 - INFO - Unpacking libmpfr6:amd64 (4.2.2-1) ...
+2026-11-10 11:05:58,447 - INFO - Selecting previously unselected package libmpc3:amd64.
+2026-11-10 11:05:58,447 - INFO - Preparing to unpack .../25-libmpc3_1.3.1-1+b3_amd64.deb ...
+2026-11-10 11:05:58,596 - INFO - Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+2026-11-10 11:05:59,650 - INFO - Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+2026-11-10 11:05:59,656 - INFO - Preparing to unpack .../26-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:00,019 - INFO - Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:06:04,304 - INFO - Selecting previously unselected package cpp-14.
+2026-11-10 11:06:04,321 - INFO - Preparing to unpack .../27-cpp-14_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:05,129 - INFO - Unpacking cpp-14 (14.2.0-19) ...
+2026-11-10 11:06:07,968 - INFO - Selecting previously unselected package cpp-x86-64-linux-gnu.
+2026-11-10 11:06:07,970 - INFO - Preparing to unpack .../28-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:06:08,189 - INFO - Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:06:11,891 - INFO - Selecting previously unselected package cpp.
+2026-11-10 11:06:11,897 - INFO - Preparing to unpack .../29-cpp_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:06:11,986 - INFO - Unpacking cpp (4:14.2.0-1) ...
+2026-11-10 11:06:12,604 - INFO - Selecting previously unselected package libcc1-0:amd64.
+2026-11-10 11:06:12,613 - INFO - Preparing to unpack .../30-libcc1-0_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:12,672 - INFO - Unpacking libcc1-0:amd64 (14.2.0-19) ...
+2026-11-10 11:06:13,803 - INFO - Selecting previously unselected package libgomp1:amd64.
+2026-11-10 11:06:13,815 - INFO - Preparing to unpack .../31-libgomp1_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:14,056 - INFO - Unpacking libgomp1:amd64 (14.2.0-19) ...
+2026-11-10 11:06:17,302 - INFO - Selecting previously unselected package libitm1:amd64.
+2026-11-10 11:06:17,302 - INFO - Preparing to unpack .../32-libitm1_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:17,650 - INFO - Unpacking libitm1:amd64 (14.2.0-19) ...
+2026-11-10 11:06:21,297 - INFO - Selecting previously unselected package libatomic1:amd64.
+2026-11-10 11:06:21,301 - INFO - Preparing to unpack .../33-libatomic1_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:21,877 - INFO - Unpacking libatomic1:amd64 (14.2.0-19) ...
+2026-11-10 11:06:24,097 - INFO - Selecting previously unselected package libasan8:amd64.
+2026-11-10 11:06:24,104 - INFO - Preparing to unpack .../34-libasan8_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:24,841 - INFO - Unpacking libasan8:amd64 (14.2.0-19) ...
+2026-11-10 11:06:29,782 - INFO - Selecting previously unselected package liblsan0:amd64.
+2026-11-10 11:06:29,782 - INFO - Preparing to unpack .../35-liblsan0_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:30,501 - INFO - Unpacking liblsan0:amd64 (14.2.0-19) ...
+2026-11-10 11:06:32,703 - INFO - Selecting previously unselected package libtsan2:amd64.
+2026-11-10 11:06:32,711 - INFO - Preparing to unpack .../36-libtsan2_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:32,966 - INFO - Unpacking libtsan2:amd64 (14.2.0-19) ...
+2026-11-10 11:06:35,036 - INFO - Selecting previously unselected package libubsan1:amd64.
+2026-11-10 11:06:35,099 - INFO - Preparing to unpack .../37-libubsan1_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:35,406 - INFO - Unpacking libubsan1:amd64 (14.2.0-19) ...
+2026-11-10 11:06:37,491 - INFO - Selecting previously unselected package libhwasan0:amd64.
+2026-11-10 11:06:37,495 - INFO - Preparing to unpack .../38-libhwasan0_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:37,854 - INFO - Unpacking libhwasan0:amd64 (14.2.0-19) ...
+2026-11-10 11:06:40,912 - INFO - Selecting previously unselected package libquadmath0:amd64.
+2026-11-10 11:06:40,912 - INFO - Preparing to unpack .../39-libquadmath0_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:41,185 - INFO - Unpacking libquadmath0:amd64 (14.2.0-19) ...
+2026-11-10 11:06:43,377 - INFO - Selecting previously unselected package libgcc-14-dev:amd64.
+2026-11-10 11:06:43,382 - INFO - Preparing to unpack .../40-libgcc-14-dev_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:43,425 - INFO - Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-11-10 11:06:45,312 - INFO - Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+2026-11-10 11:06:45,320 - INFO - Preparing to unpack .../41-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:45,499 - INFO - Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:06:49,005 - INFO - Selecting previously unselected package gcc-14.
+2026-11-10 11:06:49,008 - INFO - Preparing to unpack .../42-gcc-14_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:49,331 - INFO - Unpacking gcc-14 (14.2.0-19) ...
+2026-11-10 11:06:51,276 - INFO - Selecting previously unselected package gcc-x86-64-linux-gnu.
+2026-11-10 11:06:51,278 - INFO - Preparing to unpack .../43-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:06:51,885 - INFO - Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:06:54,642 - INFO - Selecting previously unselected package gcc.
+2026-11-10 11:06:54,644 - INFO - Preparing to unpack .../44-gcc_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:06:55,299 - INFO - Unpacking gcc (4:14.2.0-1) ...
+2026-11-10 11:06:58,952 - INFO - Selecting previously unselected package libstdc++-14-dev:amd64.
+2026-11-10 11:06:58,953 - INFO - Preparing to unpack .../45-libstdc++-14-dev_14.2.0-19_amd64.deb ...
+2026-11-10 11:06:59,430 - INFO - Unpacking libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-11-10 11:07:03,878 - INFO - Selecting previously unselected package g++-14-x86-64-linux-gnu.
+2026-11-10 11:07:03,881 - INFO - Preparing to unpack .../46-g++-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-11-10 11:07:04,813 - INFO - Unpacking g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:07:07,410 - INFO - Selecting previously unselected package g++-14.
+2026-11-10 11:07:07,459 - INFO - Preparing to unpack .../47-g++-14_14.2.0-19_amd64.deb ...
+2026-11-10 11:07:07,553 - INFO - Unpacking g++-14 (14.2.0-19) ...
+2026-11-10 11:07:09,823 - INFO - Selecting previously unselected package g++-x86-64-linux-gnu.
+2026-11-10 11:07:09,828 - INFO - Preparing to unpack .../48-g++-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:07:10,105 - INFO - Unpacking g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:07:14,427 - INFO - Selecting previously unselected package g++.
+2026-11-10 11:07:14,449 - INFO - Preparing to unpack .../49-g++_4%3a14.2.0-1_amd64.deb ...
+2026-11-10 11:07:15,289 - INFO - Unpacking g++ (4:14.2.0-1) ...
+2026-11-10 11:07:18,373 - INFO - Selecting previously unselected package make.
+2026-11-10 11:07:18,384 - INFO - Preparing to unpack .../50-make_4.4.1-2_amd64.deb ...
+2026-11-10 11:07:19,324 - INFO - Unpacking make (4.4.1-2) ...
+2026-11-10 11:07:22,270 - INFO - Selecting previously unselected package libdpkg-perl.
+2026-11-10 11:07:22,273 - INFO - Preparing to unpack .../51-libdpkg-perl_1.22.22_all.deb ...
+2026-11-10 11:07:22,864 - INFO - Unpacking libdpkg-perl (1.22.22) ...
+2026-11-10 11:07:24,224 - INFO - Selecting previously unselected package patch.
+2026-11-10 11:07:24,228 - INFO - Preparing to unpack .../52-patch_2.8-2_amd64.deb ...
+2026-11-10 11:07:24,525 - INFO - Unpacking patch (2.8-2) ...
+2026-11-10 11:07:26,131 - INFO - Selecting previously unselected package dpkg-dev.
+2026-11-10 11:07:26,134 - INFO - Preparing to unpack .../53-dpkg-dev_1.22.22_all.deb ...
+2026-11-10 11:07:26,543 - INFO - Unpacking dpkg-dev (1.22.22) ...
+2026-11-10 11:07:29,038 - INFO - Selecting previously unselected package build-essential.
+2026-11-10 11:07:29,040 - INFO - Preparing to unpack .../54-build-essential_12.12_amd64.deb ...
+2026-11-10 11:07:29,545 - INFO - Unpacking build-essential (12.12) ...
+2026-11-10 11:07:32,657 - INFO - Selecting previously unselected package libbrotli1:amd64.
+2026-11-10 11:07:32,660 - INFO - Preparing to unpack .../55-libbrotli1_1.1.0-2+deb13u1_amd64.deb ...
+2026-11-10 11:07:33,094 - INFO - Unpacking libbrotli1:amd64 (1.1.0-2+deb13u1) ...
+2026-11-10 11:07:35,747 - INFO - Selecting previously unselected package libkrb5support0:amd64.
+2026-11-10 11:07:35,749 - INFO - Preparing to unpack .../56-libkrb5support0_1.21.3-5+deb13u1_amd64.deb ...
+2026-11-10 11:07:38,461 - INFO - Unpacking libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:07:42,909 - INFO - Selecting previously unselected package libcom-err2:amd64.
+2026-11-10 11:07:42,911 - INFO - Preparing to unpack .../57-libcom-err2_1.47.2-3+b12_amd64.deb ...
+2026-11-10 11:07:43,548 - INFO - Unpacking libcom-err2:amd64 (1.47.2-3+b12) ...
+2026-11-10 11:07:48,775 - INFO - Selecting previously unselected package libk5crypto3:amd64.
+2026-11-10 11:07:48,931 - INFO - Preparing to unpack .../58-libk5crypto3_1.21.3-5+deb13u1_amd64.deb ...
+2026-11-10 11:07:49,851 - INFO - Unpacking libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:07:51,136 - INFO - Selecting previously unselected package libkeyutils1:amd64.
+2026-11-10 11:07:51,138 - INFO - Preparing to unpack .../59-libkeyutils1_1.6.3-6_amd64.deb ...
+2026-11-10 11:07:51,288 - INFO - Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+2026-11-10 11:07:52,238 - INFO - Selecting previously unselected package libkrb5-3:amd64.
+2026-11-10 11:07:52,240 - INFO - Preparing to unpack .../60-libkrb5-3_1.21.3-5+deb13u1_amd64.deb ...
+2026-11-10 11:07:52,444 - INFO - Unpacking libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:07:54,469 - INFO - Selecting previously unselected package libgssapi-krb5-2:amd64.
+2026-11-10 11:07:54,472 - INFO - Preparing to unpack .../61-libgssapi-krb5-2_1.21.3-5+deb13u1_amd64.deb ...
+2026-11-10 11:07:54,761 - INFO - Unpacking libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:07:57,424 - INFO - Selecting previously unselected package libunistring5:amd64.
+2026-11-10 11:07:57,425 - INFO - Preparing to unpack .../62-libunistring5_1.3-2_amd64.deb ...
+2026-11-10 11:07:57,670 - INFO - Unpacking libunistring5:amd64 (1.3-2) ...
+2026-11-10 11:08:00,002 - INFO - Selecting previously unselected package libidn2-0:amd64.
+2026-11-10 11:08:00,006 - INFO - Preparing to unpack .../63-libidn2-0_2.3.8-2_amd64.deb ...
+2026-11-10 11:08:00,244 - INFO - Unpacking libidn2-0:amd64 (2.3.8-2) ...
+2026-11-10 11:08:04,738 - INFO - Selecting previously unselected package libsasl2-modules-db:amd64.
+2026-11-10 11:08:04,742 - INFO - Preparing to unpack .../64-libsasl2-modules-db_2.1.28+dfsg1-9_amd64.deb ...
+2026-11-10 11:08:05,463 - INFO - Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+2026-11-10 11:08:07,777 - INFO - Selecting previously unselected package libsasl2-2:amd64.
+2026-11-10 11:08:07,781 - INFO - Preparing to unpack .../65-libsasl2-2_2.1.28+dfsg1-9_amd64.deb ...
+2026-11-10 11:08:08,275 - INFO - Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+2026-11-10 11:08:11,322 - INFO - Selecting previously unselected package libldap2:amd64.
+2026-11-10 11:08:11,325 - INFO - Preparing to unpack .../66-libldap2_2.6.10+dfsg-1_amd64.deb ...
+2026-11-10 11:08:11,784 - INFO - Unpacking libldap2:amd64 (2.6.10+dfsg-1) ...
+2026-11-10 11:08:14,835 - INFO - Selecting previously unselected package libnghttp2-14:amd64.
+2026-11-10 11:08:14,842 - INFO - Preparing to unpack .../67-libnghttp2-14_1.64.0-1.1+deb13u1_amd64.deb ...
+2026-11-10 11:08:15,305 - INFO - Unpacking libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+2026-11-10 11:08:18,010 - INFO - Selecting previously unselected package libnghttp3-9:amd64.
+2026-11-10 11:08:18,010 - INFO - Preparing to unpack .../68-libnghttp3-9_1.8.0-1_amd64.deb ...
+2026-11-10 11:08:18,695 - INFO - Unpacking libnghttp3-9:amd64 (1.8.0-1) ...
+2026-11-10 11:08:21,292 - INFO - Selecting previously unselected package libpsl5t64:amd64.
+2026-11-10 11:08:21,377 - INFO - Preparing to unpack .../69-libpsl5t64_0.21.2-1.1+b1_amd64.deb ...
+2026-11-10 11:08:21,754 - INFO - Unpacking libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+2026-11-10 11:08:24,258 - INFO - Selecting previously unselected package libp11-kit0:amd64.
+2026-11-10 11:08:24,262 - INFO - Preparing to unpack .../70-libp11-kit0_0.25.5-3_amd64.deb ...
+2026-11-10 11:08:24,615 - INFO - Unpacking libp11-kit0:amd64 (0.25.5-3) ...
+2026-11-10 11:08:28,356 - INFO - Selecting previously unselected package libtasn1-6:amd64.
+2026-11-10 11:08:28,357 - INFO - Preparing to unpack .../71-libtasn1-6_4.20.0-2+deb13u1_amd64.deb ...
+2026-11-10 11:08:28,699 - INFO - Unpacking libtasn1-6:amd64 (4.20.0-2+deb13u1) ...
+2026-11-10 11:08:30,913 - INFO - Selecting previously unselected package libgnutls30t64:amd64.
+2026-11-10 11:08:30,915 - INFO - Preparing to unpack .../72-libgnutls30t64_3.8.9-3+deb13u4_amd64.deb ...
+2026-11-10 11:08:31,267 - INFO - Unpacking libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+2026-11-10 11:08:32,921 - INFO - Selecting previously unselected package librtmp1:amd64.
+2026-11-10 11:08:32,921 - INFO - Preparing to unpack .../73-librtmp1_2.4+20151223.gitfa8646d.1-2+b5_amd64.deb ...
+2026-11-10 11:08:33,077 - INFO - Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+2026-11-10 11:08:34,016 - INFO - Selecting previously unselected package libssh2-1t64:amd64.
+2026-11-10 11:08:34,017 - INFO - Preparing to unpack .../74-libssh2-1t64_1.11.1-1+deb13u2_amd64.deb ...
+2026-11-10 11:08:34,332 - INFO - Unpacking libssh2-1t64:amd64 (1.11.1-1+deb13u2) ...
+2026-11-10 11:08:36,957 - INFO - Selecting previously unselected package libcurl4t64:amd64.
+2026-11-10 11:08:36,960 - INFO - Preparing to unpack .../75-libcurl4t64_8.14.1-2+deb13u7_amd64.deb ...
+2026-11-10 11:08:37,417 - INFO - Unpacking libcurl4t64:amd64 (8.14.1-2+deb13u7) ...
+2026-11-10 11:08:39,470 - INFO - Selecting previously unselected package curl.
+2026-11-10 11:08:39,471 - INFO - Preparing to unpack .../76-curl_8.14.1-2+deb13u7_amd64.deb ...
+2026-11-10 11:08:39,636 - INFO - Unpacking curl (8.14.1-2+deb13u7) ...
+2026-11-10 11:08:41,779 - INFO - Selecting previously unselected package libngtcp2-16:amd64.
+2026-11-10 11:08:41,783 - INFO - Preparing to unpack .../77-libngtcp2-16_1.11.0-1+deb13u1_amd64.deb ...
+2026-11-10 11:08:42,303 - INFO - Unpacking libngtcp2-16:amd64 (1.11.0-1+deb13u1) ...
+2026-11-10 11:08:45,145 - INFO - Selecting previously unselected package libngtcp2-crypto-gnutls8:amd64.
+2026-11-10 11:08:45,150 - INFO - Preparing to unpack .../78-libngtcp2-crypto-gnutls8_1.11.0-1+deb13u1_amd64.deb ...
+2026-11-10 11:08:45,501 - INFO - Unpacking libngtcp2-crypto-gnutls8:amd64 (1.11.0-1+deb13u1) ...
+2026-11-10 11:08:47,427 - INFO - Selecting previously unselected package libcurl3t64-gnutls:amd64.
+2026-11-10 11:08:47,434 - INFO - Preparing to unpack .../79-libcurl3t64-gnutls_8.14.1-2+deb13u7_amd64.deb ...
+2026-11-10 11:08:47,467 - INFO - Unpacking libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u7) ...
+2026-11-10 11:08:49,301 - INFO - Selecting previously unselected package liberror-perl.
+2026-11-10 11:08:49,301 - INFO - Preparing to unpack .../80-liberror-perl_0.17030-1_all.deb ...
+2026-11-10 11:08:49,509 - INFO - Unpacking liberror-perl (0.17030-1) ...
+2026-11-10 11:08:51,179 - INFO - Selecting previously unselected package git-man.
+2026-11-10 11:08:51,180 - INFO - Preparing to unpack .../81-git-man_1%3a2.47.3-0+deb13u1_all.deb ...
+2026-11-10 11:08:51,355 - INFO - Unpacking git-man (1:2.47.3-0+deb13u1) ...
+2026-11-10 11:08:53,435 - INFO - Selecting previously unselected package git.
+2026-11-10 11:08:53,438 - INFO - Preparing to unpack .../82-git_1%3a2.47.3-0+deb13u1_amd64.deb ...
+2026-11-10 11:08:53,624 - INFO - Unpacking git (1:2.47.3-0+deb13u1) ...
+2026-11-10 11:08:57,838 - INFO - Setting up libexpat1:amd64 (2.9.0-1~deb13u1) ...
+2026-11-10 11:08:59,501 - INFO - Setting up libkeyutils1:amd64 (1.6.3-6) ...
+2026-11-10 11:09:00,354 - INFO - Setting up libc-l10n (2.41-12+deb13u4) ...
+2026-11-10 11:09:01,273 - INFO - Setting up libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-11-10 11:09:02,506 - INFO - Setting up libbrotli1:amd64 (1.1.0-2+deb13u1) ...
+2026-11-10 11:09:03,213 - INFO - Setting up binutils-common:amd64 (2.44-3) ...
+2026-11-10 11:09:04,087 - INFO - Setting up libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+2026-11-10 11:09:04,296 - INFO - Setting up linux-libc-dev (6.12.116-1) ...
+2026-11-10 11:09:05,399 - INFO - Setting up libctf-nobfd0:amd64 (2.44-3) ...
+2026-11-10 11:09:07,097 - INFO - Setting up libcom-err2:amd64 (1.47.2-3+b12) ...
+2026-11-10 11:09:08,047 - INFO - Setting up libgomp1:amd64 (14.2.0-19) ...
+2026-11-10 11:09:09,799 - INFO - Setting up bzip2 (1.0.8-6) ...
+2026-11-10 11:09:11,372 - INFO - Setting up locales (2.41-12+deb13u4) ...
+2026-11-10 11:09:14,397 - INFO - Generating locales (this might take a while)...
+2026-11-10 11:09:14,412 - INFO - Generation complete.
+2026-11-10 11:09:15,400 - INFO - Setting up libsframe1:amd64 (2.44-3) ...
+2026-11-10 11:09:15,930 - INFO - Setting up libjansson4:amd64 (2.14-2+b3) ...
+2026-11-10 11:09:16,560 - INFO - Setting up libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:09:17,260 - INFO - Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+2026-11-10 11:09:17,854 - INFO - Setting up ca-certificates (20250419+deb13u1) ...
+2026-11-10 11:09:22,795 - INFO - Updating certificates in /etc/ssl/certs...
+2026-11-10 11:09:25,340 - INFO - rehash: warning: skipping ca-certificates.crt, it does not contain exactly one certificate or CRL
+2026-11-10 11:09:25,350 - INFO - 0 added, 2 removed; done.
+2026-11-10 11:09:26,513 - INFO - Setting up rpcsvc-proto (1.4.3-1) ...
+2026-11-10 11:09:27,498 - INFO - Setting up make (4.4.1-2) ...
+2026-11-10 11:09:28,392 - INFO - Setting up libmpfr6:amd64 (4.2.2-1) ...
+2026-11-10 11:09:29,123 - INFO - Setting up xz-utils (5.8.1-1+deb13u2) ...
+2026-11-10 11:09:29,922 - INFO - update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+2026-11-10 11:09:29,922 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,922 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,922 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,922 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,922 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,923 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,924 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,927 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,927 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:29,928 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+2026-11-10 11:09:30,410 - INFO - Setting up libquadmath0:amd64 (14.2.0-19) ...
+2026-11-10 11:09:31,413 - INFO - Setting up libp11-kit0:amd64 (0.25.5-3) ...
+2026-11-10 11:09:32,402 - INFO - Setting up libunistring5:amd64 (1.3-2) ...
+2026-11-10 11:09:33,328 - INFO - Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+2026-11-10 11:09:34,184 - INFO - Setting up libatomic1:amd64 (14.2.0-19) ...
+2026-11-10 11:09:35,058 - INFO - Setting up patch (2.8-2) ...
+2026-11-10 11:09:36,000 - INFO - Setting up libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:09:36,965 - INFO - Setting up libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+2026-11-10 11:09:37,838 - INFO - Setting up libnghttp3-9:amd64 (1.8.0-1) ...
+2026-11-10 11:09:38,820 - INFO - Setting up libubsan1:amd64 (14.2.0-19) ...
+2026-11-10 11:09:39,858 - INFO - Setting up perl-modules-5.40 (5.40.1-6+deb13u1) ...
+2026-11-10 11:09:41,086 - INFO - Setting up libhwasan0:amd64 (14.2.0-19) ...
+2026-11-10 11:09:42,500 - INFO - Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-11-10 11:09:44,171 - INFO - Setting up libasan8:amd64 (14.2.0-19) ...
+2026-11-10 11:09:45,743 - INFO - Setting up libtasn1-6:amd64 (4.20.0-2+deb13u1) ...
+2026-11-10 11:09:46,990 - INFO - Setting up git-man (1:2.47.3-0+deb13u1) ...
+2026-11-10 11:09:47,193 - INFO - Setting up libngtcp2-16:amd64 (1.11.0-1+deb13u1) ...
+2026-11-10 11:09:48,313 - INFO - Setting up libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:09:49,901 - INFO - Setting up libssh2-1t64:amd64 (1.11.1-1+deb13u2) ...
+2026-11-10 11:09:51,556 - INFO - Setting up libtsan2:amd64 (14.2.0-19) ...
+2026-11-10 11:09:53,094 - INFO - Setting up libbinutils:amd64 (2.44-3) ...
+2026-11-10 11:09:54,620 - INFO - Setting up libisl23:amd64 (0.27-1) ...
+2026-11-10 11:09:56,022 - INFO - Setting up libc-dev-bin (2.41-12+deb13u4) ...
+2026-11-10 11:09:57,331 - INFO - Setting up libcc1-0:amd64 (14.2.0-19) ...
+2026-11-10 11:09:59,524 - INFO - Setting up libldap2:amd64 (2.6.10+dfsg-1) ...
+2026-11-10 11:10:01,564 - INFO - Setting up liblsan0:amd64 (14.2.0-19) ...
+2026-11-10 11:10:02,450 - INFO - Setting up libitm1:amd64 (14.2.0-19) ...
+2026-11-10 11:10:03,433 - INFO - Setting up libctf0:amd64 (2.44-3) ...
+2026-11-10 11:10:04,485 - INFO - Setting up libidn2-0:amd64 (2.3.8-2) ...
+2026-11-10 11:10:05,248 - INFO - Setting up libperl5.40:amd64 (5.40.1-6+deb13u1) ...
+2026-11-10 11:10:05,945 - INFO - Setting up perl (5.40.1-6+deb13u1) ...
+2026-11-10 11:10:06,611 - INFO - Setting up libgprofng0:amd64 (2.44-3) ...
+2026-11-10 11:10:07,088 - INFO - Setting up libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+2026-11-10 11:10:07,627 - INFO - Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:10:08,268 - INFO - Setting up libdpkg-perl (1.22.22) ...
+2026-11-10 11:10:08,762 - INFO - Setting up cpp-14 (14.2.0-19) ...
+2026-11-10 11:10:09,036 - INFO - Setting up libc6-dev:amd64 (2.41-12+deb13u4) ...
+2026-11-10 11:10:10,316 - INFO - Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-11-10 11:10:11,337 - INFO - Setting up libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-11-10 11:10:13,025 - INFO - Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+2026-11-10 11:10:14,106 - INFO - Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:10:15,375 - INFO - Setting up libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+2026-11-10 11:10:16,279 - INFO - Setting up libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+2026-11-10 11:10:17,139 - INFO - Setting up binutils (2.44-3) ...
+2026-11-10 11:10:18,504 - INFO - Setting up dpkg-dev (1.22.22) ...
+2026-11-10 11:10:20,447 - INFO - Setting up liberror-perl (0.17030-1) ...
+2026-11-10 11:10:21,277 - INFO - Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+2026-11-10 11:10:22,685 - INFO - Setting up cpp (4:14.2.0-1) ...
+2026-11-10 11:10:24,117 - INFO - Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:10:25,118 - INFO - Setting up libngtcp2-crypto-gnutls8:amd64 (1.11.0-1+deb13u1) ...
+2026-11-10 11:10:26,161 - INFO - Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:10:27,266 - INFO - Setting up libcurl4t64:amd64 (8.14.1-2+deb13u7) ...
+2026-11-10 11:10:28,794 - INFO - Setting up libcurl3t64-gnutls:amd64 (8.14.1-2+deb13u7) ...
+2026-11-10 11:10:29,431 - INFO - Setting up gcc-14 (14.2.0-19) ...
+2026-11-10 11:10:30,351 - INFO - Setting up git (1:2.47.3-0+deb13u1) ...
+2026-11-10 11:10:31,279 - INFO - Setting up g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-11-10 11:10:32,003 - INFO - Setting up g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-11-10 11:10:32,641 - INFO - Setting up curl (8.14.1-2+deb13u7) ...
+2026-11-10 11:10:33,490 - INFO - Setting up g++-14 (14.2.0-19) ...
+2026-11-10 11:10:34,369 - INFO - Setting up gcc (4:14.2.0-1) ...
+2026-11-10 11:10:36,705 - INFO - Setting up g++ (4:14.2.0-1) ...
+2026-11-10 11:10:37,607 - INFO - update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+2026-11-10 11:10:38,053 - INFO - Setting up build-essential (12.12) ...
+2026-11-10 11:10:38,924 - INFO - Processing triggers for libc-bin (2.41-12+deb13u4) ...
+2026-11-10 11:10:39,954 - INFO - Processing triggers for ca-certificates (20250419+deb13u1) ...
+2026-11-10 11:10:40,172 - INFO - Updating certificates in /etc/ssl/certs...
+2026-11-10 11:10:42,672 - INFO - 0 added, 0 removed; done.
+2026-11-10 11:10:42,673 - INFO - Running hooks in /etc/ca-certificates/update.d...
+2026-11-10 11:10:42,677 - INFO - done.
+2026-11-10 11:11:39,102 - INFO -  ---> Removed intermediate container 722823b4c2ef
+2026-11-10 11:11:39,103 - INFO -  ---> f47b788b9837
+2026-11-10 11:11:39,103 - INFO - Step 5/15 : RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+2026-11-10 11:11:42,546 - INFO -  ---> Running in e6f15f61c1c4
+2026-11-10 11:11:45,581 - INFO - Generating locales (this might take a while)...
+2026-11-10 11:11:46,968 - INFO -   en_US.UTF-8... done
+2026-11-10 11:11:46,979 - INFO - Generation complete.
+2026-11-10 11:12:08,194 - INFO -  ---> Removed intermediate container e6f15f61c1c4
+2026-11-10 11:12:08,194 - INFO -  ---> 060b51264cde
+2026-11-10 11:12:08,195 - INFO - Step 6/15 : ENV LANG=en_US.UTF-8
+2026-11-10 11:12:25,089 - INFO -  ---> Running in 81ac4068d6ee
+2026-11-10 11:12:40,070 - INFO -  ---> Removed intermediate container 81ac4068d6ee
+2026-11-10 11:12:40,072 - INFO -  ---> fad4b8fd1ace
+2026-11-10 11:12:40,072 - INFO - Step 7/15 : ENV LANGUAGE=en_US:en
+2026-11-10 11:12:44,304 - INFO -  ---> Running in 5f853a9b5d85
+2026-11-10 11:12:54,765 - INFO -  ---> Removed intermediate container 5f853a9b5d85
+2026-11-10 11:12:54,765 - INFO -  ---> 7f91b651cd05
+2026-11-10 11:12:54,765 - INFO - Step 8/15 : ENV LC_ALL=en_US.UTF-8
+2026-11-10 11:12:57,766 - INFO -  ---> Running in 7d811f32183a
+2026-11-10 11:13:13,829 - INFO -  ---> Removed intermediate container 7d811f32183a
+2026-11-10 11:13:13,829 - INFO -  ---> b29a5b8c5fa7
+2026-11-10 11:13:13,829 - INFO - Step 9/15 : RUN python -m pip install --upgrade pip setuptools wheel
+2026-11-10 11:13:16,954 - INFO -  ---> Running in 5fa4dcf6a237
+2026-11-10 11:13:20,926 - INFO - Requirement already satisfied: pip in /usr/local/lib/python3.10/site-packages (23.0.1)
+2026-11-10 11:13:21,272 - INFO - Collecting pip
+2026-11-10 11:13:21,325 - INFO -   Downloading pip-26.3-py3-none-any.whl (2.0 MB)
+2026-11-10 11:13:21,568 - INFO -      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 8.1 MB/s eta 0:00:00
+2026-11-10 11:13:21,577 - INFO - Requirement already satisfied: setuptools in /usr/local/lib/python3.10/site-packages (79.0.1)
+2026-11-10 11:13:21,904 - INFO - Collecting setuptools
+2026-11-10 11:13:21,915 - INFO -   Downloading setuptools-84.2.1-py3-none-any.whl (876 kB)
+2026-11-10 11:13:22,270 - INFO -      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 876.3/876.3 kB 2.5 MB/s eta 0:00:00
+2026-11-10 11:13:22,275 - INFO - Requirement already satisfied: wheel in /usr/local/lib/python3.10/site-packages (0.46.3)
+2026-11-10 11:13:22,626 - INFO - Collecting wheel
+2026-11-10 11:13:22,652 - INFO -   Downloading wheel-0.48.0-py3-none-any.whl (33 kB)
+2026-11-10 11:13:22,884 - INFO - Requirement already satisfied: packaging>=24.0 in /usr/local/lib/python3.10/site-packages (from wheel) (26.3)
+2026-11-10 11:13:23,052 - INFO - Installing collected packages: wheel, setuptools, pip
+2026-11-10 11:13:23,052 - INFO -   Attempting uninstall: wheel
+2026-11-10 11:13:23,052 - INFO -     Found existing installation: wheel 0.46.3
+2026-11-10 11:13:23,058 - INFO -     Uninstalling wheel-0.46.3:
+2026-11-10 11:13:23,214 - INFO -       Successfully uninstalled wheel-0.46.3
+2026-11-10 11:13:23,595 - INFO -   Attempting uninstall: setuptools
+2026-11-10 11:13:23,597 - INFO -     Found existing installation: setuptools 79.0.1
+2026-11-10 11:13:23,773 - INFO -     Uninstalling setuptools-79.0.1:
+2026-11-10 11:13:24,200 - INFO -       Successfully uninstalled setuptools-79.0.1
+2026-11-10 11:13:25,672 - INFO -   Attempting uninstall: pip
+2026-11-10 11:13:25,672 - INFO -     Found existing installation: pip 23.0.1
+2026-11-10 11:13:25,913 - INFO -     Uninstalling pip-23.0.1:
+2026-11-10 11:13:26,864 - INFO -       Successfully uninstalled pip-23.0.1
+2026-11-10 11:13:29,271 - INFO - Successfully installed pip-26.3 setuptools-84.2.1 wheel-0.48.0
+2026-11-10 11:13:29,271 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+2026-11-10 11:14:08,183 - INFO -  ---> Removed intermediate container 5fa4dcf6a237
+2026-11-10 11:14:08,184 - INFO -  ---> 18639b7640c1
+2026-11-10 11:14:08,184 - INFO - Step 10/15 : WORKDIR /testbed/
+2026-11-10 11:14:46,189 - INFO -  ---> Running in 72a29f091249
+2026-11-10 11:15:04,648 - INFO -  ---> Removed intermediate container 72a29f091249
+2026-11-10 11:15:04,648 - INFO -  ---> 67db76f6bafa
+2026-11-10 11:15:04,649 - INFO - Step 11/15 : ARG COMMIT_SHA=2b8e056d5d4d14665b88a01c41356253c94b9259
+2026-11-10 11:15:09,941 - INFO -  ---> Running in 265d3454d1fc
+2026-11-10 11:15:26,750 - INFO -  ---> Removed intermediate container 265d3454d1fc
+2026-11-10 11:15:26,750 - INFO -  ---> ef43d1588e8f
+2026-11-10 11:15:26,750 - INFO - Step 12/15 : RUN git clone https://github.com/AntonOsika/gpt-engineer /testbed/ &&     git reset --hard $COMMIT_SHA &&     chmod -R a+rwx /testbed/
+2026-11-10 11:15:28,866 - INFO -  ---> Running in 34dcb0fb0daa
+2026-11-10 11:15:32,117 - INFO - Cloning into '/testbed'...
+2026-11-10 11:15:36,052 - INFO - HEAD is now at 2b8e056 Add flow to ask for consent to share learnings – finally (#471)
+2026-11-10 11:15:52,314 - INFO -  ---> Removed intermediate container 34dcb0fb0daa
+2026-11-10 11:15:52,314 - INFO -  ---> a1c71ebf6edc
+2026-11-10 11:15:52,314 - INFO - Step 13/15 : RUN python -m pip install --no-cache-dir -e . &&     python -m pip install --no-cache-dir     pytest pytest-cov pre-commit ruff mypy openai termcolor typer rudder-sdk-python dataclasses-json tabulate
+2026-11-10 11:15:54,215 - INFO -  ---> Running in e12e1e98d87e
+2026-11-10 11:15:56,578 - INFO - Obtaining file:///testbed
+2026-11-10 11:15:56,581 - INFO -   Installing build dependencies: started
+2026-11-10 11:16:03,513 - INFO -   Installing build dependencies: finished with status 'done'
+2026-11-10 11:16:03,516 - INFO -   Checking if build backend supports build_editable: started
+2026-11-10 11:16:04,569 - INFO -   Checking if build backend supports build_editable: finished with status 'done'
+2026-11-10 11:16:04,578 - INFO -   Getting requirements to build editable: started
+2026-11-10 11:16:05,063 - INFO -   Getting requirements to build editable: finished with status 'done'
+2026-11-10 11:16:05,065 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:61: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:05,065 - INFO -   !!
+2026-11-10 11:16:05,065 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,065 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:05,065 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:05,066 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:05,066 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,066 - INFO -   !!
+2026-11-10 11:16:05,066 - INFO -     dist._finalize_license_expression()
+2026-11-10 11:16:05,066 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/dist.py:765: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:05,066 - INFO -   !!
+2026-11-10 11:16:05,066 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,066 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:05,066 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:05,066 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:05,066 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,066 - INFO -   !!
+2026-11-10 11:16:05,066 - INFO -     self._finalize_license_expression()
+2026-11-10 11:16:05,066 - INFO -   Preparing editable metadata (pyproject.toml): started
+2026-11-10 11:16:05,647 - INFO -   Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-11-10 11:16:05,728 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:61: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:05,728 - INFO -   !!
+2026-11-10 11:16:05,728 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,728 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:05,728 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:05,728 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:05,728 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,728 - INFO -   !!
+2026-11-10 11:16:05,728 - INFO -     dist._finalize_license_expression()
+2026-11-10 11:16:05,729 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/dist.py:765: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:05,730 - INFO -   !!
+2026-11-10 11:16:05,730 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,730 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:05,730 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:05,730 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:05,730 - INFO -           ********************************************************************************
+2026-11-10 11:16:05,730 - INFO -   !!
+2026-11-10 11:16:05,730 - INFO -     self._finalize_license_expression()
+2026-11-10 11:16:05,874 - INFO - Collecting black==23.3.0 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:06,332 - INFO -   Downloading black-23.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+2026-11-10 11:16:06,399 - INFO - Collecting click>=8.0.0 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:06,561 - INFO -   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10 11:16:06,697 - INFO - Collecting mypy==1.3.0 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,072 - INFO -   Downloading mypy-1.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.9 kB)
+2026-11-10 11:16:07,143 - INFO - Collecting openai==0.27.8 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,181 - INFO -   Downloading openai-0.27.8-py3-none-any.whl.metadata (13 kB)
+2026-11-10 11:16:07,235 - INFO - Collecting pre-commit==3.3.3 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,276 - INFO -   Downloading pre_commit-3.3.3-py2.py3-none-any.whl.metadata (1.3 kB)
+2026-11-10 11:16:07,309 - INFO - Collecting pytest==7.3.1 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,343 - INFO -   Downloading pytest-7.3.1-py3-none-any.whl.metadata (7.9 kB)
+2026-11-10 11:16:07,833 - INFO - Collecting ruff==0.0.272 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,873 - INFO -   Downloading ruff-0.0.272-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-11-10 11:16:07,891 - INFO - Collecting termcolor==2.3.0 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:07,941 - INFO -   Downloading termcolor-2.3.0-py3-none-any.whl.metadata (5.3 kB)
+2026-11-10 11:16:07,976 - INFO - Collecting typer>=0.3.2 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:08,026 - INFO -   Downloading typer-0.29.0-py3-none-any.whl.metadata (16 kB)
+2026-11-10 11:16:08,282 - INFO - Collecting rudder-sdk-python==2.0.2 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:08,318 - INFO -   Downloading rudder_sdk_python-2.0.2-py2.py3-none-any.whl.metadata (1.6 kB)
+2026-11-10 11:16:08,346 - INFO - Collecting dataclasses-json==0.5.7 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:08,413 - INFO -   Downloading dataclasses_json-0.5.7-py3-none-any.whl.metadata (22 kB)
+2026-11-10 11:16:08,435 - INFO - Collecting tabulate==0.9.0 (from gpt-engineer==0.0.7)
+2026-11-10 11:16:08,502 - INFO -   Downloading tabulate-0.9.0-py3-none-any.whl.metadata (34 kB)
+2026-11-10 11:16:08,518 - INFO - Collecting mypy-extensions>=0.4.3 (from black==23.3.0->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,554 - INFO -   Downloading mypy_extensions-1.2.0-py3-none-any.whl.metadata (1.1 kB)
+2026-11-10 11:16:08,556 - INFO - Requirement already satisfied: packaging>=22.0 in /usr/local/lib/python3.10/site-packages (from black==23.3.0->gpt-engineer==0.0.7) (26.3)
+2026-11-10 11:16:08,575 - INFO - Collecting pathspec>=0.9.0 (from black==23.3.0->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,633 - INFO -   Downloading pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+2026-11-10 11:16:08,669 - INFO - Collecting platformdirs>=2 (from black==23.3.0->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,715 - INFO -   Downloading platformdirs-4.12.4-py3-none-any.whl.metadata (5.5 kB)
+2026-11-10 11:16:08,765 - INFO - Collecting tomli>=1.1.0 (from black==23.3.0->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,800 - INFO -   Downloading tomli-2.5.0-py3-none-any.whl.metadata (10 kB)
+2026-11-10 11:16:08,838 - INFO - Collecting marshmallow<4.0.0,>=3.3.0 (from dataclasses-json==0.5.7->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,873 - INFO -   Downloading marshmallow-3.26.2-py3-none-any.whl.metadata (7.3 kB)
+2026-11-10 11:16:08,890 - INFO - Collecting marshmallow-enum<2.0.0,>=1.5.1 (from dataclasses-json==0.5.7->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,924 - INFO -   Downloading marshmallow_enum-1.5.1-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-11-10 11:16:08,943 - INFO - Collecting typing-inspect>=0.4.0 (from dataclasses-json==0.5.7->gpt-engineer==0.0.7)
+2026-11-10 11:16:08,979 - INFO -   Downloading typing_inspect-0.9.0-py3-none-any.whl.metadata (1.5 kB)
+2026-11-10 11:16:09,009 - INFO - Collecting typing-extensions>=3.10 (from mypy==1.3.0->gpt-engineer==0.0.7)
+2026-11-10 11:16:09,051 - INFO -   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-10 11:16:09,090 - INFO - Collecting requests>=2.20 (from openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:09,125 - INFO -   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+2026-11-10 11:16:09,182 - INFO - Collecting tqdm (from openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:09,451 - INFO -   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-11-10 11:16:10,379 - INFO - Collecting aiohttp (from openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,440 - INFO -   Downloading aiohttp-3.14.5-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+2026-11-10 11:16:10,464 - INFO - Collecting cfgv>=2.0.0 (from pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,508 - INFO -   Downloading cfgv-3.5.0-py2.py3-none-any.whl.metadata (8.9 kB)
+2026-11-10 11:16:10,558 - INFO - Collecting identify>=1.0.0 (from pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,592 - INFO -   Downloading identify-2.6.20-py2.py3-none-any.whl.metadata (4.4 kB)
+2026-11-10 11:16:10,617 - INFO - Collecting nodeenv>=0.11.1 (from pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,653 - INFO -   Downloading nodeenv-1.12.0-py3-none-any.whl.metadata (49 kB)
+2026-11-10 11:16:10,720 - INFO - Collecting pyyaml>=5.1 (from pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,756 - INFO -   Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-10 11:16:10,820 - INFO - Collecting virtualenv>=20.10.0 (from pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,855 - INFO -   Downloading virtualenv-21.15.6-py3-none-any.whl.metadata (4.1 kB)
+2026-11-10 11:16:10,882 - INFO - Collecting iniconfig (from pytest==7.3.1->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,916 - INFO -   Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+2026-11-10 11:16:10,946 - INFO - Collecting pluggy<2.0,>=0.12 (from pytest==7.3.1->gpt-engineer==0.0.7)
+2026-11-10 11:16:10,982 - INFO -   Downloading pluggy-1.7.0-py3-none-any.whl.metadata (5.0 kB)
+2026-11-10 11:16:11,001 - INFO - Collecting exceptiongroup>=1.0.0rc8 (from pytest==7.3.1->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,038 - INFO -   Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+2026-11-10 11:16:11,067 - INFO - Collecting monotonic~=1.5 (from rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,235 - INFO -   Downloading monotonic-1.6-py2.py3-none-any.whl.metadata (1.5 kB)
+2026-11-10 11:16:11,256 - INFO - Collecting backoff~=2.1 (from rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,293 - INFO -   Downloading backoff-2.2.1-py3-none-any.whl.metadata (14 kB)
+2026-11-10 11:16:11,315 - INFO - Collecting python-dateutil~=2.2 (from rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,361 - INFO -   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2026-11-10 11:16:11,399 - INFO - Collecting python-dotenv~=0.21.0 (from rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,434 - INFO -   Downloading python_dotenv-0.21.1-py3-none-any.whl.metadata (21 kB)
+2026-11-10 11:16:11,451 - INFO - Collecting deprecation~=2.0.6 (from rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,484 - INFO -   Downloading deprecation-2.0.7-py2.py3-none-any.whl.metadata (4.6 kB)
+2026-11-10 11:16:11,520 - INFO - Collecting six>=1.5 (from python-dateutil~=2.2->rudder-sdk-python==2.0.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,553 - INFO -   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-11-10 11:16:11,697 - INFO - Collecting charset_normalizer<4,>=2 (from requests>=2.20->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,732 - INFO -   Downloading charset_normalizer-3.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+2026-11-10 11:16:11,757 - INFO - Collecting idna<4,>=2.5 (from requests>=2.20->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,790 - INFO -   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-10 11:16:11,817 - INFO - Collecting urllib3<3,>=1.26 (from requests>=2.20->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,850 - INFO -   Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+2026-11-10 11:16:11,874 - INFO - Collecting certifi>=2023.5.7 (from requests>=2.20->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:11,909 - INFO -   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-10 11:16:12,112 - INFO - Collecting pydantic>=2.5.3 (from typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:12,217 - INFO -   Downloading pydantic-2.14.3-py3-none-any.whl.metadata (141 kB)
+2026-11-10 11:16:12,269 - INFO - Collecting shellingham>=1.3.0 (from typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:12,302 - INFO -   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+2026-11-10 11:16:12,339 - INFO - Collecting rich>=13.8.0 (from typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:12,372 - INFO -   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+2026-11-10 11:16:12,388 - INFO - Collecting annotated-doc>=0.0.2 (from typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:12,560 - INFO -   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+2026-11-10 11:16:12,577 - INFO - Collecting annotated-types>=0.6.0 (from pydantic>=2.5.3->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:12,610 - INFO -   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-10 11:16:13,637 - INFO - Collecting pydantic-core==2.50.4 (from pydantic>=2.5.3->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:13,671 - INFO -   Downloading pydantic_core-2.50.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-10 11:16:13,695 - INFO - Collecting typing-inspection>=0.4.4 (from pydantic>=2.5.3->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:13,745 - INFO -   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10 11:16:13,769 - INFO - Collecting markdown-it-py>=2.2.0 (from rich>=13.8.0->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,051 - INFO -   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+2026-11-10 11:16:14,085 - INFO - Collecting pygments<3.0.0,>=2.13.0 (from rich>=13.8.0->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,345 - INFO -   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+2026-11-10 11:16:14,364 - INFO - Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.8.0->typer>=0.3.2->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,459 - INFO -   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+2026-11-10 11:16:14,487 - INFO - Collecting distlib<1,>=0.4.3 (from virtualenv>=20.10.0->pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,522 - INFO -   Downloading distlib-0.4.4-py2.py3-none-any.whl.metadata (5.3 kB)
+2026-11-10 11:16:14,551 - INFO - Collecting filelock<5,>=3.24.2 (from virtualenv>=20.10.0->pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,808 - INFO -   Downloading filelock-4.1.0-py3-none-any.whl.metadata (2.0 kB)
+2026-11-10 11:16:14,830 - INFO - Collecting python-discovery>=1.6.1 (from virtualenv>=20.10.0->pre-commit==3.3.3->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,865 - INFO -   Downloading python_discovery-1.9.5-py3-none-any.whl.metadata (4.2 kB)
+2026-11-10 11:16:14,888 - INFO - Collecting aiohappyeyeballs>=2.5.0 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,923 - INFO -   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+2026-11-10 11:16:14,940 - INFO - Collecting aiosignal>=1.4.0 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:14,975 - INFO -   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-11-10 11:16:14,994 - INFO - Collecting async-timeout<6.0,>=4.0 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:15,238 - INFO -   Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+2026-11-10 11:16:15,256 - INFO - Collecting attrs>=17.3.0 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:15,295 - INFO -   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-11-10 11:16:15,375 - INFO - Collecting frozenlist>=1.1.1 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:15,409 - INFO -   Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-11-10 11:16:15,720 - INFO - Collecting multidict<8.0,>=4.5 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:15,791 - INFO -   Downloading multidict-7.1.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.2 kB)
+2026-11-10 11:16:15,866 - INFO - Collecting propcache>=0.2.0 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:15,905 - INFO -   Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+2026-11-10 11:16:16,380 - INFO - Collecting yarl<2.0,>=1.25.1 (from aiohttp->openai==0.27.8->gpt-engineer==0.0.7)
+2026-11-10 11:16:16,520 - INFO -   Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+2026-11-10 11:16:16,598 - INFO - Downloading black-23.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.7 MB)
+2026-11-10 11:16:16,681 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 26.8 MB/s  0:00:00
+2026-11-10 11:16:16,824 - INFO - Downloading dataclasses_json-0.5.7-py3-none-any.whl (25 kB)
+2026-11-10 11:16:17,314 - INFO - Downloading mypy-1.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.2 MB)
+2026-11-10 11:16:22,706 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.2/12.2 MB 2.2 MB/s  0:00:05
+2026-11-10 11:16:22,741 - INFO - Downloading openai-0.27.8-py3-none-any.whl (73 kB)
+2026-11-10 11:16:22,777 - INFO - Downloading pre_commit-3.3.3-py2.py3-none-any.whl (202 kB)
+2026-11-10 11:16:22,924 - INFO - Downloading pytest-7.3.1-py3-none-any.whl (320 kB)
+2026-11-10 11:16:22,967 - INFO - Downloading rudder_sdk_python-2.0.2-py2.py3-none-any.whl (19 kB)
+2026-11-10 11:16:23,002 - INFO - Downloading ruff-0.0.272-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.9 MB)
+2026-11-10 11:16:23,083 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.9/5.9 MB 75.0 MB/s  0:00:00
+2026-11-10 11:16:23,116 - INFO - Downloading tabulate-0.9.0-py3-none-any.whl (35 kB)
+2026-11-10 11:16:23,205 - INFO - Downloading termcolor-2.3.0-py3-none-any.whl (6.9 kB)
+2026-11-10 11:16:23,263 - INFO - Downloading backoff-2.2.1-py3-none-any.whl (15 kB)
+2026-11-10 11:16:23,299 - INFO - Downloading deprecation-2.0.7-py2.py3-none-any.whl (11 kB)
+2026-11-10 11:16:23,334 - INFO - Downloading marshmallow-3.26.2-py3-none-any.whl (50 kB)
+2026-11-10 11:16:23,368 - INFO - Downloading marshmallow_enum-1.5.1-py2.py3-none-any.whl (4.2 kB)
+2026-11-10 11:16:23,536 - INFO - Downloading monotonic-1.6-py2.py3-none-any.whl (8.2 kB)
+2026-11-10 11:16:23,687 - INFO - Downloading pluggy-1.7.0-py3-none-any.whl (27 kB)
+2026-11-10 11:16:23,726 - INFO - Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2026-11-10 11:16:23,762 - INFO - Downloading python_dotenv-0.21.1-py3-none-any.whl (19 kB)
+2026-11-10 11:16:23,794 - INFO - Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+2026-11-10 11:16:23,832 - INFO - Downloading charset_normalizer-3.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (271 kB)
+2026-11-10 11:16:23,870 - INFO - Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-10 11:16:23,907 - INFO - Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+2026-11-10 11:16:23,945 - INFO - Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-10 11:16:23,983 - INFO - Downloading cfgv-3.5.0-py2.py3-none-any.whl (7.4 kB)
+2026-11-10 11:16:24,018 - INFO - Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-10 11:16:24,051 - INFO - Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+2026-11-10 11:16:24,211 - INFO - Downloading identify-2.6.20-py2.py3-none-any.whl (99 kB)
+2026-11-10 11:16:24,395 - INFO - Downloading mypy_extensions-1.2.0-py3-none-any.whl (5.1 kB)
+2026-11-10 11:16:24,441 - INFO - Downloading nodeenv-1.12.0-py3-none-any.whl (39 kB)
+2026-11-10 11:16:24,634 - INFO - Downloading pathspec-1.1.1-py3-none-any.whl (57 kB)
+2026-11-10 11:16:24,670 - INFO - Downloading platformdirs-4.12.4-py3-none-any.whl (32 kB)
+2026-11-10 11:16:24,708 - INFO - Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (770 kB)
+2026-11-10 11:16:24,715 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 770.3/770.3 kB 238.5 MB/s  0:00:00
+2026-11-10 11:16:24,748 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-11-10 11:16:24,883 - INFO - Downloading tomli-2.5.0-py3-none-any.whl (14 kB)
+2026-11-10 11:16:25,011 - INFO - Downloading typer-0.29.0-py3-none-any.whl (121 kB)
+2026-11-10 11:16:25,149 - INFO - Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+2026-11-10 11:16:25,202 - INFO - Downloading pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-10 11:16:25,236 - INFO - Downloading pydantic_core-2.50.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-10 11:16:25,395 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 13.4 MB/s  0:00:00
+2026-11-10 11:16:25,428 - INFO - Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-10 11:16:25,462 - INFO - Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+2026-11-10 11:16:25,497 - INFO - Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+2026-11-10 11:16:25,508 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 164.9 MB/s  0:00:00
+2026-11-10 11:16:25,542 - INFO - Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+2026-11-10 11:16:25,576 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+2026-11-10 11:16:25,612 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+2026-11-10 11:16:25,645 - INFO - Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-10 11:16:25,785 - INFO - Downloading typing_inspect-0.9.0-py3-none-any.whl (8.8 kB)
+2026-11-10 11:16:25,819 - INFO - Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-10 11:16:25,893 - INFO - Downloading virtualenv-21.15.6-py3-none-any.whl (5.7 MB)
+2026-11-10 11:16:26,078 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.7/5.7 MB 29.9 MB/s  0:00:00
+2026-11-10 11:16:26,115 - INFO - Downloading distlib-0.4.4-py2.py3-none-any.whl (472 kB)
+2026-11-10 11:16:26,151 - INFO - Downloading filelock-4.1.0-py3-none-any.whl (133 kB)
+2026-11-10 11:16:26,185 - INFO - Downloading python_discovery-1.9.5-py3-none-any.whl (44 kB)
+2026-11-10 11:16:26,280 - INFO - Downloading aiohttp-3.14.5-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
+2026-11-10 11:16:26,292 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 310.8 MB/s  0:00:00
+2026-11-10 11:16:26,327 - INFO - Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+2026-11-10 11:16:26,362 - INFO - Downloading multidict-7.1.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (464 kB)
+2026-11-10 11:16:26,399 - INFO - Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (118 kB)
+2026-11-10 11:16:26,432 - INFO - Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+2026-11-10 11:16:26,465 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-11-10 11:16:26,498 - INFO - Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-11-10 11:16:26,535 - INFO - Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+2026-11-10 11:16:26,570 - INFO - Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (224 kB)
+2026-11-10 11:16:26,605 - INFO - Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+2026-11-10 11:16:26,738 - INFO - Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-11-10 11:16:26,931 - INFO - Building wheels for collected packages: gpt-engineer
+2026-11-10 11:16:26,932 - INFO -   Building editable for gpt-engineer (pyproject.toml): started
+2026-11-10 11:16:27,537 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:61: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:27,537 - INFO -   !!
+2026-11-10 11:16:27,537 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,537 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:27,537 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:27,537 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:27,537 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,537 - INFO -   !!
+2026-11-10 11:16:27,537 - INFO -     dist._finalize_license_expression()
+2026-11-10 11:16:27,537 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/dist.py:765: BuildBackendWarning: License classifiers are deprecated.
+2026-11-10 11:16:27,537 - INFO -   !!
+2026-11-10 11:16:27,537 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,537 - INFO -           Please consider removing the following classifiers in favor of a SPDX license expression:
+2026-11-10 11:16:27,537 - INFO -           License :: OSI Approved :: MIT License
+2026-11-10 11:16:27,537 - INFO -           See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+2026-11-10 11:16:27,537 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,537 - INFO -   !!
+2026-11-10 11:16:27,537 - INFO -     self._finalize_license_expression()
+2026-11-10 11:16:27,537 - INFO -   Building editable for gpt-engineer (pyproject.toml): finished with status 'done'
+2026-11-10 11:16:27,539 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/command/build_py.py:215: BuildBackendWarning: Package 'gpt_engineer.preprompts' is absent from the `packages` configuration.
+2026-11-10 11:16:27,539 - INFO -   !!
+2026-11-10 11:16:27,539 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,539 - INFO -           ############################
+2026-11-10 11:16:27,539 - INFO -           # Package would be ignored #
+2026-11-10 11:16:27,539 - INFO -           ############################
+2026-11-10 11:16:27,539 - INFO -           Python recognizes 'gpt_engineer.preprompts' as an importable package[^1],
+2026-11-10 11:16:27,539 - INFO -           but it is absent from setuptools' `packages` configuration.
+2026-11-10 11:16:27,539 - INFO -           This leads to an ambiguous overall configuration. If you want to distribute this
+2026-11-10 11:16:27,539 - INFO -           package, please make sure that 'gpt_engineer.preprompts' is explicitly added
+2026-11-10 11:16:27,539 - INFO -           to the `packages` configuration field.
+2026-11-10 11:16:27,539 - INFO -           Alternatively, you can also rely on setuptools' discovery methods
+2026-11-10 11:16:27,539 - INFO -           (for example by using `find_namespace_packages(...)`/`find_namespace:`
+2026-11-10 11:16:27,539 - INFO -           instead of `find_packages(...)`/`find:`).
+2026-11-10 11:16:27,539 - INFO -           You can read more about "package discovery" on setuptools documentation page:
+2026-11-10 11:16:27,539 - INFO -           - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+2026-11-10 11:16:27,539 - INFO -           If you don't want 'gpt_engineer.preprompts' to be distributed and are
+2026-11-10 11:16:27,539 - INFO -           already explicitly excluding 'gpt_engineer.preprompts' via
+2026-11-10 11:16:27,539 - INFO -           `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+2026-11-10 11:16:27,539 - INFO -           you can try to use `exclude_package_data`, or `include-package-data=False` in
+2026-11-10 11:16:27,539 - INFO -           combination with a more fine grained `package-data` configuration.
+2026-11-10 11:16:27,539 - INFO -           You can read more about "package data files" on setuptools documentation page:
+2026-11-10 11:16:27,539 - INFO -           - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+2026-11-10 11:16:27,539 - INFO -           [^1]: For Python, any directory (with suitable naming) can be imported,
+2026-11-10 11:16:27,539 - INFO -                 even if it does not contain any `.py` files.
+2026-11-10 11:16:27,539 - INFO -                 On the other hand, currently there is no concept of package data
+2026-11-10 11:16:27,539 - INFO -                 directory, all directories are treated like packages.
+2026-11-10 11:16:27,539 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,539 - INFO -   !!
+2026-11-10 11:16:27,539 - INFO -     check.warn(importable)
+2026-11-10 11:16:27,540 - INFO -   /tmp/pip-build-env-07aeqe23/overlay/lib/python3.10/site-packages/setuptools/command/editable_wheel.py:354: BuildBackendWarning: Editable installation.
+2026-11-10 11:16:27,540 - INFO -   !!
+2026-11-10 11:16:27,540 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,540 - INFO -           Please be careful with folders in your working directory with the same
+2026-11-10 11:16:27,540 - INFO -           name as your package as they may take precedence during imports.
+2026-11-10 11:16:27,540 - INFO -           ********************************************************************************
+2026-11-10 11:16:27,540 - INFO -   !!
+2026-11-10 11:16:27,540 - INFO -     with strategy, WheelFile(wheel_path, "w") as wheel_obj:
+2026-11-10 11:16:27,541 - INFO -   Created wheel for gpt-engineer: filename=gpt_engineer-0.0.7-0.editable-py3-none-any.whl size=5939 sha256=e0afa2d8e38e78c337360447b4f4da002a19ff9eaeed2a139447a97cb147abbe
+2026-11-10 11:16:27,541 - INFO -   Stored in directory: /tmp/pip-ephem-wheel-cache-afrs0h5e/wheels/0d/a6/cb/465a7b303d624cc531250fa27c75d038ddc29430bdb6ba7c9f
+2026-11-10 11:16:27,544 - INFO - Successfully built gpt-engineer
+2026-11-10 11:16:27,675 - INFO - Installing collected packages: monotonic, distlib, urllib3, typing-extensions, tqdm, tomli, termcolor, tabulate, six, shellingham, ruff, pyyaml, python-dotenv, pygments, propcache, pluggy, platformdirs, pathspec, nodeenv, mypy-extensions, mdurl, marshmallow, iniconfig, idna, identify, frozenlist, filelock, deprecation, click, charset_normalizer, cfgv, certifi, backoff, attrs, async-timeout, annotated-types, annotated-doc, aiohappyeyeballs, typing-inspection, typing-inspect, requests, python-discovery, python-dateutil, pydantic-core, mypy, multidict, marshmallow-enum, markdown-it-py, exceptiongroup, black, aiosignal, yarl, virtualenv, rudder-sdk-python, rich, pytest, pydantic, dataclasses-json, typer, pre-commit, aiohttp, openai, gpt-engineer
+2026-11-10 11:17:02,513 - INFO - Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.5 aiosignal-1.4.0 annotated-doc-0.0.5 annotated-types-0.8.0 async-timeout-5.0.1 attrs-26.1.0 backoff-2.2.1 black-23.3.0 certifi-2026.10.23 cfgv-3.5.0 charset_normalizer-3.5.2 click-8.5.1 dataclasses-json-0.5.7 deprecation-2.0.7 distlib-0.4.4 exceptiongroup-1.3.1 filelock-4.1.0 frozenlist-1.8.0 gpt-engineer-0.0.7 identify-2.6.20 idna-3.20 iniconfig-2.3.1 markdown-it-py-4.2.0 marshmallow-3.26.2 marshmallow-enum-1.5.1 mdurl-0.1.2 monotonic-1.6 multidict-7.1.0 mypy-1.3.0 mypy-extensions-1.2.0 nodeenv-1.12.0 openai-0.27.8 pathspec-1.1.1 platformdirs-4.12.4 pluggy-1.7.0 pre-commit-3.3.3 propcache-0.5.4 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-7.3.1 python-dateutil-2.9.0.post0 python-discovery-1.9.5 python-dotenv-0.21.1 pyyaml-6.0.3 requests-2.34.2 rich-15.0.0 rudder-sdk-python-2.0.2 ruff-0.0.272 shellingham-1.5.4 six-1.17.0 tabulate-0.9.0 termcolor-2.3.0 tomli-2.5.0 tqdm-4.70.1 typer-0.29.0 typing-extensions-4.16.0 typing-inspect-0.9.0 typing-inspection-0.4.5 urllib3-2.8.0 virtualenv-21.15.6 yarl-1.25.1
+2026-11-10 11:17:02,514 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-11-10 11:17:04,068 - INFO - Requirement already satisfied: pytest in /usr/local/lib/python3.10/site-packages (7.3.1)
+2026-11-10 11:17:04,141 - INFO - Collecting pytest-cov
+2026-11-10 11:17:04,276 - INFO -   Downloading pytest_cov-7.1.0-py3-none-any.whl.metadata (32 kB)
+2026-11-10 11:17:04,280 - INFO - Requirement already satisfied: pre-commit in /usr/local/lib/python3.10/site-packages (3.3.3)
+2026-11-10 11:17:04,281 - INFO - Requirement already satisfied: ruff in /usr/local/lib/python3.10/site-packages (0.0.272)
+2026-11-10 11:17:04,281 - INFO - Requirement already satisfied: mypy in /usr/local/lib/python3.10/site-packages (1.3.0)
+2026-11-10 11:17:04,282 - INFO - Requirement already satisfied: openai in /usr/local/lib/python3.10/site-packages (0.27.8)
+2026-11-10 11:17:04,282 - INFO - Requirement already satisfied: termcolor in /usr/local/lib/python3.10/site-packages (2.3.0)
+2026-11-10 11:17:04,284 - INFO - Requirement already satisfied: typer in /usr/local/lib/python3.10/site-packages (0.29.0)
+2026-11-10 11:17:04,284 - INFO - Requirement already satisfied: rudder-sdk-python in /usr/local/lib/python3.10/site-packages (2.0.2)
+2026-11-10 11:17:04,284 - INFO - Requirement already satisfied: dataclasses-json in /usr/local/lib/python3.10/site-packages (0.5.7)
+2026-11-10 11:17:04,284 - INFO - Requirement already satisfied: tabulate in /usr/local/lib/python3.10/site-packages (0.9.0)
+2026-11-10 11:17:04,287 - INFO - Requirement already satisfied: iniconfig in /usr/local/lib/python3.10/site-packages (from pytest) (2.3.1)
+2026-11-10 11:17:04,287 - INFO - Requirement already satisfied: packaging in /usr/local/lib/python3.10/site-packages (from pytest) (26.3)
+2026-11-10 11:17:04,288 - INFO - Requirement already satisfied: pluggy<2.0,>=0.12 in /usr/local/lib/python3.10/site-packages (from pytest) (1.7.0)
+2026-11-10 11:17:04,289 - INFO - Requirement already satisfied: exceptiongroup>=1.0.0rc8 in /usr/local/lib/python3.10/site-packages (from pytest) (1.3.1)
+2026-11-10 11:17:04,289 - INFO - Requirement already satisfied: tomli>=1.0.0 in /usr/local/lib/python3.10/site-packages (from pytest) (2.5.0)
+2026-11-10 11:17:05,017 - INFO - Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov)
+2026-11-10 11:17:05,111 - INFO -   Downloading coverage-7.16.2-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.2 kB)
+2026-11-10 11:17:05,117 - INFO - Requirement already satisfied: cfgv>=2.0.0 in /usr/local/lib/python3.10/site-packages (from pre-commit) (3.5.0)
+2026-11-10 11:17:05,117 - INFO - Requirement already satisfied: identify>=1.0.0 in /usr/local/lib/python3.10/site-packages (from pre-commit) (2.6.20)
+2026-11-10 11:17:05,119 - INFO - Requirement already satisfied: nodeenv>=0.11.1 in /usr/local/lib/python3.10/site-packages (from pre-commit) (1.12.0)
+2026-11-10 11:17:05,119 - INFO - Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.10/site-packages (from pre-commit) (6.0.3)
+2026-11-10 11:17:05,119 - INFO - Requirement already satisfied: virtualenv>=20.10.0 in /usr/local/lib/python3.10/site-packages (from pre-commit) (21.15.6)
+2026-11-10 11:17:05,125 - INFO - Requirement already satisfied: typing-extensions>=3.10 in /usr/local/lib/python3.10/site-packages (from mypy) (4.16.0)
+2026-11-10 11:17:05,125 - INFO - Requirement already satisfied: mypy-extensions>=1.0.0 in /usr/local/lib/python3.10/site-packages (from mypy) (1.2.0)
+2026-11-10 11:17:05,128 - INFO - Requirement already satisfied: requests>=2.20 in /usr/local/lib/python3.10/site-packages (from openai) (2.34.2)
+2026-11-10 11:17:05,128 - INFO - Requirement already satisfied: tqdm in /usr/local/lib/python3.10/site-packages (from openai) (4.70.1)
+2026-11-10 11:17:05,129 - INFO - Requirement already satisfied: aiohttp in /usr/local/lib/python3.10/site-packages (from openai) (3.14.5)
+2026-11-10 11:17:05,134 - INFO - Requirement already satisfied: pydantic>=2.5.3 in /usr/local/lib/python3.10/site-packages (from typer) (2.14.3)
+2026-11-10 11:17:05,136 - INFO - Requirement already satisfied: shellingham>=1.3.0 in /usr/local/lib/python3.10/site-packages (from typer) (1.5.4)
+2026-11-10 11:17:05,136 - INFO - Requirement already satisfied: rich>=13.8.0 in /usr/local/lib/python3.10/site-packages (from typer) (15.0.0)
+2026-11-10 11:17:05,136 - INFO - Requirement already satisfied: annotated-doc>=0.0.2 in /usr/local/lib/python3.10/site-packages (from typer) (0.0.5)
+2026-11-10 11:17:05,138 - INFO - Requirement already satisfied: monotonic~=1.5 in /usr/local/lib/python3.10/site-packages (from rudder-sdk-python) (1.6)
+2026-11-10 11:17:05,138 - INFO - Requirement already satisfied: backoff~=2.1 in /usr/local/lib/python3.10/site-packages (from rudder-sdk-python) (2.2.1)
+2026-11-10 11:17:05,139 - INFO - Requirement already satisfied: python-dateutil~=2.2 in /usr/local/lib/python3.10/site-packages (from rudder-sdk-python) (2.9.0.post0)
+2026-11-10 11:17:05,139 - INFO - Requirement already satisfied: python-dotenv~=0.21.0 in /usr/local/lib/python3.10/site-packages (from rudder-sdk-python) (0.21.1)
+2026-11-10 11:17:05,141 - INFO - Requirement already satisfied: deprecation~=2.0.6 in /usr/local/lib/python3.10/site-packages (from rudder-sdk-python) (2.0.7)
+2026-11-10 11:17:05,146 - INFO - Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/site-packages (from python-dateutil~=2.2->rudder-sdk-python) (1.17.0)
+2026-11-10 11:17:05,153 - INFO - Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.10/site-packages (from requests>=2.20->openai) (3.5.2)
+2026-11-10 11:17:05,155 - INFO - Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/site-packages (from requests>=2.20->openai) (3.20)
+2026-11-10 11:17:05,155 - INFO - Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.10/site-packages (from requests>=2.20->openai) (2.8.0)
+2026-11-10 11:17:05,156 - INFO - Requirement already satisfied: certifi>=2023.5.7 in /usr/local/lib/python3.10/site-packages (from requests>=2.20->openai) (2026.10.23)
+2026-11-10 11:17:05,166 - INFO - Requirement already satisfied: marshmallow<4.0.0,>=3.3.0 in /usr/local/lib/python3.10/site-packages (from dataclasses-json) (3.26.2)
+2026-11-10 11:17:05,167 - INFO - Requirement already satisfied: marshmallow-enum<2.0.0,>=1.5.1 in /usr/local/lib/python3.10/site-packages (from dataclasses-json) (1.5.1)
+2026-11-10 11:17:05,168 - INFO - Requirement already satisfied: typing-inspect>=0.4.0 in /usr/local/lib/python3.10/site-packages (from dataclasses-json) (0.9.0)
+2026-11-10 11:17:05,193 - INFO - Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.10/site-packages (from pydantic>=2.5.3->typer) (0.8.0)
+2026-11-10 11:17:05,193 - INFO - Requirement already satisfied: pydantic-core==2.50.4 in /usr/local/lib/python3.10/site-packages (from pydantic>=2.5.3->typer) (2.50.4)
+2026-11-10 11:17:05,194 - INFO - Requirement already satisfied: typing-inspection>=0.4.4 in /usr/local/lib/python3.10/site-packages (from pydantic>=2.5.3->typer) (0.4.5)
+2026-11-10 11:17:05,203 - INFO - Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.10/site-packages (from rich>=13.8.0->typer) (4.2.0)
+2026-11-10 11:17:05,204 - INFO - Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/site-packages (from rich>=13.8.0->typer) (2.21.0)
+2026-11-10 11:17:05,213 - INFO - Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich>=13.8.0->typer) (0.1.2)
+2026-11-10 11:17:05,238 - INFO - Requirement already satisfied: distlib<1,>=0.4.3 in /usr/local/lib/python3.10/site-packages (from virtualenv>=20.10.0->pre-commit) (0.4.4)
+2026-11-10 11:17:05,238 - INFO - Requirement already satisfied: filelock<5,>=3.24.2 in /usr/local/lib/python3.10/site-packages (from virtualenv>=20.10.0->pre-commit) (4.1.0)
+2026-11-10 11:17:05,239 - INFO - Requirement already satisfied: platformdirs<5,>=4.4 in /usr/local/lib/python3.10/site-packages (from virtualenv>=20.10.0->pre-commit) (4.12.4)
+2026-11-10 11:17:05,240 - INFO - Requirement already satisfied: python-discovery>=1.6.1 in /usr/local/lib/python3.10/site-packages (from virtualenv>=20.10.0->pre-commit) (1.9.5)
+2026-11-10 11:17:05,254 - INFO - Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (2.7.1)
+2026-11-10 11:17:05,255 - INFO - Requirement already satisfied: aiosignal>=1.4.0 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (1.4.0)
+2026-11-10 11:17:05,258 - INFO - Requirement already satisfied: async-timeout<6.0,>=4.0 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (5.0.1)
+2026-11-10 11:17:05,258 - INFO - Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (26.1.0)
+2026-11-10 11:17:05,258 - INFO - Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (1.8.0)
+2026-11-10 11:17:05,260 - INFO - Requirement already satisfied: multidict<8.0,>=4.5 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (7.1.0)
+2026-11-10 11:17:05,263 - INFO - Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (0.5.4)
+2026-11-10 11:17:05,270 - INFO - Requirement already satisfied: yarl<2.0,>=1.25.1 in /usr/local/lib/python3.10/site-packages (from aiohttp->openai) (1.25.1)
+2026-11-10 11:17:05,433 - INFO - Downloading pytest_cov-7.1.0-py3-none-any.whl (22 kB)
+2026-11-10 11:17:05,447 - INFO - Downloading coverage-7.16.2-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (252 kB)
+2026-11-10 11:17:05,531 - INFO - Installing collected packages: coverage, pytest-cov
+2026-11-10 11:17:06,531 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-11-10 11:17:06,535 - INFO - Successfully installed coverage-7.16.2 pytest-cov-7.1.0
+2026-11-10 11:17:49,916 - INFO -  ---> Removed intermediate container e12e1e98d87e
+2026-11-10 11:17:49,917 - INFO -  ---> 857bc08e5e0b
+2026-11-10 11:17:49,917 - INFO - Step 14/15 : SHELL ["/bin/bash", "-c"]
+2026-11-10 11:17:59,498 - INFO -  ---> Running in 549a9ae8fd78
+2026-11-10 11:18:24,088 - INFO -  ---> Removed intermediate container 549a9ae8fd78
+2026-11-10 11:18:24,089 - INFO -  ---> 5df8f16a4093
+2026-11-10 11:18:24,089 - INFO - Step 15/15 : WORKDIR /testbed/
+2026-11-10 11:18:28,766 - INFO -  ---> Running in 2ea51445152b
+2026-11-10 11:18:43,452 - INFO -  ---> Removed intermediate container 2ea51445152b
+2026-11-10 11:18:43,453 - INFO -  ---> 37a4292464fe
+2026-11-10 11:18:43,559 - INFO - Successfully built 37a4292464fe
+2026-11-10 11:18:43,769 - INFO - Successfully tagged antonosika__gpt-engineer-438-dockerfile3:latest
+2026-11-10 11:18:43,770 - INFO - Image built successfully!

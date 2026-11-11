@@ -1,0 +1,94 @@
+2026-11-10 13:43:02,236 - INFO - Building image agentscope-ai__agentscope-66
+Using dockerfile:
+# Use ubuntu 22.04 as base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies including python3.9+, git, pip, and other essential tools
+RUN apt-get update && apt-get install -y \
+    python3.9 python3.9-venv python3-pip python3.9-distutils \
+    git wget build-essential curl locales locales-all tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.9
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+RUN python3 -m pip install --upgrade pip
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout specified commit (use ARG for commit SHA)
+ARG COMMIT_SHA=0b4bf85481d3cde1f4a5f16d6faeb6e9c9d2a49c
+
+# Clone repo, checkout commit, and install deps inside python venv
+RUN git clone https://github.com/agentscope-ai/agentscope /testbed && \
+    cd /testbed && \
+    git reset --hard ${COMMIT_SHA}
+
+# Create and activate virtual environment, upgrade pip, and install package & dependencies
+RUN python3 -m venv testbed-venv && \
+    source testbed-venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    # Install the repo in editable mode with full extras per context info
+    pip install -q -e ".[full]" && \
+    # Install coverage and pytest for test running environment
+    pip install coverage pytest pytest-cov pre-commit
+
+# Add virtual environment activation to bashrc for default shell sessions
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Default workdir as requested
+WORKDIR /testbed/
+
+# Do not run tests or add entrypoint as per instructions
+
+2026-11-10 13:43:02,247 - INFO - Step 1/13 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 13:43:03,424 - INFO -  ---> 076e7bf82319
+2026-11-10 13:43:03,424 - INFO - Step 2/13 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:43:08,051 - INFO -  ---> Running in d19dd6f4c2fe
+2026-11-10 13:43:26,564 - INFO -  ---> Removed intermediate container d19dd6f4c2fe
+2026-11-10 13:43:26,565 - INFO -  ---> 4200c87e529d
+2026-11-10 13:43:26,565 - INFO - Step 3/13 : ENV TZ=Etc/UTC
+2026-11-10 13:43:31,373 - INFO -  ---> Running in cd92bc78e4f4
+2026-11-10 13:43:56,891 - INFO -  ---> Removed intermediate container cd92bc78e4f4
+2026-11-10 13:43:56,891 - INFO -  ---> 87ebc26b7e84
+2026-11-10 13:43:56,891 - INFO - Step 4/13 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:44:05,193 - INFO -  ---> Running in 80ee6d4edd0a
+2026-11-10 13:44:32,746 - INFO -  ---> Removed intermediate container 80ee6d4edd0a
+2026-11-10 13:44:32,746 - INFO -  ---> 80c9b3cadbad
+2026-11-10 13:44:32,746 - INFO - Step 5/13 : RUN apt-get update && apt-get install -y     python3.9 python3.9-venv python3-pip python3.9-distutils     git wget build-essential curl locales locales-all tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:44:41,215 - INFO -  ---> Running in 6fa699c0763a
+2026-11-10 13:44:47,088 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 13:44:47,090 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 13:44:47,922 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 13:44:48,225 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 13:44:48,527 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 13:44:49,182 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 13:44:49,512 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 13:44:49,657 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 13:44:49,904 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 13:44:50,920 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 13:44:50,929 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 13:44:51,911 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 13:44:52,106 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 13:44:52,581 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 13:44:52,759 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 13:44:52,978 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 13:44:53,005 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 13:44:53,005 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 13:45:01,386 - INFO - Fetched 49.4 MB in 15s (3349 kB/s)
+2026-11-10 13:45:09,995 - INFO - Reading package lists...
+2026-11-10 13:45:15,713 - INFO - Reading package lists...
+2026-11-10 13:45:17,115 - INFO - Building dependency tree...
+2026-11-10 13:45:17,115 - INFO - Reading state information...
+2026-11-10 13:45:17,926 - INFO - E: Unable to locate package python3.9-venv
+2026-11-10 13:45:17,926 - INFO - E: Couldn't find any package by glob 'python3.9-venv'
+2026-11-10 13:45:17,926 - INFO - E: Couldn't find any package by regex 'python3.9-venv'
+2026-11-10 13:45:17,926 - INFO - E: Unable to locate package python3.9-distutils
+2026-11-10 13:45:17,926 - INFO - E: Couldn't find any package by glob 'python3.9-distutils'
+2026-11-10 13:45:17,926 - INFO - E: Couldn't find any package by regex 'python3.9-distutils'
+2026-11-10 13:45:21,545 - INFO -  ---> Removed intermediate container 6fa699c0763a
+2026-11-10 13:45:21,800 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     python3.9 python3.9-venv python3-pip python3.9-distutils     git wget build-essential curl locales locales-all tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:45:21,800 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     python3.9 python3.9-venv python3-pip python3.9-distutils     git wget build-essential curl locales locales-all tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

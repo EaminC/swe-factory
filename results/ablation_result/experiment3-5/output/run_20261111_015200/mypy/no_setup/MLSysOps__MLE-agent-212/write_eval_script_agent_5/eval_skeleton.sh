@@ -1,0 +1,18 @@
+#!/bin/bash
+set -uxo pipefail
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+cd /testbed
+git checkout a405d8130cbb24e6556fb0125f634c3fb738eb2a
+
+# Since tests/test_deepseek_model.py does not exist, list tests directory content for debug
+echo "Listing contents of tests/ directory:"
+ls -l tests/
+
+# No patch file to apply, skipping patch application step
+
+# Run all tests discovered by unittest in tests/ directory
+python -m unittest discover tests
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"

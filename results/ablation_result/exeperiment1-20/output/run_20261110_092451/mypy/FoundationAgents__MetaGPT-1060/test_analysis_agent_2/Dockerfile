@@ -1,0 +1,56 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies and tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    locales \
+    locales-all \
+    libffi-dev \
+    libssl-dev \
+    ca-certificates \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda for environment management
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda3 \
+    && rm /tmp/miniconda.sh
+
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and add conda-forge channel
+RUN conda init bash \
+    && conda config --append channels conda-forge
+
+# Create conda environment 'testbed' with python 3.9
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.9 -y"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository, checkout specific commit, and install dependencies inside conda env
+ARG COMMIT_SHA=0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea
+
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/FoundationAgents/MetaGPT.git /testbed && \
+    cd /testbed && \
+    git reset --hard ${COMMIT_SHA} && \
+    chmod -R a+rw /testbed && \
+    pip install --upgrade pip setuptools wheel && \
+    # Install all dependencies only from requirements.txt (do not pre-install package from PyPI) \
+    pip install -r requirements.txt && \
+    # Install only testing-related extras, ensuring no redundant PyPI packages are installed \
+    pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-html pytest-xdist pytest-timeout && \
+    # Install MetaGPT package in editable mode referencing local repo code \
+    pip install -e ."
+
+# Persist conda environment activation in bashrc for interactive use
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc

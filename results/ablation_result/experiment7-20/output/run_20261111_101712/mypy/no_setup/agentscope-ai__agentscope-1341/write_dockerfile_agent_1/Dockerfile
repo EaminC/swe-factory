@@ -1,0 +1,46 @@
+# Use a stable full Ubuntu base image with bash installed
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, Python 3.10+, git, and utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3.10-venv \
+    python3-pip \
+    python3.10-distutils \
+    git \
+    curl \
+    wget \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.10, pip3 usable
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+# Create and activate virtual environment named testbed
+RUN python3 -m venv /opt/testbed
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Git clone the repository and checkout specific commit
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed
+
+WORKDIR /testbed
+
+ARG COMMIT_SHA=c19b8bc5723ec562fff77d3386f10de3e426f8da
+RUN git fetch --all && git reset --hard $COMMIT_SHA
+
+# Install the project in editable mode along with test dependencies
+RUN pip install --upgrade pip && \
+    pip install setuptools==78.1.1 wheel==0.45.1 && \
+    pip install -e .[testing]
+
+# Some environment variables are required at runtime, documents them here as placeholder
+ENV DASHSCOPE_API_KEY=""
+ENV GAODE_API_KEY=""
+
+# Enable bashrc to activate testbed venv automatically on container shell start
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc

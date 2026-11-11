@@ -1,0 +1,54 @@
+# Use Ubuntu 22.04 as base image for stability and bash support
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, git, python, nodejs, npm, and basic build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    nodejs \
+    npm \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3.10 as default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+ && python -m pip install --upgrade pip setuptools wheel
+
+# Create and activate virtual environment named testbed
+RUN python -m venv /opt/testbed
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Install mandatory Python build tools first to support editable install
+RUN pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    git reset --hard c245029a6f1094fbe72f58b353908127bea8269b
+
+# Install the project in editable mode with dev dependencies, as tests require pytest and other dev packages
+RUN pip install -e ".[dev]" 
+
+# Ensure npm dependencies installation for AgentScope Studio (per context information)
+RUN npm install -g npm@latest && npm install
+
+# Add bash environment setup for virtualenv activation
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Environment variables hint (not set here, user must set when running container)
+# DASHSCOPE_API_KEY, GAODE_API_KEY
+
+# Default shell is bash as set above; no entrypoint or CMD to ensure container starts without running tests

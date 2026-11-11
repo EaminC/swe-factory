@@ -1,0 +1,49 @@
+[Errno 30] Read-only file system error when using AWS Lambda
+When attempting to run our agents on AWS Lambda, I encounter an [Errno 30] Read-only file system error. This issue arises because Lambda only allows writing to the `/tmp `directory.
+
+The problem specifically occurs when initializing [LTMSQLiteStorage](https://github.com/joaomdmoura/crewAI/blob/main/src/crewai/memory/storage/ltm_sqlite_storage.py) as it invokes [db_storage_path](https://github.com/joaomdmoura/crewAI/blob/main/src/crewai/utilities/paths.py), which uses `Path.cwd()` to determine the current working directory and attempts to create a directory there.
+
+To resolve this issue, you can add new env variable which will let users define the directory. This will ensure compatibility with AWS Lambda's read-only file system constraints.
+
+Error:
+
+```
+[ERROR] OSError: [Errno 30] Read-only file system: '/home/sbx_user1051'
+Traceback (most recent call last):
+  File "/var/lang/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/var/task/packages/flows/src/process_run_flow.py", line 19, in <module>
+    from crewai import Agent, Crew, Process, Task
+  File "/var/task/site-packages/crewai/__init__.py", line 1, in <module>
+    from crewai.agent import Agent
+  File "/var/task/site-packages/crewai/agent.py", line 23, in <module>
+    from crewai.agents import CacheHandler, CrewAgentExecutor, CrewAgentParser, ToolsHandler
+  File "/var/task/site-packages/crewai/agents/__init__.py", line 2, in <module>
+    from .executor import CrewAgentExecutor
+  File "/var/task/site-packages/crewai/agents/executor.py", line 16, in <module>
+    from crewai.memory.entity.entity_memory_item import EntityMemoryItem
+  File "/var/task/site-packages/crewai/memory/__init__.py", line 2, in <module>
+    from .long_term.long_term_memory import LongTermMemory
+  File "/var/task/site-packages/crewai/memory/long_term/long_term_memory.py", line 5, in <module>
+    from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
+  File "/var/task/site-packages/crewai/memory/storage/ltm_sqlite_storage.py", line 9, in <module>
+    class LTMSQLiteStorage:
+  File "/var/task/site-packages/crewai/memory/storage/ltm_sqlite_storage.py", line 14, in LTMSQLiteStorage
+    def __init__(self, db_path=f"{db_storage_path()}/long_term_memory_storage.db"):
+  File "/var/task/site-packages/crewai/utilities/paths.py", line 11, in db_storage_path
+    data_dir.mkdir(parents=True, exist_ok=True)
+  File "/var/lang/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/var/lang/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/var/lang/lib/python3.11/pathlib.py", line 1120, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "/var/lang/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+```

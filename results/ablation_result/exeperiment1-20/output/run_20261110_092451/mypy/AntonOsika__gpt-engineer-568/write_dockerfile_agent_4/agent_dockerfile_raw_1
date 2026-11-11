@@ -1,0 +1,52 @@
+<dockerfile>
+# Use Ubuntu 20.04 as stable, widely tested base with bash shell
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Split installation steps to reduce peak memory usage and potential OOM kill
+
+# Update apt and install git and curl first
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python and related packages in a separate layer
+RUN apt-get update && apt-get install -y \
+    python3.8 \
+    python3.8-venv \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure locale and timezone environment variables
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed
+
+RUN cd /testbed && git reset --hard f84754d54ee311146c4f52b5e3ceb0fa8d0b731b
+
+# Create and activate a python virtual environment with python3.8 explicitly
+RUN python3.8 -m venv /testbed/venv
+
+# Upgrade pip inside venv and install the package in editable mode plus pytest for testing
+RUN /bin/bash -c "source /testbed/venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install -e . && \
+    pip install pytest"
+
+# Set environment variables for venv activation on container start
+ENV VIRTUAL_ENV=/testbed/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+</dockerfile>

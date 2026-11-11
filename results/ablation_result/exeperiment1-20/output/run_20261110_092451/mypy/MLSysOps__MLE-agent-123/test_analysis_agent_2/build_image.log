@@ -1,0 +1,99 @@
+2026-11-10 12:53:15,142 - INFO - Building image mlsysops__mle-agent-123
+Using dockerfile:
+# Switch to Ubuntu 20.04 to try to avoid build runtime/storage driver issues encountered with 22.04
+FROM --platform=linux/x86_64 ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Update package lists and install essential system packages with explicit --no-install-recommends to reduce layer size
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    git \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    python3.11-distutils \
+    build-essential \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a dedicated Python virtual environment called testbed using python3.11 explicitly
+RUN python3.11 -m venv /opt/testbed
+
+# Upgrade pip inside the venv and install wheel and setuptools latest
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Set environment variables for virtual environment usage
+ENV VIRTUAL_ENV=/opt/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Clone the target repository and checkout the specific commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed \
+    && cd /testbed \
+    && git reset --hard cc7d248e9ec8f9359d7454017ddc6a31bde840b4
+
+# Install the repository dependencies and the repo itself in editable mode
+RUN pip install -r /testbed/requirements.txt \
+    && pip install -e /testbed
+
+# Set working directory
+WORKDIR /testbed
+
+# Optional: activate virtual environment automatically on container start by sourcing in bashrc
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+2026-11-10 12:53:15,149 - INFO - Do not find previous image, images list is clean.
+2026-11-10 12:53:15,159 - INFO - Step 1/13 : FROM --platform=linux/x86_64 ubuntu:20.04
+2026-11-10 12:56:01,160 - INFO -  ---> 8feb4d8ca535
+2026-11-10 12:56:01,183 - INFO - Step 2/13 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 12:56:07,734 - INFO -  ---> Running in 1336a8b6b764
+2026-11-10 12:56:16,886 - INFO -  ---> Removed intermediate container 1336a8b6b764
+2026-11-10 12:56:16,888 - INFO -  ---> 157ad1b9b844
+2026-11-10 12:56:16,890 - INFO - Step 3/13 : ENV TZ=Etc/UTC
+2026-11-10 12:56:18,468 - INFO -  ---> Running in a0aa8198419b
+2026-11-10 12:56:23,722 - INFO -  ---> Removed intermediate container a0aa8198419b
+2026-11-10 12:56:23,724 - INFO -  ---> 66d6c456352e
+2026-11-10 12:56:23,724 - INFO - Step 4/13 : SHELL ["/bin/bash", "-c"]
+2026-11-10 12:56:24,005 - INFO -  ---> Running in 319fc6451813
+2026-11-10 12:56:27,195 - INFO -  ---> Removed intermediate container 319fc6451813
+2026-11-10 12:56:27,196 - INFO -  ---> ffa333255839
+2026-11-10 12:56:27,196 - INFO - Step 5/13 : RUN apt-get update && apt-get install -y --no-install-recommends     wget     git     python3.11     python3.11-venv     python3-pip     python3.11-distutils     build-essential     curl     ca-certificates     && rm -rf /var/lib/apt/lists/*
+2026-11-10 12:56:27,946 - INFO -  ---> Running in 7d12e23c2ae4
+2026-11-10 12:56:29,709 - INFO - Get:1 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+2026-11-10 12:56:29,723 - INFO - Get:2 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]
+2026-11-10 12:56:31,156 - INFO - Get:3 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [4710 kB]
+2026-11-10 12:56:31,210 - INFO - Get:4 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+2026-11-10 12:56:31,570 - INFO - Get:5 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+2026-11-10 12:56:31,937 - INFO - Get:6 http://archive.ubuntu.com/ubuntu focal/multiverse amd64 Packages [177 kB]
+2026-11-10 12:56:32,113 - INFO - Get:7 http://archive.ubuntu.com/ubuntu focal/restricted amd64 Packages [33.4 kB]
+2026-11-10 12:56:32,115 - INFO - Get:8 http://archive.ubuntu.com/ubuntu focal/main amd64 Packages [1275 kB]
+2026-11-10 12:56:32,691 - INFO - Get:9 http://archive.ubuntu.com/ubuntu focal/universe amd64 Packages [11.3 MB]
+2026-11-10 12:56:32,882 - INFO - Get:10 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [4368 kB]
+2026-11-10 12:56:33,085 - INFO - Get:11 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [1300 kB]
+2026-11-10 12:56:33,200 - INFO - Get:12 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [32.5 kB]
+2026-11-10 12:56:33,650 - INFO - Get:13 http://archive.ubuntu.com/ubuntu focal-updates/multiverse amd64 Packages [36.2 kB]
+2026-11-10 12:56:33,685 - INFO - Get:14 http://archive.ubuntu.com/ubuntu focal-updates/universe amd64 Packages [1588 kB]
+2026-11-10 12:56:33,757 - INFO - Get:15 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages [4850 kB]
+2026-11-10 12:56:34,071 - INFO - Get:16 http://archive.ubuntu.com/ubuntu focal-updates/restricted amd64 Packages [4904 kB]
+2026-11-10 12:56:34,373 - INFO - Get:17 http://archive.ubuntu.com/ubuntu focal-backports/universe amd64 Packages [28.4 kB]
+2026-11-10 12:56:34,373 - INFO - Get:18 http://archive.ubuntu.com/ubuntu focal-backports/main amd64 Packages [54.7 kB]
+2026-11-10 12:56:36,086 - INFO - Fetched 35.3 MB in 7s (4995 kB/s)
+2026-11-10 12:56:38,487 - INFO - Reading package lists...
+2026-11-10 12:56:40,635 - INFO - Reading package lists...
+2026-11-10 12:56:41,164 - INFO - Building dependency tree...
+2026-11-10 12:56:41,164 - INFO - Reading state information...
+2026-11-10 12:56:41,459 - INFO - E: Unable to locate package python3.11
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by glob 'python3.11'
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by regex 'python3.11'
+2026-11-10 12:56:41,459 - INFO - E: Unable to locate package python3.11-venv
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by glob 'python3.11-venv'
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by regex 'python3.11-venv'
+2026-11-10 12:56:41,459 - INFO - E: Unable to locate package python3.11-distutils
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by glob 'python3.11-distutils'
+2026-11-10 12:56:41,459 - INFO - E: Couldn't find any package by regex 'python3.11-distutils'
+2026-11-10 12:56:42,589 - INFO -  ---> Removed intermediate container 7d12e23c2ae4
+2026-11-10 12:56:42,733 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     wget     git     python3.11     python3.11-venv     python3-pip     python3.11-distutils     build-essential     curl     ca-certificates     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 12:56:42,734 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     wget     git     python3.11     python3.11-venv     python3-pip     python3.11-distutils     build-essential     curl     ca-certificates     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

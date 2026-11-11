@@ -1,0 +1,35 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+cd /testbed
+git checkout a405d8130cbb24e6556fb0125f634c3fb738eb2a
+
+# Verify existence of the test file before applying patch
+if [ ! -f tests/test_deepseek_model.py ]; then
+  echo "ERROR: Test file 'tests/test_deepseek_model.py' not found before applying patch."
+  exit 1
+fi
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Verify existence of the test file after applying patch
+if [ ! -f tests/test_deepseek_model.py ]; then
+  echo "WARNING: Test file 'tests/test_deepseek_model.py' not found after applying patch."
+fi
+
+# Ensure pytest is installed before running tests
+pip install --no-cache-dir pytest
+
+# Run only the specified test file via pytest with detailed traceback for debugging
+pytest -v --tb=short --disable-warnings tests/test_deepseek_model.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset all changes to clean state instead of trying to checkout possibly removed/renamed files
+git reset --hard a405d8130cbb24e6556fb0125f634c3fb738eb2a
+</script>

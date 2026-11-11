@@ -1,0 +1,109 @@
+2026-11-10 13:42:59,418 - INFO - Building image agentscope-ai__agentscope-106
+Using dockerfile:
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt update && apt install -y \
+    git \
+    wget \
+    build-essential \
+    curl \
+    python3.9 \
+    python3.9-venv \
+    python3-pip \
+    python3.9-distutils \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.9 if not installed by default
+RUN python3.9 -m ensurepip
+RUN python3.9 -m pip install --upgrade pip setuptools wheel
+
+# Install Miniconda (latest py39 compatible) for more reliable env management
+RUN wget "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-0-Linux-x86_64.sh" -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/miniconda3 \
+    && rm miniconda.sh
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and create testbed environment with python 3.9
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda config --append channels conda-forge && \
+    conda create -y -n testbed python=3.9 && \
+    conda clean -afy"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repository, checkout specific commit, install dependencies in editable mode in conda env
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/agentscope-ai/agentscope.git . && \
+    git reset --hard 371d1680ab7f41c7d695559221956250ba048475 && \
+    pip install -q -e .[full] && \
+    pip install -q coverage"
+
+# Enable conda environment activation on container start for bash shells
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+# Default shell is bash
+ENV SHELL=/bin/bash
+
+2026-11-10 13:42:59,427 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 13:42:59,475 - INFO -  ---> 076e7bf82319
+2026-11-10 13:42:59,476 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:43:04,768 - INFO -  ---> Running in 39e57c1b2931
+2026-11-10 13:43:26,566 - INFO -  ---> Removed intermediate container 39e57c1b2931
+2026-11-10 13:43:26,566 - INFO -  ---> f6892489df64
+2026-11-10 13:43:26,566 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-10 13:43:32,018 - INFO -  ---> Running in 73c62e511e16
+2026-11-10 13:43:56,892 - INFO -  ---> Removed intermediate container 73c62e511e16
+2026-11-10 13:43:56,893 - INFO -  ---> 3f23a36fdfec
+2026-11-10 13:43:56,893 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:44:07,719 - INFO -  ---> Running in 1551e2ca2797
+2026-11-10 13:44:32,742 - INFO -  ---> Removed intermediate container 1551e2ca2797
+2026-11-10 13:44:32,743 - INFO -  ---> b9ead8489fc2
+2026-11-10 13:44:32,743 - INFO - Step 5/14 : RUN apt update && apt install -y     git     wget     build-essential     curl     python3.9     python3.9-venv     python3-pip     python3.9-distutils     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:44:41,244 - INFO -  ---> Running in c667d198a69a
+2026-11-10 13:44:45,529 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-10 13:44:46,014 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 13:44:46,018 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 13:44:47,093 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 13:44:47,455 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 13:44:47,620 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 13:44:48,314 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 13:44:48,828 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 13:44:48,930 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 13:44:49,317 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 13:44:49,390 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 13:44:49,429 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 13:44:49,476 - INFO - Get:12 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 13:44:51,446 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 13:44:51,518 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 13:44:51,538 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 13:44:52,274 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 13:44:52,554 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 13:44:52,554 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 13:45:00,014 - INFO - Fetched 49.4 MB in 14s (3441 kB/s)
+2026-11-10 13:45:08,867 - INFO - Reading package lists...
+2026-11-10 13:45:10,811 - INFO - Building dependency tree...
+2026-11-10 13:45:10,811 - INFO - Reading state information...
+2026-11-10 13:45:11,031 - INFO - 4 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2026-11-10 13:45:11,069 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-10 13:45:16,962 - INFO - Reading package lists...
+2026-11-10 13:45:18,220 - INFO - Building dependency tree...
+2026-11-10 13:45:18,220 - INFO - Reading state information...
+2026-11-10 13:45:18,421 - INFO - E: Unable to locate package python3.9
+2026-11-10 13:45:18,421 - INFO - E: Couldn't find any package by glob 'python3.9'
+2026-11-10 13:45:18,421 - INFO - E: Unable to locate package python3.9-venv
+2026-11-10 13:45:18,421 - INFO - E: Couldn't find any package by glob 'python3.9-venv'
+2026-11-10 13:45:18,421 - INFO - E: Unable to locate package python3.9-distutils
+2026-11-10 13:45:18,421 - INFO - E: Couldn't find any package by glob 'python3.9-distutils'
+2026-11-10 13:45:23,269 - INFO -  ---> Removed intermediate container c667d198a69a
+2026-11-10 13:45:23,998 - ERROR - Error: The command '/bin/bash -c apt update && apt install -y     git     wget     build-essential     curl     python3.9     python3.9-venv     python3-pip     python3.9-distutils     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:45:23,999 - ERROR - The command '/bin/bash -c apt update && apt install -y     git     wget     build-essential     curl     python3.9     python3.9-venv     python3-pip     python3.9-distutils     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

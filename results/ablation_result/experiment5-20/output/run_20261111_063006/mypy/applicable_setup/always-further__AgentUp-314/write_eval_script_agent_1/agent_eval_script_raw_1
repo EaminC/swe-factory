@@ -1,0 +1,25 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 58b138c3e797a3bd39c04603ce3e50b866b7a299
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate conda environment and run specified test file only
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+
+pytest --no-header -rA --tb=short tests/test_core/test_executor_agent_type.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset modified files after test run
+git checkout 58b138c3e797a3bd39c04603ce3e50b866b7a299
+
+</script>

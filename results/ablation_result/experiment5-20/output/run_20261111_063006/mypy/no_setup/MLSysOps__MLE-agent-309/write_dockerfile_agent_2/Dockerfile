@@ -1,0 +1,43 @@
+# Base image specification with Ubuntu 22.04 and bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies including python3.11 from deadsnakes PPA, git, curl, and build tools
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    curl \
+    git \
+    build-essential \
+    libffi-dev \
+    locales-all \
+    tzdata \
+    ca-certificates \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update && apt-get install -y python3.11 python3.11-venv python3.11-distutils python3-pip \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+    && python3 -m pip install --upgrade pip setuptools wheel \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit inside /testbed
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed/ \
+    && git reset --hard cf9762d3abd3cad227bbd859a3ef4f95dff164a3
+
+# Set up Python virtual environment named 'testbed' and install package in editable mode with all dependencies including unittest requirements
+RUN python3 -m venv /testbed/testbed-venv \
+    && source /testbed/testbed-venv/bin/activate \
+    && pip install --upgrade pip setuptools wheel \
+    && pip install -e . \
+    && pip install unittest2 --upgrade || true \
+    && deactivate
+
+# Expose environment activation for bash shell usage
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set workdir explicitly (redundant but clear)
+WORKDIR /testbed/

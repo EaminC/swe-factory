@@ -1,0 +1,39 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 96a84c48ce271d37749c6304866e42a24e6647ac
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the python virtual environment
+source /opt/testbed/bin/activate
+
+# Setup minimal required config file to avoid AttributeError in embedding setup
+# Create config.yaml with platform not OpenAI to avoid requiring API key, using default local embedding
+mkdir -p config
+cat > config/config.yaml <<'EOCFG'
+memory:
+  backend: chromadb
+  persist_directory: "./tmp/chroma"
+  embedding_function: null
+  platform: Local
+  api_key: null
+EOCFG
+
+export MLE_AGENT_CONFIG_PATH=/testbed/config/config.yaml
+
+# Run only the specified test file with pytest for proper test discovery
+pytest -v tests/test_memory_lancedb.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup config file to reset environment
+rm -rf /testbed/config
+
+# Reset any changes after test run
+git checkout 96a84c48ce271d37749c6304866e42a24e6647ac

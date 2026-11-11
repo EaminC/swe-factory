@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout cf9762d3abd3cad227bbd859a3ef4f95dff164a3 "tests/test_gemini_model.py"
+
+# Apply required test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate python venv environment
+source /testbed/testbed-venv/bin/activate
+
+# Install dependencies to ensure all required packages including test dependencies are present
+pip install --upgrade pip setuptools wheel
+pip install -e .
+pip install unittest2 --upgrade || true
+
+# Run only the specified test file(s) using unittest verbose output (unittest by default can run a single file)
+python -m unittest -v tests/test_gemini_model.py
+rc=$?            # Required, save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc"  # Required, echo test status
+
+# Cleanup: reset the patched file to original state
+git checkout cf9762d3abd3cad227bbd859a3ef4f95dff164a3 "tests/test_gemini_model.py"

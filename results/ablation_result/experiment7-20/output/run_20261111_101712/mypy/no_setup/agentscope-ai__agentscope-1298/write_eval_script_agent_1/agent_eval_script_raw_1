@@ -1,0 +1,20 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 28cfb99a21902d330dab6cb3762a739198cf972f tests/hooks/test_studio_hooks.py
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified target test file; output concise test results with file names and status
+pytest -q --tb=short --disable-warnings --maxfail=1 tests/hooks/test_studio_hooks.py
+rc=$?            # Required, save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc" # Required, echo test status
+
+# Revert changes on the test file to keep clean state
+git checkout 28cfb99a21902d330dab6cb3762a739198cf972f tests/hooks/test_studio_hooks.py
+</script>

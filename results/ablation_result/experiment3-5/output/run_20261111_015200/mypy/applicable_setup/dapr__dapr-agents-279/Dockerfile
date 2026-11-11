@@ -1,0 +1,62 @@
+# Use Ubuntu 22.04 as base for stable and compatible environment with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies, Python 3.10+, git, curl, build essentials, and utilities
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3.10 as default python3 and python
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
+
+# Install Dapr CLI via official install script
+RUN wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+
+# Note: Removed 'RUN dapr init' since it requires Docker daemon available at build time, which is not possible
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the dapr/dapr-agents repo and checkout the specified commit (passed as build arg)
+ARG COMMIT_SHA=13feed2c2c00249344c4e5151a1e3b2cdaf6d428
+RUN git clone https://github.com/dapr/dapr-agents.git . && \
+    git reset --hard ${COMMIT_SHA} && \
+    git remote remove origin
+
+# Set up a python virtual environment named 'testbed'
+RUN python3 -m venv /opt/testbed
+
+# Activate virtual environment and install dependencies:
+# 1. Upgrade pip inside venv,
+# 2. Install core dependencies explicitly as per context,
+# 3. Install the package itself in editable mode with test extras.
+RUN /bin/bash -c "\
+    source /opt/testbed/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install 'dapr>=1.16.0rc2' 'dapr-ext-fastapi>=1.16.0rc2' 'pydantic>=2.11.3,<3.0.0' 'fastapi>=0.110.0,<1.0.0' 'protobuf>=6.31.0,<7.0.0' 'docker>=7.1.0' && \
+    pip install -e .[test] \
+"
+
+# Ensure bash uses the venv environment by default for convenience
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Default shell to bash explicitly
+SHELL ["/bin/bash", "-c"]

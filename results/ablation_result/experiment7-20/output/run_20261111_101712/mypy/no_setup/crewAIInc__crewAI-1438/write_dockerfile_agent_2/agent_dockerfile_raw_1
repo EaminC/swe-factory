@@ -1,0 +1,72 @@
+<dockerfile>
+# Use Ubuntu 22.04 as the base image to ensure bash and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, wget, build essentials, python3.11, python3-pip, locales, tzdata, and others
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to avoid locale warnings
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip globally (pip is installed via python3-pip package)
+RUN python3.11 -m pip install --upgrade pip
+
+# Install 'uv' dependency management tool globally to manage dependencies as described
+RUN python3.11 -m pip install uv
+
+# Create a working directory /testbed
+WORKDIR /testbed/
+
+# Clone the repo and checkout the specified commit
+# The commit SHA will be passed during build time as build-arg COMMIT_SHA
+ARG COMMIT_SHA=de5d2eaa9b12167ea14ecf59c70f59227fd63fe3
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed && \
+    git reset --hard ${COMMIT_SHA} && \
+    git remote remove origin
+
+# Set up Python virtual environment named 'testbed'
+RUN python3.11 -m venv /testbed/testbed
+
+# Activate the virtualenv, upgrade pip, install uv lock and use UV to sync dependencies and create venv env
+# Then install the local package in editable mode with all optional tools (per context: 'pip install dist/*.tar.gz' & 'crewai[tools]')
+RUN /bin/bash -c "\
+    source /testbed/testbed/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install uv && \
+    uv lock && \
+    uv sync && \
+    uv venv && \
+    pip install -e . && \
+    pip install 'crewai[tools]' \
+    "
+
+# Expose environment variables that tests might require (informative for container use)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# Append virtual environment activation to bashrc for convenience during interactive sessions
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash (already set) and default working directory is /testbed
+WORKDIR /testbed/
+</dockerfile>

@@ -1,0 +1,107 @@
+2026-11-10 13:43:04,431 - INFO - Building image mlsysops__mle-agent-187
+Using dockerfile:
+# Base image with Python 3.11 on Ubuntu 20.04 (matching CI environment)
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools including git, python3.11, pip, build essentials
+RUN apt update && apt install -y \
+    software-properties-common \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11 and pip3 to pip for python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+ && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+# Upgrade pip to latest version for python3.11
+RUN python3 -m pip install --upgrade pip setuptools
+
+# Create virtual environment named "testbed"
+RUN python3 -m venv /opt/testbed
+
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Upgrade pip and setuptools inside the virtual environment
+RUN pip install --upgrade pip setuptools
+
+# Set working directory where repo will be cloned
+WORKDIR /testbed
+
+# Clone the repository and checkout specific commit, then install dependencies and repo itself in editable mode
+RUN git clone https://github.com/MLSysOps/MLE-agent.git . \
+ && git reset --hard b95f56b446a2fe55247eee717ab85fe45f857d27 \
+ && pip install -r requirements.txt \
+ && pip install mle-agent -U \
+ && pip install -e .
+
+# Add activation of virtual environment to root bashrc for interactive sessions
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Default shell bash to ensure compatibility
+SHELL ["/bin/bash", "-c"]
+
+2026-11-10 13:43:04,442 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:20.04
+2026-11-10 13:43:04,954 - INFO -  ---> 8feb4d8ca535
+2026-11-10 13:43:04,955 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:43:10,236 - INFO -  ---> Running in 0a7f54b4c0bd
+2026-11-10 13:43:26,564 - INFO -  ---> Removed intermediate container 0a7f54b4c0bd
+2026-11-10 13:43:26,564 - INFO -  ---> a68a336ea9c0
+2026-11-10 13:43:26,564 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-10 13:43:30,822 - INFO -  ---> Running in 5e3910433b0b
+2026-11-10 13:43:53,223 - INFO -  ---> Removed intermediate container 5e3910433b0b
+2026-11-10 13:43:53,224 - INFO -  ---> 5e8fb53ab75c
+2026-11-10 13:43:53,224 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:44:02,534 - INFO -  ---> Running in 3ecd0c0c9113
+2026-11-10 13:44:31,428 - INFO -  ---> Removed intermediate container 3ecd0c0c9113
+2026-11-10 13:44:31,429 - INFO -  ---> bedaa7cc6bae
+2026-11-10 13:44:31,429 - INFO - Step 5/14 : RUN apt update && apt install -y     software-properties-common     git     wget     curl     build-essential     python3.11     python3.11-venv     python3.11-distutils     python3-pip     locales     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:44:37,629 - INFO -  ---> Running in f16eeffd59f4
+2026-11-10 13:44:42,790 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-10 13:44:43,309 - INFO - Get:1 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+2026-11-10 13:44:43,351 - INFO - Get:2 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]
+2026-11-10 13:44:44,457 - INFO - Get:3 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+2026-11-10 13:44:44,624 - INFO - Get:4 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [32.5 kB]
+2026-11-10 13:44:44,745 - INFO - Get:5 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+2026-11-10 13:44:45,028 - INFO - Get:6 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [4368 kB]
+2026-11-10 13:44:45,213 - INFO - Get:7 http://archive.ubuntu.com/ubuntu focal/main amd64 Packages [1275 kB]
+2026-11-10 13:44:45,854 - INFO - Get:8 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [4710 kB]
+2026-11-10 13:44:45,882 - INFO - Get:9 http://archive.ubuntu.com/ubuntu focal/multiverse amd64 Packages [177 kB]
+2026-11-10 13:44:46,037 - INFO - Get:10 http://archive.ubuntu.com/ubuntu focal/universe amd64 Packages [11.3 MB]
+2026-11-10 13:44:46,351 - INFO - Get:11 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [1300 kB]
+2026-11-10 13:44:47,215 - INFO - Get:12 http://archive.ubuntu.com/ubuntu focal/restricted amd64 Packages [33.4 kB]
+2026-11-10 13:44:47,215 - INFO - Get:13 http://archive.ubuntu.com/ubuntu focal-updates/restricted amd64 Packages [4904 kB]
+2026-11-10 13:44:47,550 - INFO - Get:14 http://archive.ubuntu.com/ubuntu focal-updates/multiverse amd64 Packages [36.2 kB]
+2026-11-10 13:44:47,557 - INFO - Get:15 http://archive.ubuntu.com/ubuntu focal-updates/universe amd64 Packages [1588 kB]
+2026-11-10 13:44:47,625 - INFO - Get:16 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages [4850 kB]
+2026-11-10 13:44:47,981 - INFO - Get:17 http://archive.ubuntu.com/ubuntu focal-backports/universe amd64 Packages [28.4 kB]
+2026-11-10 13:44:47,990 - INFO - Get:18 http://archive.ubuntu.com/ubuntu focal-backports/main amd64 Packages [54.7 kB]
+2026-11-10 13:44:57,123 - INFO - Fetched 35.3 MB in 14s (2520 kB/s)
+2026-11-10 13:45:01,760 - INFO - Reading package lists...
+2026-11-10 13:45:04,790 - INFO - Building dependency tree...
+2026-11-10 13:45:04,794 - INFO - Reading state information...
+2026-11-10 13:45:05,020 - INFO - 5 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2026-11-10 13:45:05,079 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-10 13:45:12,030 - INFO - Reading package lists...
+2026-11-10 13:45:13,641 - INFO - Building dependency tree...
+2026-11-10 13:45:13,641 - INFO - Reading state information...
+2026-11-10 13:45:14,167 - INFO - E: Unable to locate package python3.11
+2026-11-10 13:45:14,167 - INFO - E: Couldn't find any package by glob 'python3.11'
+2026-11-10 13:45:14,167 - INFO - E: Unable to locate package python3.11-venv
+2026-11-10 13:45:14,167 - INFO - E: Couldn't find any package by glob 'python3.11-venv'
+2026-11-10 13:45:14,167 - INFO - E: Unable to locate package python3.11-distutils
+2026-11-10 13:45:14,167 - INFO - E: Couldn't find any package by glob 'python3.11-distutils'
+2026-11-10 13:45:18,041 - INFO -  ---> Removed intermediate container f16eeffd59f4
+2026-11-10 13:45:18,329 - ERROR - Error: The command '/bin/bash -c apt update && apt install -y     software-properties-common     git     wget     curl     build-essential     python3.11     python3.11-venv     python3.11-distutils     python3-pip     locales     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:45:18,330 - ERROR - The command '/bin/bash -c apt update && apt install -y     software-properties-common     git     wget     curl     build-essential     python3.11     python3.11-venv     python3.11-distutils     python3-pip     locales     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

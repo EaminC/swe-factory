@@ -1,0 +1,238 @@
+2026-11-11 02:42:22,941 - INFO - Checking if image dapr__dapr-agents-279-dockerfile6:latest exists locally...
+2026-11-11 02:42:23,062 - INFO - Image dapr__dapr-agents-279-dockerfile6:latest found locally.
+2026-11-11 02:42:23,062 - INFO - Creating container for dapr__dapr-agents-279...
+2026-11-11 02:42:23,453 - INFO - Container for dapr__dapr-agents-279 started: 3963950523de0d743457052d2a49ed01e77dbc9a4ad4bb20088f61a8327fd7af
+2026-11-11 02:42:23,453 - INFO - Intermediate patch for dapr__dapr-agents-279 written to /root/swe-factory/output/run_20261111_015200/mypy/dapr__dapr-agents-279/test_analysis_agent_6/patch.diff, now applying to container...
+2026-11-11 02:42:23,874 - INFO - Apply patch success:
+Checking patch dapr_agents/agents/orchestrators/base.py...
+Checking patch dapr_agents/agents/orchestrators/llm/orchestrator.py...
+Checking patch dapr_agents/agents/orchestrators/random.py...
+Checking patch dapr_agents/agents/orchestrators/roundrobin.py...
+Applied patch dapr_agents/agents/orchestrators/base.py cleanly.
+Applied patch dapr_agents/agents/orchestrators/llm/orchestrator.py cleanly.
+Applied patch dapr_agents/agents/orchestrators/random.py cleanly.
+Applied patch dapr_agents/agents/orchestrators/roundrobin.py cleanly.
+
+2026-11-11 02:42:23,982 - INFO - Git diff before:
+diff --git a/dapr_agents/agents/orchestrators/base.py b/dapr_agents/agents/orchestrators/base.py
+index b40c8ac2..94999ac7 100644
+--- a/dapr_agents/agents/orchestrators/base.py
++++ b/dapr_agents/agents/orchestrators/base.py
+@@ -3,7 +3,7 @@ from __future__ import annotations
+ import asyncio
+ import logging
+ from collections.abc import Coroutine
+-from typing import Any, Dict, Optional
++from typing import Any, Dict, Optional, Callable
+ 
+ import dapr.ext.workflow as wf
+ 
+@@ -46,22 +46,8 @@ class OrchestratorBase(AgentComponents):
+         runtime: Optional[wf.WorkflowRuntime] = None,
+         workflow_client: Optional[wf.DaprWorkflowClient] = None,
+         default_bundle: Optional[StateModelBundle] = None,
++        final_summary_callback: Optional[Callable[[str], None]] = None,
+     ) -> None:
+-        """
+-        Initialize the orchestrator base.
+-
+-        Args:
+-            name: Orchestrator name.
+-            pubsub: Pub/Sub settings used to address agents via topics.
+-            state: Durable state settings (if the orchestrator persists anything).
+-            registry: Agent registry configuration for discovery.
+-            agent_metadata: Extra metadata to store in the registry; ``orchestrator=True``
+-                is enforced automatically.
+-            workflow_grpc: Optional gRPC overrides for the workflow runtime channel.
+-            runtime: Optional pre-existing workflow runtime to attach to.
+-            workflow_client: Optional DaprWorkflowClient for dependency injection/testing.
+-            default_bundle: Optional state schema bundle (injected by orchestrator subclass).
+-        """
+         super().__init__(
+             name=name,
+             pubsub=pubsub,
+@@ -71,6 +57,8 @@ class OrchestratorBase(AgentComponents):
+             default_bundle=default_bundle,
+         )
+ 
++        self._final_summary_callback = final_summary_callback
++
+         self.execution: AgentExecutionConfig = execution or AgentExecutionConfig()
+         try:
+             self.execution.max_iterations = max(1, int(self.execution.max_iterations))
+@@ -100,6 +88,22 @@ class OrchestratorBase(AgentComponents):
+         # Presentation helper (console)
+         self._text_formatter = ColorTextFormatter()
+ 
++    # ------------------------------------------------------------------
++    # Callback-safe helper method
++    # ------------------------------------------------------------------
++    def _invoke_final_summary_callback(self, summary: str) -> None:
++        """
++        Invoke the user-supplied final summary callback (if any).
++
++        This MUST be called only during non-replay execution paths.
++        """
++        cb = getattr(self, "_final_summary_callback", None)
++        if cb and callable(cb):
++            try:
++                cb(summary)
++            except Exception as exc:  # noqa: BLE001
++                logger.exception("Final summary callback failed: %s", exc)
++
+     # ------------------------------------------------------------------
+     # Lifecycle
+     # ------------------------------------------------------------------
+diff --git a/dapr_agents/agents/orchestrators/llm/orchestrator.py b/dapr_agents/agents/orchestrators/llm/orchestrator.py
+index 146feb65..ab2a652c 100644
+--- a/dapr_agents/agents/orchestrators/llm/orchestrator.py
++++ b/dapr_agents/agents/orchestrators/llm/orchestrator.py
+@@ -284,6 +284,8 @@ class LLMOrchestrator(LLMOrchestratorBase):
+                 )
+                 if not ctx.is_replaying:
+                     logger.info("Workflow %s finalized.", instance_id)
++
++                self._invoke_final_summary_callback(final_summary)
+                 return final_summary
+             else:
+                 task_text = task_results["content"]
+diff --git a/dapr_agents/agents/orchestrators/random.py b/dapr_agents/agents/orchestrators/random.py
+index 873c9fb7..3a97769c 100644
+--- a/dapr_agents/agents/orchestrators/random.py
++++ b/dapr_agents/agents/orchestrators/random.py
+@@ -191,6 +191,7 @@ class RandomOrchestrator(OrchestratorBase):
+                 "Random workflow completed without producing a final output."
+             )
+ 
++        self._invoke_final_summary_callback(final_output)
+         return final_output
+ 
+     @message_router(message_model=AgentTaskResponse)
+diff --git a/dapr_agents/agents/orchestrators/roundrobin.py b/dapr_agents/agents/orchestrators/roundrobin.py
+index 923a7e30..ecd532cc 100644
+--- a/dapr_agents/agents/orchestrators/roundrobin.py
++++ b/dapr_agents/agents/orchestrators/roundrobin.py
+@@ -173,6 +173,8 @@ class RoundRobinOrchestrator(OrchestratorBase):
+             raise RuntimeError(
+                 "RoundRobin workflow completed without producing a final output."
+             )
++
++        self._invoke_final_summary_callback(final_output)
+         return final_output
+ 
+     @message_router(message_model=AgentTaskResponse)
+2026-11-11 02:42:23,983 - INFO - Eval script for dapr__dapr-agents-279 written to /root/swe-factory/output/run_20261111_015200/mypy/dapr__dapr-agents-279/test_analysis_agent_6/patch.diff, now applying to container...
+2026-11-11 02:42:33,223 - INFO - Test output for dapr__dapr-agents-279 written to /root/swe-factory/output/run_20261111_015200/mypy/dapr__dapr-agents-279/test_analysis_agent_6/test_output.txt
+2026-11-11 02:42:33,397 - INFO - Git diff after:
+diff --git a/dapr_agents/agents/orchestrators/base.py b/dapr_agents/agents/orchestrators/base.py
+index b40c8ac2..94999ac7 100644
+--- a/dapr_agents/agents/orchestrators/base.py
++++ b/dapr_agents/agents/orchestrators/base.py
+@@ -3,7 +3,7 @@ from __future__ import annotations
+ import asyncio
+ import logging
+ from collections.abc import Coroutine
+-from typing import Any, Dict, Optional
++from typing import Any, Dict, Optional, Callable
+ 
+ import dapr.ext.workflow as wf
+ 
+@@ -46,22 +46,8 @@ class OrchestratorBase(AgentComponents):
+         runtime: Optional[wf.WorkflowRuntime] = None,
+         workflow_client: Optional[wf.DaprWorkflowClient] = None,
+         default_bundle: Optional[StateModelBundle] = None,
++        final_summary_callback: Optional[Callable[[str], None]] = None,
+     ) -> None:
+-        """
+-        Initialize the orchestrator base.
+-
+-        Args:
+-            name: Orchestrator name.
+-            pubsub: Pub/Sub settings used to address agents via topics.
+-            state: Durable state settings (if the orchestrator persists anything).
+-            registry: Agent registry configuration for discovery.
+-            agent_metadata: Extra metadata to store in the registry; ``orchestrator=True``
+-                is enforced automatically.
+-            workflow_grpc: Optional gRPC overrides for the workflow runtime channel.
+-            runtime: Optional pre-existing workflow runtime to attach to.
+-            workflow_client: Optional DaprWorkflowClient for dependency injection/testing.
+-            default_bundle: Optional state schema bundle (injected by orchestrator subclass).
+-        """
+         super().__init__(
+             name=name,
+             pubsub=pubsub,
+@@ -71,6 +57,8 @@ class OrchestratorBase(AgentComponents):
+             default_bundle=default_bundle,
+         )
+ 
++        self._final_summary_callback = final_summary_callback
++
+         self.execution: AgentExecutionConfig = execution or AgentExecutionConfig()
+         try:
+             self.execution.max_iterations = max(1, int(self.execution.max_iterations))
+@@ -100,6 +88,22 @@ class OrchestratorBase(AgentComponents):
+         # Presentation helper (console)
+         self._text_formatter = ColorTextFormatter()
+ 
++    # ------------------------------------------------------------------
++    # Callback-safe helper method
++    # ------------------------------------------------------------------
++    def _invoke_final_summary_callback(self, summary: str) -> None:
++        """
++        Invoke the user-supplied final summary callback (if any).
++
++        This MUST be called only during non-replay execution paths.
++        """
++        cb = getattr(self, "_final_summary_callback", None)
++        if cb and callable(cb):
++            try:
++                cb(summary)
++            except Exception as exc:  # noqa: BLE001
++                logger.exception("Final summary callback failed: %s", exc)
++
+     # ------------------------------------------------------------------
+     # Lifecycle
+     # ------------------------------------------------------------------
+diff --git a/dapr_agents/agents/orchestrators/llm/orchestrator.py b/dapr_agents/agents/orchestrators/llm/orchestrator.py
+index 146feb65..ab2a652c 100644
+--- a/dapr_agents/agents/orchestrators/llm/orchestrator.py
++++ b/dapr_agents/agents/orchestrators/llm/orchestrator.py
+@@ -284,6 +284,8 @@ class LLMOrchestrator(LLMOrchestratorBase):
+                 )
+                 if not ctx.is_replaying:
+                     logger.info("Workflow %s finalized.", instance_id)
++
++                self._invoke_final_summary_callback(final_summary)
+                 return final_summary
+             else:
+                 task_text = task_results["content"]
+diff --git a/dapr_agents/agents/orchestrators/random.py b/dapr_agents/agents/orchestrators/random.py
+index 873c9fb7..3a97769c 100644
+--- a/dapr_agents/agents/orchestrators/random.py
++++ b/dapr_agents/agents/orchestrators/random.py
+@@ -191,6 +191,7 @@ class RandomOrchestrator(OrchestratorBase):
+                 "Random workflow completed without producing a final output."
+             )
+ 
++        self._invoke_final_summary_callback(final_output)
+         return final_output
+ 
+     @message_router(message_model=AgentTaskResponse)
+diff --git a/dapr_agents/agents/orchestrators/roundrobin.py b/dapr_agents/agents/orchestrators/roundrobin.py
+index 923a7e30..ecd532cc 100644
+--- a/dapr_agents/agents/orchestrators/roundrobin.py
++++ b/dapr_agents/agents/orchestrators/roundrobin.py
+@@ -173,6 +173,8 @@ class RoundRobinOrchestrator(OrchestratorBase):
+             raise RuntimeError(
+                 "RoundRobin workflow completed without producing a final output."
+             )
++
++        self._invoke_final_summary_callback(final_output)
+         return final_output
+ 
+     @message_router(message_model=AgentTaskResponse)
+2026-11-11 02:42:33,398 - INFO - Attempting to stop container dapr__dapr-agents-279-test5...
+2026-11-11 02:42:48,634 - INFO - Attempting to remove container dapr__dapr-agents-279-test5...
+2026-11-11 02:42:48,676 - INFO - Container dapr__dapr-agents-279-test5 removed.
+2026-11-11 02:42:48,676 - INFO - Attempting to remove image dapr__dapr-agents-279-dockerfile6:latest...
+2026-11-11 02:42:51,800 - INFO - Image dapr__dapr-agents-279-dockerfile6:latest removed.

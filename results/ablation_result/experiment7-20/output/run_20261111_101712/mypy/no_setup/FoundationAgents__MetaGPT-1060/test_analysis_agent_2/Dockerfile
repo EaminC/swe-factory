@@ -1,0 +1,57 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies including git, curl, wget, bash, build tools, and libraries needed for Miniconda and Python
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    ca-certificates \
+    locales \
+    tzdata \
+    bzip2 \
+    libffi-dev \
+    libssl-dev \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV PATH=/opt/conda/bin:$PATH
+
+# Instead of installing Miniconda manually, use official Miniconda base image as intermediate build stage for stability
+# But since we must keep single stage here, install Miniconda step split to isolate and debug if failure
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-1-Linux-x86_64.sh -O /tmp/miniconda.sh
+RUN ls -l /tmp/miniconda.sh
+RUN bash /tmp/miniconda.sh -b -p /opt/conda
+RUN rm /tmp/miniconda.sh
+RUN /opt/conda/bin/conda init bash
+RUN /opt/conda/bin/conda config --system --prepend channels conda-forge
+RUN /opt/conda/bin/conda config --system --set channel_priority strict
+
+# Create conda environment with Python 3.9
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda create -y -n testbed python=3.9 && conda clean -afy"
+
+# Clone the target repo and check out the specified commit, install in dev mode with required dependencies, and test dependencies
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed && \
+    git clone https://github.com/FoundationAgents/MetaGPT.git /testbed && \
+    cd /testbed && \
+    git reset --hard 0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea && \
+    pip install --upgrade pip setuptools wheel && \
+    # Install dependencies from requirements.txt
+    pip install -r requirements.txt && \
+    # Install the repo itself in editable mode (development)
+    pip install -e . && \
+    # Install test extras as specified
+    pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-html pytest-xdist pytest-timeout"
+
+WORKDIR /testbed
+
+# Ensure conda environment activates automatically on shell startup
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc

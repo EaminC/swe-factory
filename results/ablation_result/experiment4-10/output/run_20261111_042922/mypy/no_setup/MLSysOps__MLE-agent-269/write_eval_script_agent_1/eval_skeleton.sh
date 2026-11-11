@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout dd7da4e5ac4085fb8324cac3ac0b4c104b9007cb
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /opt/testbed/bin/activate
+
+# Run only the specified test file using unittest, output concise info (module=script path w/o .py)
+python -m unittest -v tests.test_memory_api
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout dd7da4e5ac4085fb8324cac3ac0b4c104b9007cb tests/test_memory_api.py

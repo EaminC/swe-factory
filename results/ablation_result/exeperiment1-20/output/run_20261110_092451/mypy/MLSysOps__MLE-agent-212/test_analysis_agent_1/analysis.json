@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails while trying to install Python 3.11 and its associated packages (python3.11-venv, python3.11-distutils, python3.11-dev) on Ubuntu 20.04. The error is: 'E: Unable to locate package python3.11' and similar messages for all python3.11-related packages. This happens because Ubuntu 20.04's default repositories do not include Python 3.11 packages. To fix this, update the Dockerfile to add the 'deadsnakes' PPA which provides newer python versions for Ubuntu 20.04 before the apt-get install command. For example, add:\n\nRUN apt-get update && apt-get install -y software-properties-common \\\n    && add-apt-repository ppa:deadsnakes/ppa \\\n    && apt-get update \\\n    && apt-get install -y python3.11 python3.11-venv python3.11-distutils python3.11-dev git wget build-essential curl ca-certificates\n\nThis addition enables apt to locate python3.11 packages. Remove the current apt-get install line for python3.11 packages and replace accordingly. After fixing this, the docker image should build successfully and enable correct Python environment setup.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

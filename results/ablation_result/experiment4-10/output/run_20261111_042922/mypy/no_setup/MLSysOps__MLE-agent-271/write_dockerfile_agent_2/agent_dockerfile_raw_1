@@ -1,0 +1,49 @@
+<dockerfile>
+# Use Ubuntu 22.04 LTS to get newer Python versions and better compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies and essential tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    python3.11-distutils \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Create and activate python virtual environment named testbed
+RUN python3 -m venv /opt/testbed
+
+# Upgrade pip and setuptools in the virtual environment
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools
+
+# Set environment variables to use the virtual environment by default
+ENV VIRTUAL_ENV=/opt/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/MLSysOps/MLE-agent /testbed \
+    && cd /testbed \
+    && git reset --hard b9765e74d8c3e87ba6828fc7f9fc7fe751ef7984 \
+    && git remote remove origin
+
+WORKDIR /testbed
+
+# Install Python dependencies and the package itself in editable mode
+RUN pip install -r requirements.txt \
+    && pip install -e .
+
+# Set default shell to bash
+SHELL ["/bin/bash", "-c"]
+</dockerfile>

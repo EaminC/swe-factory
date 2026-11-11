@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uxo pipefail
+
+source /opt/conda/etc/profile.d/conda.sh
+conda activate testbed
+
+cd /testbed
+git checkout 5e8bd105177e08848990d32b9ea636daa639be19
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run specified test file only, output concise status of tests
+pytest tests/test_llm_config.py --tb=short -r a -q
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset patched changes to keep repo clean
+git checkout 5e8bd105177e08848990d32b9ea636daa639be19 "tests/test_llm_config.py"

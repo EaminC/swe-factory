@@ -1,0 +1,46 @@
+<dockerfile>
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essentials
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    build-essential \
+    libffi-dev \
+    libtiff-dev \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3.10-dev \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry for dependency and environment management
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /testbed/
+
+# Clone repo and checkout specific commit
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed \
+ && git reset --hard 04c71d7d297447479d897b6803206210ed589d53
+
+# Install project dependencies inside Poetry environment (development mode)
+RUN poetry config virtualenvs.create true \
+ && poetry config virtualenvs.in-project true \
+ && poetry install --no-interaction --no-ansi --with dev
+
+# Write bashrc instructions to activate Poetry shell automatically on container start
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Ensure bash is default shell
+ENV SHELL=/bin/bash
+</dockerfile>

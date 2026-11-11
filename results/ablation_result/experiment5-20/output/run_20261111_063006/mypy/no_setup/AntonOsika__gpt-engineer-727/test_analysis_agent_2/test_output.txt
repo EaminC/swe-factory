@@ -1,0 +1,35 @@
++ cd /testbed
++ git checkout 27e2566cff7e3dcf79f37b5271efbc1c0c01c3e0
+HEAD is now at 27e2566 Merge pull request #820 from TheoMcCabe/token_usage_logs_refactor
+M	gpt_engineer/cli/main.py
+M	gpt_engineer/core/steps.py
++ git apply -v -
+Checking patch tests/test_self_heal.py...
+Applied patch tests/test_self_heal.py cleanly.
++ pytest --tb=short --capture=no -q tests/test_self_heal.py
+
+==================================== ERRORS ====================================
+___________________ ERROR collecting tests/test_self_heal.py ___________________
+ImportError while importing test module '/testbed/tests/test_self_heal.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_self_heal.py:4: in <module>
+    from gpt_engineer.core.steps import self_heal, MAX_SELF_HEAL_ATTEMPTS
+gpt_engineer/__init__.py:2: in <module>
+    from gpt_engineer.core import (
+gpt_engineer/core/ai.py:35: in <module>
+    from gpt_engineer.core.token_usage import TokenUsageLog
+gpt_engineer/core/token_usage.py:5: in <module>
+    from langchain.callbacks.openai_info import get_openai_token_cost_for_model
+E   ImportError: cannot import name 'get_openai_token_cost_for_model' from 'langchain.callbacks.openai_info' (/usr/local/lib/python3.10/dist-packages/langchain/callbacks/openai_info.py)
+=========================== short test summary info ============================
+ERROR tests/test_self_heal.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 2.31s
+OMNIGRIL_EXIT_CODE=2
++ rc=2
++ echo OMNIGRIL_EXIT_CODE=2
++ git checkout 27e2566cff7e3dcf79f37b5271efbc1c0c01c3e0 tests/test_self_heal.py
+error: pathspec 'tests/test_self_heal.py' did not match any file(s) known to git

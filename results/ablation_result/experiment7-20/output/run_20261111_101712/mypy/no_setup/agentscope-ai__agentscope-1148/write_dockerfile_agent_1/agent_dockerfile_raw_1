@@ -1,0 +1,65 @@
+<dockerfile>
+# Base image specification using Ubuntu 22.04 for stability and bash support
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies: git, python3.10, python3-pip, build-essential, curl, and other essentials
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    bash \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version, set python3 default command to python3.10
+RUN python3.10 -m pip install --upgrade pip setuptools wheel && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Create working directory /testbed
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+# Commit SHA will be provided during the build as build-arg COMMIT_SHA
+ARG COMMIT_SHA=ba6a627de8f756f0c628d4cc0086c08748922eb6
+
+RUN git clone https://github.com/agentscope-ai/agentscope /testbed && \
+    cd /testbed && \
+    git checkout ${COMMIT_SHA}
+
+# Create and activate Python virtual environment named testbed
+RUN python3.10 -m venv /opt/testbed && \
+    /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Install repository dependencies and development/test dependencies inside the venv
+# Using pip inside venv and pip install -e . for development mode install
+
+RUN /opt/testbed/bin/pip install \
+    "mcp>=1.13" \
+    "qdrant-client==1.15.1" && \
+    /opt/testbed/bin/pip install \
+    pytest pytest-forked pre-commit fakeredis aiosqlite greenlet
+
+RUN cd /testbed && \
+    /opt/testbed/bin/pip install -e .
+
+# Install pre-commit, initialize hooks
+RUN /opt/testbed/bin/pre-commit install
+
+# Add environment activation line to root's bashrc for user convenience
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Set shell explicitly to bash
+SHELL ["/bin/bash", "-c"]
+
+# Set environment variables (not required to set DASHSCOPE_API_KEY here since not always required)
+ENV VIRTUAL_ENV=/opt/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# WORKDIR is already set to /testbed, repository cloned and checked out, dependencies installed in venv
+</dockerfile>

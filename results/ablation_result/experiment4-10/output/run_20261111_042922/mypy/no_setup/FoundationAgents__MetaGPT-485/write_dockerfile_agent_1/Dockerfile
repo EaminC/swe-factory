@@ -1,0 +1,82 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV PYTHONUNBUFFERED=1
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    python3-pip \
+    locales \
+    tzdata \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.9 explicitly
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+ && update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 \
+ && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3 1
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Create testbed directory and set workdir
+WORKDIR /testbed/
+
+# Clone the repository and checkout specific commit (passed as build arg)
+ARG COMMIT_SHA=384f5ee08b6defef2adfb22274283e8bd0ef4314
+RUN git clone https://github.com/FoundationAgents/MetaGPT.git . \
+ && git checkout ${COMMIT_SHA}
+
+# Setup virtual environment and install dependencies
+RUN python3 -m venv /opt/testbed \
+ && source /opt/testbed/bin/activate \
+ && pip install --upgrade pip setuptools wheel \
+ && pip install \
+    aiohttp==3.8.4 \
+    channels==4.0.0 \
+    faiss_cpu==1.7.4 \
+    fire==0.4.0 \
+    lancedb==0.1.16 \
+    langchain==0.0.231 \
+    loguru==0.6.0 \
+    meilisearch==0.21.0 \
+    numpy==1.24.3 \
+    beautifulsoup4==4.12.2 \
+    pandas==2.0.3 \
+    pydantic==1.10.8 \
+    pytest==7.2.2 \
+    python_docx==0.8.11 \
+    PyYAML==6.0.1 \
+    setuptools==65.6.3 \
+    tenacity==8.2.2 \
+    tiktoken==0.4.0 \
+    tqdm==4.64.0 \
+    anthropic==0.3.6 \
+    typing-inspect==0.8.0 \
+    typing_extensions==4.5.0 \
+    libcst==1.0.1 \
+    qdrant-client==1.4.0 \
+    pytest-mock==3.11.1 \
+    ta==0.10.2 \
+    semantic-kernel==0.3.13.dev0 \
+    wrapt==1.15.0 \
+    websocket-client==0.58.0 \
+ && pip install openai openpyxl \
+ && pip install -e .
+
+# Add virtualenv activation to bashrc
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Set working directory
+WORKDIR /testbed/

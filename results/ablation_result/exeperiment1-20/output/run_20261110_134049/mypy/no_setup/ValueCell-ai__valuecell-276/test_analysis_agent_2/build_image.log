@@ -1,0 +1,88 @@
+2026-11-10 13:45:30,861 - INFO - Building image valuecell-ai__valuecell-276
+Using dockerfile:
+# Use Ubuntu 23.04 as base to get python3.12 from default repos
+FROM --platform=linux/x86_64 ubuntu:23.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools: git, curl, build essentials, python3.12 and modules, locales, tzdata, etc.
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.12 \
+    python3.12-venv \
+    python3.12-distutils \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.12
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+
+# Upgrade pip, setuptools, wheel
+RUN python3.12 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install uv tool (dependency manager) per repo requirement
+RUN python3.12 -m pip install --no-cache-dir uv
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repository and checkout specific commit
+RUN git clone https://github.com/ValueCell-ai/valuecell.git /testbed && \
+    git reset --hard 67d56f93a45e712e924f5334119779c93830e208
+
+# Install dependencies using uv as per context info (all extras + dev + locked)
+RUN uv sync --locked --all-extras --dev
+
+# Install repository in editable mode to ensure local code usage
+RUN python3.12 -m pip install --no-cache-dir -e .
+
+# Ensure UTF-8 output encoding by default when running bash
+RUN echo "export PYTHONIOENCODING=utf-8" >> ~/.bashrc
+
+# Set default shell
+ENV SHELL=/bin/bash
+
+2026-11-10 13:45:30,866 - INFO - Do not find previous image, images list is clean.
+2026-11-10 13:45:30,892 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:23.04
+2026-11-10 13:46:08,900 - INFO -  ---> 5a828e28de10
+2026-11-10 13:46:08,901 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:46:18,009 - INFO -  ---> Running in 274523973a6e
+2026-11-10 13:46:36,216 - INFO -  ---> Removed intermediate container 274523973a6e
+2026-11-10 13:46:36,216 - INFO -  ---> 120128bb38ee
+2026-11-10 13:46:36,217 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-10 13:46:42,086 - INFO -  ---> Running in 46d5d9ed0d3a
+2026-11-10 13:47:08,678 - INFO -  ---> Removed intermediate container 46d5d9ed0d3a
+2026-11-10 13:47:08,678 - INFO -  ---> 57c60b2e50a3
+2026-11-10 13:47:08,678 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:47:17,677 - INFO -  ---> Running in c43c690d27ad
+2026-11-10 13:47:22,121 - INFO -  ---> Removed intermediate container c43c690d27ad
+2026-11-10 13:47:22,122 - INFO -  ---> 97aa0594efa7
+2026-11-10 13:47:22,122 - INFO - Step 5/14 : RUN apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:47:28,714 - INFO -  ---> Running in 27af3716de93
+2026-11-10 13:47:31,176 - INFO - Ign:1 http://security.ubuntu.com/ubuntu lunar-security InRelease
+2026-11-10 13:47:31,364 - INFO - Err:2 http://security.ubuntu.com/ubuntu lunar-security Release
+2026-11-10 13:47:31,364 - INFO -   404  Not Found [IP: 91.189.90.13 80]
+2026-11-10 13:47:31,404 - INFO - Ign:3 http://archive.ubuntu.com/ubuntu lunar InRelease
+2026-11-10 13:47:31,580 - INFO - Ign:4 http://archive.ubuntu.com/ubuntu lunar-updates InRelease
+2026-11-10 13:47:31,757 - INFO - Ign:5 http://archive.ubuntu.com/ubuntu lunar-backports InRelease
+2026-11-10 13:47:31,931 - INFO - Err:6 http://archive.ubuntu.com/ubuntu lunar Release
+2026-11-10 13:47:31,932 - INFO -   404  Not Found [IP: 91.189.90.11 80]
+2026-11-10 13:47:32,107 - INFO - Err:7 http://archive.ubuntu.com/ubuntu lunar-updates Release
+2026-11-10 13:47:32,108 - INFO -   404  Not Found [IP: 91.189.90.11 80]
+2026-11-10 13:47:32,283 - INFO - Err:8 http://archive.ubuntu.com/ubuntu lunar-backports Release
+2026-11-10 13:47:32,307 - INFO -   404  Not Found [IP: 91.189.90.11 80]
+2026-11-10 13:47:32,309 - INFO - Reading package lists...
+2026-11-10 13:47:32,317 - INFO - E: The repository 'http://security.ubuntu.com/ubuntu lunar-security Release' does not have a Release file.
+2026-11-10 13:47:32,426 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar Release' does not have a Release file.
+2026-11-10 13:47:32,426 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar-updates Release' does not have a Release file.
+2026-11-10 13:47:32,426 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar-backports Release' does not have a Release file.
+2026-11-10 13:47:35,614 - INFO -  ---> Removed intermediate container 27af3716de93
+2026-11-10 13:47:35,730 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:47:35,730 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

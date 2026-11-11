@@ -1,0 +1,47 @@
+diff --git a/gpt_engineer/applications/cli/main.py b/gpt_engineer/applications/cli/main.py
+index f10d599a0e..6cbd73d5ac 100644
+--- a/gpt_engineer/applications/cli/main.py
++++ b/gpt_engineer/applications/cli/main.py
+@@ -247,7 +247,7 @@ def prompt_yesno() -> bool:
+ )
+ def main(
+     project_path: str = typer.Argument(".", help="path"),
+-    model: str = typer.Argument("gpt-4-0125-preview", help="model id string"),
++    model: str = typer.Argument("gpt-4-turbo", help="model id string"),
+     temperature: float = typer.Option(
+         0.1,
+         "--temperature",
+diff --git a/gpt_engineer/core/ai.py b/gpt_engineer/core/ai.py
+index d3b8956b78..5db26eb439 100644
+--- a/gpt_engineer/core/ai.py
++++ b/gpt_engineer/core/ai.py
+@@ -87,7 +87,7 @@ class AI:
+ 
+     def __init__(
+         self,
+-        model_name="gpt-4-0125-preview",
++        model_name="gpt-4-turbo",
+         temperature=0.1,
+         azure_endpoint=None,
+         streaming=True,
+@@ -107,7 +107,11 @@ def __init__(
+         self.azure_endpoint = azure_endpoint
+         self.model_name = model_name
+         self.streaming = streaming
+-        self.vision = "vision" in model_name
++        self.vision = (
++            ("vision-preview" in model_name)
++            or ("gpt-4-turbo" in model_name and "preview" not in model_name)
++            or ("claude" in model_name)
++        )
+         self.llm = self._create_chat_model()
+         self.token_usage_log = TokenUsageLog(model_name)
+ 
+diff --git a/projects/example-vision/prompt/images/ux_diagram.png b/projects/example-vision/images/ux_diagram.png
+similarity index 100%
+rename from projects/example-vision/prompt/images/ux_diagram.png
+rename to projects/example-vision/images/ux_diagram.png
+diff --git a/projects/example-vision/prompt/text b/projects/example-vision/prompt
+similarity index 100%
+rename from projects/example-vision/prompt/text
+rename to projects/example-vision/prompt

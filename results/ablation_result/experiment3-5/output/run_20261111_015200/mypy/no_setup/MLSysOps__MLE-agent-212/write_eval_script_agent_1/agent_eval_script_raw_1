@@ -1,0 +1,20 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+cd /testbed
+git checkout a405d8130cbb24e6556fb0125f634c3fb738eb2a
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file via unittest module
+python -m unittest tests.test_deepseek_model
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout a405d8130cbb24e6556fb0125f634c3fb738eb2a tests/test_deepseek_model.py
+</script>

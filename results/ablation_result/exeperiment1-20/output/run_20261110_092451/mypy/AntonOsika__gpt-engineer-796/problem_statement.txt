@@ -1,0 +1,74 @@
+[Improving code] WARNING: learning too big, removing some parts. Please report if this results in a crash
+## Expected Behavior
+
+No crash
+
+## Current Behavior
+
+Crash after improving existing files.
+
+## Failure Information
+
+I used the latest version (after commit #772) and let gpt-engineer improve two files. After it was done gpt-engineer crashed with the following error information:
+
+WARNING: learning too big, removing some parts. Please report if this results in a crash
+/content/gpt-engineer/gpt-engineer/gpt_engineer/cli/collect.py:93 in         │
+│ collect_learnings                                                            │
+│                                                                              │
+│    90 │   │   model, temperature, steps, dbs, steps_file_hash=steps_file_has │
+│    91 │   )                                                                  │
+│    92 │   try:                                                               │
+│ ❱  93 │   │   send_learning(learnings)                                       │
+│    94 │   except RuntimeError as e:                                          │
+│    95 │   │   # try to remove some parts of learning that might be too big   │
+│    96 │   │   # rudderstack max event size is 32kb
+Information about the failure, including environment details, such as LLM used.
+
+
+### Failure Logs
+
+│ ╭───────────────────────────────── locals ─────────────────────────────────╮ │
+│ │         dbs = DBs(                                                       │ │
+│ │               │   memory=<gpt_engineer.core.db.DB object at              │ │
+│ │               0x7e6aaa047e80>,                                           │ │
+│ │               │   logs=<gpt_engineer.core.db.DB object at                │ │
+│ │               0x7e6aaa047d90>,                                           │ │
+│ │               │   preprompts=<gpt_engineer.core.db.DB object at          │ │
+│ │               0x7e6aaa047ca0>,                                           │ │
+│ │               │   input=<gpt_engineer.core.db.DB object at               │ │
+│ │               0x7e6aaa047d30>,                                           │ │
+│ │               │   workspace=<gpt_engineer.core.db.DB object at           │ │
+│ │               0x7e6aaa047cd0>,                                           │ │
+│ │               │   archive=<gpt_engineer.core.db.DB object at             │ │
+│ │               0x7e6aaa047c70>,                                           │ │
+│ │               │   project_metadata=<gpt_engineer.core.db.DB object at    │ │
+│ │               0x7e6aaa047b80>                                            │ │
+│ │               )                                                          │ │
+│ │   learnings = Learning(                                                  │ │
+│ │               │   model='gpt-4',                                         │ │
+│ │               │   temperature=0.1,                                       │ │
+│ │               │   steps='["set_improve_filelist", "get_improve_prompt",  │ │
+│ │               "improve_existing_code"]',                                 │ │
+│ │               │                                                          │ │
+│ │               steps_file_hash='0826bdf454cdb466eaf03ba0c8c22ee97d45429a… │ │
+│ │               │   prompt='Integriere die Evaluierungsfunktion aus        │ │
+│ │               evaluation.py in the trainings loop.\nImp'+139,            │ │
+│ │               │   logs='--- set_improve_filelist ---\n\n[]\n---          │ │
+│ │               get_improve_prompt ---\n\n[]\n--- improve_exis'+27047,     │ │
+│ │               │   workspace="Let's start with the implementation of the  │ │
+│ │               classes and methods necessary for the"+3484,               │ │
+│ │               │   feedback=None,                                         │ │
+│ │               │   session='1360777038',                                  │ │
+│ │               │   review=None,                                           │ │
+│ │               │   timestamp='2023-10-07T21:11:04.483747',                │ │
+│ │               │   version='0.3'                                          │ │
+│ │               )                                                          │ │
+│ │       model = 'gpt-4'                                                    │ │
+│ │    overflow = 768                                                        │ │
+│ │       steps = [                                                          │ │
+│ │               │   <function set_improve_filelist at 0x7e6aaab431c0>,     │ │
+│ │               │   <function get_improve_prompt at 0x7e6aaab432e0>,       │ │
+│ │               │   <function improve_existing_code at 0x7e6aaab43370>     │ │
+│ │               ]                                                          │ │
+│ │ temperature = 0.1                                                        │ │
+│ ╰──────────────────────────────────────────────────────────────────────────╯ │

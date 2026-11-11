@@ -1,0 +1,123 @@
+2026-11-10 11:57:01,952 - INFO - Building image canner__wrenai-1890
+Using dockerfile:
+# Use ubuntu 22.04 as base image for stability and to have python3.12 available in default repos
+FROM ubuntu:22.04
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies including python3.12, venv, distutils, pip, and required tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-venv \
+    python3.12-distutils \
+    curl \
+    locales \
+    git \
+    netcat-traditional \
+    build-essential \
+    ca-certificates \
+    wget \
+    bash-completion \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 - \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup UTF-8 locale correctly
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Set python3.12 as default python and pip
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
+ && update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip 1
+
+# Install Poetry 1.8.3 via official installer
+ENV POETRY_VERSION=1.8.3
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3.12 - --version $POETRY_VERSION \
+    && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+# Set working directory
+WORKDIR /testbed
+
+# Clone the repository and checkout specific commit
+ARG REPO=https://github.com/Canner/WrenAI.git
+ARG COMMIT_SHA=9b589c65fed699a48d1c93fe74c9e57bc361b70d
+
+RUN git clone $REPO . \
+ && git reset --hard $COMMIT_SHA
+
+# Configure Poetry to create virtualenvs inside the project folder
+RUN poetry config virtualenvs.in-project true
+
+# Install dependencies excluding dev, eval, test groups as per context information
+RUN poetry install --no-interaction --no-ansi --without dev --without eval --without test
+
+# Install package in development mode to ensure local source usage
+RUN poetry run pip install -e .
+
+# Enable auto-activation of poetry virtualenv in bash
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default environment variable for unbuffered Python stdout/stderr
+ENV PYTHONUNBUFFERED=1
+
+# Install just 1.36.0 for task commands
+RUN curl -Ls https://github.com/casey/just/releases/download/1.36.0/just-1.36.0-x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin just
+
+# Final working directory set
+WORKDIR /testbed
+
+2026-11-10 11:57:01,976 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:57:01,996 - INFO - Step 1/21 : FROM ubuntu:22.04
+2026-11-10 11:57:12,240 - INFO -  ---> 076e7bf82319
+2026-11-10 11:57:12,241 - INFO - Step 2/21 : SHELL ["/bin/bash", "-c"]
+2026-11-10 11:57:15,877 - INFO -  ---> Running in c650bce6d1b8
+2026-11-10 11:57:25,239 - INFO -  ---> Removed intermediate container c650bce6d1b8
+2026-11-10 11:57:25,239 - INFO -  ---> dda8325a1793
+2026-11-10 11:57:25,239 - INFO - Step 3/21 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:58:03,307 - INFO -  ---> Running in 0a2dd8b2bda1
+2026-11-10 11:58:18,431 - INFO -  ---> Removed intermediate container 0a2dd8b2bda1
+2026-11-10 11:58:18,431 - INFO -  ---> 3f260d42313a
+2026-11-10 11:58:18,431 - INFO - Step 4/21 : ENV TZ=Etc/UTC
+2026-11-10 11:58:26,907 - INFO -  ---> Running in b41d2cf27597
+2026-11-10 11:58:35,830 - INFO -  ---> Removed intermediate container b41d2cf27597
+2026-11-10 11:58:35,830 - INFO -  ---> 19141aa01b7b
+2026-11-10 11:58:35,830 - INFO - Step 5/21 : RUN apt-get update && apt-get install -y --no-install-recommends     python3.12     python3.12-venv     python3.12-distutils     curl     locales     git     netcat-traditional     build-essential     ca-certificates     wget     bash-completion     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 -     && rm -rf /var/lib/apt/lists/*
+2026-11-10 11:58:39,764 - INFO -  ---> Running in 799f188cb3f1
+2026-11-10 11:58:43,233 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 11:58:43,491 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 11:58:44,395 - INFO - Get:3 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 11:58:44,449 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 11:58:44,684 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 11:58:45,002 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 11:58:45,175 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 11:58:46,158 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 11:58:46,337 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 11:58:46,695 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 11:58:46,710 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 11:58:46,821 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 11:58:47,041 - INFO - Get:13 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 11:58:47,144 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 11:58:47,444 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 11:58:47,444 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 11:58:47,476 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 11:58:47,476 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 11:58:50,887 - INFO - Fetched 49.4 MB in 8s (6048 kB/s)
+2026-11-10 11:58:53,373 - INFO - Reading package lists...
+2026-11-10 11:58:55,932 - INFO - Reading package lists...
+2026-11-10 11:58:56,489 - INFO - Building dependency tree...
+2026-11-10 11:58:56,489 - INFO - Reading state information...
+2026-11-10 11:58:56,960 - INFO - E: Unable to locate package python3.12
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by regex 'python3.12'
+2026-11-10 11:58:56,960 - INFO - E: Unable to locate package python3.12-venv
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by regex 'python3.12-venv'
+2026-11-10 11:58:56,960 - INFO - E: Unable to locate package python3.12-distutils
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by glob 'python3.12-distutils'
+2026-11-10 11:58:56,960 - INFO - E: Couldn't find any package by regex 'python3.12-distutils'
+2026-11-10 11:59:05,315 - INFO -  ---> Removed intermediate container 799f188cb3f1
+2026-11-10 11:59:05,656 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     python3.12     python3.12-venv     python3.12-distutils     curl     locales     git     netcat-traditional     build-essential     ca-certificates     wget     bash-completion     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 -     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 11:59:05,656 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     python3.12     python3.12-venv     python3.12-distutils     curl     locales     git     netcat-traditional     build-essential     ca-certificates     wget     bash-completion     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 -     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

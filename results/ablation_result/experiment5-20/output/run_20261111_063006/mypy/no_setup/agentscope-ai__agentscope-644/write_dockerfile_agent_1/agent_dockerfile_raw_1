@@ -1,0 +1,59 @@
+<dockerfile>
+# Use Ubuntu 22.04 LTS as base image with bash and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Set bash as default shell explicitly
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies and Python 3.10 (chosen among versions available)
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    ca-certificates \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and setuptools to ensure latest packaging support
+RUN python3.10 -m pip install --upgrade pip setuptools wheel
+
+# Create a virtual environment called testbed using python3.10
+RUN python3.10 -m venv /opt/testbed
+
+# Add virtual environment to PATH for subsequent commands
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA (provided by user)
+RUN git clone https://github.com/modelscope/agentscope.git /testbed && \
+    git reset --hard f93b928219f5218a93f1651dc7ba486794061860
+
+# Install the repository in editable mode with [full] extra dependencies and additional ones: setuptools, wheel, coverage
+# According to context retrieval agent, the recommended way is pip install -e .[full] and the additional packages
+RUN /bin/bash -c "pip install --upgrade pip setuptools wheel coverage && \
+    pip install -e .[full]"
+
+# Set bash as default shell for runtime
+SHELL ["/bin/bash", "-c"]
+
+# Export environment variables placeholders (optional runtime usage)
+ENV OPENAI_API_KEY=""
+ENV OPENAI_ORGANIZATION=""
+
+# Reaffirm working directory
+WORKDIR /testbed/
+</dockerfile>

@@ -1,0 +1,396 @@
+2026-11-10 18:47:53,290 - INFO - Checking if image mlsysops__mle-agent-167-dockerfile2:latest exists locally...
+2026-11-10 18:47:53,356 - INFO - Image mlsysops__mle-agent-167-dockerfile2:latest found locally.
+2026-11-10 18:47:53,357 - INFO - Creating container for mlsysops__mle-agent-167...
+2026-11-10 18:48:27,396 - INFO - Container for mlsysops__mle-agent-167 started: 457c26b0e83ecf212a12d2eceb5cb57ecc91c510cc1ec0d87b095d60857045ae
+2026-11-10 18:48:27,397 - INFO - Intermediate patch for mlsysops__mle-agent-167 written to /root/swe-factory/output/run_20261110_181147/mypy/MLSysOps__MLE-agent-167/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-10 18:48:27,875 - INFO - Apply patch success:
+Checking patch mle/cli.py...
+Checking patch mle/workflow/report.py...
+Applied patch mle/cli.py cleanly.
+Applied patch mle/workflow/report.py cleanly.
+
+2026-11-10 18:48:28,196 - INFO - Git diff before:
+diff --git a/mle/cli.py b/mle/cli.py
+index 616ed69..d34effe 100644
+--- a/mle/cli.py
++++ b/mle/cli.py
+@@ -1,4 +1,5 @@
+ import os
++import re
+ import yaml
+ import click
+ import pickle
+@@ -10,10 +11,10 @@ from rich.console import Console
+ from rich.markdown import Markdown
+ 
+ import mle
++import mle.workflow as workflow
+ from mle.utils import Memory
+ from mle.model import load_model
+ from mle.agents import CodeAgent
+-from mle.workflow import baseline, report
+ from mle.utils.system import get_config, write_config
+ 
+ console = Console()
+@@ -59,12 +60,40 @@ def start(mode, model):
+     if not check_config():
+         return
+ 
+-    if mode == 'report':
+-        # Report mode
+-        return report(os.getcwd(), model)
+-    else:
++    if mode == 'general':
+         # Baseline mode
+-        return baseline(os.getcwd(), model)
++        return workflow.baseline(os.getcwd(), model)
++
++
++@cli.command()
++@click.pass_context
++@click.argument('repo', required=False)
++@click.option('--model', default=None, help='The model to use for the chat.')
++def report(ctx, repo, model):
++    """
++    report: generate report with LLM.
++    """
++    if repo is None:
++        # TODO: support local project report
++        repo = questionary.text(
++            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
++        ).ask()
++
++    if not re.match(r'.*/.*', repo):
++        console.log("Invalid github repository, "
++                    "Usage: 'mle report <organization/name>'")
++        return False
++
++    if not check_config():
++        # build a new project for github report generating
++        project_name = f"mle-report-{repo.replace('/', '_').lower()}"
++        ctx.invoke(new, name=project_name)
++        # enter the new project for report generation
++        work_dir = os.path.join(os.getcwd(), project_name)
++        os.chdir(work_dir)
++        return workflow.report(work_dir, repo, model)
++
++    return workflow.report(os.getcwd(), repo, model)
+ 
+ 
+ @cli.command()
+@@ -159,13 +188,9 @@ def integrate():
+         token = questionary.password(
+             "What is your GitHub token? (https://github.com/settings/tokens)"
+         ).ask()
+-        repos = questionary.text(
+-            "What are your working repositories? (e.g., MLSysOps/MLE-agent)"
+-        ).ask()
+ 
+         config["integration"]["github"] = {
+             "token": token,
+-            "repositories": repos.split(","),
+         }
+         write_config(config)
+ 
+diff --git a/mle/workflow/report.py b/mle/workflow/report.py
+index e5be5e7..ce68638 100644
+--- a/mle/workflow/report.py
++++ b/mle/workflow/report.py
+@@ -3,12 +3,12 @@ Report Mode: the mode to generate the AI report based on the user's requirements
+ """
+ import os
+ import json
+-import pickle
+-import datetime
++import questionary
+ from rich.console import Console
+ from mle.model import load_model
+ from mle.agents import SummaryAgent
+-from mle.utils import print_in_box, ask_text, get_config
++from mle.utils import print_in_box, ask_text
++from mle.utils.system import get_config, write_config
+ 
+ 
+ def ask_data(data_str: str):
+@@ -24,70 +24,34 @@ def ask_data(data_str: str):
+         return f"[green]Dataset:[/green] {data_str}"
+ 
+ 
+-def get_current_week_github_activities():
++def ask_github_token():
+     """
+-    Get user's Github activities on this week.
++    Ask the user to integrate github.
++    :return: the github token.
+     """
+-    config = get_config()
+-    if not (config.get("integration") and config["integration"].get("github")):
+-        return None
++    config = get_config() or {}
++    if "integration" not in config.keys():
++        config["integration"] = {}
+ 
+-    token = config["integration"]["github"]["token"]
+-    repos = config["integration"]["github"]["repositories"]
+-    current_date = datetime.date.today()
++    if "github" not in config["integration"].keys():
++        token = questionary.password(
++            "What is your GitHub token? (https://github.com/settings/tokens)"
++        ).ask()
+ 
+-    from mle.integration.github import GitHubIntegration
+-    activities = {}
+-    for repo in repos:
+-        github = GitHubIntegration(repo, token)
+-        start_date = current_date - datetime.timedelta(days=current_date.weekday())
+-        activities[repo] = github.get_user_activity(
+-            username=github.get_user_info()["login"],
+-            start_date=start_date.strftime('%Y-%m-%d'),
+-        )
+-    return activities
++        config["integration"]["github"] = {"token": token}
++        write_config(config)
+ 
++    return config["integration"]["github"]["token"]
+ 
+-def get_current_week_google_calendar_activities():
+-    """
+-    Get user's google calendar events on this week.
+-    """
+-    config = get_config()
+-    if not (config.get("integration") and config["integration"].get("google_calendar")):
+-        return None
+-
+-    # refresh google calendar activities
+-    token = pickle.loads(config["integration"]["google_calendar"]["token"])
+-    current_date = datetime.date.today()
+-
+-    from mle.integration.google_calendar import GoogleCalendarIntegration
+-    google_calendar = GoogleCalendarIntegration(token)
+-    start_date = current_date - datetime.timedelta(days=current_date.weekday())
+-    end_date = start_date + datetime.timedelta(days=6)
+-    return google_calendar.get_events(
+-        start_date=start_date.strftime('%Y-%m-%d'),
+-        end_date=end_date.strftime('%Y-%m-%d'),
+-    )
+ 
+-
+-def report(work_dir: str, model=None):
++def report(work_dir: str, github_repo: str, model=None):
+     """
+     The workflow of the baseline mode.
+     :return:
+     """
+-
+     console = Console()
+     model = load_model(work_dir, model)
+ 
+-    # fetch activities
+-    # github_activities = get_current_week_github_activities()
+-    # google_calendar_activities = get_current_week_google_calendar_activities()
+-
+-    github_repo = ask_text("Please provide your github repository (organization/name)")
+-    if not github_repo:
+-        print_in_box("The user's github_repo is empty. Aborted", console, title="Error", color="red")
+-        return
+-
+-    summarizer = SummaryAgent(model, github_repo=github_repo)
++    summarizer = SummaryAgent(model, github_repo=github_repo, github_token=ask_github_token())
+     github_summary = summarizer.summarize()
+     print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")
+2026-11-10 18:48:28,197 - INFO - Eval script for mlsysops__mle-agent-167 written to /root/swe-factory/output/run_20261110_181147/mypy/MLSysOps__MLE-agent-167/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-10 18:48:28,567 - INFO - Test output for mlsysops__mle-agent-167 written to /root/swe-factory/output/run_20261110_181147/mypy/MLSysOps__MLE-agent-167/test_analysis_agent_2/test_output.txt
+2026-11-10 18:48:28,731 - INFO - Git diff after:
+diff --git a/mle/cli.py b/mle/cli.py
+index 616ed69..d34effe 100644
+--- a/mle/cli.py
++++ b/mle/cli.py
+@@ -1,4 +1,5 @@
+ import os
++import re
+ import yaml
+ import click
+ import pickle
+@@ -10,10 +11,10 @@ from rich.console import Console
+ from rich.markdown import Markdown
+ 
+ import mle
++import mle.workflow as workflow
+ from mle.utils import Memory
+ from mle.model import load_model
+ from mle.agents import CodeAgent
+-from mle.workflow import baseline, report
+ from mle.utils.system import get_config, write_config
+ 
+ console = Console()
+@@ -59,12 +60,40 @@ def start(mode, model):
+     if not check_config():
+         return
+ 
+-    if mode == 'report':
+-        # Report mode
+-        return report(os.getcwd(), model)
+-    else:
++    if mode == 'general':
+         # Baseline mode
+-        return baseline(os.getcwd(), model)
++        return workflow.baseline(os.getcwd(), model)
++
++
++@cli.command()
++@click.pass_context
++@click.argument('repo', required=False)
++@click.option('--model', default=None, help='The model to use for the chat.')
++def report(ctx, repo, model):
++    """
++    report: generate report with LLM.
++    """
++    if repo is None:
++        # TODO: support local project report
++        repo = questionary.text(
++            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
++        ).ask()
++
++    if not re.match(r'.*/.*', repo):
++        console.log("Invalid github repository, "
++                    "Usage: 'mle report <organization/name>'")
++        return False
++
++    if not check_config():
++        # build a new project for github report generating
++        project_name = f"mle-report-{repo.replace('/', '_').lower()}"
++        ctx.invoke(new, name=project_name)
++        # enter the new project for report generation
++        work_dir = os.path.join(os.getcwd(), project_name)
++        os.chdir(work_dir)
++        return workflow.report(work_dir, repo, model)
++
++    return workflow.report(os.getcwd(), repo, model)
+ 
+ 
+ @cli.command()
+@@ -159,13 +188,9 @@ def integrate():
+         token = questionary.password(
+             "What is your GitHub token? (https://github.com/settings/tokens)"
+         ).ask()
+-        repos = questionary.text(
+-            "What are your working repositories? (e.g., MLSysOps/MLE-agent)"
+-        ).ask()
+ 
+         config["integration"]["github"] = {
+             "token": token,
+-            "repositories": repos.split(","),
+         }
+         write_config(config)
+ 
+diff --git a/mle/workflow/report.py b/mle/workflow/report.py
+index e5be5e7..ce68638 100644
+--- a/mle/workflow/report.py
++++ b/mle/workflow/report.py
+@@ -3,12 +3,12 @@ Report Mode: the mode to generate the AI report based on the user's requirements
+ """
+ import os
+ import json
+-import pickle
+-import datetime
++import questionary
+ from rich.console import Console
+ from mle.model import load_model
+ from mle.agents import SummaryAgent
+-from mle.utils import print_in_box, ask_text, get_config
++from mle.utils import print_in_box, ask_text
++from mle.utils.system import get_config, write_config
+ 
+ 
+ def ask_data(data_str: str):
+@@ -24,70 +24,34 @@ def ask_data(data_str: str):
+         return f"[green]Dataset:[/green] {data_str}"
+ 
+ 
+-def get_current_week_github_activities():
++def ask_github_token():
+     """
+-    Get user's Github activities on this week.
++    Ask the user to integrate github.
++    :return: the github token.
+     """
+-    config = get_config()
+-    if not (config.get("integration") and config["integration"].get("github")):
+-        return None
++    config = get_config() or {}
++    if "integration" not in config.keys():
++        config["integration"] = {}
+ 
+-    token = config["integration"]["github"]["token"]
+-    repos = config["integration"]["github"]["repositories"]
+-    current_date = datetime.date.today()
++    if "github" not in config["integration"].keys():
++        token = questionary.password(
++            "What is your GitHub token? (https://github.com/settings/tokens)"
++        ).ask()
+ 
+-    from mle.integration.github import GitHubIntegration
+-    activities = {}
+-    for repo in repos:
+-        github = GitHubIntegration(repo, token)
+-        start_date = current_date - datetime.timedelta(days=current_date.weekday())
+-        activities[repo] = github.get_user_activity(
+-            username=github.get_user_info()["login"],
+-            start_date=start_date.strftime('%Y-%m-%d'),
+-        )
+-    return activities
++        config["integration"]["github"] = {"token": token}
++        write_config(config)
+ 
++    return config["integration"]["github"]["token"]
+ 
+-def get_current_week_google_calendar_activities():
+-    """
+-    Get user's google calendar events on this week.
+-    """
+-    config = get_config()
+-    if not (config.get("integration") and config["integration"].get("google_calendar")):
+-        return None
+-
+-    # refresh google calendar activities
+-    token = pickle.loads(config["integration"]["google_calendar"]["token"])
+-    current_date = datetime.date.today()
+-
+-    from mle.integration.google_calendar import GoogleCalendarIntegration
+-    google_calendar = GoogleCalendarIntegration(token)
+-    start_date = current_date - datetime.timedelta(days=current_date.weekday())
+-    end_date = start_date + datetime.timedelta(days=6)
+-    return google_calendar.get_events(
+-        start_date=start_date.strftime('%Y-%m-%d'),
+-        end_date=end_date.strftime('%Y-%m-%d'),
+-    )
+ 
+-
+-def report(work_dir: str, model=None):
++def report(work_dir: str, github_repo: str, model=None):
+     """
+     The workflow of the baseline mode.
+     :return:
+     """
+-
+     console = Console()
+     model = load_model(work_dir, model)
+ 
+-    # fetch activities
+-    # github_activities = get_current_week_github_activities()
+-    # google_calendar_activities = get_current_week_google_calendar_activities()
+-
+-    github_repo = ask_text("Please provide your github repository (organization/name)")
+-    if not github_repo:
+-        print_in_box("The user's github_repo is empty. Aborted", console, title="Error", color="red")
+-        return
+-
+-    summarizer = SummaryAgent(model, github_repo=github_repo)
++    summarizer = SummaryAgent(model, github_repo=github_repo, github_token=ask_github_token())
+     github_summary = summarizer.summarize()
+     print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")
+2026-11-10 18:48:28,732 - INFO - Attempting to stop container mlsysops__mle-agent-167-test1...
+2026-11-10 18:48:47,366 - INFO - Attempting to remove container mlsysops__mle-agent-167-test1...
+2026-11-10 18:48:48,507 - INFO - Container mlsysops__mle-agent-167-test1 removed.
+2026-11-10 18:48:48,508 - INFO - Attempting to remove image mlsysops__mle-agent-167-dockerfile2:latest...
+2026-11-10 18:49:10,706 - INFO - Image mlsysops__mle-agent-167-dockerfile2:latest removed.

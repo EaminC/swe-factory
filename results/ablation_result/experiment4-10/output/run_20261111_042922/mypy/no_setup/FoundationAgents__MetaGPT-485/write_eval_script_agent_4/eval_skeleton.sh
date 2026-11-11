@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uxo pipefail
+
+source /opt/testbed/bin/activate
+
+cd /testbed
+git checkout 384f5ee08b6defef2adfb22274283e8bd0ef4314 
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+export OPENAI_API_KEY="sk-REPLACE_WITH_VALID_KEY"
+
+# Install pytest-asyncio to support async tests
+pip install pytest-asyncio
+
+pytest --no-header -rA --tb=short tests/test_retry_behavior.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset repository state
+git checkout 384f5ee08b6defef2adfb22274283e8bd0ef4314

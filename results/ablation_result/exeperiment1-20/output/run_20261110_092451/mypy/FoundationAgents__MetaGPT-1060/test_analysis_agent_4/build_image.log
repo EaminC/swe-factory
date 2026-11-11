@@ -1,0 +1,112 @@
+2026-11-10 12:03:13,166 - INFO - Building image foundationagents__metagpt-1060
+Using dockerfile:
+FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, Python, Node.js, and tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    gnupg \
+    ca-certificates \
+    locales \
+    locales-all \
+    tzdata \
+    build-essential \
+    libgomp1 \
+    chromium-browser \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    libxss1 \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure python3.9 as default python3 and install pip
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 -
+
+# Set environment variables required for chromium and puppeteer
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    puppeteer_config=/app/metagpt/config/puppeteer-config.json
+
+# Set working directory
+WORKDIR /app/metagpt
+
+# Clone the repo and checkout specific commit in one layer
+ARG COMMIT_SHA=0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea
+RUN git clone https://github.com/FoundationAgents/MetaGPT.git /app/metagpt && \
+    cd /app/metagpt && \
+    git reset --hard ${COMMIT_SHA} && \
+    chmod -R a+rw /app/metagpt
+
+# Create and activate virtual environment, upgrade pip, install dependencies and package
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pytest pytest-asyncio pytest-cov pytest-mock pytest-html pytest-xdist pytest-timeout && \
+    pip install --no-cache-dir -e .
+
+# Install Node global packages
+RUN npm install -g @mermaid-js/mermaid-cli
+
+# Default command to keep container alive for post-build testing
+CMD ["tail", "-f", "/dev/null"]
+
+2026-11-10 12:03:13,181 - INFO - Do not find previous image, images list is clean.
+2026-11-10 12:03:13,210 - INFO - Step 1/16 : FROM ubuntu:22.04
+2026-11-10 12:03:13,465 - INFO -  ---> 076e7bf82319
+2026-11-10 12:03:13,465 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 12:03:23,617 - INFO -  ---> Running in 019f2d92fd6b
+2026-11-10 12:03:40,125 - INFO -  ---> Removed intermediate container 019f2d92fd6b
+2026-11-10 12:03:40,126 - INFO -  ---> 84ab149ce472
+2026-11-10 12:03:40,126 - INFO - Step 3/16 : ENV TZ=Etc/UTC
+2026-11-10 12:03:43,453 - INFO -  ---> Running in 02457473d3f3
+2026-11-10 12:04:22,171 - INFO -  ---> Removed intermediate container 02457473d3f3
+2026-11-10 12:04:22,173 - INFO -  ---> 0d2ad6deeb00
+2026-11-10 12:04:22,173 - INFO - Step 4/16 : SHELL ["/bin/bash", "-c"]
+2026-11-10 12:04:38,576 - INFO -  ---> Running in a133dac992d5
+2026-11-10 12:04:43,652 - INFO -  ---> Removed intermediate container a133dac992d5
+2026-11-10 12:04:43,652 - INFO -  ---> ac30bd9c7209
+2026-11-10 12:04:43,654 - INFO - Step 5/16 : RUN apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     gnupg     ca-certificates     locales     locales-all     tzdata     build-essential     libgomp1     chromium-browser     fonts-liberation     fonts-noto-color-emoji     libxss1     python3.9     python3.9-venv     python3.9-distutils     npm     && rm -rf /var/lib/apt/lists/*
+2026-11-10 12:04:53,137 - INFO -  ---> Running in 7f4c9baca05d
+2026-11-10 12:04:59,671 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 12:04:59,671 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 12:05:00,569 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 12:05:00,926 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 12:05:01,003 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 12:05:01,166 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 12:05:02,018 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 12:05:02,041 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 12:05:02,222 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 12:05:02,227 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 12:05:02,289 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 12:05:03,124 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 12:05:03,127 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 12:05:03,265 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 12:05:03,607 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 12:05:03,894 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 12:05:03,895 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 12:05:03,902 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 12:05:06,156 - INFO - Fetched 49.4 MB in 7s (6828 kB/s)
+2026-11-10 12:05:08,036 - INFO - Reading package lists...
+2026-11-10 12:05:09,734 - INFO - Reading package lists...
+2026-11-10 12:05:10,155 - INFO - Building dependency tree...
+2026-11-10 12:05:10,155 - INFO - Reading state information...
+2026-11-10 12:05:10,472 - INFO - E: Unable to locate package python3.9-venv
+2026-11-10 12:05:10,505 - INFO - E: Couldn't find any package by glob 'python3.9-venv'
+2026-11-10 12:05:10,505 - INFO - E: Couldn't find any package by regex 'python3.9-venv'
+2026-11-10 12:05:10,505 - INFO - E: Unable to locate package python3.9-distutils
+2026-11-10 12:05:10,505 - INFO - E: Couldn't find any package by glob 'python3.9-distutils'
+2026-11-10 12:05:10,505 - INFO - E: Couldn't find any package by regex 'python3.9-distutils'
+2026-11-10 12:05:16,296 - INFO -  ---> Removed intermediate container 7f4c9baca05d
+2026-11-10 12:05:18,129 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     gnupg     ca-certificates     locales     locales-all     tzdata     build-essential     libgomp1     chromium-browser     fonts-liberation     fonts-noto-color-emoji     libxss1     python3.9     python3.9-venv     python3.9-distutils     npm     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 12:05:18,130 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     gnupg     ca-certificates     locales     locales-all     tzdata     build-essential     libgomp1     chromium-browser     fonts-liberation     fonts-noto-color-emoji     libxss1     python3.9     python3.9-venv     python3.9-distutils     npm     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

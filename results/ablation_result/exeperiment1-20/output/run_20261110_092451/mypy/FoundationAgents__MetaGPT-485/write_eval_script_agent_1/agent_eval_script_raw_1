@@ -1,0 +1,22 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+git checkout 384f5ee08b6defef2adfb22274283e8bd0ef4314
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment and run the test file with pytest
+source /opt/testbed/bin/activate
+
+pytest -rA --tb=short tests/test_retry_behavior.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 384f5ee08b6defef2adfb22274283e8bd0ef4314 "tests/test_retry_behavior.py"
+</script>

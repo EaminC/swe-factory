@@ -1,0 +1,162 @@
+2026-11-11 07:53:25,617 - INFO - Checking if image antonosika__gpt-engineer-727-dockerfile4:latest exists locally...
+2026-11-11 07:53:25,898 - INFO - Image antonosika__gpt-engineer-727-dockerfile4:latest found locally.
+2026-11-11 07:53:25,899 - INFO - Creating container for antonosika__gpt-engineer-727...
+2026-11-11 07:53:26,742 - INFO - Container for antonosika__gpt-engineer-727 started: abe375f2234b7cf6a07b430524394fb94d336950cdf02e8f46901c8193f7b741
+2026-11-11 07:53:26,742 - INFO - Intermediate patch for antonosika__gpt-engineer-727 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-727/test_analysis_agent_4/patch.diff, now applying to container...
+2026-11-11 07:53:27,415 - INFO - Apply patch success:
+Checking patch gpt_engineer/cli/main.py...
+Checking patch gpt_engineer/core/steps.py...
+Checking patch gpt_engineer/preprompts/file_format_fix...
+Applied patch gpt_engineer/cli/main.py cleanly.
+Applied patch gpt_engineer/core/steps.py cleanly.
+Applied patch gpt_engineer/preprompts/file_format_fix cleanly.
+
+2026-11-11 07:53:27,682 - INFO - Git diff before:
+diff --git a/gpt_engineer/cli/main.py b/gpt_engineer/cli/main.py
+index d328019..375f6e7 100644
+--- a/gpt_engineer/cli/main.py
++++ b/gpt_engineer/cli/main.py
+@@ -160,6 +160,7 @@ def main(
+         StepsConfig.USE_FEEDBACK,
+         StepsConfig.EVALUATE,
+         StepsConfig.IMPROVE_CODE,
++        StepsConfig.SELF_HEAL,
+     ]:
+         archive(dbs)
+         load_prompt(dbs)
+diff --git a/gpt_engineer/core/steps.py b/gpt_engineer/core/steps.py
+index fe73e62..4518de1 100644
+--- a/gpt_engineer/core/steps.py
++++ b/gpt_engineer/core/steps.py
+@@ -50,6 +50,8 @@ import re
+ import subprocess
+ 
+ from enum import Enum
++from platform import platform
++from sys import version_info
+ from typing import List, Union
+ 
+ from langchain.schema import AIMessage, HumanMessage, SystemMessage
+@@ -66,10 +68,25 @@ from gpt_engineer.core.db import DBs
+ from gpt_engineer.cli.file_selector import FILE_LIST_NAME, ask_for_files
+ from gpt_engineer.cli.learning import human_review_input
+ 
++MAX_SELF_HEAL_ATTEMPTS = 2  # constants for self healing code
++ASSUME_WORKING_TIMEOUT = 30
++
+ # Type hint for chat messages
+ Message = Union[AIMessage, HumanMessage, SystemMessage]
+ 
+ 
++def get_platform_info():
++    """Returns the Platform: OS, and the Python version.
++    This is used for self healing.  There are some possible areas of conflict here if
++    you use a different version of Python in your virtualenv.  A better solution would
++    be to have this info printed from the virtualenv.
++    """
++    v = version_info
++    a = f"Python Version: {v.major}.{v.minor}.{v.micro}"
++    b = f"\nOS: {platform()}\n"
++    return a + b
++
++
+ def setup_sys_prompt(dbs: DBs) -> str:
+     """
+     Constructs a system prompt for the AI based on predefined instructions and philosophies.
+@@ -614,6 +631,70 @@ def human_review(ai: AI, dbs: DBs):
+     return []
+ 
+ 
++def self_heal(ai: AI, dbs: DBs):
++    """Attempts to execute the code from the entrypoint and if it fails,
++    sends the error output back to the AI with instructions to fix.
++    This code will make `MAX_SELF_HEAL_ATTEMPTS` to try and fix the code
++    before giving up.
++    This makes the assuption that the previous step was `gen_entrypoint`,
++    this code could work with `simple_gen`, or `gen_clarified_code` as well.
++    """
++
++    # step 1. execute the entrypoint
++    log_path = dbs.workspace.path / "log.txt"
++
++    attempts = 0
++    messages = []
++
++    while attempts < MAX_SELF_HEAL_ATTEMPTS:
++        log_file = open(log_path, "w")  # wipe clean on every iteration
++        timed_out = False
++
++        p = subprocess.Popen(  # attempt to run the entrypoint
++            "bash run.sh",
++            shell=True,
++            cwd=dbs.workspace.path,
++            stdout=log_file,
++            stderr=log_file,
++            bufsize=0,
++        )
++        try:  # timeout if the process actually runs
++            p.wait(timeout=ASSUME_WORKING_TIMEOUT)
++        except subprocess.TimeoutExpired:
++            timed_out = True
++            print("The process hit a timeout before exiting.")
++
++        # get the result and output
++        # step 2. if the return code not 0, package and send to the AI
++        if p.returncode != 0 and not timed_out:
++            print("run.sh failed.  Let's fix it.")
++
++            # pack results in an AI prompt
++
++            # Using the log from the previous step has all the code and
++            # the gen_entrypoint prompt inside.
++            if attempts < 1:
++                messages = AI.deserialize_messages(dbs.logs[gen_entrypoint.__name__])
++                messages.append(ai.fuser(get_platform_info()))  # add in OS and Py version
++
++            # append the error message
++            messages.append(ai.fuser(dbs.workspace["log.txt"]))
++
++            messages = ai.next(
++                messages, dbs.preprompts["file_format_fix"], step_name=curr_fn()
++            )
++        else:  # the process did not fail, we are done here.
++            return messages
++
++        log_file.close()
++
++        # this overwrites the existing files
++        to_files_and_memory(messages[-1].content.strip(), dbs)
++        attempts += 1
++
++    return messages
++
++
+ class Config(str, Enum):
+     """
+     Enumeration representing different configuration modes for the code processing system.
+@@ -645,6 +726,7 @@ class Config(str, Enum):
+     IMPROVE_CODE = "improve_code"
+     EVAL_IMPROVE_CODE = "eval_improve_code"
+     EVAL_NEW_CODE = "eval_new_code"
++    SELF_HEAL = "self_heal"
+ 
+ 
+ STEPS = {
+@@ -683,6 +765,7 @@ STEPS = {
+     ],
+     Config.EVAL_IMPROVE_CODE: [assert_files_ready, improve_existing_code],
+     Config.EVAL_NEW_CODE: [simple_gen],
++    Config.SELF_HEAL: [self_heal],
+ }
+ """
+ A dictionary mapping Config modes to a list of associated processing steps.
+2026-11-11 07:53:27,682 - INFO - Eval script for antonosika__gpt-engineer-727 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-727/test_analysis_agent_4/patch.diff, now applying to container...
+2026-11-11 07:53:33,634 - INFO - Test output for antonosika__gpt-engineer-727 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-727/test_analysis_agent_4/test_output.txt
+2026-11-11 07:53:33,799 - INFO - Git diff after:
+
+2026-11-11 07:53:33,799 - INFO - Git diff changed after running eval script
+2026-11-11 07:53:33,799 - INFO - Attempting to stop container antonosika__gpt-engineer-727-test4...
+2026-11-11 07:53:49,357 - INFO - Attempting to remove container antonosika__gpt-engineer-727-test4...
+2026-11-11 07:53:50,308 - INFO - Container antonosika__gpt-engineer-727-test4 removed.
+2026-11-11 07:53:50,308 - INFO - Attempting to remove image antonosika__gpt-engineer-727-dockerfile4:latest...
+2026-11-11 07:54:12,684 - INFO - Image antonosika__gpt-engineer-727-dockerfile4:latest removed.

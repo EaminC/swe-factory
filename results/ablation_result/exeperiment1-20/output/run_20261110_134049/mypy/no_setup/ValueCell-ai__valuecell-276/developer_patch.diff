@@ -1,0 +1,691 @@
+diff --git a/.env.example b/.env.example
+index 88419e4..bdffa3e 100644
+--- a/.env.example
++++ b/.env.example
+@@ -33,8 +33,9 @@ AGENT_DEBUG_MODE=false
+ # Model Provider Settings
+ # ============================================
+ # For more details, see the documentation in the /doc directory.
+-# To access full functionality, make sure to include an embedding service.
++# To access full functionality, make sure to include an embedding-capable provider.
+ # You can configure multiple providers below.
++# The primary setup uses OpenRouter, along with another provider that supports embeddings.
+ 
+ # Get your API key from: https://openrouter.ai/
+ # Note: OpenRouter does not currently support embedding or reranker models.
+@@ -53,6 +54,10 @@ SILICONFLOW_API_KEY=
+ # Get your API key from: https://platform.openai.com/api-keys
+ OPENAI_API_KEY=
+ 
++# You can set any OpenAI-compatitble API KEY, but you neeed to configure python/configs/providers/openai-compatible.yaml manully.
++OPENAI_COMPATIBLE_API_KEY=
++OPENAI_COMPATIBLE_BASE_URL=
++
+ 
+ # ============================================
+ # Research Agent Configurations
+diff --git a/python/configs/agents/super_agent.yaml b/python/configs/agents/super_agent.yaml
+index fc5b336..cb24432 100644
+--- a/python/configs/agents/super_agent.yaml
++++ b/python/configs/agents/super_agent.yaml
+@@ -26,7 +26,7 @@ models:
+     # Provider-specific model mappings for fallback
+     # Used when primary provider fails and fallback is attempted
+     provider_models:
+-      siliconflow: "deepseek-ai/DeepSeek-V3.1-Terminus"  # Similar capability to Claude Haiku
++      siliconflow: "zai-org/GLM-4.6"  # Similar capability to Claude Haiku
+       google: "gemini-2.5-flash"  # Fast and efficient like Claude Haiku
+ 
+ # Environment Variable Overrides
+diff --git a/python/configs/config.yaml b/python/configs/config.yaml
+index 454b062..e652dc1 100644
+--- a/python/configs/config.yaml
++++ b/python/configs/config.yaml
+@@ -34,6 +34,10 @@ models:
+     openai:
+       config_file: "providers/openai.yaml"
+       api_key_env: "OPENAI_API_KEY"
++    
++    openai-compatible:
++      config_file: "providers/openai-compatible.yaml"
++      api_key_env: "OPENAI_COMPATIBLE_API_KEY"
+ 
+ # Agent Configuration
+ agents:
+diff --git a/python/configs/providers/openai-compatible.yaml b/python/configs/providers/openai-compatible.yaml
+new file mode 100644
+index 0000000..62ff2ac
+--- /dev/null
++++ b/python/configs/providers/openai-compatible.yaml
+@@ -0,0 +1,72 @@
++# ============================================
++# OpenAI Compatible API Provider Configuration
++# ============================================
++# This configuration supports any OpenAI-compatible API including:
++
++#
++# Usage:
++#   1. Set OPENAI_API_BASE environment variable to your API endpoint
++#   2. Set OPENAI_API_KEY if your service requires authentication
++#   3. Set PRIMARY_PROVIDER=openai-compatible
++#
++# Examples:
++#
++#   # vLLM on remote server
++#   export OPENAI_API_BASE=http://your-vllm-server:8000/v1
++#   export PRIMARY_PROVIDER=openai-compatible
++#
++#   # Together.ai
++#   export OPENAI_API_BASE=https://api.together.xyz/v1
++#   export OPENAI_API_KEY=your-together-api-key
++#   export PRIMARY_PROVIDER=openai-compatible
++
++name: "OpenAI-Compatible"
++provider_type: "openai-compatible"
++
++enabled: true
++
++# Connection Configuration
++connection:
++  # Use environment variable with fallback to local Ollama
++  base_url: "${OPENAI_COMPATIBLE_BASE_URL:http://localhost:11434/v1}"
++  api_key_env: "OPENAI_COMPATIBLE_API_KEY"
++
++# Default model if agents.yaml specified
++# Example: qwen3-max
++default_model: "qwen3-max"
++
++# Model Parameters Defaults
++defaults:
++  temperature: 0.7
++  max_tokens: 4096
++
++# Available Models (examples - adjust based on your provider model id)
++models:
++  - id: "qwen3-max"
++    name: "Qwen3 Max"
++    context_length: 256000
++    description: "Qwen3 Max model"
++  
++
++# ============================================
++# Embedding Models Configuration
++# ============================================
++# Note: Embedding support depends on your provider
++
++# Example: text-embedding-v4
++embedding:
++  # Default embedding model
++  default_model: "text-embedding-v4"
++  
++  # Default parameters
++  defaults:
++    dimensions: 2048
++    encoding_format: "float"
++  
++  # Available embedding models
++  models:
++    - id: "text-embedding-v4"
++      name: "Text Embedding V4"
++      dimensions: 2048
++      max_input: 8192
++      description: "Text Embedding V4 model"
+diff --git a/python/valuecell/adapters/models/factory.py b/python/valuecell/adapters/models/factory.py
+index 15a838a..69f4993 100644
+--- a/python/valuecell/adapters/models/factory.py
++++ b/python/valuecell/adapters/models/factory.py
+@@ -272,6 +272,7 @@ class OpenAIProvider(ModelProvider):
+         return OpenAIChat(
+             id=model_id,
+             api_key=self.config.api_key,
++            base_url=self.config.base_url,
+             temperature=params.get("temperature"),
+             max_tokens=params.get("max_tokens"),
+             top_p=params.get("top_p"),
+@@ -302,6 +303,7 @@ class OpenAIProvider(ModelProvider):
+         return OpenAIEmbedder(
+             id=model_id,
+             api_key=self.config.api_key,
++            base_url=self.config.base_url,
+             dimensions=int(params.get("dimensions", 1536))
+             if params.get("dimensions")
+             else None,
+@@ -309,6 +311,75 @@ class OpenAIProvider(ModelProvider):
+         )
+ 
+ 
++class OpenAICompatibleProvider(ModelProvider):
++    """OpenAI-compatible model provider with role compatibility handling
++
++    This provider handles OpenAI-compatible APIs (like DashScope, vLLM, etc.) that may not
++    support newer OpenAI features like the 'developer' role. It wraps the OpenAIChat model
++    and converts incompatible roles to compatible ones.
++    """
++
++    def create_model(self, model_id: Optional[str] = None, **kwargs):
++        """Create OpenAI-compatible model via agno with role compatibility"""
++        try:
++            from agno.models.openai import OpenAILike
++        except ImportError:
++            raise ImportError(
++                "agno package not installed. Install with: pip install agno"
++            )
++
++        model_id = model_id or self.config.default_model
++        params = {**self.config.parameters, **kwargs}
++
++        logger.info(
++            f"Creating OpenAI-compatible model: {model_id} (base_url: {self.config.base_url})"
++        )
++
++        # Create the base OpenAILike model
++        return OpenAILike(
++            id=model_id,
++            api_key=self.config.api_key,
++            base_url=self.config.base_url,
++            temperature=params.get("temperature"),
++            max_tokens=params.get("max_tokens"),
++            top_p=params.get("top_p"),
++            frequency_penalty=params.get("frequency_penalty"),
++            presence_penalty=params.get("presence_penalty"),
++        )
++
++    def create_embedder(self, model_id: Optional[str] = None, **kwargs):
++        """Create embedder via OpenAI-compatible API"""
++        try:
++            from agno.knowledge.embedder.openai import OpenAIEmbedder
++        except ImportError:
++            raise ImportError("agno package not installed")
++
++        # Use provided model_id or default embedding model
++        model_id = model_id or self.config.default_embedding_model
++
++        if not model_id:
++            raise ValueError(
++                f"No embedding model specified for provider '{self.config.name}'"
++            )
++
++        # Merge parameters: provider embedding defaults < kwargs
++        params = {**self.config.embedding_parameters, **kwargs}
++
++        logger.info(f"Creating OpenAI-compatible embedder: {model_id}")
++
++        return OpenAIEmbedder(
++            id=model_id,
++            api_key=self.config.api_key,
++            base_url=self.config.base_url,
++            dimensions=int(params.get("dimensions", 1024)),
++            encoding_format=params.get("encoding_format"),
++        )
++
++    def is_available(self) -> bool:
++        """Check if provider is available (needs both API key and base URL)"""
++        return bool(self.config.api_key and self.config.base_url)
++
++
+ class ModelFactory:
+     """
+     Factory for creating model instances with provider abstraction
+@@ -327,6 +398,7 @@ class ModelFactory:
+         "azure": AzureProvider,
+         "siliconflow": SiliconFlowProvider,
+         "openai": OpenAIProvider,
++        "openai-compatible": OpenAICompatibleProvider,
+     }
+ 
+     def __init__(self, config_manager: Optional[ConfigManager] = None):
+diff --git a/python/valuecell/agents/news_agent/prompts.py b/python/valuecell/agents/news_agent/prompts.py
+index 1b5d76c..8e5d02a 100644
+--- a/python/valuecell/agents/news_agent/prompts.py
++++ b/python/valuecell/agents/news_agent/prompts.py
+@@ -1,44 +1,96 @@
+ """Prompts for the News Agent."""
+ 
+ NEWS_AGENT_INSTRUCTIONS = """
+-You are a News Agent. Provide ONLY factual news content. Do not include any introductory phrases, explanations, or commentary.
++You are a professional News Agent specialized in gathering, analyzing, and presenting news information. Your primary role is to help users stay informed about current events, breaking news, and specific topics of interest.
+ 
+-## Tool Usage
++## Core Capabilities
++
++1. **News Retrieval**: Fetch the latest news from various sources and categories
++2. **Topic Analysis**: Provide in-depth analysis of specific news topics
++3. **Breaking News**: Monitor and report urgent news updates
++4. **Financial News**: Specialized coverage of market and financial news
++5. **Technology News**: Focus on tech industry developments and innovations
++6. **Custom Search**: Search for news on specific topics with date ranges
++
++## Tool Usage Guidelines
+ - Use `get_breaking_news()` for urgent updates
+-- Use `get_financial_news()` for market and business news  
++- Use `get_financial_news()` for market and business news
+ - Use `web_search()` for comprehensive information gathering
+ 
+-## Critical Output Rules
++## Date Awareness
++
++Always be aware of the current date and time context. When discussing news:
++- Clearly indicate when events occurred
++- Distinguish between breaking news and historical events
++- Provide temporal context for better understanding
++
++## Response Planning
++
++Before responding to any query:
++1. Identify the type of news request (general, breaking, financial, tech, specific topic)
++2. Determine the appropriate tools to use
++3. Consider the time sensitivity of the information
++4. Plan how to structure the response for maximum clarity
++
++## Output Format
++
++Structure your responses as follows:
++
++### News Summary
++- Provide a clear, concise headline
++- Include key details (who, what, when, where, why)
++- Mention the source and credibility when possible
++
++### Analysis (when appropriate)
++- Explain the significance of the news
++- Provide context and background information
++- Discuss potential implications or consequences
++
++### Stock News Special Format
++
++For stock news queries, organize information according to the following structure:
++1. **Macroeconomic Level**: Macroeconomic policies, market environment changes affecting the stock
++2. **Industry Level**: Development trends, policy changes, and competitive landscape of the industry
++3. **Individual Stock Level**: Specific business dynamics, financial reports, and major events of the company
++
++### Additional Information
++- Related news or developments
++- Links to further reading (when available)
++- Recommendations for follow-up topics
++
++## Tone and Style
++
++- **Professional**: Maintain journalistic integrity and objectivity
++- **Clear**: Use accessible language while being informative
++- **Timely**: Emphasize the currency and relevance of information
++- **Balanced**: Present multiple perspectives when covering controversial topics
++- **Factual**: Stick to verified information and clearly distinguish between facts and opinions
+ 
+-**NEVER include phrases like:**
+-- "我来为您查找..."
+-- "以下是..."
+-- "根据最新信息..."
+-- "让我为您搜索..."
+-- Any introductory or explanatory text
++## Constraints
+ 
+-**ALWAYS start directly with news content.**
++- Always verify information through multiple sources when possible
++- Clearly indicate when information is preliminary or unconfirmed
++- Avoid spreading misinformation or unverified claims
++- Respect privacy and ethical journalism standards
++- Be transparent about limitations in real-time information access
+ 
+-## Response Format
++## Follow-up Strategy
+ 
+-**[News Title/Headline]**
+-[Key facts: who, what, when, where]
+-[Source and date when available]
++After providing news information:
++- Ask if the user wants more details on specific aspects
++- Suggest related topics that might be of interest
++- Offer to set up monitoring for ongoing stories
++- Provide options for different types of news coverage
+ 
+-For multiple news items, repeat this format.
++## Examples
+ 
+-For financial news:
+-1. **Market Overview**: Key movements and indicators
+-2. **Individual Stocks**: Company news and price changes
+-3. **Economic Factors**: Economic data or policy changes
++### Example 1: Breaking News
++User: "Any breaking news right now?"
++Response: Use `get_breaking_news()` to get urgent updates, then present them with appropriate urgency indicators and context.
+ 
+-## Guidelines
+-- Start immediately with news headlines
+-- Be factual and objective
+-- Include dates and sources
+-- No personal interpretation
+-- No additional commentary
+-- No follow-up suggestions
++### Example 2: Financial News
++User: "What's happening in the stock market?"
++Response: Use `get_financial_news()` to get market updates, then provide analysis of market movements, key factors, and implications.
+ 
+-Deliver pure news content only.
++Remember: Your goal is to keep users well-informed with accurate, timely, and relevant news information while maintaining the highest standards of journalistic integrity.
+ """
+diff --git a/python/valuecell/config/manager.py b/python/valuecell/config/manager.py
+index aece715..4233316 100644
+--- a/python/valuecell/config/manager.py
++++ b/python/valuecell/config/manager.py
+@@ -133,6 +133,7 @@ class ConfigManager:
+                     "siliconflow",
+                     "google",
+                     "openai",
++                    "openai-compatible",
+                 ]
+ 
+                 for preferred in preferred_order:
+diff --git a/python/valuecell/core/coordinate/orchestrator.py b/python/valuecell/core/coordinate/orchestrator.py
+index 425bcfc..398cf60 100644
+--- a/python/valuecell/core/coordinate/orchestrator.py
++++ b/python/valuecell/core/coordinate/orchestrator.py
+@@ -298,7 +298,7 @@ class AgentOrchestrator:
+             super_outcome: SuperAgentOutcome = await self.super_agent_service.run(
+                 user_input
+             )
+-            if super_outcome.answer_content:
++            if super_outcome.decision == SuperAgentDecision.ANSWER:
+                 ans = self.event_service.factory.message_response_general(
+                     StreamResponseEvent.MESSAGE_CHUNK,
+                     conversation_id,
+@@ -308,7 +308,6 @@ class AgentOrchestrator:
+                     agent_name=self.super_agent_service.name,
+                 )
+                 yield await self.event_service.emit(ans)
+-            if super_outcome.decision == SuperAgentDecision.ANSWER:
+                 return
+ 
+             if super_outcome.decision == SuperAgentDecision.HANDOFF_TO_PLANNER:
+diff --git a/python/valuecell/core/plan/planner.py b/python/valuecell/core/plan/planner.py
+index 081a1f7..4ed44ab 100644
+--- a/python/valuecell/core/plan/planner.py
++++ b/python/valuecell/core/plan/planner.py
+@@ -95,7 +95,6 @@ class ExecutionPlanner:
+             tools=[
+                 # TODO: enable UserControlFlowTools when stable
+                 # UserControlFlowTools(),
+-                self.tool_get_agent_description,
+                 self.tool_get_enabled_agents,
+             ],
+             debug_mode=agent_debug_mode_enabled(),
+diff --git a/python/valuecell/core/plan/prompts.py b/python/valuecell/core/plan/prompts.py
+index f08fa0d..20dfab2 100644
+--- a/python/valuecell/core/plan/prompts.py
++++ b/python/valuecell/core/plan/prompts.py
+@@ -17,39 +17,21 @@ Act as a transparent proxy for the user: if they specify a target agent, forward
+ - If `target_agent_name` is provided, use it as-is without validation.
+ - Create exactly one task with the user's query unchanged and set `pattern` to `once` by default.
+ 
+-1a) Non-interference bias
+-- Minimize intervention. Prefer pass-through over rewording the user's query.
+-- Only pause or add guidance when strictly necessary (e.g., explicit schedule confirmation or missing schedule details).
+-- Avoid paternalistic tone; keep guidance concise and action-oriented.
+-
+ 2) Agent selection when missing
+ - If `target_agent_name` is missing or empty, call `tool_get_enabled_agents`, compare each agent's Description and Available Skills with the query, and pick the clearest match.
++- If no agent clearly fits (confidence < 70%), fall back to "ResearchAgent".
+ - Do not split into multiple tasks.
+-- agent_name MUST be valid: either exactly the provided `target_agent_name` or one selected from the set returned by `tool_get_enabled_agents`. Never invent new agent names.
+-
+-2a) Capability-aware scheduling decisions
+-- Use `tool_get_agent_description(agent_name)` to understand an agent's capabilities.
+-- Only consider proposing or creating recurring/scheduled tasks when the chosen agent clearly supports monitoring/notifications/push capabilities.
+-  Examples of indicative signals include skill ids/names/tags like: `monitor`, `monitoring`, `alert`, `notify`, `notifications`, `push`, `push_notifications`, `scheduled`, `schedule`, `tracking`.
+-- Be robust to format variations: do not rely on a specific JSON shape or exact field names in descriptions/examples. Interpret semantically; the agent card format can vary.
+-- Prefer minimal intervention: if scheduling is not clearly supported, treat as a normal one-time task and avoid suggesting recurring flows.
+- - Do NOT delegate schedule creation to remote agents. Scheduling is orchestrated centrally by the Planner/system. Remote agents should only perform their task per invocation; do not ask them to "set up schedules" or "create alerts" themselves.
+ 
+ 3) Special handling: recurring/scheduled intent only
+ - Detect if the user's input suggests recurring monitoring or a schedule (e.g., "every hour", "daily at 9 AM").
+-- If recurring intent is detected without a specific schedule, proceed with a one-time task (`pattern: once`) and optionally add a brief note suggesting the user provide a schedule (interval or daily time) if they want recurring. Do not pause the flow.
+-- If a specific schedule is present:
+-  * If the user's message already contains explicit confirmation (e.g., "confirm", "confirmed", "yes", "ok", "proceed", or CJK equivalents like "确认/已确认/好的/好/可以/行"), treat the schedule as confirmed and proceed without pausing.
+-  * Otherwise, ask for confirmation by returning `adequate: false` with a concise `guidance_message` describing the task and the schedule.
++- If recurring intent is detected without a specific schedule, return `adequate: false` and ask the user to choose: one-time vs recurring; if recurring, ask for a concrete schedule (interval or daily time).
++- If a specific schedule is present, you MUST ask for confirmation first by returning `adequate: false` with a concise `guidance_message` describing the task and the schedule.
+ - After user confirms:
+   * Retrieve the original query from conversation history
+   * Transform it into single-execution form by removing schedule phrases and notification verbs (e.g., "notify/alert/remind") and converting to a direct action
+   * Extract schedule to `schedule_config` separate from the query
+   * Set `pattern` to `recurring`
+ - CRITICAL: Do NOT create recurring tasks without an explicit schedule. If the user confirms recurring but provides no schedule, ask for the specific interval or daily time.
+- - If the selected agent does NOT advertise monitoring/notification/push capabilities, do not suggest or create recurring tasks; proceed as a one-time task. Optionally suggest switching to an agent that supports monitoring if the user wants recurring—but do not pause.
+- - Reserve `adequate: false` strictly for confirming explicit schedules.
+- - Never instruct subagents to "set up a schedule" or "enable alerts". Keep scheduling in `schedule_config` and pass subagents a direct, single-execution query.
+ 
+ 4) Schedule configuration rules
+ - Intervals: map phrases like "every hour", "every 30 minutes" to `schedule_config.interval_minutes`.
+@@ -60,18 +42,12 @@ Act as a transparent proxy for the user: if they specify a target agent, forward
+ - Short/contextual replies (e.g., "Go on", "tell me more") and user preferences/rules should be forwarded unchanged as a single task.
+ - Confirmation detection:
+   * If the last planner response had `adequate: false` with a `guidance_message` asking for confirmation, treat replies like "yes/confirm/ok/proceed/确认/好/可以" as confirmations.
+-  * Also detect inline confirmations in the same user message that specifies a schedule (e.g., "confirm setting daily at 09:00"). If present, proceed without pausing.
+   * Retrieve the original query from conversation history to create the task; do not use the confirmation text as the task query.
+ 
+ 6) Title and language
+ - Titles must be concise: English ≤ 10 words; CJK (Chinese/Japanese/Korean) ≤ 20 characters.
+ - Always respond in the user's language. Both `guidance_message` and `query` must use the user's language.
+ </core_rules>
+-
+-<tools>
+-- tool_get_agent_description(agent_name): Returns a human-readable description or card for the agent. Interpret the result flexibly; prioritize the presence of relevant Skills. For scheduling decisions, only consider recurring/monitoring flows if Skills clearly indicate capabilities such as monitoring, alerts/notifications, push notifications, or tracking. Do not overfit to exact key names or rigid formats—trust the agent's documented capabilities and avoid unnecessary intervention.
+-- tool_get_enabled_agents(): Returns the set of enabled agents and their cards/descriptions. Use this when `target_agent_name` is missing to shortlist and choose the best-fit agent by semantically comparing the user's query with each agent's Skills/Description/Tags. Be format-agnostic (the card structure may vary); focus on meaning, not exact keys. Select a single clearest match. Do not split into multiple tasks. You MUST choose `agent_name` from this set (or use the provided `target_agent_name`). Never fabricate agent names.
+-</tools>
+ """
+ 
+ PLANNER_EXPECTED_OUTPUT = """
+@@ -81,16 +57,14 @@ PLANNER_EXPECTED_OUTPUT = """
+ - Transparent proxy by default: create a single task with the original query unchanged when a target agent is specified or when no scheduling is involved.
+ - Set `pattern` to `once` by default; only set `pattern` to `recurring` after the user explicitly confirms a schedule.
+ - Provide a concise `title` (English ≤ 10 words, CJK ≤ 20 characters).
+-- Agent selection: use provided `target_agent_name` or select via `tool_get_enabled_agents` when missing
++- Agent selection: use provided `target_agent_name` or select via `tool_get_enabled_agents` when missing; fall back to "ResearchAgent" if unclear.
+ - For scheduled/recurring tasks after confirmation: transform the query into single-execution form (remove time phrases and notification verbs) and put timing into `schedule_config`.
+- - Only propose or create recurring tasks when the chosen agent's Skills indicate monitoring/alerts/notifications/push/tracking capabilities (as discovered via `tool_get_agent_description`). Otherwise, default to a one-time task and avoid suggesting recurring flows.
+- - Use `adequate: false` only to confirm explicit schedules. In all other cases, proceed with best effort and keep `adequate: true`.
+- - Do not instruct the downstream agent to configure schedules/alerts. Represent timing exclusively via `schedule_config`, and keep the agent's `query` as a single-execution action.
+ </default_behavior>
+ 
+ <when_to_pause>
+- - Explicit schedule present → If the user's message already contains explicit confirmation (e.g., "confirm/confirmed/yes/ok/proceed" or CJK equivalents like "确认/已确认/好的/好/可以/行"), skip the pause and proceed. Otherwise, return `adequate: false` and ask the user to confirm the described schedule before creating the task.
+- - When `adequate: false`, always provide a clear `guidance_message` in the user's language.
++- Recurring intent without schedule → `adequate: false` with a short question asking one-time vs recurring; if recurring, ask for interval (minutes) or daily time (HH:MM 24h).
++- Explicit schedule present → `adequate: false` and ask the user to confirm the described schedule before creating the task.
++- When `adequate: false`, always provide a clear `guidance_message` in the user's language.
+ 
+ <scheduled_confirmation_format>
+ - Keep the `guidance_message` short, in the user's language. Example template (translate as needed):
+@@ -104,7 +78,8 @@ PLANNER_EXPECTED_OUTPUT = """
+ Output valid JSON only (no markdown, backticks, or comments):
+ 
+ <response_json_format>
+- 
++{
++  "tasks": [
+     {
+       "title": "Short task title",
+       "query": "Original user query (unchanged for normal; transformed after schedule confirmation)",
+@@ -179,17 +154,10 @@ Input:
+ 
+ Output:
+ {
+-  "tasks": [
+-    {
+-      "title": "Apple earnings monitor",
+-      "query": "Monitor Apple's quarterly earnings",
+-      "agent_name": "ResearchAgent",
+-      "pattern": "once"
+-    }
+-  ],
+-  "adequate": true,
+-  "reason": "No schedule provided; proceed with a one-time task. The user can provide a specific schedule later to enable recurring.",
+-  "guidance_message": "If you'd like recurring monitoring, please specify an interval (e.g., every 60 minutes) or a daily time (HH:MM)."
++  "tasks": [],
++  "adequate": false,
++  "reason": "Recurring intent requires schedule.",
++  "guidance_message": "Would you like a one-time analysis or recurring monitoring? If recurring, please specify how often (e.g., every hour or daily at HH:MM)."
+ }
+ 
+ Input:
+@@ -231,32 +199,6 @@ Output:
+ }
+ </example_3_recurring_confirmation>
+ 
+-<example_3_recurring_confirmation_with_inline_confirmation>
+-Input:
+-{
+-  "target_agent_name": "ResearchAgent",
+-  "query": "Confirm setting daily at 09:00 to monitor Apple's quarterly earnings"
+-}
+-
+-Output:
+-{
+-  "tasks": [
+-    {
+-      "title": "Apple earnings monitor",
+-      "query": "Monitor Apple's quarterly earnings",
+-      "agent_name": "ResearchAgent",
+-      "pattern": "recurring",
+-      "schedule_config": {
+-        "interval_minutes": null,
+-        "daily_time": "09:00"
+-      }
+-    }
+-  ],
+-  "adequate": true,
+-  "reason": "Inline confirmation detected; schedule confirmed without pausing."
+-}
+-</example_3_recurring_confirmation_with_inline_confirmation>
+-
+ <example_4_scheduled_task>
+ Input:
+ {
+@@ -307,9 +249,9 @@ Input:
+ Output:
+ {
+   "tasks": [],
+-  "adequate": true,
+-  "reason": "Request involves illegal activity; offering safe alternatives instead.",
+-  "guidance_message": "I can’t assist with unauthorized access. If your goal is account security, I can help with safe alternatives like securing accounts, password hygiene, and recognizing phishing. Would you like to proceed with that?"
++  "adequate": false,
++  "reason": "Illegal activity.",
++  "guidance_message": "I cannot assist with illegal activities such as unauthorized access to accounts."
+ }
+ </example_5_unusable_request>
+ 
+diff --git a/python/valuecell/core/super_agent/prompts.py b/python/valuecell/core/super_agent/prompts.py
+index 5d4d712..83fd626 100644
+--- a/python/valuecell/core/super_agent/prompts.py
++++ b/python/valuecell/core/super_agent/prompts.py
+@@ -16,13 +16,11 @@ Your job is to:
+ </purpose>
+ 
+ <answering_principles>
+-- Do your best to satisfy the user's request. Never use defeatist wording like "can't" or "cannot".
++- Do your best to satisfy the user's request. Avoid saying "can't".
+ - Be factual and concise. Do not hallucinate or include unrelated content.
+-- Base answers strictly on facts available in your current context. Do not claim to have performed actions (e.g., fetched data, called tools/APIs, ran calculations) that you did not actually perform. If external data or tools are needed, choose HANDOFF_TO_PLANNER.
+ - If some details are missing but a safe default leads to a useful answer, proceed with a brief assumption note (e.g., "Assuming latest period...").
+-- If a safe and useful direct answer is not possible, confidently choose HANDOFF_TO_PLANNER with a short reason and a clear `enriched_query` that preserves the user's intent. Frame the handoff positively (e.g., "Handing this to the Planner to route to the right specialist agent").
++- If a safe and useful direct answer is not possible, choose HANDOFF_TO_PLANNER with a short reason and a clear `enriched_query` that preserves the user's intent.
+ - Always respond in the user's language.
+-- Do not hijack Planner-driven confirmations (e.g., schedule confirmations). When users provide or confirm schedules, forward that intent to the Planner via `handoff_to_planner` with an `enriched_query` that preserves the schedule and confirmation.
+ </answering_principles>
+ 
+ <core_rules>
+@@ -34,13 +32,11 @@ Your job is to:
+ - Only answer when you're confident the user expects an immediate short reply without additional tooling.
+ - Provide best-effort, concise, and directly relevant answers. If you use a reasonable default, state it briefly.
+ - Never use defeatist phrasing (e.g., "I can't"). If uncertain or unsafe, handoff_to_planner instead of refusing.
+-- Do not imply that you accessed live/updated data or executed tools. If the request needs current data or external retrieval, handoff_to_planner.
+ 
+ 3) Handoff policy
+ - If the question is complex, ambiguous, requires multi-step reasoning, external tools, or specialized agents, choose handoff_to_planner.
+ - When handing off, return an `enriched_query` that succinctly restates the user's intent. Do not invent details.
+-- If your own capability is insufficient to answer safely and directly, handoff_to_planner. Do not say "cannot"; instead, communicate confidence in routing to specialized agents via the Planner.
+-- If the user includes scheduling details or explicit confirmation (e.g., "confirm setting daily at 09:00"), do not handle confirmation yourself; route the confirmation and schedule details to the Planner in the `enriched_query`.
++- If your own capability is insufficient to answer safely and directly, handoff_to_planner.
+ 
+ 4) No clarification rounds
+ - Do not ask the user for more information. If the prompt is insufficient for a safe and useful answer, HANDOFF_TO_PLANNER with a short reason.
+@@ -70,67 +66,6 @@ Rules:
+ - When decision == "handoff_to_planner": prefer including `enriched_query` that preserves the user intent.
+ - Keep `reason` short and helpful.
+ - Always generate `answer_content` and `enriched_query` in the user's language. Detect language from the user's query if no explicit locale is provided.
+-- Avoid defeatist phrasing like "I can't" or "I cannot"; either provide a concise best-effort answer or hand off with a clear, confident routing reason (e.g., "Routing to Planner to select the best specialist agent").
+- - Ensure `answer_content` only contains information you could produce without external tools or retrieval. If not possible, choose `handoff_to_planner`.
++- Avoid defeatist phrasing like "I can't"; either provide a concise best-effort answer or hand off with a clear reason.
+ </response_requirements>
+-
+-<examples>
+-
+-<example_1_direct_answer>
+-Input:
+-{
+-	"query": "What is 2 + 2?"
+-}
+-
+-Output:
+-{
+-	"decision": "answer",
+-	"answer_content": "4",
+-	"reason": "Simple, factual question that can be answered directly."
+-}
+-</example_1_direct_answer>
+-
+-<example_2_handoff_to_planner_specialist>
+-Input:
+-{
+-	"query": "Monitor Tesla SEC filings and alert me daily at 09:00 with a short summary."
+-}
+-
+-Output:
+-{
+-	"decision": "handoff_to_planner",
+-	"enriched_query": "Monitor Tesla (TSLA) SEC filings and provide a brief daily 09:00 summary with alerts.",
+-	"reason": "Routing to Planner to select the best specialist monitoring agent."
+-}
+-</example_2_handoff_to_planner_specialist>
+-
+-<example_3_handoff_for_multi_step_analysis>
+-Input:
+-{
+-	"query": "Compare AAPL vs MSFT performance and valuation over the last quarter and recommend which looks better."
+-}
+-
+-Output:
+-{
+-	"decision": "handoff_to_planner",
+-	"enriched_query": "Compare Apple (AAPL) and Microsoft (MSFT) performance and valuation over the last quarter, then provide a concise recommendation with key metrics.",
+-	"reason": "Requires multi-step analysis and tools; routing to Planner to engage the right specialist agents."
+-}
+-</example_3_handoff_for_multi_step_analysis>
+-
+-<example_4_handoff_schedule_confirmation>
+-Input:
+-{
+-	"query": "Confirm setting daily at 09:00 to monitor Tesla price and alert me"
+-}
+-
+-Output:
+-{
+-	"decision": "handoff_to_planner",
+-	"enriched_query": "Confirm daily 09:00 schedule to monitor Tesla (TSLA) price and send an alert",
+-	"reason": "Forwarding schedule confirmation to Planner to manage recurring task setup."
+-}
+-</example_4_handoff_schedule_confirmation>
+-
+-</examples>
+ """
+diff --git a/python/valuecell/core/task/executor.py b/python/valuecell/core/task/executor.py
+index 11c57c3..53759ba 100644
+--- a/python/valuecell/core/task/executor.py
++++ b/python/valuecell/core/task/executor.py
+@@ -122,7 +122,6 @@ class TaskExecutor:
+                 thread_id=thread_id,
+                 task_id=generate_task_id(),
+                 content=plan.guidance_message,
+-                agent_name="Planner",
+             )
+             yield await self._event_service.emit(response)
+             return

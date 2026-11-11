@@ -1,0 +1,31 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 3caa8faa22d8c820bfd0bfb663be5035938b528b
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+git checkout 3caa8faa22d8c820bfd0bfb663be5035938b528b
+
+# Check if the target Python test file exists
+TEST_FILE="platform/reworkd_platform/tests/agent/test_autonomous_agent.py"
+if [[ -f "$TEST_FILE" ]]; then
+    # Install Python 3 and pytest in the container (if not already installed)
+    # This ensures the environment can run the python test file
+    
+    apt update
+    apt install -y python3 python3-pip
+    pip3 install pytest
+
+    # Run pytest on the specific test file with concise output of test results
+    pytest --maxfail=1 --disable-warnings -q "$TEST_FILE"
+    rc=$?
+else
+    echo "Target test file $TEST_FILE does not exist."
+    # Exit with code 1 to reflect missing test file as a failure
+    rc=1
+fi
+
+echo "OMNIGRIL_EXIT_CODE=$rc"

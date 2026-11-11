@@ -1,0 +1,60 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 as python alias
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+
+# Upgrade pip
+RUN python -m pip install --no-cache-dir --upgrade pip
+
+# Install pre-commit, pytest, and other dev dependencies globally since no constraints given for system packages
+RUN python -m pip install --no-cache-dir \
+    pytest \
+    pytest-forked \
+    pre-commit \
+    fakeredis \
+    aiosqlite \
+    greenlet \
+    setuptools>=45 \
+    wheel
+
+# Create directory and clone repository
+WORKDIR /testbed/
+RUN git clone https://github.com/agentscope-ai/agentscope.git /testbed
+
+# Checkout the specific commit SHA (28cfb99a21902d330dab6cb3762a739198cf972f)
+RUN git reset --hard 28cfb99a21902d330dab6cb3762a739198cf972f
+
+# Install the target repository in development mode
+RUN python -m pip install --no-cache-dir -e .
+
+# Install and configure pre-commit hooks as per instructions
+RUN pre-commit install && pre-commit run --all-files || true
+
+# Keep bash as default shell and ensure environment is set correctly
+ENV SHELL=/bin/bash
+
+# Default workdir set to /testbed
+WORKDIR /testbed/
+
+# No CMD or ENTRYPOINT as tests will be run separately

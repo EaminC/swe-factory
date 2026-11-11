@@ -1,0 +1,319 @@
+diff --git a/mle/utils/__init__.py b/mle/utils/__init__.py
+index 5843f93..b29dd43 100644
+--- a/mle/utils/__init__.py
++++ b/mle/utils/__init__.py
+@@ -1,1 +1,2 @@
+ from .system import *
++from .cache import *
+diff --git a/mle/utils/cache.py b/mle/utils/cache.py
+new file mode 100644
+index 0000000..431913c
+--- /dev/null
++++ b/mle/utils/cache.py
+@@ -0,0 +1,164 @@
++import pickle
++from typing import Dict
++from datetime import datetime
++
++from mle.utils.system import get_config, write_config
++
++
++class WorkflowCacheOperator:
++    """
++    WorkflowCacheOperator handles the storing and resuming of cache content.
++    """
++
++    def __init__(self, cache, cache_content: Dict[str, object]):
++        """
++        Args:
++            cache: The cache instance to which this operator belongs.
++            cache_content (Dict[str, object]): A dictionary holding the cached content.
++        """
++        self.cache = cache
++        self.cache_content = cache_content
++
++    def store(self, key: str, value: object):
++        """
++        Store a value into the cache content.
++
++        Args:
++            key (str): The key under which the value is stored.
++            value (object): The value to be stored.
++        """
++        self.cache_content[key] = pickle.dumps(value, fix_imports=False)
++
++    def resume(self, key: str):
++        """
++        Resume a value from the cache content.
++
++        Args:
++            key (str): The key of the value to be resumed.
++
++        Returns:
++            object: The resumed value, or None if the key does not exist.
++        """
++        if self.cache_content.get(key) is not None:
++            return pickle.loads(self.cache_content[key])
++        return None
++
++    def __enter__(self):
++        """
++        Enter the runtime context related to this object.
++
++        Returns:
++            WorkflowCacheOperator: self
++        """
++        return self
++
++    def __exit__(self, exc_type, exc_val, exc_tb):
++        """
++        Exit the runtime context related to this object.
++
++        Args:
++            exc_type: The exception type.
++            exc_val: The exception value.
++            exc_tb: The traceback object.
++        """
++        if exc_type is None:
++            self.cache._store_cache_buffer()
++
++
++class WorkflowCache:
++    """
++    WorkflowCache manages the caching for workflows, providing
++    methods to load, store, and remove cached steps.
++    """
++
++    def __init__(self, project_dir: str):
++        """
++        Initialize WorkflowCache with a project directory.
++
++        Args:
++            project_dir (str): The directory of the project.
++        """
++        self.project_dir = project_dir
++        self.buffer = self._load_cache_buffer()
++        self.cache = self.buffer["cache"]
++
++    def is_empty(self):
++        """
++        Check if the cache is empty.
++
++        Returns:
++            bool: True if the cache is empty, False otherwise.
++        """
++        return len(self.cache.keys()) == 0
++
++    def remove(self, step: int):
++        """
++        Remove a step from the cache.
++
++        Args:
++            step (int): The step index to be removed.
++        """
++        if step in self.cache.keys():
++            del self.cache[step]
++        self._store_cache_buffer()
++
++    def current_step(self):
++        """
++        Get the current step from the cache.
++
++        Returns:
++            int: The current step.
++        """
++        return max(self.cache.keys())
++
++    def _load_cache_buffer(self):
++        """
++        Load the cache buffer from the configuration.
++
++        Returns:
++            dict: The buffer loaded from the configuration.
++        """
++        buffer = get_config()
++        if buffer.get("cache") is None:
++            buffer["cache"] = {}
++        return buffer
++
++    def _store_cache_buffer(self):
++        """
++        Store the cache buffer to the configuration.
++        """
++        write_config(self.buffer)
++
++    def __call__(self, step: int, name: str):
++        """
++        Initialize the cache content for a given step and name.
++
++        Args:
++            step (str): The step to be initialized.
++            name (str): The name associated with the step.
++
++        Returns:
++            WorkflowCacheOperator: An instance of WorkflowCacheOperator.
++        """
++        if step not in self.cache.keys():
++            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
++            self.cache[step] = {
++                "step": step,
++                "name": name,
++                "time": timestamp,
++                "content": dict(),
++            }
++        cache_content = self.cache[step]["content"]
++        return WorkflowCacheOperator(self, cache_content)
++
++    def __str__(self):
++        """
++        Return a string representation of the step cache list.
++
++        Returns:
++            str: The string representation of the cache.
++        """
++        str = ""
++        for k, v in self.cache.items():
++            str += f"[{k}] {v['name']} ({v['time']}) \n"
++        return str
+diff --git a/mle/utils/system.py b/mle/utils/system.py
+index e30095a..0568f8a 100644
+--- a/mle/utils/system.py
++++ b/mle/utils/system.py
+@@ -53,6 +53,14 @@ def get_config():
+     with open(config_path, 'r') as file:
+         return yaml.safe_load(file)
+ 
++def write_config(value):
++    """
++    Write the configuration file.
++    """
++    config_path = os.path.join(os.getcwd(), 'project.yml')
++    with open(config_path, 'w+') as file:
++        yaml.dump(value, file, default_flow_style=False)
++
+ 
+ def delete_directory(path):
+     """
+diff --git a/mle/workflow/baseline.py b/mle/workflow/baseline.py
+index 2e61ece..a7073d2 100644
+--- a/mle/workflow/baseline.py
++++ b/mle/workflow/baseline.py
+@@ -5,7 +5,7 @@ import os
+ import questionary
+ from rich.console import Console
+ from mle.model import load_model
+-from mle.utils import print_in_box, ask_text
++from mle.utils import print_in_box, ask_text, WorkflowCache
+ from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
+ 
+ 
+@@ -29,51 +29,76 @@ def baseline(work_dir: str, model='gpt-4o'):
+     """
+ 
+     console = Console()
++    cache = WorkflowCache(work_dir)
+     model = load_model(work_dir, model)
+ 
++    if not cache.is_empty():
++        step = ask_text(f"MLE has already pass through the following steps: \n{cache}\n Pick a step for resume (ENTER to continue the workflow)")
++        if step:
++            step = int(step)
++            for i in range(step, cache.current_step() + 1):
++                cache.remove(i)  # remove the stale step caches
++
+     # ask for the data information
+-    dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
+-    if not dataset:
+-        print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
+-        return
++    with cache(step=1, name="ask for the data information") as ca:
++        dataset = ca.resume("dataset")
++        if dataset is None:
++            dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
++            if not dataset:
++                print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
++                return
++            ca.store("dataset", dataset)
+ 
+     # ask for the user requirement
+-    ml_requirement = ask_text("Please provide the user requirement")
+-    if not ml_requirement:
+-        print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
+-        return
++    with cache(step=2, name="ask for the user requirement") as ca:
++        ml_requirement = ca.resume("ml_requirement")
++        if ml_requirement is None:
++            ml_requirement = ask_text("Please provide the user requirement")
++            if not ml_requirement:
++                print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
++                return
++        ca.store("ml_requirement", ml_requirement)
+ 
+     # advisor agent gives suggestions in a report
+-    advisor = AdviseAgent(model, console)
+-    advisor_report = advisor.interact("[green]User Requirement:[/green] " + ml_requirement + "\n" + ask_data(dataset))
++    with cache(step=3, name="advisor agent gives suggestions in a report") as ca:
++        advisor_report = ca.resume("advisor_report")
++        if advisor_report is None:
++            advisor = AdviseAgent(model, console)
++            advisor_report = advisor.interact("[green]User Requirement:[/green] " + ml_requirement + "\n" + ask_data(dataset))
++        ca.store("advisor_report", advisor_report)
+ 
+     # plan agent generates the coding plan
+-    planner = PlanAgent(model, console)
+-    coding_plan = planner.interact(advisor_report)
++    with cache(step=4, name="plan agent generates the coding plan") as ca:
++        coding_plan = ca.resume("coding_plan")
++        if coding_plan is None:
++            planner = PlanAgent(model, console)
++            coding_plan = planner.interact(advisor_report)
++        ca.store("coding_plan", coding_plan)
+ 
+     # code agent codes the tasks and debug with the debug agent
+-    coder = CodeAgent(model, work_dir, console)
+-    coder.read_requirement(advisor_report)
+-    debugger = DebugAgent(model, console)
++    with cache(step=5, name="code agent codes the tasks and debug with the debug agent") as ca:
++        coder = CodeAgent(model, work_dir, console)
++        coder.read_requirement(advisor_report)
++        debugger = DebugAgent(model, console)
+ 
+-    is_auto_mode = questionary.confirm(
+-        "MLE developer is about to start to code.\n"
+-        "Choose to debug or not (If no, MLE agent will only focus on coding tasks,"
+-        " and you have to run and debug the code yourself)?"
+-    ).ask()
++        is_auto_mode = questionary.confirm(
++            "MLE developer is about to start to code.\n"
++            "Choose to debug or not (If no, MLE agent will only focus on coding tasks,"
++            " and you have to run and debug the code yourself)?"
++        ).ask()
+ 
+-    for current_task in coding_plan.get('tasks'):
+-        code_report = coder.interact(current_task)
+-        is_debugging = code_report.get('debug')
++        for current_task in coding_plan.get('tasks'):
++            code_report = coder.interact(current_task)
++            is_debugging = code_report.get('debug')
+ 
+-        if is_auto_mode:
+-            while True:
+-                if is_debugging == 'true' or is_debugging == 'True':
+-                    with console.status("Debugger is executing and debugging the code..."):
+-                        debug_report = debugger.analyze(code_report)
+-                    if debug_report.get('status') == 'success':
+-                        break
++            if is_auto_mode:
++                while True:
++                    if is_debugging == 'true' or is_debugging == 'True':
++                        with console.status("Debugger is executing and debugging the code..."):
++                            debug_report = debugger.analyze(code_report)
++                        if debug_report.get('status') == 'success':
++                            break
++                        else:
++                            code_report = coder.debug(current_task, debug_report)
+                     else:
+-                        code_report = coder.debug(current_task, debug_report)
+-                else:
+-                    break
++                        break

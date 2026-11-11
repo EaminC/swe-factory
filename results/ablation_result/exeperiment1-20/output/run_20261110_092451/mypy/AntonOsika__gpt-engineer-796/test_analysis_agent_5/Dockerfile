@@ -1,0 +1,43 @@
+FROM ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Configure locales early to prevent locale warnings during package installation
+RUN apt-get update && apt-get install -y locales && \
+    locale-gen en_US.UTF-8 && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install base system dependencies and tools in split minimal steps with --no-install-recommends
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y --no-install-recommends git wget curl build-essential
+RUN apt-get install -y --no-install-recommends python3.10 python3.10-venv python3.10-distutils python3-pip tzdata
+RUN rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.10, upgrade pip/setuptools/wheel
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed
+RUN git -C /testbed reset --hard 9dbddfcbdd69cc064992266aa2a295c110948e33
+RUN git -C /testbed remote remove origin
+
+# Create python virtual environment
+RUN python3 -m venv /testbed/venv
+
+# Install the cloned repo in editable mode along with pytest packages inside the virtual environment
+RUN /bin/bash -c "source /testbed/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -e . && \
+    pip install pytest pytest-cov"
+
+# Add virtual environment activation to root bashrc for convenience
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc

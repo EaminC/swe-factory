@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 77126b12032fdf38a35368cfa6d6dd34ab552c10 
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Reactivate clean state to avoid partial patch residues if any
+git checkout 77126b12032fdf38a35368cfa6d6dd34ab552c10 
+
+# Activate the Python virtual environment
+source /testbed_env/bin/activate
+
+# Run only the specified test file using unittest, showing names and results concisely
+python -m unittest -v tests/test_api_url_forwarding.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup - reset the test file to original to discard patch effects if they affected it
+git checkout 77126b12032fdf38a35368cfa6d6dd34ab552c10 tests/test_api_url_forwarding.py

@@ -1,0 +1,55 @@
+2026-11-10 11:23:07,229 - INFO - Building image aider-ai__aider-1590
+Using dockerfile:
+# Use official Ubuntu 22.04 base image for a stable environment and manual Python 3.12 installation
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential tools separately in smaller steps to reduce memory pressure
+RUN apt-get update && apt-get install -y software-properties-common && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y git curl ca-certificates wget lsb-release && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+
+# Add deadsnakes PPA to install Python 3.12
+RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
+
+# Install Python 3.12, its venv module, distutils, pip and other essentials
+RUN apt-get install -y python3.12 python3.12-venv python3-distutils python3-pip && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+
+# Upgrade pip and setuptools for python3.12
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repository and checkout specified commit
+RUN git clone https://github.com/Aider-AI/aider.git /testbed && \
+    git checkout ca4141564f86dd1b7dee3082959042dc05d5d471 && \
+    git remote remove origin
+
+# Create Python virtual environment using python3.12
+RUN python3 -m venv /testbed/testbed-venv
+
+# Install dependencies inside the virtual environment
+RUN /bin/bash -c "source /testbed/testbed-venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt && \
+    pip install -e ."
+
+# Add virtual environment activation to bashrc for interactive shell sessions
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+2026-11-10 11:23:07,235 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:23:07,244 - INFO - Step 1/16 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 11:23:07,328 - INFO -  ---> 076e7bf82319
+2026-11-10 11:23:07,328 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:23:12,737 - INFO -  ---> Running in af56abc17fcb
+2026-11-10 11:23:20,784 - INFO -  ---> Removed intermediate container af56abc17fcb
+2026-11-10 11:23:21,142 - ERROR - Error: failed commit on ref "sha256:263ad4e1acdcd124f07c67af694a441412a7da7c499edaf3ba4152f436a49154": commit failed: lease does not exist: not found
+2026-11-10 11:23:21,142 - ERROR - failed commit on ref "sha256:263ad4e1acdcd124f07c67af694a441412a7da7c499edaf3ba4152f436a49154": commit failed: lease does not exist: not found

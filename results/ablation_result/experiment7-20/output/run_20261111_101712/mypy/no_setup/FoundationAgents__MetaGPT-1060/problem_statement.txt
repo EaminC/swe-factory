@@ -1,0 +1,50 @@
+ReadTimeout when using local LLM
+**Bug description**
+When hosting the following model; https://huggingface.co/oobabooga/CodeBooga-34B-v0.1 locally using LMStudio 0.2.14 on Linux Mint 21.3 Cinnamon I am sometimes (usually after several iterations when the context gets large) confronted with a ReadTimeout.
+
+MetaGPT main branch, commit id: adb42f4, it reports version: 0.7.4 with pip show metagpt. Used Python 3.9.18.
+
+I used the following code to try out MetaGPT
+```
+import asyncio
+from metagpt.roles.di.data_interpreter import DataInterpreter
+
+async def main(requirement: str = ""):
+    di = DataInterpreter()
+    await di.run(requirement)
+
+if __name__ == "__main__":
+    requirement = "Create a dnd 5th edition graph displaying xp per level based on information from a reputable source determined by Googling. First write results in a CSV and validate the CSV contains multiple records. If the file does not contain records, determine if you can fix the code or whether you need to look at another source. After the CSV files is filled with records, create the graph based on this."
+
+    asyncio.run(main(requirement))
+```
+I got the below exception
+```
+Traceback (most recent call last):
+  File "metagpt/lib/python3.9/site-packages/httpx/_transports/default.py", line 69, in map_httpcore_exceptions
+    yield
+  File "metagpt/lib/python3.9/site-packages/httpx/_transports/default.py", line 254, in __aiter__
+    async for part in self._httpcore_stream:
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/connection_pool.py", line 367, in __aiter__
+    raise exc from None
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/connection_pool.py", line 363, in __aiter__
+    async for part in self._stream:
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/http11.py", line 349, in __aiter__
+    raise exc
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/http11.py", line 341, in __aiter__
+    async for chunk in self._connection._receive_response_body(**kwargs):
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/http11.py", line 210, in _receive_response_body
+    event = await self._receive_event(timeout=timeout)
+  File "metagpt/lib/python3.9/site-packages/httpcore/_async/http11.py", line 224, in _receive_event
+    data = await self._network_stream.read(
+  File "metagpt/lib/python3.9/site-packages/httpcore/_backends/anyio.py", line 36, in read
+    return b""
+  File "3.9.18/lib/python3.9/contextlib.py", line 137, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "metagpt/lib/python3.9/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout
+```
+**Bug solved method**
+
+It would be nice if the timeout and retries are configurable to avoid this issue (for example like AutoGen does this in the LLM API configuration). N.b. I've tried larger local models in the past (for which disk swapping was required due to memory constraints). Those models can sometimes take more than an hour to respond. The model for which this bug is registered can fit in my CPU RAM (64Gb).

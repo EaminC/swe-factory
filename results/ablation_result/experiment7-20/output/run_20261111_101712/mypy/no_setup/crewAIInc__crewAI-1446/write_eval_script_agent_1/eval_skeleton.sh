@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 916dec241836cb85c4eda5c8a4e1e0c00aa6c802
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+git checkout 916dec241836cb85c4eda5c8a4e1e0c00aa6c802
+
+# Activate the Python virtual environment created in /testbed/testbed/
+source /testbed/testbed/bin/activate
+
+# Run target test file only, with concise output showing test file names and statuses
+# Use uvx pytest command as per context information; uvx handles environment layers and pytest is for testing.
+uvx pytest -v --tb=short lib/crewai/tests/agents/agent_builder/test_base_agent_tool_i18n.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any changes after tests
+git checkout 916dec241836cb85c4eda5c8a4e1e0c00aa6c802 "lib/crewai/tests/agents/agent_builder/test_base_agent_tool_i18n.py"

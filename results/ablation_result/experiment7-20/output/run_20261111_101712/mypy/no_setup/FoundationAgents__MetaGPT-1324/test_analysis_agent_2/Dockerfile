@@ -1,0 +1,56 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies including python3.10 and related packages (Ubuntu 22.04 default Python version)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    locales \
+    locales-all \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Update alternatives to make python3 point to python3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Upgrade pip for python3
+RUN python3 -m pip install --upgrade pip
+
+# Install playwright python package and dependencies
+RUN python3 -m pip install playwright && playwright install --with-deps
+
+# Install mermaid-cli globally via npm
+RUN npm install -g @mermaid-js/mermaid-cli
+
+WORKDIR /testbed/
+
+# Clone the target repository and checkout the specific commit
+ARG COMMIT_SHA=5e8bd105177e08848990d32b9ea636daa639be19
+RUN git clone https://github.com/FoundationAgents/MetaGPT.git /testbed/ && \
+    cd /testbed/ && \
+    git reset --hard ${COMMIT_SHA}
+
+# Create python virtual environment and install the repository in editable mode with test dependencies
+RUN python3 -m venv /testbed/testbed && \
+    source /testbed/testbed/bin/activate && \
+    pip install --upgrade pip && \
+    pip install -e .[test]
+
+# Prepare config directory for metagpt (no config file generated here)
+RUN mkdir -p /root/.metagpt
+
+# Add virtual environment activation to root bashrc for interactive use
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+ENV ALLOW_OPENAI_API_CALL=0
+ENV PATH="/testbed/testbed/bin:$PATH"
+
+CMD ["/bin/bash"]

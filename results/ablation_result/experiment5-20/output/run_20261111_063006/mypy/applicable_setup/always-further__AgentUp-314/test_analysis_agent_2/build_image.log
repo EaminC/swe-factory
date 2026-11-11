@@ -1,0 +1,105 @@
+2026-11-11 07:54:21,559 - INFO - Building image always-further__agentup-314
+Using dockerfile:
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools
+RUN apt update && apt install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    locales \
+    locales-all \
+    tzdata \
+    bzip2 \
+    libncursesw5 \
+    libssl1.1 \
+    libsqlite3-0 \
+    libffi7 \
+    liblzma5 \
+    libreadline8 \
+    libbz2-1.0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install and setup Miniconda with Python 3.11
+RUN wget 'https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh' -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/miniconda3 \
+    && rm miniconda.sh
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+RUN conda config --append channels conda-forge
+
+# Create conda environment with Python 3.11
+RUN conda create -n testbed python=3.11 -y
+
+# Install essential Python packages inside the environment using conda run
+RUN conda run -n testbed pip install --upgrade pip setuptools wheel
+RUN conda run -n testbed pip install pytest>=8.4.0 pytest-asyncio>=1.0.0 python-dotenv
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repo, checkout specific commit, install repo in editable mode using conda run
+ARG REPO=https://github.com/always-further/AgentUp.git
+ARG COMMIT_SHA=58b138c3e797a3bd39c04603ce3e50b866b7a299
+RUN git clone ${REPO} /testbed && \
+    cd /testbed && \
+    git checkout ${COMMIT_SHA} && \
+    conda run -n testbed pip install -e .
+
+# Enable conda environment activation in interactive shells
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+2026-11-11 07:54:21,589 - INFO - Do not find previous image, images list is clean.
+2026-11-11 07:54:21,603 - INFO - Step 1/16 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 07:54:21,858 - INFO -  ---> 076e7bf82319
+2026-11-11 07:54:21,859 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 07:54:22,200 - INFO -  ---> Running in c579ddcc690d
+2026-11-11 07:54:30,371 - INFO -  ---> Removed intermediate container c579ddcc690d
+2026-11-11 07:54:30,373 - INFO -  ---> e1bb1b92eb04
+2026-11-11 07:54:30,373 - INFO - Step 3/16 : ENV TZ=Etc/UTC
+2026-11-11 07:54:30,695 - INFO -  ---> Running in 8c38c561cab8
+2026-11-11 07:54:32,822 - INFO -  ---> Removed intermediate container 8c38c561cab8
+2026-11-11 07:54:32,824 - INFO -  ---> 05a827d13a26
+2026-11-11 07:54:32,824 - INFO - Step 4/16 : SHELL ["/bin/bash", "-c"]
+2026-11-11 07:54:33,251 - INFO -  ---> Running in 5e8f91d72932
+2026-11-11 07:54:35,502 - INFO -  ---> Removed intermediate container 5e8f91d72932
+2026-11-11 07:54:35,503 - INFO -  ---> b3a23dc54c1d
+2026-11-11 07:54:35,503 - INFO - Step 5/16 : RUN apt update && apt install -y     git     wget     curl     build-essential     locales     locales-all     tzdata     bzip2     libncursesw5     libssl1.1     libsqlite3-0     libffi7     liblzma5     libreadline8     libbz2-1.0     && rm -rf /var/lib/apt/lists/*
+2026-11-11 07:54:35,616 - INFO -  ---> Running in f1118988c1d3
+2026-11-11 07:54:36,358 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-11 07:54:36,740 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 07:54:36,802 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 07:54:37,682 - INFO - Get:3 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 07:54:37,881 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 07:54:38,146 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 07:54:38,417 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 07:54:38,517 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 07:54:38,647 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 07:54:38,733 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 07:54:38,768 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 07:54:38,771 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 07:54:39,073 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 07:54:40,182 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 07:54:40,189 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 07:54:40,699 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 07:54:40,999 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 07:54:41,095 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 07:54:41,095 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 07:54:42,639 - INFO - Fetched 49.4 MB in 6s (7953 kB/s)
+2026-11-11 07:54:45,753 - INFO - Reading package lists...
+2026-11-11 07:54:46,664 - INFO - Building dependency tree...
+2026-11-11 07:54:46,664 - INFO - Reading state information...
+2026-11-11 07:54:46,709 - INFO - 4 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2026-11-11 07:54:46,721 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-11 07:54:49,781 - INFO - Reading package lists...
+2026-11-11 07:54:50,492 - INFO - Building dependency tree...
+2026-11-11 07:54:50,492 - INFO - Reading state information...
+2026-11-11 07:54:50,567 - INFO - E: Unable to locate package libssl1.1
+2026-11-11 07:54:50,567 - INFO - E: Couldn't find any package by glob 'libssl1.1'
+2026-11-11 07:54:52,935 - INFO -  ---> Removed intermediate container f1118988c1d3
+2026-11-11 07:54:52,945 - ERROR - Error: The command '/bin/bash -c apt update && apt install -y     git     wget     curl     build-essential     locales     locales-all     tzdata     bzip2     libncursesw5     libssl1.1     libsqlite3-0     libffi7     liblzma5     libreadline8     libbz2-1.0     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 07:54:52,945 - ERROR - The command '/bin/bash -c apt update && apt install -y     git     wget     curl     build-essential     locales     locales-all     tzdata     bzip2     libncursesw5     libssl1.1     libsqlite3-0     libffi7     liblzma5     libreadline8     libbz2-1.0     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

@@ -1,0 +1,33 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+# Activate conda environment and run everything within it
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+
+cd /testbed
+
+# Reset repo to target commit to ensure clean state
+git checkout 371d1680ab7f41c7d695559221956250ba048475
+
+# Apply test patch (content replaced during actual run)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file with coverage
+# Using coverage run with tests/run.py to select single test file via environment variable PYTHONPATH override,
+# but as per collected info, tests/run.py runs entire suite, so instead run python -m unittest on specific test file.
+# However, the info only gives coverage run tests/run.py, no direct test command for individual tests.
+# So we run coverage on unittest specifying the test file explicitly, which unittest supports:
+# Run coverage on the specific test file
+coverage run -m unittest discover -s tests -p test_logging_utils.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset files after test run
+git checkout 371d1680ab7f41c7d695559221956250ba048475 tests/test_logging_utils.py
+</script>

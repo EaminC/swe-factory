@@ -1,0 +1,41 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 1581431dbe..2bd24fc125 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -24,6 +24,7 @@ dependencies = [
+     "anthropic",
+     "dashscope",
+     "docstring_parser",
++    "filetype",
+     "json5",
+     "json_repair",
+     "mcp>=1.13",
+diff --git a/src/agentscope/formatter/_openai_formatter.py b/src/agentscope/formatter/_openai_formatter.py
+index b1f45a7126..57aa01a425 100644
+--- a/src/agentscope/formatter/_openai_formatter.py
++++ b/src/agentscope/formatter/_openai_formatter.py
+@@ -70,6 +70,8 @@ def _to_openai_image_url(url: str) -> str:
+         url (`str`):
+             The local or public url of the image.
+     """
++    import filetype
++
+     # See https://platform.openai.com/docs/guides/vision for details of
+     # support image extensions.
+     support_image_extensions = (
+@@ -92,6 +94,15 @@ def _to_openai_image_url(url: str) -> str:
+             mime_type = f"image/{extension}"
+             return f"data:{mime_type};base64,{base64_image}"
+ 
++        # No extension - detect file type using filetype
++        kind = filetype.guess(raw_url)
++        if kind is not None and kind.mime.startswith("image/"):
++            with open(raw_url, "rb") as image_file:
++                base64_image = base64.b64encode(image_file.read()).decode(
++                    "utf-8",
++                )
++            return f"data:{kind.mime};base64,{base64_image}"
++
+     # For web urls
+     parsed_url = urlparse(raw_url)
+     if parsed_url.scheme not in ["", "file"]:

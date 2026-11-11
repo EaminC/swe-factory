@@ -1,0 +1,413 @@
++ cd /testbed
++ git checkout d63b15dc4721d48cb8368fe9011398df417fbc32
+Note: switching to 'd63b15dc4721d48cb8368fe9011398df417fbc32'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at d63b15dc4 0.0.50
+M	examples/customer-support/customer-support.ipynb
++ git apply -v -
+Checking patch libs/checkpoint-postgres/tests/test_continue_thread.py...
+Applied patch libs/checkpoint-postgres/tests/test_continue_thread.py cleanly.
++ echo '=== Poetry show installed packages ==='
+=== Poetry show installed packages ===
++ poetry show
+Skipping virtualenv creation, as specified in config file.
+annotated-types    0.6.0     Reusable constraint types to use with typing.A...
+certifi            2024.2.2  Python package for providing Mozilla's CA Bundle.
+charset-normalizer 3.3.2     The Real First Universal Charset Detector. Ope...
+idna               3.7       Internationalized Domain Names in Applications...
+jsonpatch          1.33      Apply JSON-Patches (RFC 6902)
+jsonpointer        2.4       Identify specific nodes in a JSON document (RF...
+langchain-core     0.2.0     Building applications with LLMs through compos...
+langsmith          0.1.50    Client library to connect to the LangSmith LLM...
+orjson             3.10.1    Fast, correct Python JSON library supporting d...
+packaging          23.2      Core utilities for Python packages
+pydantic           2.7.1     Data validation using Python type hints
+pydantic-core      2.18.2    Core functionality for Pydantic validation and...
+pyyaml             6.0.1     YAML parser and emitter for Python
+requests           2.31.0    Python HTTP for Humans.
+tenacity           8.2.3     Retry code until it succeeds
+typing-extensions  4.11.0    Backported and Experimental Type Hints for Pyt...
+urllib3            2.2.1     HTTP library with thread-safe connection pooli...
+uuid6              2024.1.12 New time-based UUID formats which are suited f...
++ echo '=== Checking import of langgraph package ==='
+=== Checking import of langgraph package ===
++ python3 -c 'import langgraph'
++ export PYTHONPATH=/testbed
++ PYTHONPATH=/testbed
++ poetry run pytest --no-header -rA --tb=short libs/checkpoint-postgres/tests/test_continue_thread.py
+Skipping virtualenv creation, as specified in config file.
+============================= test session starts ==============================
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+___ ERROR collecting libs/checkpoint-postgres/tests/test_continue_thread.py ____
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    def _importtestmodule(self):
+        # We assume we are only called once per module.
+        importmode = self.config.getoption("--import-mode")
+        try:
+>           mod = import_path(self.path, mode=importmode, root=self.config.rootpath)
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:617: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+p = PosixPath('/testbed/libs/checkpoint-postgres/tests/test_continue_thread.py')
+
+    def import_path(
+        p: Union[str, "os.PathLike[str]"],
+        *,
+        mode: Union[str, ImportMode] = ImportMode.prepend,
+        root: Path,
+    ) -> ModuleType:
+        """Import and return a module from the given path, which can be a file (a module) or
+        a directory (a package).
+    
+        The import mechanism used is controlled by the `mode` parameter:
+    
+        * `mode == ImportMode.prepend`: the directory containing the module (or package, taking
+          `__init__.py` files into account) will be put at the *start* of `sys.path` before
+          being imported with `importlib.import_module`.
+    
+        * `mode == ImportMode.append`: same as `prepend`, but the directory will be appended
+          to the end of `sys.path`, if not already in `sys.path`.
+    
+        * `mode == ImportMode.importlib`: uses more fine control mechanisms provided by `importlib`
+          to import the module, which avoids having to muck with `sys.path` at all. It effectively
+          allows having same-named test modules in different places.
+    
+        :param root:
+            Used as an anchor when mode == ImportMode.importlib to obtain
+            a unique name for the module being imported so it can safely be stored
+            into ``sys.modules``.
+    
+        :raises ImportPathMismatchError:
+            If after importing the given `path` and the module `__file__`
+            are different. Only raised in `prepend` and `append` modes.
+        """
+        mode = ImportMode(mode)
+    
+        path = Path(p)
+    
+        if not path.exists():
+            raise ImportError(path)
+    
+        if mode is ImportMode.importlib:
+            module_name = module_name_from_path(path, root)
+            with contextlib.suppress(KeyError):
+                return sys.modules[module_name]
+    
+            for meta_importer in sys.meta_path:
+                spec = meta_importer.find_spec(module_name, [str(path.parent)])
+                if spec is not None:
+                    break
+            else:
+                spec = importlib.util.spec_from_file_location(module_name, str(path))
+    
+            if spec is None:
+                raise ImportError(f"Can't find module {module_name} at location {path}")
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = mod
+            spec.loader.exec_module(mod)  # type: ignore[union-attr]
+            insert_missing_modules(sys.modules, module_name)
+            return mod
+    
+        pkg_path = resolve_package_path(path)
+        if pkg_path is not None:
+            pkg_root = pkg_path.parent
+            names = list(path.with_suffix("").relative_to(pkg_root).parts)
+            if names[-1] == "__init__":
+                names.pop()
+            module_name = ".".join(names)
+        else:
+            pkg_root = path.parent
+            module_name = path.stem
+    
+        # Change sys.path permanently: restoring it at the end of this function would cause surprising
+        # problems because of delayed imports: for example, a conftest.py file imported by this function
+        # might have local imports, which would fail at runtime if we restored sys.path.
+        if mode is ImportMode.append:
+            if str(pkg_root) not in sys.path:
+                sys.path.append(str(pkg_root))
+        elif mode is ImportMode.prepend:
+            if str(pkg_root) != sys.path[0]:
+                sys.path.insert(0, str(pkg_root))
+        else:
+            assert_never(mode)
+    
+>       importlib.import_module(module_name)
+
+/usr/local/lib/python3.10/dist-packages/_pytest/pathlib.py:567: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'test_continue_thread', package = None
+
+    def import_module(name, package=None):
+        """Import a module.
+    
+        The 'package' argument is required when performing a relative import. It
+        specifies the package to use as the anchor point from which to resolve the
+        relative import to an absolute import.
+    
+        """
+        level = 0
+        if name.startswith('.'):
+            if not package:
+                msg = ("the 'package' argument is required to perform a relative "
+                       "import for {!r}")
+                raise TypeError(msg.format(name))
+            for character in name:
+                if character != '.':
+                    break
+                level += 1
+>       return _bootstrap._gcd_import(name[level:], package, level)
+
+/usr/lib/python3.10/importlib/__init__.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'test_continue_thread', package = None, level = 0
+
+>   ???
+
+<frozen importlib._bootstrap>:1050: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'test_continue_thread'
+import_ = <function _gcd_import at 0x79199ae4b400>
+
+>   ???
+
+<frozen importlib._bootstrap>:1027: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'test_continue_thread'
+import_ = <function _gcd_import at 0x79199ae4b400>
+
+>   ???
+
+<frozen importlib._bootstrap>:1006: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+spec = ModuleSpec(name='test_continue_thread', loader=<_pytest.assertion.rewrite.AssertionRewritingHook object at 0x79199a2a0430>, origin='/testbed/libs/checkpoint-postgres/tests/test_continue_thread.py')
+
+>   ???
+
+<frozen importlib._bootstrap>:688: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_pytest.assertion.rewrite.AssertionRewritingHook object at 0x79199a2a0430>
+module = <module 'test_continue_thread' from '/testbed/libs/checkpoint-postgres/tests/test_continue_thread.py'>
+
+    def exec_module(self, module: types.ModuleType) -> None:
+        assert module.__spec__ is not None
+        assert module.__spec__.origin is not None
+        fn = Path(module.__spec__.origin)
+        state = self.config.stash[assertstate_key]
+    
+        self._rewritten_names[module.__name__] = fn
+    
+        # The requested module looks like a test file, so rewrite it. This is
+        # the most magical part of the process: load the source, rewrite the
+        # asserts, and load the rewritten source. We also cache the rewritten
+        # module code in a special pyc. We must be aware of the possibility of
+        # concurrent pytest processes rewriting and loading pycs. To avoid
+        # tricky race conditions, we maintain the following invariant: The
+        # cached pyc is always a complete, valid pyc. Operations on it must be
+        # atomic. POSIX's atomic rename comes in handy.
+        write = not sys.dont_write_bytecode
+        cache_dir = get_cache_dir(fn)
+        if write:
+            ok = try_makedirs(cache_dir)
+            if not ok:
+                write = False
+                state.trace(f"read only directory: {cache_dir}")
+    
+        cache_name = fn.name[:-3] + PYC_TAIL
+        pyc = cache_dir / cache_name
+        # Notice that even if we're in a read-only directory, I'm going
+        # to check for a cached pyc. This may not be optimal...
+        co = _read_pyc(fn, pyc, state.trace)
+        if co is None:
+            state.trace(f"rewriting {fn!r}")
+            source_stat, co = _rewrite_test(fn, self.config)
+            if write:
+                self._writing_pyc = True
+                try:
+                    _write_pyc(state, co, source_stat, pyc)
+                finally:
+                    self._writing_pyc = False
+        else:
+            state.trace(f"found cached rewritten pyc for {fn}")
+>       exec(co, module.__dict__)
+
+/usr/local/lib/python3.10/dist-packages/_pytest/assertion/rewrite.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import pytest
+    import asyncio
+>   from langgraph.checkpoint.postgres.aio import PostgresCheckpointer
+E   ModuleNotFoundError: No module named 'langgraph.checkpoint.postgres'
+
+libs/checkpoint-postgres/tests/test_continue_thread.py:3: ModuleNotFoundError
+
+The above exception was the direct cause of the following exception:
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function pytest_make_collect_report.<locals>.<lambda> at 0x7919995a16c0>
+when = 'collect', reraise = None
+
+    @classmethod
+    def from_call(
+        cls,
+        func: "Callable[[], TResult]",
+        when: "Literal['collect', 'setup', 'call', 'teardown']",
+        reraise: Optional[
+            Union[Type[BaseException], Tuple[Type[BaseException], ...]]
+        ] = None,
+    ) -> "CallInfo[TResult]":
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        start = timing.time()
+        precise_start = timing.perf_counter()
+        try:
+>           result: Optional[TResult] = func()
+
+/usr/local/lib/python3.10/dist-packages/_pytest/runner.py:341: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   call = CallInfo.from_call(lambda: list(collector.collect()), "collect")
+
+/usr/local/lib/python3.10/dist-packages/_pytest/runner.py:372: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    def collect(self) -> Iterable[Union[nodes.Item, nodes.Collector]]:
+>       self._inject_setup_module_fixture()
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    def _inject_setup_module_fixture(self) -> None:
+        """Inject a hidden autouse, module scoped fixture into the collected module object
+        that invokes setUpModule/tearDownModule if either or both are available.
+    
+        Using a fixture to invoke this methods ensures we play nicely and unsurprisingly with
+        other fixtures (#517).
+        """
+        has_nose = self.config.pluginmanager.has_plugin("nose")
+        setup_module = _get_first_non_fixture_func(
+>           self.obj, ("setUpModule", "setup_module")
+        )
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:545: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    @property
+    def obj(self):
+        """Underlying Python object."""
+        obj = getattr(self, "_obj", None)
+        if obj is None:
+>           self._obj = obj = self._getobj()
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:310: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    def _getobj(self):
+>       return self._importtestmodule()
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:528: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Module libs/checkpoint-postgres/tests/test_continue_thread.py>
+
+    def _importtestmodule(self):
+        # We assume we are only called once per module.
+        importmode = self.config.getoption("--import-mode")
+        try:
+            mod = import_path(self.path, mode=importmode, root=self.config.rootpath)
+        except SyntaxError as e:
+            raise self.CollectError(
+                ExceptionInfo.from_current().getrepr(style="short")
+            ) from e
+        except ImportPathMismatchError as e:
+            raise self.CollectError(
+                "import file mismatch:\n"
+                "imported module %r has this __file__ attribute:\n"
+                "  %s\n"
+                "which is not the same as the test file we want to collect:\n"
+                "  %s\n"
+                "HINT: remove __pycache__ / .pyc files and/or use a "
+                "unique basename for your test file modules" % e.args
+            ) from e
+        except ImportError as e:
+            exc_info = ExceptionInfo.from_current()
+            if self.config.getoption("verbose") < 2:
+                exc_info.traceback = exc_info.traceback.filter(filter_traceback)
+            exc_repr = (
+                exc_info.getrepr(style="short")
+                if exc_info.traceback
+                else exc_info.exconly()
+            )
+            formatted_tb = str(exc_repr)
+>           raise self.CollectError(
+                "ImportError while importing test module '{path}'.\n"
+                "Hint: make sure your test modules/packages have valid Python names.\n"
+                "Traceback:\n"
+                "{traceback}".format(path=self.path, traceback=formatted_tb)
+            ) from e
+E           _pytest.nodes.Collector.CollectError: ImportError while importing test module '/testbed/libs/checkpoint-postgres/tests/test_continue_thread.py'.
+E           Hint: make sure your test modules/packages have valid Python names.
+E           Traceback:
+E           /usr/lib/python3.10/importlib/__init__.py:126: in import_module
+E               return _bootstrap._gcd_import(name[level:], package, level)
+E           libs/checkpoint-postgres/tests/test_continue_thread.py:3: in <module>
+E               from langgraph.checkpoint.postgres.aio import PostgresCheckpointer
+E           E   ModuleNotFoundError: No module named 'langgraph.checkpoint.postgres'
+
+/usr/local/lib/python3.10/dist-packages/_pytest/python.py:642: CollectError
+=========================== short test summary info ============================
+ERROR libs/checkpoint-postgres/tests/test_continue_thread.py - _pytest.nodes....
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.40s ===============================
++ rc=2
++ echo OMNIGRIL_EXIT_CODE=2
+OMNIGRIL_EXIT_CODE=2
++ git restore libs/checkpoint-postgres/tests/test_continue_thread.py
+error: pathspec 'libs/checkpoint-postgres/tests/test_continue_thread.py' did not match any file(s) known to git
++ true
++ git clean -fd
+Removing libs/checkpoint-postgres/tests/test_continue_thread.py
++ git reset --hard d63b15dc4721d48cb8368fe9011398df417fbc32
+HEAD is now at d63b15dc4 0.0.50

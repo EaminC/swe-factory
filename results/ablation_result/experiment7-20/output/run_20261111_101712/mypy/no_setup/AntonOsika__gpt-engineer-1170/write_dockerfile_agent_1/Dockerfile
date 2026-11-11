@@ -1,0 +1,53 @@
+# Use an Ubuntu base image with bash support
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+# Avoid interactive prompts during package installation
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies including git, curl, build tools, Python 3.11, and related dev packages
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    locales-all \
+    jq \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry (latest stable for dependency management)
+RUN curl -sSL https://install.python-poetry.org | python3.11 -
+
+# Add Poetry to PATH
+ENV PATH="/root/.local/bin:$PATH"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    git checkout 3e589bf1356024fb471a9d17738e4626f21a953b && \
+    chmod -R 777 /testbed
+
+# Install dependencies with Poetry in development mode; 
+# This includes installing the project itself editable and its dependencies correctly
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root && \
+    poetry install --no-interaction --no-ansi
+
+# Install the package itself in editable/development mode (pip editable install)
+RUN pip3 install --no-cache-dir -e .
+
+# Export bashrc to automatically source the correct environment if needed (Poetry does not require activation if virtualenvs are disabled)
+RUN echo "export PATH=/root/.local/bin:$PATH" >> /root/.bashrc
+
+# Default environment variables placeholder (OPENAI_API_KEY is expected to be set during test runtime)
+ENV OPENAI_API_KEY=""

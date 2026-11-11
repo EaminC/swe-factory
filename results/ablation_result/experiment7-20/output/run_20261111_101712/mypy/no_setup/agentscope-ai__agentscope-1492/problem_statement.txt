@@ -1,0 +1,31 @@
+[Bug]:DeepResearchAgent raises KeyError with Qwen3.5-397B-A17B-FPB due to thinking block in response blocks
+**Describe the bug**
+When using DeepResearchAgent with the model Qwen3.5-397B-A17B-FPB, a KeyError occurs at line 931 in `deep_research_agent.py` where `final_report_content = blocks[0]["text"]` is executed.
+The model returns blocks in the structure: `[{'type': 'thinking', 'thinking': 'xxxxxx'}, {'type': 'text', 'text': 'xxxxxx'}]`
+The first block is of type thinking and does not contain the text key, causing the KeyError. This error further results in the generate_response tool output being `[{'type': 'text', 'text': "Error: 'text'"}]`.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+1. Create a DeepResearchAgent with Qwen3.5-397B-A17B-FPB model
+2. Run a research query with the agent
+3. Observe the KeyError and incorrect tool output
+
+**Expected behavior**
+The agent should correctly filter and extract the block with type: 'text' from the blocks list, avoid KeyError, and generate the correct final report content instead of returning Error: 'text'.
+
+**Error messages**
+KeyError: 'text'
+Traceback (most recent call last):
+  File "agentscope/examples/agent/deep_research_agent/deep_research_agent.py", line 931, in ...
+    final_report_content = blocks[0]["text"]
+KeyError: 'text'
+
+**Environment (please complete the following information):**
+
+- AgentScope Version: 1.0.17
+- Python Version: 3.12
+- OS: windows
+
+**Additional context**
+The Qwen3.5-397B-A17B-FPB model returns a leading thinking block before the actual text block, which breaks the current hard-coded index access logic that assumes the first block always contains the text field.

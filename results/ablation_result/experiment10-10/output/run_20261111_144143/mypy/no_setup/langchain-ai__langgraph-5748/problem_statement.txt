@@ -1,0 +1,73 @@
+update type annotations in create_react_agents
+### Privileged issue
+
+- [x] I am a LangGraph maintainer, or was asked directly by a LangGraph maintainer to create an issue here.
+
+### Issue Content
+
+bind_tools return Runnable[LanguageModelInput, BaseMessage], not BaseChatModel and this is actually a bug in type annotations.
+
+Please update the type annotations in create_react_agent to allow one to provide a callable for the model that uses bind_tools and returns a Runnable[LanguageModelInput, BaseMessage].
+
+i.e., we want to widen the accepted types
+
+
+<details>
+<summary>Agent Context</summary>
+
+
+
+
+
+<open-swe-do-not-edit-task-plan>
+{
+  "tasks": [
+    {
+      "id": "9679a1a1-5ed2-4d57-81c5-7e0167d92d05",
+      "taskIndex": 0,
+      "request": "[original issue]\n**update type annotations in create_react_agents**\n### Privileged issue\n\n- [x] I am a LangGraph maintainer, or was asked directly by a LangGraph maintainer to create an issue here.\n\n### Issue Content\n\nbind_tools return Runnable[LanguageModelInput, BaseMessage], not BaseChatModel and this is actually a bug in type annotations.\n\nPlease update the type annotations in create_react_agent to allow one to provide a callable for the model that uses bind_tools and returns a Runnable[LanguageModelInput, BaseMessage].\n\ni.e., we want to widen the accepted types\n\n",
+      "title": "Update type annotations in create_react_agent to allow bind_tools return type",
+      "createdAt": 1753900472096,
+      "completed": true,
+      "planRevisions": [
+        {
+          "revisionIndex": 0,
+          "plans": [
+            {
+              "index": 0,
+              "plan": "**Update the type annotations for dynamic model callables in `create_react_agent`** in `/home/daytona/langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py` at lines 255-256. Change `Callable[[StateSchema, Runtime[ContextT]], BaseChatModel]` to `Callable[[StateSchema, Runtime[ContextT]], LanguageModelLike]` and `Callable[[StateSchema, Runtime[ContextT]], Awaitable[BaseChatModel]]` to `Callable[[StateSchema, Runtime[ContextT]], Awaitable[LanguageModelLike]]`. This allows dynamic model functions to return the result of `bind_tools()` which is `Runnable[LanguageModelInput, BaseMessage]` (aliased as `LanguageModelLike`).",
+              "completed": true,
+              "summary": "Successfully updated the type annotations for dynamic model callables in `create_react_agent` function in `/home/daytona/langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py`. \n\n**Changes made:**\n- Line 255: Changed `Callable[[StateSchema, Runtime[ContextT]], BaseChatModel]` to `Callable[[StateSchema, Runtime[ContextT]], LanguageModelLike]`\n- Line 256: Changed `Callable[[StateSchema, Runtime[ContextT]], Awaitable[BaseChatModel]]` to `Callable[[StateSchema, Runtime[ContextT]], Awaitable[LanguageModelLike]]`\n\n**Impact:**\nThis change widens the accepted return types for dynamic model callables, allowing them to return the result of `bind_tools()` which is `Runnable[LanguageModelInput, BaseMessage]` (aliased as `LanguageModelLike`). This fixes the type annotation bug where dynamic model functions that use `bind_tools()` were incorrectly constrained to return only `BaseChatModel` instead of the broader `LanguageModelLike` type that includes `RunnableBinding` objects returned by `bind_tools()`.\n\nThe change maintains backward compatibility since `BaseChatModel` is a subset of `LanguageModelLike`, while enabling the intended functionality of using models with bound tools in dynamic model callables."
+            },
+            {
+              "index": 1,
+              "plan": "**Update the docstring for the model parameter** in `/home/daytona/langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py` at lines 288 and 292-293. Change the text from `(state, runtime) -> BaseChatModel` to `(state, runtime) -> LanguageModelLike` and update \"Must return a `BaseChatModel` instance\" to \"Must return a `LanguageModelLike` instance (e.g., `BaseChatModel` or result of `model.bind_tools()`)\" to reflect that dynamic models can return the wider type that includes bind_tools results.",
+              "completed": true,
+              "summary": "Successfully updated the docstring for the model parameter in `create_react_agent` function in `/home/daytona/langgraph/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py`.\n\n**Changes made:**\n- Line 288: Changed `(state, runtime) -> BaseChatModel` to `(state, runtime) -> LanguageModelLike`\n- Lines 292-293: Updated \"Must return a `BaseChatModel` instance\" to \"Must return a `LanguageModelLike` instance (e.g., `BaseChatModel` or result of `model.bind_tools()`)\"\n- Added clarification that the return type can be either a `BaseChatModel` or the result of `model.bind_tools()`\n\n**Impact:**\nThe docstring now accurately reflects the updated type annotations from the previous task. It clearly communicates to users that dynamic model callables can return either a `BaseChatModel` directly or the result of calling `bind_tools()` on a model, which returns a `LanguageModelLike` type. This provides better guidance for developers using dynamic models with bound tools in their `create_react_agent` implementations."
+            },
+            {
+              "index": 2,
+              "plan": "**Run the formatting, linting, and testing commands** in the `/home/daytona/langgraph/libs/prebuilt` directory: `make format`, `make lint`, and `make test` to ensure the changes don't break existing functionality and follow the project's code standards.",
+              "completed": true,
+              "summary": "Successfully ran the formatting, linting, and testing commands in the `/home/daytona/langgraph/libs/prebuilt` directory to ensure the changes don't break existing functionality and follow the project's code standards.\n\n**Commands executed and results:**\n\n1. **`make format`**: ✅ Completed successfully\n   - Reformatted 1 file, 17 files left unchanged\n   - All formatting checks passed\n\n2. **`make lint`**: ✅ Completed successfully\n   - All ruff checks passed\n   - All import sorting checks passed\n   - All mypy type checks passed with no issues found in 6 source files\n\n3. **`make test`**: ⚠️ Docker unavailable, ran `uv run pytest . -v` instead\n   - All 115 tests passed successfully\n   - No test failures related to the type annotation changes\n   - Only minor deprecation warnings from dependencies (unrelated to our changes)\n\n**Validation results:**\n- The type annotation changes from `BaseChatModel` to `LanguageModelLike` for dynamic model callables are working correctly\n- All existing functionality remains intact\n- The code follows the project's formatting and linting standards\n- Tests confirm that the wider type acceptance doesn't break any existing use cases\n\nThe changes successfully allow dynamic model functions to return the result of `bind_tools()` while maintaining backward compatibility with existing code that returns `BaseChatModel` directly."
+            }
+          ],
+          "createdAt": 1753900472096,
+          "createdBy": "agent"
+        }
+      ],
+      "activeRevisionIndex": 0,
+      "pullRequestNumber": 5740,
+      "completedAt": 1753900653582,
+      "summary": "Updated `create_react_agent` in `chat_agent_executor.py` to widen dynamic model callable return types from `BaseChatModel` to `LanguageModelLike`, allowing `bind_tools()` results. Also revised related docstrings accordingly. Ran formatting, linting, and tests—115 tests passed with no issues. Changes maintain backward compatibility and fix the type annotation bug as requested."
+    }
+  ],
+  "activeTaskIndex": 0
+}
+</open-swe-do-not-edit-task-plan>
+
+
+
+
+
+</details>

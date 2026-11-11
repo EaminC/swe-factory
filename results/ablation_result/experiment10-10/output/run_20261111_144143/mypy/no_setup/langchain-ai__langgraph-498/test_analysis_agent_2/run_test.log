@@ -1,0 +1,160 @@
+2026-11-11 15:23:40,051 - INFO - Checking if image langchain-ai__langgraph-498-dockerfile2:latest exists locally...
+2026-11-11 15:23:40,086 - INFO - Image langchain-ai__langgraph-498-dockerfile2:latest found locally.
+2026-11-11 15:23:40,086 - INFO - Creating container for langchain-ai__langgraph-498...
+2026-11-11 15:23:40,532 - INFO - Container for langchain-ai__langgraph-498 started: 03dd086076ee6472dcee0b63fe864ccf70fe02074aaf3e856a07cec01c49dbda
+2026-11-11 15:23:40,532 - INFO - Intermediate patch for langchain-ai__langgraph-498 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-498/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-11 15:23:40,829 - INFO - Apply patch success:
+Checking patch examples/customer-support/customer-support.ipynb...
+Applied patch examples/customer-support/customer-support.ipynb cleanly.
+
+2026-11-11 15:23:41,756 - INFO - Git diff before:
+diff --git a/examples/customer-support/customer-support.ipynb b/examples/customer-support/customer-support.ipynb
+index de56f7c9c..f1d498a36 100644
+--- a/examples/customer-support/customer-support.ipynb
++++ b/examples/customer-support/customer-support.ipynb
+@@ -1113,16 +1113,14 @@
+     "\n",
+     "# Define nodes: these do the work\n",
+     "builder.add_node(\"assistant\", Assistant(part_1_assistant_runnable))\n",
+-    "builder.add_node(\"action\", create_tool_node_with_fallback(part_1_tools))\n",
++    "builder.add_node(\"tools\", create_tool_node_with_fallback(part_1_tools))\n",
+     "# Define edges: these determine how the control flow moves\n",
+     "builder.set_entry_point(\"assistant\")\n",
+     "builder.add_conditional_edges(\n",
+     "    \"assistant\",\n",
+     "    tools_condition,\n",
+-    "    # \"action\" calls one of our tools. END causes the graph to terminate (and respond to the user)\n",
+-    "    {\"action\": \"action\", END: END},\n",
+     ")\n",
+-    "builder.add_edge(\"action\", \"assistant\")\n",
++    "builder.add_edge(\"tools\", \"assistant\")\n",
+     "\n",
+     "# The checkpointer lets the graph persist its state\n",
+     "# this is a complete memory for the entire graph.\n",
+@@ -1941,20 +1939,20 @@
+     "builder.add_node(\"fetch_user_info\", user_info)\n",
+     "builder.set_entry_point(\"fetch_user_info\")\n",
+     "builder.add_node(\"assistant\", Assistant(part_2_assistant_runnable))\n",
+-    "builder.add_node(\"action\", create_tool_node_with_fallback(part_2_tools))\n",
++    "builder.add_node(\"tools\", create_tool_node_with_fallback(part_2_tools))\n",
+     "builder.add_edge(\"fetch_user_info\", \"assistant\")\n",
+     "builder.add_conditional_edges(\n",
+-    "    \"assistant\", tools_condition, {\"action\": \"action\", END: END}\n",
++    "    \"assistant\", tools_condition,\n",
+     ")\n",
+-    "builder.add_edge(\"action\", \"assistant\")\n",
++    "builder.add_edge(\"tools\", \"assistant\")\n",
+     "\n",
+     "memory = SqliteSaver.from_conn_string(\":memory:\")\n",
+     "part_2_graph = builder.compile(\n",
+     "    checkpointer=memory,\n",
+-    "    # NEW: The graph will always halt before executing the \"action\" node.\n",
++    "    # NEW: The graph will always halt before executing the \"tools\" node.\n",
+     "    # The user can approve or reject (or even alter the request) before\n",
+     "    # the assistant continues\n",
+-    "    interrupt_before=[\"action\"],\n",
++    "    interrupt_before=[\"tools\"],\n",
+     ")"
+    ]
+   },
+@@ -2560,7 +2558,7 @@
+     "memory = SqliteSaver.from_conn_string(\":memory:\")\n",
+     "part_3_graph = builder.compile(\n",
+     "    checkpointer=memory,\n",
+-    "    # NEW: The graph will always halt before executing the \"action\" node.\n",
++    "    # NEW: The graph will always halt before executing the \"tools\" node.\n",
+     "    # The user can approve or reject (or even alter the request) before\n",
+     "    # the assistant continues\n",
+     "    interrupt_before=[\"sensitive_tools\"],\n",
+@@ -3395,11 +3393,7 @@
+    "cell_type": "code",
+    "execution_count": 32,
+    "id": "fb812818-99c9-4bf3-b1e5-a394c7b9058d",
+-   "metadata": {
+-    "vscode": {
+-     "languageId": "plaintext"
+-    }
+-   },
++   "metadata": {},
+    "outputs": [],
+    "source": [
+     "from typing import Callable\n",
+2026-11-11 15:23:41,757 - INFO - Eval script for langchain-ai__langgraph-498 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-498/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-11 15:23:44,311 - INFO - Test output for langchain-ai__langgraph-498 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-498/test_analysis_agent_2/test_output.txt
+2026-11-11 15:23:44,385 - INFO - Git diff after:
+diff --git a/examples/customer-support/customer-support.ipynb b/examples/customer-support/customer-support.ipynb
+index de56f7c9c..f1d498a36 100644
+--- a/examples/customer-support/customer-support.ipynb
++++ b/examples/customer-support/customer-support.ipynb
+@@ -1113,16 +1113,14 @@
+     "\n",
+     "# Define nodes: these do the work\n",
+     "builder.add_node(\"assistant\", Assistant(part_1_assistant_runnable))\n",
+-    "builder.add_node(\"action\", create_tool_node_with_fallback(part_1_tools))\n",
++    "builder.add_node(\"tools\", create_tool_node_with_fallback(part_1_tools))\n",
+     "# Define edges: these determine how the control flow moves\n",
+     "builder.set_entry_point(\"assistant\")\n",
+     "builder.add_conditional_edges(\n",
+     "    \"assistant\",\n",
+     "    tools_condition,\n",
+-    "    # \"action\" calls one of our tools. END causes the graph to terminate (and respond to the user)\n",
+-    "    {\"action\": \"action\", END: END},\n",
+     ")\n",
+-    "builder.add_edge(\"action\", \"assistant\")\n",
++    "builder.add_edge(\"tools\", \"assistant\")\n",
+     "\n",
+     "# The checkpointer lets the graph persist its state\n",
+     "# this is a complete memory for the entire graph.\n",
+@@ -1941,20 +1939,20 @@
+     "builder.add_node(\"fetch_user_info\", user_info)\n",
+     "builder.set_entry_point(\"fetch_user_info\")\n",
+     "builder.add_node(\"assistant\", Assistant(part_2_assistant_runnable))\n",
+-    "builder.add_node(\"action\", create_tool_node_with_fallback(part_2_tools))\n",
++    "builder.add_node(\"tools\", create_tool_node_with_fallback(part_2_tools))\n",
+     "builder.add_edge(\"fetch_user_info\", \"assistant\")\n",
+     "builder.add_conditional_edges(\n",
+-    "    \"assistant\", tools_condition, {\"action\": \"action\", END: END}\n",
++    "    \"assistant\", tools_condition,\n",
+     ")\n",
+-    "builder.add_edge(\"action\", \"assistant\")\n",
++    "builder.add_edge(\"tools\", \"assistant\")\n",
+     "\n",
+     "memory = SqliteSaver.from_conn_string(\":memory:\")\n",
+     "part_2_graph = builder.compile(\n",
+     "    checkpointer=memory,\n",
+-    "    # NEW: The graph will always halt before executing the \"action\" node.\n",
++    "    # NEW: The graph will always halt before executing the \"tools\" node.\n",
+     "    # The user can approve or reject (or even alter the request) before\n",
+     "    # the assistant continues\n",
+-    "    interrupt_before=[\"action\"],\n",
++    "    interrupt_before=[\"tools\"],\n",
+     ")"
+    ]
+   },
+@@ -2560,7 +2558,7 @@
+     "memory = SqliteSaver.from_conn_string(\":memory:\")\n",
+     "part_3_graph = builder.compile(\n",
+     "    checkpointer=memory,\n",
+-    "    # NEW: The graph will always halt before executing the \"action\" node.\n",
++    "    # NEW: The graph will always halt before executing the \"tools\" node.\n",
+     "    # The user can approve or reject (or even alter the request) before\n",
+     "    # the assistant continues\n",
+     "    interrupt_before=[\"sensitive_tools\"],\n",
+@@ -3395,11 +3393,7 @@
+    "cell_type": "code",
+    "execution_count": 32,
+    "id": "fb812818-99c9-4bf3-b1e5-a394c7b9058d",
+-   "metadata": {
+-    "vscode": {
+-     "languageId": "plaintext"
+-    }
+-   },
++   "metadata": {},
+    "outputs": [],
+    "source": [
+     "from typing import Callable\n",
+2026-11-11 15:23:44,385 - INFO - Attempting to stop container langchain-ai__langgraph-498-test2...
+2026-11-11 15:23:59,738 - INFO - Attempting to remove container langchain-ai__langgraph-498-test2...
+2026-11-11 15:24:00,001 - INFO - Container langchain-ai__langgraph-498-test2 removed.
+2026-11-11 15:24:00,001 - INFO - Attempting to remove image langchain-ai__langgraph-498-dockerfile2:latest...
+2026-11-11 15:24:05,402 - INFO - Image langchain-ai__langgraph-498-dockerfile2:latest removed.

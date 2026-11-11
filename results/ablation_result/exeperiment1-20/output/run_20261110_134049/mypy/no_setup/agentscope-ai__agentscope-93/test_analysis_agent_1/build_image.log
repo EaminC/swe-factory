@@ -1,0 +1,109 @@
+2026-11-10 13:43:01,039 - INFO - Building image agentscope-ai__agentscope-93
+Using dockerfile:
+# Base image specification with Ubuntu 22.04 and bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies including git, python3.9, pip, build tools, and libraries
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    python3-pip \
+    python-is-python3 \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version
+RUN python3.9 -m pip install --upgrade pip
+
+# Install Miniconda for environment management
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda3 \
+    && rm /tmp/miniconda.sh
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda for bash shell and add conda-forge channel
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && conda init bash && conda config --append channels conda-forge"
+
+# Create a conda environment named 'testbed' with Python 3.9 and activate it
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.9 -y"
+
+# Set working directory to /testbed
+WORKDIR /testbed/
+
+# Clone the agentscope repository, checkout the provided commit, and remove origin remote to ensure isolation
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    cd /testbed && \
+    git reset --hard 17676eaaf2346ff936fc2df78ec098fa7a81e3e0 && \
+    git remote remove origin"
+
+# Install the project with all optional dependencies (full) and test dependencies in editable mode
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install -e .[full] pytest pytest-cov coverage"
+
+# Add conda activation to bashrc for interactive sessions
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+2026-11-10 13:43:01,050 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 13:43:02,408 - INFO -  ---> 076e7bf82319
+2026-11-10 13:43:02,408 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:43:07,889 - INFO -  ---> Running in 8e2ef4c82748
+2026-11-10 13:43:26,565 - INFO -  ---> Removed intermediate container 8e2ef4c82748
+2026-11-10 13:43:26,565 - INFO -  ---> c1d87fbfd247
+2026-11-10 13:43:26,566 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-10 13:43:31,742 - INFO -  ---> Running in 15ed84839171
+2026-11-10 13:43:56,892 - INFO -  ---> Removed intermediate container 15ed84839171
+2026-11-10 13:43:56,892 - INFO -  ---> a9c8d471683a
+2026-11-10 13:43:56,892 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:44:05,856 - INFO -  ---> Running in a8feb8a5e94c
+2026-11-10 13:44:32,743 - INFO -  ---> Removed intermediate container a8feb8a5e94c
+2026-11-10 13:44:32,743 - INFO -  ---> 3e1a995ba7bb
+2026-11-10 13:44:32,743 - INFO - Step 5/14 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     libffi-dev     libssl-dev     python3.9     python3.9-venv     python3.9-distutils     python3-pip     python-is-python3     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:44:41,067 - INFO -  ---> Running in 4f041412b30b
+2026-11-10 13:44:45,466 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 13:44:45,473 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 13:44:46,517 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 13:44:46,704 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 13:44:47,099 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 13:44:47,646 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 13:44:48,625 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 13:44:48,826 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 13:44:48,940 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 13:44:50,028 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 13:44:51,506 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 13:44:51,712 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 13:44:51,912 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 13:44:52,229 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 13:44:52,764 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 13:44:53,302 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 13:44:53,493 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 13:44:53,675 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 13:44:59,733 - INFO - Fetched 49.4 MB in 15s (3403 kB/s)
+2026-11-10 13:45:09,295 - INFO - Reading package lists...
+2026-11-10 13:45:15,899 - INFO - Reading package lists...
+2026-11-10 13:45:17,036 - INFO - Building dependency tree...
+2026-11-10 13:45:17,037 - INFO - Reading state information...
+2026-11-10 13:45:18,096 - INFO - E: Unable to locate package python3.9-venv
+2026-11-10 13:45:18,096 - INFO - E: Couldn't find any package by glob 'python3.9-venv'
+2026-11-10 13:45:18,096 - INFO - E: Couldn't find any package by regex 'python3.9-venv'
+2026-11-10 13:45:18,096 - INFO - E: Unable to locate package python3.9-distutils
+2026-11-10 13:45:18,098 - INFO - E: Couldn't find any package by glob 'python3.9-distutils'
+2026-11-10 13:45:18,098 - INFO - E: Couldn't find any package by regex 'python3.9-distutils'
+2026-11-10 13:45:22,046 - INFO -  ---> Removed intermediate container 4f041412b30b
+2026-11-10 13:45:22,641 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libffi-dev     libssl-dev     python3.9     python3.9-venv     python3.9-distutils     python3-pip     python-is-python3     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:45:22,641 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libffi-dev     libssl-dev     python3.9     python3.9-venv     python3.9-distutils     python3-pip     python-is-python3     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

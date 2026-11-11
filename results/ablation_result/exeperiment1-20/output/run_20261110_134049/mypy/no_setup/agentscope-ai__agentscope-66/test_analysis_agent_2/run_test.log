@@ -1,0 +1,134 @@
+2026-11-10 15:07:37,237 - INFO - Checking if image agentscope-ai__agentscope-66-dockerfile2:latest exists locally...
+2026-11-10 15:07:37,552 - INFO - Image agentscope-ai__agentscope-66-dockerfile2:latest found locally.
+2026-11-10 15:07:37,552 - INFO - Creating container for agentscope-ai__agentscope-66...
+2026-11-10 15:07:43,077 - INFO - Container for agentscope-ai__agentscope-66 started: a3f88ce299774da602f9a0672308afd06861616c7afb86e2c4ca0efeacdb4d09
+2026-11-10 15:07:43,078 - INFO - Intermediate patch for agentscope-ai__agentscope-66 written to /root/swe-factory/output/run_20261110_134049/mypy/agentscope-ai__agentscope-66/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-10 15:07:44,992 - INFO - Apply patch success:
+Checking patch src/agentscope/agents/dict_dialog_agent.py...
+Checking patch src/agentscope/models/model.py...
+Checking patch src/agentscope/utils/logging_utils.py...
+Applied patch src/agentscope/agents/dict_dialog_agent.py cleanly.
+Applied patch src/agentscope/models/model.py cleanly.
+Applied patch src/agentscope/utils/logging_utils.py cleanly.
+
+2026-11-10 15:07:45,761 - INFO - Git diff before:
+diff --git a/src/agentscope/agents/dict_dialog_agent.py b/src/agentscope/agents/dict_dialog_agent.py
+index be376105..a04185fc 100644
+--- a/src/agentscope/agents/dict_dialog_agent.py
++++ b/src/agentscope/agents/dict_dialog_agent.py
+@@ -145,7 +145,7 @@ class DictDialogAgent(AgentBase):
+         ).raw
+ 
+         # logging raw messages in debug mode
+-        logger.debug(json.dumps(response, indent=4))
++        logger.debug(json.dumps(response, indent=4, ensure_ascii=False))
+ 
+         # In this agent, if the response is a dict, we treat "speak" as a
+         # special key, which represents the text to be spoken
+diff --git a/src/agentscope/models/model.py b/src/agentscope/models/model.py
+index 813d037b..e2200525 100644
+--- a/src/agentscope/models/model.py
++++ b/src/agentscope/models/model.py
+@@ -114,7 +114,7 @@ class ModelResponse:
+             "image_urls": self.image_urls,
+             "raw": self.raw,
+         }
+-        return json.dumps(serialized_fields, indent=4)
++        return json.dumps(serialized_fields, indent=4, ensure_ascii=False)
+ 
+ 
+ def _response_parse_decorator(
+@@ -223,7 +223,10 @@ class ModelWrapperBase(metaclass=_ModelWrapperMeta):
+         """
+         self.config_name = config_name
+         logger.info(f"Initialize model [{config_name}]")
+-        logger.debug(f"[{config_name}]:\n {json.dumps(kwargs, indent=2)}")
++        logger.debug(
++            f"[{config_name}]:\n"
++            f"{json.dumps(kwargs, indent=2, ensure_ascii=False)}",
++        )
+ 
+     def __call__(self, *args: Any, **kwargs: Any) -> ModelResponse:
+         """Processing input with the model."""
+diff --git a/src/agentscope/utils/logging_utils.py b/src/agentscope/utils/logging_utils.py
+index c074c776..8f7cf0eb 100644
+--- a/src/agentscope/utils/logging_utils.py
++++ b/src/agentscope/utils/logging_utils.py
+@@ -95,7 +95,12 @@ def _chat(message: Union[str, dict], *args: Any, **kwargs: Any) -> None:
+             <content>".
+     """
+     # Save message into file
+-    logger.log(LEVEL_CHAT_SAVE, json.dumps(message), *args, **kwargs)
++    logger.log(
++        LEVEL_CHAT_SAVE,
++        json.dumps(message, ensure_ascii=False),
++        *args,
++        **kwargs,
++    )
+ 
+     # Print message in terminal with specific format
+     if isinstance(message, dict):
+2026-11-10 15:07:45,761 - INFO - Eval script for agentscope-ai__agentscope-66 written to /root/swe-factory/output/run_20261110_134049/mypy/agentscope-ai__agentscope-66/test_analysis_agent_2/patch.diff, now applying to container...
+2026-11-10 15:08:04,958 - INFO - Test output for agentscope-ai__agentscope-66 written to /root/swe-factory/output/run_20261110_134049/mypy/agentscope-ai__agentscope-66/test_analysis_agent_2/test_output.txt
+2026-11-10 15:08:05,796 - INFO - Git diff after:
+diff --git a/src/agentscope/agents/dict_dialog_agent.py b/src/agentscope/agents/dict_dialog_agent.py
+index be376105..a04185fc 100644
+--- a/src/agentscope/agents/dict_dialog_agent.py
++++ b/src/agentscope/agents/dict_dialog_agent.py
+@@ -145,7 +145,7 @@ class DictDialogAgent(AgentBase):
+         ).raw
+ 
+         # logging raw messages in debug mode
+-        logger.debug(json.dumps(response, indent=4))
++        logger.debug(json.dumps(response, indent=4, ensure_ascii=False))
+ 
+         # In this agent, if the response is a dict, we treat "speak" as a
+         # special key, which represents the text to be spoken
+diff --git a/src/agentscope/models/model.py b/src/agentscope/models/model.py
+index 813d037b..e2200525 100644
+--- a/src/agentscope/models/model.py
++++ b/src/agentscope/models/model.py
+@@ -114,7 +114,7 @@ class ModelResponse:
+             "image_urls": self.image_urls,
+             "raw": self.raw,
+         }
+-        return json.dumps(serialized_fields, indent=4)
++        return json.dumps(serialized_fields, indent=4, ensure_ascii=False)
+ 
+ 
+ def _response_parse_decorator(
+@@ -223,7 +223,10 @@ class ModelWrapperBase(metaclass=_ModelWrapperMeta):
+         """
+         self.config_name = config_name
+         logger.info(f"Initialize model [{config_name}]")
+-        logger.debug(f"[{config_name}]:\n {json.dumps(kwargs, indent=2)}")
++        logger.debug(
++            f"[{config_name}]:\n"
++            f"{json.dumps(kwargs, indent=2, ensure_ascii=False)}",
++        )
+ 
+     def __call__(self, *args: Any, **kwargs: Any) -> ModelResponse:
+         """Processing input with the model."""
+diff --git a/src/agentscope/utils/logging_utils.py b/src/agentscope/utils/logging_utils.py
+index c074c776..8f7cf0eb 100644
+--- a/src/agentscope/utils/logging_utils.py
++++ b/src/agentscope/utils/logging_utils.py
+@@ -95,7 +95,12 @@ def _chat(message: Union[str, dict], *args: Any, **kwargs: Any) -> None:
+             <content>".
+     """
+     # Save message into file
+-    logger.log(LEVEL_CHAT_SAVE, json.dumps(message), *args, **kwargs)
++    logger.log(
++        LEVEL_CHAT_SAVE,
++        json.dumps(message, ensure_ascii=False),
++        *args,
++        **kwargs,
++    )
+ 
+     # Print message in terminal with specific format
+     if isinstance(message, dict):
+2026-11-10 15:08:05,796 - INFO - Attempting to stop container agentscope-ai__agentscope-66-test1...
+2026-11-10 15:08:54,309 - INFO - Attempting to remove container agentscope-ai__agentscope-66-test1...
+2026-11-10 15:08:57,981 - INFO - Container agentscope-ai__agentscope-66-test1 removed.
+2026-11-10 15:08:57,981 - INFO - Attempting to remove image agentscope-ai__agentscope-66-dockerfile2:latest...
+2026-11-10 15:08:59,137 - INFO - Image agentscope-ai__agentscope-66-dockerfile2:latest removed.

@@ -1,0 +1,22 @@
+{
+    "task_id": "agentscope-ai__agentscope-106",
+    "setup_info": {
+        "repo_path": "testbed/agentscope-ai__agentscope-106_2026-11-10_13-42-05",
+        "repo_cache_path": "testbed/agentscope-ai/agentscope_cache"
+    },
+    "task_info": {
+        "repo": "agentscope-ai/agentscope",
+        "pull_number": 106,
+        "instance_id": "agentscope-ai__agentscope-106",
+        "issue_numbers": [
+            "102"
+        ],
+        "base_commit": "371d1680ab7f41c7d695559221956250ba048475",
+        "patch": "diff --git a/src/agentscope/utils/logging_utils.py b/src/agentscope/utils/logging_utils.py\nindex ac3d14927c..35cb6d957d 100644\n--- a/src/agentscope/utils/logging_utils.py\n+++ b/src/agentscope/utils/logging_utils.py\n@@ -144,20 +144,26 @@ def log_studio(message: dict, uid: str, **kwargs: Any) -> None:\n \n         msg = message[\"content\"]\n         flushing = True\n-        if \"url\" in message:\n+        if \"url\" in message and message[\"url\"]:\n             flushing = False\n+            if isinstance(message[\"url\"], str):\n+                message[\"url\"] = [message[\"url\"]]\n             for i in range(len(message[\"url\"])):\n                 msg += \"\\n\" + f\"\"\"<img src=\"{message['url'][i]}\"/>\"\"\"\n-        if \"audio_path\" in message:\n+        if \"audio_path\" in message and message[\"audio_path\"]:\n             flushing = False\n+            if isinstance(message[\"audio_path\"], str):\n+                message[\"audio_path\"] = [message[\"audio_path\"]]\n             for i in range(len(message[\"audio_path\"])):\n                 msg += (\n                     \"\\n\"\n                     + f\"\"\"<audio src=\"{message['audio_path'][i]}\"\n                 controls/></audio>\"\"\"\n                 )\n-        if \"video_path\" in message:\n+        if \"video_path\" in message and message[\"video_path\"]:\n             flushing = False\n+            if isinstance(message[\"video_path\"], str):\n+                message[\"video_path\"] = [message[\"video_path\"]]\n             for i in range(len(message[\"video_path\"])):\n                 msg += (\n                     \"\\n\"\ndiff --git a/src/agentscope/web/studio/__init__.py b/src/agentscope/web/studio/__init__.py\nnew file mode 100644\nindex 0000000000..e69de29bb2\n",
+        "test_patch": "diff --git a/tests/test_logging_utils.py b/tests/test_logging_utils.py\nnew file mode 100644\nindex 0000000000..f1a2b3c4d5\n--- /dev/null\n+++ b/tests/test_logging_utils.py\n@@ -0,0 +1,26 @@\n+import pytest\n+from src.agentscope.utils import logging_utils\n+\n+def test_log_studio_handles_single_and_list_urls(monkeypatch):\n+    messages = [\n+        {\"content\": \"test\", \"url\": \"http://example.com/image.png\"},\n+        {\"content\": \"test\", \"url\": [\"http://example.com/image1.png\", \"http://example.com/image2.png\"]},\n+        {\"content\": \"test\", \"audio_path\": \"audio.mp3\"},\n+        {\"content\": \"test\", \"audio_path\": [\"audio1.mp3\", \"audio2.mp3\"]},\n+        {\"content\": \"test\", \"video_path\": \"video.mp4\"},\n+        {\"content\": \"test\", \"video_path\": [\"video1.mp4\", \"video2.mp4\"]},\n+        {\"content\": \"test\"},\n+    ]\n+\n+    for message in messages:\n+        # Should not raise exceptions\n+        logging_utils.log_studio(message, uid=\"testuid\")\n+\n+@pytest.mark.parametrize(\"message\", [\n+    {\"content\": \"test\", \"url\": None},\n+    {\"content\": \"test\", \"audio_path\": None},\n+    {\"content\": \"test\", \"video_path\": None},\n+])\n+def test_log_studio_handles_none_values(message):\n+    # Should not raise exceptions when url/audio_path/video_path is None\n+    logging_utils.log_studio(message, uid=\"testuid\")\n",
+        "problem_statement": "[Bug]: Missing __init__.py for agentscope.web.studio\n![image](https://github.com/modelscope/agentscope/assets/1947568/ae8383b9-4d21-4f6a-94c7-61b0e72fb9ac)\n\nrelated commit: 3e33a27",
+        "hints_text": "",
+        "created_at": "2024-03-26T09:15:35Z",
+        "version": "0.0"
+    }
+}

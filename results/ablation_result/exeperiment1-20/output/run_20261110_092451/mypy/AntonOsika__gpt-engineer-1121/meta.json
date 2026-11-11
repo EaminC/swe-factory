@@ -1,0 +1,22 @@
+{
+    "task_id": "AntonOsika__gpt-engineer-1121",
+    "setup_info": {
+        "repo_path": "testbed/AntonOsika__gpt-engineer-1121_2026-11-10_09-51-30",
+        "repo_cache_path": "testbed/AntonOsika/gpt-engineer_cache"
+    },
+    "task_info": {
+        "repo": "AntonOsika/gpt-engineer",
+        "pull_number": 1121,
+        "instance_id": "AntonOsika__gpt-engineer-1121",
+        "issue_numbers": [
+            "1112"
+        ],
+        "base_commit": "04c71d7d297447479d897b6803206210ed589d53",
+        "patch": "diff --git a/gpt_engineer/applications/cli/main.py b/gpt_engineer/applications/cli/main.py\nindex f10d599a0e..6cbd73d5ac 100644\n--- a/gpt_engineer/applications/cli/main.py\n+++ b/gpt_engineer/applications/cli/main.py\n@@ -247,7 +247,7 @@ def prompt_yesno() -> bool:\n )\n def main(\n     project_path: str = typer.Argument(\".\", help=\"path\"),\n-    model: str = typer.Argument(\"gpt-4-0125-preview\", help=\"model id string\"),\n+    model: str = typer.Argument(\"gpt-4-turbo\", help=\"model id string\"),\n     temperature: float = typer.Option(\n         0.1,\n         \"--temperature\",\ndiff --git a/gpt_engineer/core/ai.py b/gpt_engineer/core/ai.py\nindex d3b8956b78..5db26eb439 100644\n--- a/gpt_engineer/core/ai.py\n+++ b/gpt_engineer/core/ai.py\n@@ -87,7 +87,7 @@ class AI:\n \n     def __init__(\n         self,\n-        model_name=\"gpt-4-0125-preview\",\n+        model_name=\"gpt-4-turbo\",\n         temperature=0.1,\n         azure_endpoint=None,\n         streaming=True,\n@@ -107,7 +107,11 @@ def __init__(\n         self.azure_endpoint = azure_endpoint\n         self.model_name = model_name\n         self.streaming = streaming\n-        self.vision = \"vision\" in model_name\n+        self.vision = (\n+            (\"vision-preview\" in model_name)\n+            or (\"gpt-4-turbo\" in model_name and \"preview\" not in model_name)\n+            or (\"claude\" in model_name)\n+        )\n         self.llm = self._create_chat_model()\n         self.token_usage_log = TokenUsageLog(model_name)\n \ndiff --git a/projects/example-vision/prompt/images/ux_diagram.png b/projects/example-vision/images/ux_diagram.png\nsimilarity index 100%\nrename from projects/example-vision/prompt/images/ux_diagram.png\nrename to projects/example-vision/images/ux_diagram.png\ndiff --git a/projects/example-vision/prompt/text b/projects/example-vision/prompt\nsimilarity index 100%\nrename from projects/example-vision/prompt/text\nrename to projects/example-vision/prompt\n",
+        "test_patch": "diff --git a/tests/test_vision_model.py b/tests/test_vision_model.py\nnew file mode 100644\nindex 0000000..e69de29\n--- /dev/null\n+++ b/tests/test_vision_model.py\n@@ -0,0 +1,23 @@\n+import pytest\n+from gpt_engineer.core.ai import AI\n+\n+def test_vision_flag_for_gpt_4_turbo():\n+    # The vision flag should be True for 'gpt-4-turbo' model\n+    ai = AI(model_name=\"gpt-4-turbo\")\n+    assert ai.vision is True\n+\n+    # Also True for 'gpt-4-turbo-2024-04-09'\n+    ai2 = AI(model_name=\"gpt-4-turbo-2024-04-09\")\n+    assert ai2.vision is True\n+\n+    # Should be False for 'gpt-4-turbo-preview'\n+    ai3 = AI(model_name=\"gpt-4-turbo-preview\")\n+    assert ai3.vision is False\n+\n+    # Should be True for 'vision-preview' in model name\n+    ai4 = AI(model_name=\"gpt-4-vision-preview\")\n+    assert ai4.vision is True\n+\n+    # Should be False for unrelated model\n+    ai5 = AI(model_name=\"gpt-3.5-turbo\")\n+    assert ai5.vision is False\n",
+        "problem_statement": "Missing support for the vision capabilities in the new model gpt-4-turbo\n## Expected Behavior\n\nWhen using the model gpt-4-turbo, I expect the vision capabilities to work so that I can send in image inputs using the --image_directory flag.\n\n## Current Behavior\n\nWhen using the --image_directory flag and the model gpt-4-turbo, the images in the directory are ignored and not sent to the model.\n\n##\nA simple fix would be to update the dependency to langchain to reference v0.1.16 or later that have better support for gpt-4-turbo.\nhttps://github.com/langchain-ai/langchain/releases/tag/v0.1.16\n\nAnd: \n\nIn core/ai.py one could change this on row 110:\n`self.vision = \"vision\" in model_name`\nto\n`self.vision = \"vision\" in model_name or model_name in [\"gpt-4-turbo\", \"gpt-4-turbo-2024-04-09\"]`",
+        "hints_text": "",
+        "created_at": "2024-04-13T21:44:07Z",
+        "version": "0.2"
+    }
+}

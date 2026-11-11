@@ -1,0 +1,26 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 9bae29c0727b7af51e0715ba6c20b00f7adefe33
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file.
+# As the repository uses Node.js/TypeScript with no explicit test command, use npm test with a pattern filter.
+# Since no test framework details or npm test script is given,
+# attempt to run the test via a direct call to node_modules/.bin/jest,
+# filtering to the single test file (if jest is installed, typically).
+# If jest or another test runner is not installed or the test file doesn't run this way, this may be adapted.
+
+# Use npx jest with the path to the test file to run only the target test
+npx jest --silent --passWithNoTests --outputFile=jest_output.json --json platform/reworkd_platform/tests/agent/test_autonomous_agent_model_option.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset test file to original state
+git checkout 9bae29c0727b7af51e0715ba6c20b00f7adefe33 platform/reworkd_platform/tests/agent/test_autonomous_agent_model_option.py

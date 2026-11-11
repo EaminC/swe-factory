@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The docker build step that installs system dependencies fails with multiple 404 Not Found errors when attempting to fetch packages from the Debian bullseye-security repository. The errors are similar to:\n\nE: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/t/tzdata/tzdata_2026b-0%2bdeb11u1_all.deb  404  Not Found\n\nThis usually indicates that the package index references outdated or moved files. This can happen if the base image is old or the Debian repositories have moved packages, especially for security updates.\n\nTo fix:\n- Update the Debian package sources to use proper or current mirror URLs. Check if the debian-security URL needs to be updated or replaced with archive.debian.org for older releases.\n- Alternatively, consider using a newer base image like python:3.10-slim or python:3.10 for which apt repos are more actively maintained.\n- Add 'apt-get update --fix-missing' or '--allow-releaseinfo-change' flags if appropriate to handle repository metadata changes.\n- Verify apt sources in the base image or add custom sources.list if needed.\n\nThis fix is necessary because without successfully installing dependencies like git, curl, and tzdata, the environment is incomplete, and tests cannot run.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

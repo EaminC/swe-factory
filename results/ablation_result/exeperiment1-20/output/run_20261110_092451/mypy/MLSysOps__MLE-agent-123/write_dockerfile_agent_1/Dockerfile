@@ -1,0 +1,44 @@
+# Use Ubuntu 22.04 as a reliable base with bash and common tools
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system packages, git, python3.11, python3.11-venv, pip, and build tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    python3.11-distutils \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a dedicated Python virtual environment called testbed
+RUN python3.11 -m venv /opt/testbed
+
+# Upgrade pip inside the venv and install wheel and setuptools latest
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Set environment variables for virtual environment usage
+ENV VIRTUAL_ENV=/opt/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Clone the target repository and checkout the specific commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed \
+    && cd /testbed \
+    && git reset --hard cc7d248e9ec8f9359d7454017ddc6a31bde840b4
+
+# Install the repository dependencies and the repo itself in editable mode
+# Use requirements.txt to install pinned dependencies plus those without fixed versions
+RUN pip install -r /testbed/requirements.txt \
+    && pip install -e /testbed
+
+# Set working directory
+WORKDIR /testbed
+
+# Add bashrc to activate virtual environment automatically on container start (optional)
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc

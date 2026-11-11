@@ -1,0 +1,17 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 542afe61a8adfca1b9a0434189b9f339dfb07817
+
+# No patch to apply since none available
+# Run tests in existing test directories with configured pytest options
+
+source .venv/bin/activate
+
+# Run tests in lib/crewai/tests and lib/crewai-tools/tests using uv run pytest
+uv run pytest -vv --splits 8 --durations=10 --maxfail=3 lib/crewai/tests lib/crewai-tools/tests
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+</script>

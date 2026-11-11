@@ -1,0 +1,30 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Configure git to consider /testbed a safe directory to avoid ownership issues
+git config --global --add safe.directory /testbed
+
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+
+# Apply the test patch and keep changes applied (do not git checkout after patch)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate python virtual environment
+source /testbed/testbed-env/bin/activate
+
+# Ensure pytest is installed for running the tests
+pip install pytest
+
+# Run pytest explicitly on the specified test file to ensure discovery and execution
+pytest tests/test_cli_report_mode.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset repository to original state after tests
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27

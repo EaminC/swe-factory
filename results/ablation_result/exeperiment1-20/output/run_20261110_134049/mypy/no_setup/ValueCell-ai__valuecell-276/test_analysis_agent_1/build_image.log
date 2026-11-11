@@ -1,0 +1,102 @@
+2026-11-10 13:43:11,657 - INFO - Building image valuecell-ai__valuecell-276
+Using dockerfile:
+# Base image with Bash and Python 3.12+
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools: git, curl, build essentials, python3.12 and pip, locales, tzdata, etc.
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.12 \
+    python3.12-venv \
+    python3.12-distutils \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.12
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+
+# Upgrade pip
+RUN python3.12 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install uv tool (dependency manager) as per repo requirement
+RUN python3.12 -m pip install --no-cache-dir uv
+
+# Set work directory
+WORKDIR /testbed/
+
+# Clone repository and checkout specific commit
+RUN git clone https://github.com/ValueCell-ai/valuecell.git /testbed && \
+    git reset --hard 67d56f93a45e712e924f5334119779c93830e208
+
+# Install dependencies using uv according to context info (all extras + dev + locked)
+RUN uv sync --locked --all-extras --dev
+
+# Install current repo in editable mode to use local source code correctly
+RUN python3.12 -m pip install --no-cache-dir -e .
+
+# Make sure shell startup activates any environment if needed (uv uses no explicit venv but env variables)
+RUN echo "export PYTHONIOENCODING=utf-8" >> ~/.bashrc
+
+# Set default shell
+ENV SHELL=/bin/bash
+
+2026-11-10 13:43:11,668 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 13:43:12,354 - INFO -  ---> 076e7bf82319
+2026-11-10 13:43:12,354 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:43:21,646 - INFO -  ---> Running in 8a44cf562e95
+2026-11-10 13:43:35,564 - INFO -  ---> Removed intermediate container 8a44cf562e95
+2026-11-10 13:43:35,564 - INFO -  ---> 1a2b39c49250
+2026-11-10 13:43:35,564 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-10 13:43:46,790 - INFO -  ---> Running in 29054e685799
+2026-11-10 13:44:02,685 - INFO -  ---> Removed intermediate container 29054e685799
+2026-11-10 13:44:02,685 - INFO -  ---> cce580a8c2de
+2026-11-10 13:44:02,685 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:44:13,697 - INFO -  ---> Running in 12b9ffa28c92
+2026-11-10 13:44:37,536 - INFO -  ---> Removed intermediate container 12b9ffa28c92
+2026-11-10 13:44:37,537 - INFO -  ---> 27af34b278fd
+2026-11-10 13:44:37,537 - INFO - Step 5/14 : RUN apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:44:43,013 - INFO -  ---> Running in 1748eae55c35
+2026-11-10 13:44:47,663 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 13:44:47,973 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 13:44:48,988 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 13:44:49,170 - INFO - Get:4 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 13:44:49,286 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 13:44:50,225 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 13:44:50,673 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 13:44:50,684 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 13:44:51,065 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 13:44:51,238 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 13:44:51,262 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 13:44:51,536 - INFO - Get:12 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 13:44:52,778 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 13:44:53,002 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 13:44:53,063 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 13:44:53,072 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 13:44:53,814 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 13:44:53,814 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 13:45:03,594 - INFO - Fetched 49.4 MB in 16s (3069 kB/s)
+2026-11-10 13:45:10,746 - INFO - Reading package lists...
+2026-11-10 13:45:16,515 - INFO - Reading package lists...
+2026-11-10 13:45:17,670 - INFO - Building dependency tree...
+2026-11-10 13:45:17,670 - INFO - Reading state information...
+2026-11-10 13:45:18,300 - INFO - E: Unable to locate package python3.12
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by regex 'python3.12'
+2026-11-10 13:45:18,300 - INFO - E: Unable to locate package python3.12-venv
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by regex 'python3.12-venv'
+2026-11-10 13:45:18,300 - INFO - E: Unable to locate package python3.12-distutils
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by glob 'python3.12-distutils'
+2026-11-10 13:45:18,300 - INFO - E: Couldn't find any package by regex 'python3.12-distutils'
+2026-11-10 13:45:22,883 - INFO -  ---> Removed intermediate container 1748eae55c35
+2026-11-10 13:45:23,641 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:45:23,641 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     build-essential     python3.12     python3.12-venv     python3.12-distutils     wget     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

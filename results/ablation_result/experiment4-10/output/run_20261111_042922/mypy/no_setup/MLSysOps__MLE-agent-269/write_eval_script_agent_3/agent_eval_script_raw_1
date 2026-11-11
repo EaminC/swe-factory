@@ -1,0 +1,32 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout dd7da4e5ac4085fb8324cac3ac0b4c104b9007cb
+
+# Apply the test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /opt/testbed/bin/activate
+
+# Downgrade numpy to a compatible version <2.0 to avoid ImportError with lancedb
+pip install --no-cache-dir "numpy<2.0,>=1.24"
+
+# Reinstall lancedb after fixing numpy to ensure compatibility
+pip install --no-cache-dir --force-reinstall "lancedb~=0.15.0"
+
+# Ensure pytest is installed for running tests
+pip install --no-cache-dir pytest
+
+# Run only the specified test file with pytest, concise output
+pytest -q --tb=short --disable-warnings tests/test_memory_api.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout dd7da4e5ac4085fb8324cac3ac0b4c104b9007cb tests/test_memory_api.py
+</script>

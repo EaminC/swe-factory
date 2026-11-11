@@ -1,0 +1,102 @@
+2026-11-11 04:32:48,035 - INFO - Building image mlsysops__mle-agent-221
+Using dockerfile:
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, Python 3.11, pip, build essentials and other required tools
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    tzdata \
+    locales \
+    libffi-dev \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Install pip for python3.11
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Create a virtual environment named testbed
+RUN python3.11 -m venv /opt/testbed
+
+# Add virtualenv python and pip to PATH
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Upgrade pip in virtualenv
+RUN pip install --upgrade pip setuptools
+
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed && \
+    cd /testbed && \
+    git checkout 1b637bed35ef1171f3eb11395c8a5ad2bd8c15b8
+
+# Install the repository dependencies and install in editable mode
+RUN pip install --no-cache-dir -e . 
+
+# Expose shell environment with virtualenv activated by default
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+2026-11-11 04:32:48,200 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:20.04
+2026-11-11 04:32:53,338 - INFO -  ---> 8feb4d8ca535
+2026-11-11 04:32:53,338 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 04:32:53,553 - INFO -  ---> Running in 9cac6ac9e6ef
+2026-11-11 04:32:54,454 - INFO -  ---> Removed intermediate container 9cac6ac9e6ef
+2026-11-11 04:32:54,454 - INFO -  ---> 203891e01bd3
+2026-11-11 04:32:54,454 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-11 04:32:54,532 - INFO -  ---> Running in 97461c597e61
+2026-11-11 04:32:55,515 - INFO -  ---> Removed intermediate container 97461c597e61
+2026-11-11 04:32:55,515 - INFO -  ---> 3a59d92a4f7d
+2026-11-11 04:32:55,516 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-11 04:32:55,619 - INFO -  ---> Running in fff17093861f
+2026-11-11 04:32:56,827 - INFO -  ---> Removed intermediate container fff17093861f
+2026-11-11 04:32:56,827 - INFO -  ---> a441a68f777a
+2026-11-11 04:32:56,827 - INFO - Step 5/14 : RUN apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     tzdata     locales     libffi-dev     python3.11     python3.11-venv     python3.11-distutils     && rm -rf /var/lib/apt/lists/*
+2026-11-11 04:32:56,954 - INFO -  ---> Running in fab4d4de0a9d
+2026-11-11 04:32:57,942 - INFO - Get:1 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]
+2026-11-11 04:32:58,085 - INFO - Get:2 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+2026-11-11 04:32:58,990 - INFO - Get:3 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+2026-11-11 04:32:59,231 - INFO - Get:4 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+2026-11-11 04:32:59,588 - INFO - Get:5 http://archive.ubuntu.com/ubuntu focal/main amd64 Packages [1275 kB]
+2026-11-11 04:33:00,437 - INFO - Get:6 http://archive.ubuntu.com/ubuntu focal/multiverse amd64 Packages [177 kB]
+2026-11-11 04:33:00,437 - INFO - Get:7 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [1300 kB]
+2026-11-11 04:33:00,457 - INFO - Get:8 http://archive.ubuntu.com/ubuntu focal/universe amd64 Packages [11.3 MB]
+2026-11-11 04:33:01,723 - INFO - Get:9 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [32.5 kB]
+2026-11-11 04:33:01,895 - INFO - Get:10 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [4368 kB]
+2026-11-11 04:33:02,044 - INFO - Get:11 http://archive.ubuntu.com/ubuntu focal/restricted amd64 Packages [33.4 kB]
+2026-11-11 04:33:02,256 - INFO - Get:12 http://archive.ubuntu.com/ubuntu focal-updates/universe amd64 Packages [1588 kB]
+2026-11-11 04:33:02,547 - INFO - Get:13 http://archive.ubuntu.com/ubuntu focal-updates/multiverse amd64 Packages [36.2 kB]
+2026-11-11 04:33:02,549 - INFO - Get:14 http://archive.ubuntu.com/ubuntu focal-updates/restricted amd64 Packages [4904 kB]
+2026-11-11 04:33:02,607 - INFO - Get:15 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [4710 kB]
+2026-11-11 04:33:03,214 - INFO - Get:16 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages [4850 kB]
+2026-11-11 04:33:03,633 - INFO - Get:17 http://archive.ubuntu.com/ubuntu focal-backports/universe amd64 Packages [28.4 kB]
+2026-11-11 04:33:03,633 - INFO - Get:18 http://archive.ubuntu.com/ubuntu focal-backports/main amd64 Packages [54.7 kB]
+2026-11-11 04:33:09,676 - INFO - Fetched 35.3 MB in 12s (2921 kB/s)
+2026-11-11 04:33:17,511 - INFO - Reading package lists...
+2026-11-11 04:33:27,704 - INFO - Reading package lists...
+2026-11-11 04:33:32,723 - INFO - Building dependency tree...
+2026-11-11 04:33:32,743 - INFO - Reading state information...
+2026-11-11 04:33:34,918 - INFO - E: Unable to locate package python3.11
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by glob 'python3.11'
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by regex 'python3.11'
+2026-11-11 04:33:34,929 - INFO - E: Unable to locate package python3.11-venv
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by glob 'python3.11-venv'
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by regex 'python3.11-venv'
+2026-11-11 04:33:34,929 - INFO - E: Unable to locate package python3.11-distutils
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by glob 'python3.11-distutils'
+2026-11-11 04:33:34,929 - INFO - E: Couldn't find any package by regex 'python3.11-distutils'
+2026-11-11 04:33:38,427 - INFO -  ---> Removed intermediate container fab4d4de0a9d
+2026-11-11 04:33:38,480 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     tzdata     locales     libffi-dev     python3.11     python3.11-venv     python3.11-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 04:33:38,480 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     tzdata     locales     libffi-dev     python3.11     python3.11-venv     python3.11-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

@@ -1,0 +1,125 @@
+checkpointe-postgres v2.0.23 has error in any exists thread
+### Checked other resources
+
+- [x] This is a bug, not a usage question. For questions, please use the LangChain Forum (https://forum.langchain.com/).
+- [x] I added a clear and detailed title that summarizes the issue.
+- [x] I read what a minimal reproducible example is (https://stackoverflow.com/help/minimal-reproducible-example).
+- [x] I included a self-contained, minimal example that demonstrates the issue INCLUDING all the relevant imports. The code run AS IS to reproduce the issue.
+
+### Example Code
+
+```python
+when continue any exists threads
+```
+
+### Error Message and Stack Trace (if applicable)
+
+```shell
+'NoneType' object is not a mapping\nTraceback (most recent call last):\n  File \"/app/intentkit/core/engine.py\", line 564, in stream_agent\n    async for chunk in executor.astream({\"messages\": messages}, stream_config):\n  File \"/app/.venv/lib/python3.12/site-packages/langgraph/pregel/__init__.py\", line 2710, in astream\n    async with AsyncPregelLoop(\n               ^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/langgraph/pregel/loop.py\", line 1177, in __aenter__\n    saved = await self.checkpointer.aget_tuple(self.checkpoint_config)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/langgraph/checkpoint/postgres/aio.py\", line 217, in aget_tuple\n    return await self._load_checkpoint_tuple(value)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/langgraph/checkpoint/postgres/aio.py\", line 413, in _load_checkpoint_tuple\n    \"channel_values\": {\n                      ^\nTypeError: 'NoneType' object is not a mapping\n"
+```
+
+### Description
+
+In the new thread, there are no errors, but if you continue any previous version of the thread, this error will occur.
+
+### System Info
+
+System Information
+------------------
+> OS:  Linux
+> OS Version:  #1 SMP PREEMPT_DYNAMIC Tue Apr  8 13:14:54 UTC 2025
+> Python Version:  3.12.11 (main, Jul  1 2025, 02:44:10) [GCC 12.2.0]
+
+Package Information
+-------------------
+> langchain_core: 0.3.69
+> langchain: 0.3.26
+> langchain_community: 0.3.27
+> langsmith: 0.4.6
+> langchain_anthropic: 0.3.17
+> langchain_mcp_adapters: 0.1.7
+> langchain_openai: 0.3.28
+> langchain_postgres: 0.0.15
+> langchain_text_splitters: 0.3.8
+> langchain_xai: 0.2.4
+> langgraph_sdk: 0.1.73
+
+Optional packages not installed
+-------------------------------
+> langserve
+
+Other Dependencies
+------------------
+> aiohttp<4,>=3.9.1: Installed. No version info available.
+> aiohttp<4.0.0,>=3.8.3: Installed. No version info available.
+> anthropic<1,>=0.57.0: Installed. No version info available.
+> async-timeout<5.0.0,>=4.0.0;: Installed. No version info available.
+> asyncpg>=0.30.0: Installed. No version info available.
+> dataclasses-json<0.7,>=0.5.7: Installed. No version info available.
+> httpx: 0.28.1
+> httpx-sse<1.0.0,>=0.4.0: Installed. No version info available.
+> httpx>=0.25.2: Installed. No version info available.
+> jsonpatch<2.0,>=1.33: Installed. No version info available.
+> langchain-anthropic;: Installed. No version info available.
+> langchain-aws;: Installed. No version info available.
+> langchain-azure-ai;: Installed. No version info available.
+> langchain-cohere;: Installed. No version info available.
+> langchain-community;: Installed. No version info available.
+> langchain-core<0.4,>=0.3.36: Installed. No version info available.
+> langchain-core<0.4.0,>=0.2.13: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.51: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.62: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.66: Installed. No version info available.
+> langchain-core<1.0.0,>=0.3.68: Installed. No version info available.
+> langchain-deepseek;: Installed. No version info available.
+> langchain-fireworks;: Installed. No version info available.
+> langchain-google-genai;: Installed. No version info available.
+> langchain-google-vertexai;: Installed. No version info available.
+> langchain-groq;: Installed. No version info available.
+> langchain-huggingface;: Installed. No version info available.
+> langchain-mistralai;: Installed. No version info available.
+> langchain-ollama;: Installed. No version info available.
+> langchain-openai;: Installed. No version info available.
+> langchain-openai<0.4,>=0.3.18: Installed. No version info available.
+> langchain-perplexity;: Installed. No version info available.
+> langchain-text-splitters<1.0.0,>=0.3.8: Installed. No version info available.
+> langchain-together;: Installed. No version info available.
+> langchain-xai;: Installed. No version info available.
+> langchain<1.0.0,>=0.3.26: Installed. No version info available.
+> langsmith-pyo3: Installed. No version info available.
+> langsmith>=0.1.125: Installed. No version info available.
+> langsmith>=0.1.17: Installed. No version info available.
+> langsmith>=0.3.45: Installed. No version info available.
+> mcp>=1.9.2: Installed. No version info available.
+> numpy<3,>=1.21: Installed. No version info available.
+> numpy>=1.26.2;: Installed. No version info available.
+> numpy>=2.1.0;: Installed. No version info available.
+> openai-agents: Installed. No version info available.
+> openai<2.0.0,>=1.86.0: Installed. No version info available.
+> opentelemetry-api: Installed. No version info available.
+> opentelemetry-exporter-otlp-proto-http: Installed. No version info available.
+> opentelemetry-sdk: Installed. No version info available.
+> orjson: 3.11.0
+> orjson>=3.10.1: Installed. No version info available.
+> packaging: 24.2
+> packaging>=23.2: Installed. No version info available.
+> pgvector<0.4,>=0.2.5: Installed. No version info available.
+> psycopg-pool<4,>=3.2.1: Installed. No version info available.
+> psycopg<4,>=3: Installed. No version info available.
+> pydantic: 2.10.6
+> pydantic-settings<3.0.0,>=2.4.0: Installed. No version info available.
+> pydantic<3.0.0,>=2.7.4: Installed. No version info available.
+> pydantic>=2.7.4: Installed. No version info available.
+> pytest: Installed. No version info available.
+> PyYAML>=5.3: Installed. No version info available.
+> requests: 2.32.3
+> requests-toolbelt: 1.0.0
+> requests<3,>=2: Installed. No version info available.
+> rich: Installed. No version info available.
+> SQLAlchemy<3,>=1.4: Installed. No version info available.
+> sqlalchemy<3,>=2: Installed. No version info available.
+> tenacity!=8.4.0,<10,>=8.1.0: Installed. No version info available.
+> tenacity!=8.4.0,<10.0.0,>=8.1.0: Installed. No version info available.
+> tiktoken<1,>=0.7: Installed. No version info available.
+> typing-extensions>=4.7: Installed. No version info available.
+> zstandard: 0.23.0

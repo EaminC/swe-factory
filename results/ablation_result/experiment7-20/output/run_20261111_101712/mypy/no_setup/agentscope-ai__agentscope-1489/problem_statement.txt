@@ -1,0 +1,30 @@
+[Bug]:AttributeError: 'NoneType' object has no attribute 'get' in DeepResearchAgent._acting
+**Describe the bug**
+When running DeepResearchAgent, an AttributeError occurs in the _acting method. The error is caused by accessing the 'get' method on a NoneType object.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Initialize a DeepResearchAgent
+2. Run the agent with a normal query
+3. The error occurs during the agent's acting process
+
+**Expected behavior**
+The DeepResearchAgent should run without throwing an AttributeError. The code should handle the case where chunk.metadata is None properly.
+
+**Error messages**
+Traceback (most recent call last):
+  File "E:\项目研发\AI\CODE\agent-universe\packages\agentscope-main\src\agentscope\agent\_agent_meta.py", line 120, in async_wrapper
+    current_output = await original_func(
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "E:\项目研发\AI\CODE\agent-universe\packages\universe-agent\src\search_agent\deep_research_agent.py", line 341, in _acting
+    and not chunk.metadata.get("success")
+            ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+**Environment (please complete the following information):**
+- AgentScope Version: 1.0.17
+- Python Version: 3.12
+- OS: Windows
+
+**Additional context**
+The error occurs because chunk.metadata is None, but the code tries to call chunk.metadata.get("success") without checking if it exists.

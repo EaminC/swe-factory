@@ -1,0 +1,63 @@
+# Use Ubuntu 22.04 as base image to ensure bash and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install necessary system dependencies for Python, git, curl, and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    build-essential \
+    ca-certificates \
+    libffi-dev \
+    libssl-dev \
+    locales \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup python3 alias to python, and pip3 alias to pip
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+
+# Install Miniconda to manage environment with python 3.9
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_23.3.1-0-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh
+
+ENV PATH=/opt/conda/bin:$PATH
+
+# Initialize conda and create environment named 'testbed' with python=3.9
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && \
+    conda create -y -n testbed python=3.9 && \
+    conda clean -afy"
+
+# Clone repository, checkout the specified commit SHA, and install dependencies
+ARG COMMIT_SHA=5e8bd105177e08848990d32b9ea636daa639be19
+
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/geekan/MetaGPT /testbed && \
+    cd /testbed && \
+    git reset --hard ${COMMIT_SHA} && \
+    pip install --upgrade pip && \
+    pip install --upgrade setuptools wheel && \
+    pip install --upgrade git+https://github.com/geekan/MetaGPT.git && \
+    pip install --upgrade -e . && \
+    pip install -r requirements.txt"
+
+# Set working directory to /testbed
+WORKDIR /testbed/
+
+# Ensure bash is default shell
+SHELL ["/bin/bash", "-c"]
+
+# Ensure conda environment is activated in interactive shells
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+# Environment variable to disable openai calls during testing as per context hint
+ENV ALLOW_OPENAI_API_CALL=0

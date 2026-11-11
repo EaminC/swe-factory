@@ -1,0 +1,102 @@
+2026-11-11 13:27:03,203 - INFO - Checking if image agentscope-ai__agentscope-1341-dockerfile1:latest exists locally...
+2026-11-11 13:27:04,415 - INFO - Image agentscope-ai__agentscope-1341-dockerfile1:latest found locally.
+2026-11-11 13:27:04,415 - INFO - Creating container for agentscope-ai__agentscope-1341...
+2026-11-11 13:27:08,901 - INFO - Container for agentscope-ai__agentscope-1341 started: 23aa76374f4d3bdcfe5fefb17cfca9925b96f0dafe60b74f9b2ae4895acf4169
+2026-11-11 13:27:08,901 - INFO - Intermediate patch for agentscope-ai__agentscope-1341 written to /root/swe-factory/output/run_20261111_101712/mypy/agentscope-ai__agentscope-1341/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-11 13:27:11,698 - INFO - Apply patch success:
+Checking patch pyproject.toml...
+Checking patch src/agentscope/formatter/_openai_formatter.py...
+Applied patch pyproject.toml cleanly.
+Applied patch src/agentscope/formatter/_openai_formatter.py cleanly.
+
+2026-11-11 13:27:13,509 - INFO - Git diff before:
+diff --git a/pyproject.toml b/pyproject.toml
+index 1581431d..2bd24fc1 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -24,6 +24,7 @@ dependencies = [
+     "anthropic",
+     "dashscope",
+     "docstring_parser",
++    "filetype",
+     "json5",
+     "json_repair",
+     "mcp>=1.13",
+diff --git a/src/agentscope/formatter/_openai_formatter.py b/src/agentscope/formatter/_openai_formatter.py
+index b1f45a71..57aa01a4 100644
+--- a/src/agentscope/formatter/_openai_formatter.py
++++ b/src/agentscope/formatter/_openai_formatter.py
+@@ -70,6 +70,8 @@ def _to_openai_image_url(url: str) -> str:
+         url (`str`):
+             The local or public url of the image.
+     """
++    import filetype
++
+     # See https://platform.openai.com/docs/guides/vision for details of
+     # support image extensions.
+     support_image_extensions = (
+@@ -92,6 +94,15 @@ def _to_openai_image_url(url: str) -> str:
+             mime_type = f"image/{extension}"
+             return f"data:{mime_type};base64,{base64_image}"
+ 
++        # No extension - detect file type using filetype
++        kind = filetype.guess(raw_url)
++        if kind is not None and kind.mime.startswith("image/"):
++            with open(raw_url, "rb") as image_file:
++                base64_image = base64.b64encode(image_file.read()).decode(
++                    "utf-8",
++                )
++            return f"data:{kind.mime};base64,{base64_image}"
++
+     # For web urls
+     parsed_url = urlparse(raw_url)
+     if parsed_url.scheme not in ["", "file"]:
+2026-11-11 13:27:13,509 - INFO - Eval script for agentscope-ai__agentscope-1341 written to /root/swe-factory/output/run_20261111_101712/mypy/agentscope-ai__agentscope-1341/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-11 13:27:16,694 - INFO - Test output for agentscope-ai__agentscope-1341 written to /root/swe-factory/output/run_20261111_101712/mypy/agentscope-ai__agentscope-1341/test_analysis_agent_1/test_output.txt
+2026-11-11 13:27:17,319 - INFO - Git diff after:
+diff --git a/pyproject.toml b/pyproject.toml
+index 1581431d..2bd24fc1 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -24,6 +24,7 @@ dependencies = [
+     "anthropic",
+     "dashscope",
+     "docstring_parser",
++    "filetype",
+     "json5",
+     "json_repair",
+     "mcp>=1.13",
+diff --git a/src/agentscope/formatter/_openai_formatter.py b/src/agentscope/formatter/_openai_formatter.py
+index b1f45a71..57aa01a4 100644
+--- a/src/agentscope/formatter/_openai_formatter.py
++++ b/src/agentscope/formatter/_openai_formatter.py
+@@ -70,6 +70,8 @@ def _to_openai_image_url(url: str) -> str:
+         url (`str`):
+             The local or public url of the image.
+     """
++    import filetype
++
+     # See https://platform.openai.com/docs/guides/vision for details of
+     # support image extensions.
+     support_image_extensions = (
+@@ -92,6 +94,15 @@ def _to_openai_image_url(url: str) -> str:
+             mime_type = f"image/{extension}"
+             return f"data:{mime_type};base64,{base64_image}"
+ 
++        # No extension - detect file type using filetype
++        kind = filetype.guess(raw_url)
++        if kind is not None and kind.mime.startswith("image/"):
++            with open(raw_url, "rb") as image_file:
++                base64_image = base64.b64encode(image_file.read()).decode(
++                    "utf-8",
++                )
++            return f"data:{kind.mime};base64,{base64_image}"
++
+     # For web urls
+     parsed_url = urlparse(raw_url)
+     if parsed_url.scheme not in ["", "file"]:
+2026-11-11 13:27:17,319 - INFO - Attempting to stop container agentscope-ai__agentscope-1341-test1...
+2026-11-11 13:27:35,308 - INFO - Attempting to remove container agentscope-ai__agentscope-1341-test1...
+2026-11-11 13:27:38,904 - INFO - Container agentscope-ai__agentscope-1341-test1 removed.
+2026-11-11 13:27:38,904 - INFO - Attempting to remove image agentscope-ai__agentscope-1341-dockerfile1:latest...
+2026-11-11 13:28:36,094 - INFO - Image agentscope-ai__agentscope-1341-dockerfile1:latest removed.

@@ -1,0 +1,47 @@
+diff --git a/src/crewai/agents/crew_agent_executor.py b/src/crewai/agents/crew_agent_executor.py
+index b11782ca16..9e9ad9c7ea 100644
+--- a/src/crewai/agents/crew_agent_executor.py
++++ b/src/crewai/agents/crew_agent_executor.py
+@@ -117,6 +117,15 @@ def _invoke_loop(self, formatted_answer=None):
+                         callbacks=self.callbacks,
+                     )
+ 
++                    if answer is None or answer == "":
++                        self._printer.print(
++                            content="Received None or empty response from LLM call.",
++                            color="red",
++                        )
++                        raise ValueError(
++                            "Invalid response from LLM call - None or empty."
++                        )
++
+                     if not self.use_stop_words:
+                         try:
+                             self._format_answer(answer)
+diff --git a/src/crewai/llm.py b/src/crewai/llm.py
+index 000bc25092..577cb6a436 100644
+--- a/src/crewai/llm.py
++++ b/src/crewai/llm.py
+@@ -1,7 +1,10 @@
+-from contextlib import contextmanager
+-from typing import Any, Dict, List, Optional, Union
++import io
+ import logging
++import sys
+ import warnings
++from contextlib import contextmanager
++from typing import Any, Dict, List, Optional, Union
++
+ import litellm
+ from litellm import get_supported_openai_params
+ 
+@@ -9,9 +12,6 @@
+     LLMContextLengthExceededException,
+ )
+ 
+-import sys
+-import io
+-
+ 
+ class FilteredStream(io.StringIO):
+     def write(self, s):

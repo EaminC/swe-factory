@@ -1,0 +1,55 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools
+RUN apt update && apt install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-distutils \
+    python3.11-venv \
+    python3-pip \
+    python3-wheel \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.11
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Install and setup Miniconda with Python 3.11
+RUN wget 'https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh' -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/miniconda3 \
+    && rm miniconda.sh
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+RUN conda init bash \
+    && conda config --append channels conda-forge
+
+# Create and activate conda environment with python 3.11 and install pytest and pytest-asyncio
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.11 -y && \
+    conda activate testbed && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install pytest>=8.4.0 pytest-asyncio>=1.0.0 python-dotenv"
+
+# Set workdir
+WORKDIR /testbed/
+
+# Clone target repository, checkout specific commit, install package in editable mode
+ARG REPO=https://github.com/always-further/AgentUp.git
+ARG COMMIT_SHA=58b138c3e797a3bd39c04603ce3e50b866b7a299
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone ${REPO} /testbed && \
+    cd /testbed && \
+    git checkout ${COMMIT_SHA} && \
+    pip install -e ."
+
+# Enable conda environment activation in interactive shells
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc

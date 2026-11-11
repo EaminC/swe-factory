@@ -1,0 +1,31 @@
+Native Support for Alibaba Cloud DashScope (Qwen) API
+**Is your feature request related to a problem? Please describe.**
+
+While users *can* access Qwen via SiliconFlow (which proxies some Qwen variants), many Chinese users and enterprises prefer or require direct DashScope integration due to:
+
+- Lower latency in mainland China  
+- Full model availability (e.g., `qwen3-max`, private models)  
+- Compliance/audit requirements (e.g., data residency, invoicing via Alibaba Cloud)  
+- Higher rate limits & enterprise SLA support  
+
+
+**Describe the solution you'd like**
+
+Add a native `dashscope` provider with:
+- ✅ Chat/completion via `/compatible-mode/v1/chat/completions` (OpenAI-compatible layer)  
+- ✅ Embedding via native `dashscope.TextEmbedding` (non-OpenAI API)  
+- ✅ Configurable `DASHSCOPE_API_KEY` in `.env` and provider YAML  
+- ✅ Fallback integration (e.g., auto-fallback from OpenRouter → DashScope)
+
+***Minimal Config Example (Suggested):***
+```yaml
+# configs/providers/dashscope.yaml
+name: "DashScope (Qwen)"
+provider_type: "dashscope"
+enabled: true
+connection:
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key_env: "DASHSCOPE_API_KEY"
+default_model: "qwen-max"
+...
+```

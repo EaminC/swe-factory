@@ -1,0 +1,614 @@
+diff --git a/config/config2.example.yaml b/config/config2.example.yaml
+index 3a5cc35855..c5454ec323 100644
+--- a/config/config2.example.yaml
++++ b/config/config2.example.yaml
+@@ -4,6 +4,7 @@ llm:
+   api_key: "YOUR_API_KEY"
+   model: "gpt-4-turbo-preview"  # or gpt-3.5-turbo-1106 / gpt-4-1106-preview
+   proxy: "YOUR_PROXY"  # for LLM API requests
++  # timeout: 600 # Optional. If set to 0, default value is 300.
+   pricing_plan: "" # Optional. If invalid, it will be automatically filled in with the value of the `model`.
+   # Azure-exclusive pricing plan mappings：
+   # - gpt-3.5-turbo 4k: "gpt-3.5-turbo-1106"
+diff --git a/metagpt/actions/action_node.py b/metagpt/actions/action_node.py
+index 59559ad042..27dde5a8c6 100644
+--- a/metagpt/actions/action_node.py
++++ b/metagpt/actions/action_node.py
+@@ -17,6 +17,7 @@
+ from tenacity import retry, stop_after_attempt, wait_random_exponential
+ 
+ from metagpt.actions.action_outcls_registry import register_action_outcls
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.llm import BaseLLM
+ from metagpt.logs import logger
+ from metagpt.provider.postprocess.llm_output_postprocess import llm_output_postprocess
+@@ -416,7 +417,7 @@ async def _aask_v1(
+         images: Optional[Union[str, list[str]]] = None,
+         system_msgs: Optional[list[str]] = None,
+         schema="markdown",  # compatible to original format
+-        timeout=3,
++        timeout=USE_CONFIG_TIMEOUT,
+     ) -> (str, BaseModel):
+         """Use ActionOutput to wrap the output of aask"""
+         content = await self.llm.aask(prompt, system_msgs, images=images, timeout=timeout)
+@@ -448,7 +449,9 @@ def set_llm(self, llm):
+     def set_context(self, context):
+         self.set_recursive("context", context)
+ 
+-    async def simple_fill(self, schema, mode, images: Optional[Union[str, list[str]]] = None, timeout=3, exclude=None):
++    async def simple_fill(
++        self, schema, mode, images: Optional[Union[str, list[str]]] = None, timeout=USE_CONFIG_TIMEOUT, exclude=None
++    ):
+         prompt = self.compile(context=self.context, schema=schema, mode=mode, exclude=exclude)
+ 
+         if schema != "raw":
+@@ -473,7 +476,7 @@ async def fill(
+         mode="auto",
+         strgy="simple",
+         images: Optional[Union[str, list[str]]] = None,
+-        timeout=3,
++        timeout=USE_CONFIG_TIMEOUT,
+         exclude=[],
+     ):
+         """Fill the node(s) with mode.
+diff --git a/metagpt/configs/llm_config.py b/metagpt/configs/llm_config.py
+index fa9bc0b1ba..af8f56372f 100644
+--- a/metagpt/configs/llm_config.py
++++ b/metagpt/configs/llm_config.py
+@@ -10,6 +10,7 @@
+ 
+ from pydantic import field_validator
+ 
++from metagpt.const import LLM_API_TIMEOUT
+ from metagpt.utils.yaml_model import YamlModel
+ 
+ 
+@@ -74,7 +75,7 @@ class LLMConfig(YamlModel):
+     stream: bool = False
+     logprobs: Optional[bool] = None  # https://cookbook.openai.com/examples/using_logprobs
+     top_logprobs: Optional[int] = None
+-    timeout: int = 60
++    timeout: int = 600
+ 
+     # For Network
+     proxy: Optional[str] = None
+@@ -88,3 +89,8 @@ def check_llm_key(cls, v):
+         if v in ["", None, "YOUR_API_KEY"]:
+             raise ValueError("Please set your API key in config2.yaml")
+         return v
++
++    @field_validator("timeout")
++    @classmethod
++    def check_timeout(cls, v):
++        return v or LLM_API_TIMEOUT
+diff --git a/metagpt/const.py b/metagpt/const.py
+index 6dbbfe0c17..e4cebfd96c 100644
+--- a/metagpt/const.py
++++ b/metagpt/const.py
+@@ -123,7 +123,6 @@ def get_metagpt_root():
+ 
+ # REDIS
+ REDIS_KEY = "REDIS_KEY"
+-LLM_API_TIMEOUT = 300
+ 
+ # Message id
+ IGNORED_MESSAGE_ID = "0"
+@@ -132,3 +131,7 @@ def get_metagpt_root():
+ GENERALIZATION = "Generalize"
+ COMPOSITION = "Composite"
+ AGGREGATION = "Aggregate"
++
++# Timeout
++USE_CONFIG_TIMEOUT = 0  # Using llm.timeout configuration.
++LLM_API_TIMEOUT = 300
+diff --git a/metagpt/provider/anthropic_api.py b/metagpt/provider/anthropic_api.py
+index 872f9b2c7f..1aeacbe83b 100644
+--- a/metagpt/provider/anthropic_api.py
++++ b/metagpt/provider/anthropic_api.py
+@@ -5,6 +5,7 @@
+ from anthropic.types import Message, Usage
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
+@@ -41,15 +42,15 @@ def _update_costs(self, usage: Usage, model: str = None, local_calc_usage: bool
+     def get_choice_text(self, resp: Message) -> str:
+         return resp.content[0].text
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout: int = 3) -> Message:
++    async def _achat_completion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> Message:
+         resp: Message = await self.aclient.messages.create(**self._const_kwargs(messages))
+         self._update_costs(resp.usage, self.model)
+         return resp
+ 
+-    async def acompletion(self, messages: list[dict], timeout: int = 3) -> Message:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> Message:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         stream = await self.aclient.messages.create(**self._const_kwargs(messages, stream=True))
+         collected_content = []
+         usage = Usage(input_tokens=0, output_tokens=0)
+diff --git a/metagpt/provider/base_llm.py b/metagpt/provider/base_llm.py
+index 601980d5ec..db2757ec33 100644
+--- a/metagpt/provider/base_llm.py
++++ b/metagpt/provider/base_llm.py
+@@ -23,6 +23,7 @@
+ )
+ 
+ from metagpt.configs.llm_config import LLMConfig
++from metagpt.const import LLM_API_TIMEOUT, USE_CONFIG_TIMEOUT
+ from metagpt.logs import logger
+ from metagpt.schema import Message
+ from metagpt.utils.common import log_and_reraise
+@@ -130,7 +131,7 @@ async def aask(
+         system_msgs: Optional[list[str]] = None,
+         format_msgs: Optional[list[dict[str, str]]] = None,
+         images: Optional[Union[str, list[str]]] = None,
+-        timeout=3,
++        timeout=USE_CONFIG_TIMEOUT,
+         stream=True,
+     ) -> str:
+         if system_msgs:
+@@ -146,31 +147,31 @@ async def aask(
+         else:
+             message.extend(msg)
+         logger.debug(message)
+-        rsp = await self.acompletion_text(message, stream=stream, timeout=timeout)
++        rsp = await self.acompletion_text(message, stream=stream, timeout=self.get_timeout(timeout))
+         return rsp
+ 
+     def _extract_assistant_rsp(self, context):
+         return "\n".join([i["content"] for i in context if i["role"] == "assistant"])
+ 
+-    async def aask_batch(self, msgs: list, timeout=3) -> str:
++    async def aask_batch(self, msgs: list, timeout=USE_CONFIG_TIMEOUT) -> str:
+         """Sequential questioning"""
+         context = []
+         for msg in msgs:
+             umsg = self._user_msg(msg)
+             context.append(umsg)
+-            rsp_text = await self.acompletion_text(context, timeout=timeout)
++            rsp_text = await self.acompletion_text(context, timeout=self.get_timeout(timeout))
+             context.append(self._assistant_msg(rsp_text))
+         return self._extract_assistant_rsp(context)
+ 
+-    async def aask_code(self, messages: Union[str, Message, list[dict]], timeout=3, **kwargs) -> dict:
++    async def aask_code(self, messages: Union[str, Message, list[dict]], timeout=USE_CONFIG_TIMEOUT, **kwargs) -> dict:
+         raise NotImplementedError
+ 
+     @abstractmethod
+-    async def _achat_completion(self, messages: list[dict], timeout=3):
++    async def _achat_completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         """_achat_completion implemented by inherited class"""
+ 
+     @abstractmethod
+-    async def acompletion(self, messages: list[dict], timeout=3):
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         """Asynchronous version of completion
+         All GPTAPIs are required to provide the standard OpenAI completion interface
+         [
+@@ -181,7 +182,7 @@ async def acompletion(self, messages: list[dict], timeout=3):
+         """
+ 
+     @abstractmethod
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         """_achat_completion_stream implemented by inherited class"""
+ 
+     @retry(
+@@ -191,11 +192,13 @@ async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3)
+         retry=retry_if_exception_type(ConnectionError),
+         retry_error_callback=log_and_reraise,
+     )
+-    async def acompletion_text(self, messages: list[dict], stream: bool = False, timeout: int = 3) -> str:
++    async def acompletion_text(
++        self, messages: list[dict], stream: bool = False, timeout: int = USE_CONFIG_TIMEOUT
++    ) -> str:
+         """Asynchronous version of completion. Return str. Support stream-print"""
+         if stream:
+-            return await self._achat_completion_stream(messages, timeout=timeout)
+-        resp = await self._achat_completion(messages, timeout=timeout)
++            return await self._achat_completion_stream(messages, timeout=self.get_timeout(timeout))
++        resp = await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+         return self.get_choice_text(resp)
+ 
+     def get_choice_text(self, rsp: dict) -> str:
+@@ -258,3 +261,6 @@ def with_model(self, model: str):
+         """Set model and return self. For example, `with_model("gpt-3.5-turbo")`."""
+         self.config.model = model
+         return self
++
++    def get_timeout(self, timeout: int) -> int:
++        return timeout or self.config.timeout or LLM_API_TIMEOUT
+diff --git a/metagpt/provider/dashscope_api.py b/metagpt/provider/dashscope_api.py
+index 21f3ef351d..82224e8939 100644
+--- a/metagpt/provider/dashscope_api.py
++++ b/metagpt/provider/dashscope_api.py
+@@ -25,6 +25,7 @@
+     UnsupportedApiProtocol,
+ )
+ 
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM, LLMConfig
+ from metagpt.provider.llm_provider_registry import LLMType, register_provider
+@@ -202,16 +203,16 @@ def completion(self, messages: list[dict]) -> GenerationOutput:
+         self._update_costs(dict(resp.usage))
+         return resp.output
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout: int = 3) -> GenerationOutput:
++    async def _achat_completion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> GenerationOutput:
+         resp: GenerationResponse = await self.aclient.acall(**self._const_kwargs(messages, stream=False))
+         self._check_response(resp)
+         self._update_costs(dict(resp.usage))
+         return resp.output
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3) -> GenerationOutput:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> GenerationOutput:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         resp = await self.aclient.acall(**self._const_kwargs(messages, stream=True))
+         collected_content = []
+         usage = {}
+diff --git a/metagpt/provider/general_api_base.py b/metagpt/provider/general_api_base.py
+index 1b91493966..8e5da8f161 100644
+--- a/metagpt/provider/general_api_base.py
++++ b/metagpt/provider/general_api_base.py
+@@ -573,7 +573,7 @@ async def arequest_raw(
+                 total=request_timeout[1],
+             )
+         else:
+-            timeout = aiohttp.ClientTimeout(total=request_timeout if request_timeout else TIMEOUT_SECS)
++            timeout = aiohttp.ClientTimeout(total=request_timeout or TIMEOUT_SECS)
+ 
+         if files:
+             # TODO: Use `aiohttp.MultipartWriter` to create the multipart form data here.
+diff --git a/metagpt/provider/google_gemini_api.py b/metagpt/provider/google_gemini_api.py
+index 76264a2a00..7a35f0a9de 100644
+--- a/metagpt/provider/google_gemini_api.py
++++ b/metagpt/provider/google_gemini_api.py
+@@ -16,6 +16,7 @@
+ )
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream, logger
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
+@@ -123,16 +124,18 @@ def completion(self, messages: list[dict]) -> "GenerateContentResponse":
+         self._update_costs(usage)
+         return resp
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout: int = 3) -> "AsyncGenerateContentResponse":
++    async def _achat_completion(
++        self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT
++    ) -> "AsyncGenerateContentResponse":
+         resp: AsyncGenerateContentResponse = await self.llm.generate_content_async(**self._const_kwargs(messages))
+         usage = await self.aget_usage(messages, resp.text)
+         self._update_costs(usage)
+         return resp
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3) -> dict:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> dict:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         resp: AsyncGenerateContentResponse = await self.llm.generate_content_async(
+             **self._const_kwargs(messages, stream=True)
+         )
+diff --git a/metagpt/provider/human_provider.py b/metagpt/provider/human_provider.py
+index e5f37c5b93..f205ecd1f4 100644
+--- a/metagpt/provider/human_provider.py
++++ b/metagpt/provider/human_provider.py
+@@ -6,6 +6,7 @@
+ from typing import Optional
+ 
+ from metagpt.configs.llm_config import LLMConfig
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import logger
+ from metagpt.provider.base_llm import BaseLLM
+ 
+@@ -18,7 +19,7 @@ class HumanProvider(BaseLLM):
+     def __init__(self, config: LLMConfig):
+         pass
+ 
+-    def ask(self, msg: str, timeout=3) -> str:
++    def ask(self, msg: str, timeout=USE_CONFIG_TIMEOUT) -> str:
+         logger.info("It's your turn, please type in your response. You may also refer to the context below")
+         rsp = input(msg)
+         if rsp in ["exit", "quit"]:
+@@ -31,20 +32,20 @@ async def aask(
+         system_msgs: Optional[list[str]] = None,
+         format_msgs: Optional[list[dict[str, str]]] = None,
+         generator: bool = False,
+-        timeout=3,
++        timeout=USE_CONFIG_TIMEOUT,
+     ) -> str:
+-        return self.ask(msg, timeout=timeout)
++        return self.ask(msg, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout=3):
++    async def _achat_completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         pass
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3):
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         """dummy implementation of abstract method in base"""
+         return []
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         pass
+ 
+-    async def acompletion_text(self, messages: list[dict], stream=False, timeout=3) -> str:
++    async def acompletion_text(self, messages: list[dict], stream=False, timeout=USE_CONFIG_TIMEOUT) -> str:
+         """dummy implementation of abstract method in base"""
+         return ""
+diff --git a/metagpt/provider/ollama_api.py b/metagpt/provider/ollama_api.py
+index f65d7e4117..2913eb1ddb 100644
+--- a/metagpt/provider/ollama_api.py
++++ b/metagpt/provider/ollama_api.py
+@@ -5,7 +5,7 @@
+ import json
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
+-from metagpt.const import LLM_API_TIMEOUT
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.general_api_requestor import GeneralAPIRequestor
+@@ -50,28 +50,28 @@ def _decode_and_load(self, chunk: bytes, encoding: str = "utf-8") -> dict:
+         chunk = chunk.decode(encoding)
+         return json.loads(chunk)
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout: int = 3) -> dict:
++    async def _achat_completion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> dict:
+         resp, _, _ = await self.client.arequest(
+             method=self.http_method,
+             url=self.suffix_url,
+             params=self._const_kwargs(messages),
+-            request_timeout=LLM_API_TIMEOUT,
++            request_timeout=self.get_timeout(timeout),
+         )
+         resp = self._decode_and_load(resp)
+         usage = self.get_usage(resp)
+         self._update_costs(usage)
+         return resp
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3) -> dict:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> dict:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         stream_resp, _, _ = await self.client.arequest(
+             method=self.http_method,
+             url=self.suffix_url,
+             stream=True,
+             params=self._const_kwargs(messages, stream=True),
+-            request_timeout=LLM_API_TIMEOUT,
++            request_timeout=self.get_timeout(timeout),
+         )
+ 
+         collected_content = []
+diff --git a/metagpt/provider/openai_api.py b/metagpt/provider/openai_api.py
+index 2fb64dc85c..dbfed72df2 100644
+--- a/metagpt/provider/openai_api.py
++++ b/metagpt/provider/openai_api.py
+@@ -25,6 +25,7 @@
+ )
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream, logger
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.constant import GENERAL_FUNCTION_SCHEMA
+@@ -74,9 +75,9 @@ def _get_proxy_params(self) -> dict:
+ 
+         return params
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout=3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> str:
+         response: AsyncStream[ChatCompletionChunk] = await self.aclient.chat.completions.create(
+-            **self._cons_kwargs(messages, timeout=timeout), stream=True
++            **self._cons_kwargs(messages, timeout=self.get_timeout(timeout)), stream=True
+         )
+         usage = None
+         collected_messages = []
+@@ -104,7 +105,7 @@ async def _achat_completion_stream(self, messages: list[dict], timeout=3) -> str
+         self._update_costs(usage)
+         return full_reply_content
+ 
+-    def _cons_kwargs(self, messages: list[dict], timeout=3, **extra_kwargs) -> dict:
++    def _cons_kwargs(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT, **extra_kwargs) -> dict:
+         kwargs = {
+             "messages": messages,
+             "max_tokens": self._get_max_tokens(messages),
+@@ -112,20 +113,20 @@ def _cons_kwargs(self, messages: list[dict], timeout=3, **extra_kwargs) -> dict:
+             # "stop": None,  # default it's None and gpt4-v can't have this one
+             "temperature": self.config.temperature,
+             "model": self.model,
+-            "timeout": max(self.config.timeout, timeout),
++            "timeout": self.get_timeout(timeout),
+         }
+         if extra_kwargs:
+             kwargs.update(extra_kwargs)
+         return kwargs
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout=3) -> ChatCompletion:
+-        kwargs = self._cons_kwargs(messages, timeout=timeout)
++    async def _achat_completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> ChatCompletion:
++        kwargs = self._cons_kwargs(messages, timeout=self.get_timeout(timeout))
+         rsp: ChatCompletion = await self.aclient.chat.completions.create(**kwargs)
+         self._update_costs(rsp.usage)
+         return rsp
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3) -> ChatCompletion:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> ChatCompletion:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+     @retry(
+         wait=wait_random_exponential(min=1, max=60),
+@@ -134,24 +135,24 @@ async def acompletion(self, messages: list[dict], timeout=3) -> ChatCompletion:
+         retry=retry_if_exception_type(APIConnectionError),
+         retry_error_callback=log_and_reraise,
+     )
+-    async def acompletion_text(self, messages: list[dict], stream=False, timeout=3) -> str:
++    async def acompletion_text(self, messages: list[dict], stream=False, timeout=USE_CONFIG_TIMEOUT) -> str:
+         """when streaming, print each token in place."""
+         if stream:
+             return await self._achat_completion_stream(messages, timeout=timeout)
+ 
+-        rsp = await self._achat_completion(messages, timeout=timeout)
++        rsp = await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+         return self.get_choice_text(rsp)
+ 
+     async def _achat_completion_function(
+-        self, messages: list[dict], timeout: int = 3, **chat_configs
++        self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT, **chat_configs
+     ) -> ChatCompletion:
+         messages = self.format_msg(messages)
+-        kwargs = self._cons_kwargs(messages=messages, timeout=timeout, **chat_configs)
++        kwargs = self._cons_kwargs(messages=messages, timeout=self.get_timeout(timeout), **chat_configs)
+         rsp: ChatCompletion = await self.aclient.chat.completions.create(**kwargs)
+         self._update_costs(rsp.usage)
+         return rsp
+ 
+-    async def aask_code(self, messages: list[dict], timeout: int = 3, **kwargs) -> dict:
++    async def aask_code(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT, **kwargs) -> dict:
+         """Use function of tools to ask a code.
+         Note: Keep kwargs consistent with https://platform.openai.com/docs/api-reference/chat/create
+ 
+diff --git a/metagpt/provider/qianfan_api.py b/metagpt/provider/qianfan_api.py
+index 50916fa3eb..3d78c8bfc9 100644
+--- a/metagpt/provider/qianfan_api.py
++++ b/metagpt/provider/qianfan_api.py
+@@ -9,6 +9,7 @@
+ from qianfan.resources.typing import JsonBody
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
+@@ -107,15 +108,15 @@ def completion(self, messages: list[dict]) -> JsonBody:
+         self._update_costs(resp.body.get("usage", {}))
+         return resp.body
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout: int = 3) -> JsonBody:
++    async def _achat_completion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> JsonBody:
+         resp = await self.aclient.ado(**self._const_kwargs(messages=messages, stream=False))
+         self._update_costs(resp.body.get("usage", {}))
+         return resp.body
+ 
+-    async def acompletion(self, messages: list[dict], timeout: int = 3) -> JsonBody:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> JsonBody:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         resp = await self.aclient.ado(**self._const_kwargs(messages=messages, stream=True))
+         collected_content = []
+         usage = {}
+diff --git a/metagpt/provider/spark_api.py b/metagpt/provider/spark_api.py
+index 882c6ce85a..5942672599 100644
+--- a/metagpt/provider/spark_api.py
++++ b/metagpt/provider/spark_api.py
+@@ -17,6 +17,7 @@
+ import websocket  # 使用websocket_client
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import logger
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
+@@ -31,19 +32,19 @@ def __init__(self, config: LLMConfig):
+     def get_choice_text(self, rsp: dict) -> str:
+         return rsp["payload"]["choices"]["text"][-1]["content"]
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout: int = 3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         pass
+ 
+-    async def acompletion_text(self, messages: list[dict], stream=False, timeout: int = 3) -> str:
++    async def acompletion_text(self, messages: list[dict], stream=False, timeout: int = USE_CONFIG_TIMEOUT) -> str:
+         # 不支持
+         # logger.warning("当前方法无法支持异步运行。当你使用acompletion时，并不能并行访问。")
+         w = GetMessageFromWeb(messages, self.config)
+         return w.run()
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout=3):
++    async def _achat_completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         pass
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3):
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT):
+         # 不支持异步
+         w = GetMessageFromWeb(messages, self.config)
+         return w.run()
+diff --git a/metagpt/provider/zhipuai_api.py b/metagpt/provider/zhipuai_api.py
+index 14ad1a36b3..2db4419918 100644
+--- a/metagpt/provider/zhipuai_api.py
++++ b/metagpt/provider/zhipuai_api.py
+@@ -8,6 +8,7 @@
+ from zhipuai.types.chat.chat_completion import Completion
+ 
+ from metagpt.configs.llm_config import LLMConfig, LLMType
++from metagpt.const import USE_CONFIG_TIMEOUT
+ from metagpt.logs import log_llm_stream
+ from metagpt.provider.base_llm import BaseLLM
+ from metagpt.provider.llm_provider_registry import register_provider
+@@ -45,22 +46,22 @@ def _const_kwargs(self, messages: list[dict], stream: bool = False) -> dict:
+         kwargs = {"model": self.model, "messages": messages, "stream": stream, "temperature": 0.3}
+         return kwargs
+ 
+-    def completion(self, messages: list[dict], timeout=3) -> dict:
++    def completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> dict:
+         resp: Completion = self.llm.chat.completions.create(**self._const_kwargs(messages))
+         usage = resp.usage.model_dump()
+         self._update_costs(usage)
+         return resp.model_dump()
+ 
+-    async def _achat_completion(self, messages: list[dict], timeout=3) -> dict:
++    async def _achat_completion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> dict:
+         resp = await self.llm.acreate(**self._const_kwargs(messages))
+         usage = resp.get("usage", {})
+         self._update_costs(usage)
+         return resp
+ 
+-    async def acompletion(self, messages: list[dict], timeout=3) -> dict:
+-        return await self._achat_completion(messages, timeout=timeout)
++    async def acompletion(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> dict:
++        return await self._achat_completion(messages, timeout=self.get_timeout(timeout))
+ 
+-    async def _achat_completion_stream(self, messages: list[dict], timeout=3) -> str:
++    async def _achat_completion_stream(self, messages: list[dict], timeout=USE_CONFIG_TIMEOUT) -> str:
+         response = await self.llm.acreate_stream(**self._const_kwargs(messages, stream=True))
+         collected_content = []
+         usage = {}
+diff --git a/requirements.txt b/requirements.txt
+index 83565278bc..6b23e47b66 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -34,7 +34,7 @@ PyYAML==6.0.1
+ # sentence_transformers==2.2.2
+ setuptools==65.6.3
+ tenacity==8.2.3
+-tiktoken==0.5.2
++tiktoken==0.6.0
+ tqdm==4.66.2
+ #unstructured[local-inference]
+ # selenium>4

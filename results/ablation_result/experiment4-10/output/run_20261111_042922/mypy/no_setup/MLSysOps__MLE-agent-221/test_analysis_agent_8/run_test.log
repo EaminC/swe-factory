@@ -1,0 +1,76 @@
+2026-11-11 05:35:37,710 - INFO - Checking if image mlsysops__mle-agent-221-dockerfile8:latest exists locally...
+2026-11-11 05:35:37,773 - INFO - Image mlsysops__mle-agent-221-dockerfile8:latest found locally.
+2026-11-11 05:35:37,773 - INFO - Creating container for mlsysops__mle-agent-221...
+2026-11-11 05:35:38,046 - INFO - Container for mlsysops__mle-agent-221 started: 522996b4009a571dc656b1f1db79850d556f897ff0a54bdc69560ca49dd859d1
+2026-11-11 05:35:38,046 - INFO - Intermediate patch for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_8/patch.diff, now applying to container...
+2026-11-11 05:35:38,372 - INFO - Apply patch success:
+Checking patch mle/utils/system.py...
+Applied patch mle/utils/system.py cleanly.
+
+2026-11-11 05:35:38,531 - INFO - Git diff before:
+diff --git a/mle/utils/system.py b/mle/utils/system.py
+index c7c94b7..bbaf8dd 100644
+--- a/mle/utils/system.py
++++ b/mle/utils/system.py
+@@ -89,15 +89,20 @@ def check_config(console: Optional[Console] = None):
+         os.makedirs(config_dir, exist_ok=True)
+         shutil.move(old_config_path, config_path)
+ 
+-    if not os.path.exists(config_path):
++    try:
++        with open(config_path, 'r') as file:
++            data = yaml.safe_load(file)
++            if data is None:
++                raise yaml.YAMLError
++    except FileNotFoundError:
+         console.log("Configuration file not found. Please run 'mle new' first.")
+         return False
++    except yaml.YAMLError:
++        console.log("Configuration file could not be loaded.")
++        return False
+ 
+-    with open(config_path, 'r') as file:
+-        data = yaml.safe_load(file)
+-        if data.get('search_key'):
+-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
+-
++    if data.get('search_key'):
++        os.environ["SEARCH_API_KEY"] = data.get('search_key')
+     return True
+2026-11-11 05:35:38,531 - INFO - Eval script for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_8/patch.diff, now applying to container...
+2026-11-11 05:35:43,285 - INFO - Test output for mlsysops__mle-agent-221 written to /root/swe-factory/output/run_20261111_042922/mypy/MLSysOps__MLE-agent-221/test_analysis_agent_8/test_output.txt
+2026-11-11 05:35:43,356 - INFO - Git diff after:
+diff --git a/mle/utils/system.py b/mle/utils/system.py
+index c7c94b7..bbaf8dd 100644
+--- a/mle/utils/system.py
++++ b/mle/utils/system.py
+@@ -89,15 +89,20 @@ def check_config(console: Optional[Console] = None):
+         os.makedirs(config_dir, exist_ok=True)
+         shutil.move(old_config_path, config_path)
+ 
+-    if not os.path.exists(config_path):
++    try:
++        with open(config_path, 'r') as file:
++            data = yaml.safe_load(file)
++            if data is None:
++                raise yaml.YAMLError
++    except FileNotFoundError:
+         console.log("Configuration file not found. Please run 'mle new' first.")
+         return False
++    except yaml.YAMLError:
++        console.log("Configuration file could not be loaded.")
++        return False
+ 
+-    with open(config_path, 'r') as file:
+-        data = yaml.safe_load(file)
+-        if data.get('search_key'):
+-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
+-
++    if data.get('search_key'):
++        os.environ["SEARCH_API_KEY"] = data.get('search_key')
+     return True
+2026-11-11 05:35:43,356 - INFO - Attempting to stop container mlsysops__mle-agent-221-test4...
+2026-11-11 05:35:58,629 - INFO - Attempting to remove container mlsysops__mle-agent-221-test4...
+2026-11-11 05:35:59,249 - INFO - Container mlsysops__mle-agent-221-test4 removed.
+2026-11-11 05:35:59,249 - INFO - Attempting to remove image mlsysops__mle-agent-221-dockerfile8:latest...
+2026-11-11 05:36:05,686 - INFO - Image mlsysops__mle-agent-221-dockerfile8:latest removed.

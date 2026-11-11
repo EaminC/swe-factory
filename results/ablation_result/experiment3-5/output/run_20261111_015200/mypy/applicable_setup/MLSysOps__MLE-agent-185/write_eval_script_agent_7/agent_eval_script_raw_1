@@ -1,0 +1,25 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5
+
+source /testbed/testbed-venv/bin/activate
+
+# Install pytest to satisfy test dependencies before running tests
+pip install --no-cache-dir pytest
+
+# Run unittest discovery on tests directory
+python -m unittest discover -s tests
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# No test files specific to reset
+</script>

@@ -1,0 +1,25 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Reapply patch after checkout to keep changes
+# This prevents overwriting the patch by the final checkout step
+git checkout 8109d8b905bb4aac4de6258516a966abaf2147f5
+
+source /testbed/testbed-venv/bin/activate
+
+# The test file tests/test_github_token.py is missing and test failures are related to missing or incorrect imports
+# No specific test commands or files to run; run unittest discover on the tests folder (which only contains __init__.py)
+python -m unittest discover -s tests
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# No test files to reset as none modified or created
+</script>

@@ -1,0 +1,20 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+git checkout f4d5eded95c65cfac06d78dea79dbe9459c4b9c0
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file using the given test command for specific test file
+uv run pytest python/valuecell/core/agent/tests/test_component_type_report.py --tb=short -rA
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any changes after test run
+git checkout f4d5eded95c65cfac06d78dea79dbe9459c4b9c0 python/valuecell/core/agent/tests/test_component_type_report.py

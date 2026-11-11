@@ -1,0 +1,22 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate testbed
+cd /testbed
+git checkout 0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the provided target test file
+# Use the known single test invocation from collected info
+pytest tests/test_timeout_config.py -v --tb=short
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset test file modifications after running tests
+git checkout 0958cc333ee13d1ce5216ae0bdeaa53b5eacc6ea tests/test_timeout_config.py
+</script>

@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout e7ed12bec5a45d9d6a365a10cde42c5acb214e65
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment provided by the Docker image
+source /opt/venv/bin/activate
+
+# Run only the specified test file using pytest with coverage, concise output, no header, and showing all outcomes
+pytest --no-header -rA --tb=short --cov=agentscope tests/exec_shell_test.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the repository to remove patch changes to keep clean state for further runs if any
+git checkout e7ed12bec5a45d9d6a365a10cde42c5acb214e65 tests/exec_shell_test.py

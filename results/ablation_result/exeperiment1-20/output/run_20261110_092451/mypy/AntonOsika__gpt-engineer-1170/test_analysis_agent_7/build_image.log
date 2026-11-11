@@ -1,0 +1,177 @@
+2026-11-10 11:16:02,159 - INFO - Building image antonosika__gpt-engineer-1170
+Using dockerfile:
+# Use python 3.10 bullseye image for better compatibility and avoid missing system binaries errors
+FROM python:3.10-bullseye
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Fix for deprecation or moved repositories by allowing release info changes and fixing missing packages
+RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+    && sed -i '/security.debian.org/d' /etc/apt/sources.list
+
+# Update and install essential system dependencies and tools (git, curl, build-essential)
+RUN apt-get update --allow-releaseinfo-change && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    locales \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Create necessary directory structure and set permissions for Poetry installation
+RUN mkdir -p /root/.local/share/pypoetry && \
+    chown -R root:root /root/.local
+
+# Download Poetry installation script separately and explicitly run it to better handle errors and layer snapshot issues
+RUN curl -sSL https://install.python-poetry.org -o install-poetry.py && \
+    python3 install-poetry.py --version 1.9.6 && \
+    rm install-poetry.py
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Verify poetry installation by printing version (fail early if install failed)
+RUN poetry --version
+
+# Clone the repository, checkout the given commit
+WORKDIR /testbed/
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    git reset --hard 3e589bf1356024fb471a9d17738e4626f21a953b
+
+# Configure Poetry to create virtual env inside project, install dependencies, then install package in editable mode
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-root --only main,dev
+
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install -e ."
+
+# Set default shell as bash
+SHELL ["/bin/bash", "-c"]
+
+# Default workdir
+WORKDIR /testbed/
+
+# Expose HOME environment to ensure Poetry and virtual env works smoothly
+ENV HOME=/root
+
+# Provide a bashrc line to activate poetry shell (virtual env) automatically for convenience during interactive use
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+2026-11-10 11:16:02,179 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:16:02,338 - INFO - Step 1/21 : FROM python:3.10-bullseye
+2026-11-10 11:16:02,530 - INFO -  ---> 65c6bdcca22d
+2026-11-10 11:16:02,530 - INFO - Step 2/21 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:16:06,955 - INFO -  ---> Running in e0bb6508a3e3
+2026-11-10 11:16:27,506 - INFO -  ---> Removed intermediate container e0bb6508a3e3
+2026-11-10 11:16:27,506 - INFO -  ---> 5328d8235517
+2026-11-10 11:16:27,506 - INFO - Step 3/21 : ENV TZ=Etc/UTC
+2026-11-10 11:16:40,986 - INFO -  ---> Running in af0f3569b096
+2026-11-10 11:16:59,956 - INFO -  ---> Removed intermediate container af0f3569b096
+2026-11-10 11:16:59,956 - INFO -  ---> 2ecdc762e629
+2026-11-10 11:16:59,956 - INFO - Step 4/21 : RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list     && sed -i '/security.debian.org/d' /etc/apt/sources.list
+2026-11-10 11:17:04,783 - INFO -  ---> Running in e3ecf4d2cff5
+2026-11-10 11:17:45,092 - INFO -  ---> Removed intermediate container e3ecf4d2cff5
+2026-11-10 11:17:45,093 - INFO -  ---> cdb2554c5707
+2026-11-10 11:17:45,093 - INFO - Step 5/21 : RUN apt-get update --allow-releaseinfo-change && apt-get install -y --no-install-recommends     git     curl     build-essential     locales     tzdata     bash     && rm -rf /var/lib/apt/lists/*
+2026-11-10 11:17:57,839 - INFO -  ---> Running in 985f1b151b55
+2026-11-10 11:18:01,190 - INFO - Get:1 http://archive.debian.org/debian bullseye InRelease [116 kB]
+2026-11-10 11:18:01,210 - INFO - Get:2 http://archive.debian.org/debian-security bullseye-security InRelease [27.1 kB]
+2026-11-10 11:18:01,212 - INFO - Get:3 http://archive.debian.org/debian bullseye-updates InRelease [44.0 kB]
+2026-11-10 11:18:02,133 - INFO - Get:4 http://archive.debian.org/debian bullseye/main amd64 Packages [8066 kB]
+2026-11-10 11:18:03,219 - INFO - Get:5 http://archive.debian.org/debian-security bullseye-security/main amd64 Packages [475 kB]
+2026-11-10 11:18:03,846 - INFO - Get:6 http://archive.debian.org/debian bullseye-updates/main amd64 Packages [18.8 kB]
+2026-11-10 11:18:08,909 - INFO - Fetched 8747 kB in 8s (1113 kB/s)
+2026-11-10 11:18:10,035 - INFO - Reading package lists...
+2026-11-10 11:18:10,907 - INFO - Reading package lists...
+2026-11-10 11:18:11,254 - INFO - Building dependency tree...
+2026-11-10 11:18:11,255 - INFO - Reading state information...
+2026-11-10 11:18:11,434 - INFO - bash is already the newest version (5.1-2+deb11u1).
+2026-11-10 11:18:11,435 - INFO - bash set to manually installed.
+2026-11-10 11:18:11,435 - INFO - The following additional packages will be installed:
+2026-11-10 11:18:11,435 - INFO -   libc-l10n libcurl4 libcurl4-openssl-dev
+2026-11-10 11:18:11,436 - INFO - Suggested packages:
+2026-11-10 11:18:11,436 - INFO -   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-el git-email
+2026-11-10 11:18:11,436 - INFO -   git-gui gitk gitweb git-cvs git-mediawiki git-svn libcurl4-doc libidn11-dev
+2026-11-10 11:18:11,436 - INFO -   libldap2-dev librtmp-dev libssh2-1-dev
+2026-11-10 11:18:11,436 - INFO - Recommended packages:
+2026-11-10 11:18:11,436 - INFO -   less
+2026-11-10 11:18:11,475 - INFO - The following NEW packages will be installed:
+2026-11-10 11:18:11,475 - INFO -   build-essential libc-l10n locales
+2026-11-10 11:18:11,479 - INFO - The following packages will be upgraded:
+2026-11-10 11:18:11,479 - INFO -   curl git libcurl4 libcurl4-openssl-dev tzdata
+2026-11-10 11:18:11,556 - INFO - 5 upgraded, 3 newly installed, 0 to remove and 98 not upgraded.
+2026-11-10 11:18:11,556 - INFO - Need to get 11.9 MB of archives.
+2026-11-10 11:18:11,556 - INFO - After this operation, 20.9 MB of additional disk space will be used.
+2026-11-10 11:18:11,556 - INFO - Get:1 http://archive.debian.org/debian-security bullseye-security/main amd64 tzdata all 2026b-0+deb11u1 [311 kB]
+2026-11-10 11:18:11,573 - INFO - Get:2 http://archive.debian.org/debian-security bullseye-security/main amd64 libc-l10n all 2.31-13+deb11u14 [865 kB]
+2026-11-10 11:18:11,586 - INFO - Get:3 http://archive.debian.org/debian-security bullseye-security/main amd64 locales all 2.31-13+deb11u14 [4087 kB]
+2026-11-10 11:18:11,658 - INFO - Get:4 http://archive.debian.org/debian bullseye/main amd64 build-essential amd64 12.9 [7704 B]
+2026-11-10 11:18:11,969 - INFO - Get:5 http://archive.debian.org/debian-security bullseye-security/main amd64 libcurl4-openssl-dev amd64 7.74.0-1.3+deb11u16 [438 kB]
+2026-11-10 11:18:12,527 - INFO - Get:6 http://archive.debian.org/debian-security bullseye-security/main amd64 curl amd64 7.74.0-1.3+deb11u16 [272 kB]
+2026-11-10 11:18:12,527 - INFO - Get:7 http://archive.debian.org/debian-security bullseye-security/main amd64 libcurl4 amd64 7.74.0-1.3+deb11u16 [347 kB]
+2026-11-10 11:18:12,529 - INFO - Get:8 http://archive.debian.org/debian-security bullseye-security/main amd64 git amd64 1:2.30.2-1+deb11u5 [5568 kB]
+2026-11-10 11:18:13,276 - INFO - debconf: delaying package configuration, since apt-utils is not installed
+2026-11-10 11:18:14,131 - INFO - Fetched 11.9 MB in 1s (10.8 MB/s)
+2026-11-10 11:18:15,483 - INFO - (Reading database ... 
+2026-11-10 11:18:15,513 - INFO - (Reading database ... 5%
+2026-11-10 11:18:15,513 - INFO - (Reading database ... 10%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 15%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 20%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 25%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 30%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 35%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 40%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 45%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 50%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 55%
+2026-11-10 11:18:15,514 - INFO - (Reading database ... 60%
+2026-11-10 11:18:15,519 - INFO - (Reading database ... 65%
+2026-11-10 11:18:15,534 - INFO - (Reading database ... 70%
+2026-11-10 11:18:15,555 - INFO - (Reading database ... 75%
+2026-11-10 11:18:15,572 - INFO - (Reading database ... 80%
+2026-11-10 11:18:15,612 - INFO - (Reading database ... 85%
+2026-11-10 11:18:15,612 - INFO - (Reading database ... 90%
+2026-11-10 11:18:15,622 - INFO - (Reading database ... 95%
+2026-11-10 11:18:15,639 - INFO - (Reading database ... 100%
+2026-11-10 11:18:15,639 - INFO - (Reading database ... 23433 files and directories currently installed.)
+2026-11-10 11:18:15,641 - INFO - Preparing to unpack .../0-tzdata_2026b-0+deb11u1_all.deb ...
+2026-11-10 11:18:16,091 - INFO - Unpacking tzdata (2026b-0+deb11u1) over (2025b-0+deb11u1) ...
+2026-11-10 11:22:28,957 - INFO - Selecting previously unselected package libc-l10n.
+2026-11-10 11:22:28,966 - INFO - Preparing to unpack .../1-libc-l10n_2.31-13+deb11u14_all.deb ...
+2026-11-10 11:22:29,566 - INFO - Unpacking libc-l10n (2.31-13+deb11u14) ...
+2026-11-10 11:22:35,567 - INFO - Selecting previously unselected package locales.
+2026-11-10 11:22:35,569 - INFO - Preparing to unpack .../2-locales_2.31-13+deb11u14_all.deb ...
+2026-11-10 11:22:36,300 - INFO - Unpacking locales (2.31-13+deb11u14) ...
+2026-11-10 11:22:40,847 - INFO - Selecting previously unselected package build-essential.
+2026-11-10 11:22:40,848 - INFO - Preparing to unpack .../3-build-essential_12.9_amd64.deb ...
+2026-11-10 11:22:41,461 - INFO - Unpacking build-essential (12.9) ...
+2026-11-10 11:22:43,053 - INFO - Preparing to unpack .../4-libcurl4-openssl-dev_7.74.0-1.3+deb11u16_amd64.deb ...
+2026-11-10 11:22:44,193 - INFO - Unpacking libcurl4-openssl-dev:amd64 (7.74.0-1.3+deb11u16) over (7.74.0-1.3+deb11u15) ...
+2026-11-10 11:22:51,330 - INFO - Preparing to unpack .../5-curl_7.74.0-1.3+deb11u16_amd64.deb ...
+2026-11-10 11:22:51,800 - INFO - Unpacking curl (7.74.0-1.3+deb11u16) over (7.74.0-1.3+deb11u15) ...
+2026-11-10 11:22:54,718 - INFO - Preparing to unpack .../6-libcurl4_7.74.0-1.3+deb11u16_amd64.deb ...
+2026-11-10 11:22:56,958 - INFO - Unpacking libcurl4:amd64 (7.74.0-1.3+deb11u16) over (7.74.0-1.3+deb11u15) ...
+2026-11-10 11:22:59,948 - INFO - Preparing to unpack .../7-git_1%3a2.30.2-1+deb11u5_amd64.deb ...
+2026-11-10 11:23:01,046 - INFO - Unpacking git (1:2.30.2-1+deb11u5) over (1:2.30.2-1+deb11u4) ...
+2026-11-10 11:25:15,158 - INFO - Setting up libc-l10n (2.31-13+deb11u14) ...
+2026-11-10 11:25:16,214 - INFO - Setting up locales (2.31-13+deb11u14) ...
+2026-11-10 11:25:18,524 - INFO - Generating locales (this might take a while)...
+2026-11-10 11:25:18,539 - INFO - Generation complete.
+2026-11-10 11:25:20,468 - INFO - Setting up tzdata (2026b-0+deb11u1) ...
+2026-11-10 11:25:22,210 - INFO - Current default time zone: 'Etc/UTC'
+2026-11-10 11:25:22,216 - INFO - Local time is now:      Tue Nov 10 11:25:22 UTC 2026.
+2026-11-10 11:25:22,216 - INFO - Universal Time is now:  Tue Nov 10 11:25:22 UTC 2026.
+2026-11-10 11:25:22,216 - INFO - Run 'dpkg-reconfigure tzdata' if you wish to change it.
+2026-11-10 11:25:23,970 - INFO - Setting up git (1:2.30.2-1+deb11u5) ...
+2026-11-10 11:25:25,439 - INFO - Setting up build-essential (12.9) ...
+2026-11-10 11:25:26,836 - INFO - Setting up libcurl4:amd64 (7.74.0-1.3+deb11u16) ...
+2026-11-10 11:25:28,488 - INFO - Setting up curl (7.74.0-1.3+deb11u16) ...
+2026-11-10 11:25:29,626 - INFO - Setting up libcurl4-openssl-dev:amd64 (7.74.0-1.3+deb11u16) ...
+2026-11-10 11:25:31,382 - INFO - Processing triggers for libc-bin (2.31-13+deb11u13) ...

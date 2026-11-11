@@ -1,0 +1,22 @@
+{
+    "task_id": "agentscope-ai__agentscope-517",
+    "setup_info": {
+        "repo_path": "testbed/agentscope-ai__agentscope-517_2026-11-11_06-32-50",
+        "repo_cache_path": "testbed/agentscope-ai/agentscope_cache"
+    },
+    "task_info": {
+        "repo": "agentscope-ai/agentscope",
+        "pull_number": 517,
+        "instance_id": "agentscope-ai__agentscope-517",
+        "issue_numbers": [
+            "513"
+        ],
+        "base_commit": "e616e52f444d01dbb249ea3d2e205cbd1c8fb848",
+        "patch": "diff --git a/src/agentscope/web/workstation/workflow_dag.py b/src/agentscope/web/workstation/workflow_dag.py\nindex d9ffe43f..09b872a4 100644\n--- a/src/agentscope/web/workstation/workflow_dag.py\n+++ b/src/agentscope/web/workstation/workflow_dag.py\n@@ -149,6 +149,7 @@ class ASDiGraph(nx.DiGraph):\n \n         # Combine header and body to form the full script\n         script = (\n+            \"# -*- coding: utf-8 -*-\\n\"\n             f\"{header}\\n\\n\\n{main_body}\\n\\nif __name__ == \"\n             f\"'__main__':\\n    main()\\n\"\n         )\n",
+        "test_patch": "diff --git a/tests/test_encoding_support.py b/tests/test_encoding_support.py\nnew file mode 100644\nindex 00000000..e69de29bb\n--- /dev/null\n+++ b/tests/test_encoding_support.py\n@@ -0,0 +1,28 @@\n+# -*- coding: utf-8 -*-\n+import subprocess\n+import sys\n+import tempfile\n+import os\n+\n+import pytest\n+\n+def test_utf8_encoding_declaration():\n+    # This test verifies that a script containing Chinese characters runs without SyntaxError\n+    script_content = '''\n+# -*- coding: utf-8 -*-\n+def main():\n+    prompt = '\u8fd9\u662f\u4e00\u4e2a\u6d4b\u8bd5'  # Chinese characters\n+    print(prompt)\n+\n+if __name__ == '__main__':\n+    main()\n+'''\n+    with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False, encoding='utf-8') as f:\n+        f.write(script_content)\n+        temp_path = f.name\n+    try:\n+        result = subprocess.run([sys.executable, temp_path], capture_output=True, text=True)\n+        assert result.returncode == 0\n+        assert '\u8fd9\u662f\u4e00\u4e2a\u6d4b\u8bd5' in result.stdout\n+    finally:\n+        os.remove(temp_path)\n",
+        "problem_statement": "[Bug]:Workstation does not support Chinese characters?\nWorkstation bug:\nWhen I fill in Chinese characters in the content of the message or the system prompt of the agent in the workflow, an error message appears:\n\nSyntaxError: Non-UTF-8 code starting with '\\xc4' in file C:\\Users\\Lenovo\\AppData\\Local\\Temp\\tmpw0lirvil.py on line 31, but no encoding declared; see https://peps.python.org/pep-0263/ for details\n\nIn fact, in the Grop Chat example, the system prompt of angents already contains a few Chinese characters - single quotation marks. I need to change them before it can start.",
+        "hints_text": "",
+        "created_at": "2025-01-10T04:34:41Z",
+        "version": "0.1"
+    }
+}

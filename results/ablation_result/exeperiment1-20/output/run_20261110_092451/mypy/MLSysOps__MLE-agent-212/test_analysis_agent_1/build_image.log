@@ -1,0 +1,116 @@
+2026-11-10 12:57:13,730 - INFO - Building image mlsysops__mle-agent-212
+Using dockerfile:
+# Use Ubuntu 20.04 as base image to match CI environment and ensure bash support
+FROM --platform=linux/x86_64 ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, python3.11, pip, build essentials and others required
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    git \
+    wget \
+    build-essential \
+    curl \
+    ca-certificates \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3.11-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 and pip3 alternatives to python3.11 and pip for python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+    && wget https://bootstrap.pypa.io/get-pip.py -O get-pip.py \
+    && python3 get-pip.py \
+    && rm get-pip.py
+
+# Create a python virtual environment named testbed and activate it
+RUN python3 -m venv /opt/testbed
+
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Upgrade pip inside venv and install necessary pinned dependencies plus the local package in editable mode
+# The pinned versions and other deps collected from the requirements information will be installed from requirements.txt in the repo after cloning
+# Therefore, install git now, clone repo next, then install dependencies inside venv
+
+# Set workdir before cloning repo
+WORKDIR /testbed/
+
+# Clone repository and checkout to the specified commit SHA (must be provided during docker build)
+ARG COMMIT_SHA=a405d8130cbb24e6556fb0125f634c3fb738eb2a
+RUN git clone https://github.com/MLSysOps/MLE-agent.git . \
+    && git reset --hard ${COMMIT_SHA} \
+    && git submodule update --init --recursive
+
+# Install/upgrade pip, then install requirements and the package itself in editable mode
+RUN pip install --upgrade pip wheel setuptools \
+    && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi \
+    && pip install mle-agent -U \
+    && pip install -e .
+
+# Fix permission to avoid potential permission issues
+RUN chmod -R a+rwx /testbed
+
+# Add conda-like activation to bashrc to ensure venv activation for interactive shells
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Set working directory to /testbed
+WORKDIR /testbed/
+
+2026-11-10 12:57:13,823 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:20.04
+2026-11-10 12:57:15,440 - INFO -  ---> 8feb4d8ca535
+2026-11-10 12:57:15,441 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 12:57:19,911 - INFO -  ---> Running in 00369603e286
+2026-11-10 12:58:36,546 - INFO -  ---> Removed intermediate container 00369603e286
+2026-11-10 12:58:36,548 - INFO -  ---> 7687ae275774
+2026-11-10 12:58:36,548 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-10 12:58:38,234 - INFO -  ---> Running in a9e4b81df1e4
+2026-11-10 12:58:58,454 - INFO -  ---> Removed intermediate container a9e4b81df1e4
+2026-11-10 12:58:58,455 - INFO -  ---> 0e72b62a193c
+2026-11-10 12:58:58,455 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-10 12:59:00,229 - INFO -  ---> Running in 1f70a320d9f8
+2026-11-10 12:59:13,213 - INFO -  ---> Removed intermediate container 1f70a320d9f8
+2026-11-10 12:59:13,216 - INFO -  ---> a151cacd0c7b
+2026-11-10 12:59:13,216 - INFO - Step 5/15 : RUN apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     python3.11     python3.11-venv     python3.11-distutils     python3.11-dev     && rm -rf /var/lib/apt/lists/*
+2026-11-10 12:59:14,502 - INFO -  ---> Running in a96b8ea3243a
+2026-11-10 12:59:16,491 - INFO - Get:1 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]
+2026-11-10 12:59:16,492 - INFO - Get:2 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+2026-11-10 12:59:17,370 - INFO - Get:3 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+2026-11-10 12:59:17,600 - INFO - Get:4 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+2026-11-10 12:59:17,937 - INFO - Get:5 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [1300 kB]
+2026-11-10 12:59:19,053 - INFO - Get:6 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [32.5 kB]
+2026-11-10 12:59:19,065 - INFO - Get:7 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [4368 kB]
+2026-11-10 12:59:20,003 - INFO - Get:8 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [4710 kB]
+2026-11-10 12:59:20,210 - INFO - Get:9 http://archive.ubuntu.com/ubuntu focal/main amd64 Packages [1275 kB]
+2026-11-10 12:59:21,790 - INFO - Get:10 http://archive.ubuntu.com/ubuntu focal/universe amd64 Packages [11.3 MB]
+2026-11-10 12:59:24,223 - INFO - Get:11 http://archive.ubuntu.com/ubuntu focal/multiverse amd64 Packages [177 kB]
+2026-11-10 12:59:24,458 - INFO - Get:12 http://archive.ubuntu.com/ubuntu focal/restricted amd64 Packages [33.4 kB]
+2026-11-10 12:59:24,692 - INFO - Get:13 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages [4850 kB]
+2026-11-10 12:59:25,795 - INFO - Get:14 http://archive.ubuntu.com/ubuntu focal-updates/restricted amd64 Packages [4904 kB]
+2026-11-10 12:59:26,591 - INFO - Get:15 http://archive.ubuntu.com/ubuntu focal-updates/universe amd64 Packages [1588 kB]
+2026-11-10 12:59:27,015 - INFO - Get:16 http://archive.ubuntu.com/ubuntu focal-updates/multiverse amd64 Packages [36.2 kB]
+2026-11-10 12:59:27,257 - INFO - Get:17 http://archive.ubuntu.com/ubuntu focal-backports/main amd64 Packages [54.7 kB]
+2026-11-10 12:59:27,503 - INFO - Get:18 http://archive.ubuntu.com/ubuntu focal-backports/universe amd64 Packages [28.4 kB]
+2026-11-10 12:59:40,978 - INFO - Fetched 35.3 MB in 25s (1419 kB/s)
+2026-11-10 12:59:47,621 - INFO - Reading package lists...
+2026-11-10 12:59:53,862 - INFO - Reading package lists...
+2026-11-10 12:59:55,728 - INFO - Building dependency tree...
+2026-11-10 12:59:55,728 - INFO - Reading state information...
+2026-11-10 12:59:58,391 - INFO - E: Unable to locate package python3.11
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by glob 'python3.11'
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by regex 'python3.11'
+2026-11-10 12:59:58,392 - INFO - E: Unable to locate package python3.11-venv
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by glob 'python3.11-venv'
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by regex 'python3.11-venv'
+2026-11-10 12:59:58,392 - INFO - E: Unable to locate package python3.11-distutils
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by glob 'python3.11-distutils'
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by regex 'python3.11-distutils'
+2026-11-10 12:59:58,392 - INFO - E: Unable to locate package python3.11-dev
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by glob 'python3.11-dev'
+2026-11-10 12:59:58,392 - INFO - E: Couldn't find any package by regex 'python3.11-dev'
+2026-11-10 13:00:06,213 - INFO -  ---> Removed intermediate container a96b8ea3243a
+2026-11-10 13:00:06,522 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     python3.11     python3.11-venv     python3.11-distutils     python3.11-dev     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 13:00:06,522 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     software-properties-common     git     wget     build-essential     curl     ca-certificates     python3.11     python3.11-venv     python3.11-distutils     python3.11-dev     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

@@ -1,0 +1,34 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 8b817541dac5128db2e47e55c920a289d02037a0
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+source /opt/testbed/bin/activate
+export PYTHONPATH=/testbed${PYTHONPATH:+:$PYTHONPATH}
+
+# The originally requested test file does not exist in the repo at this commit.
+# Without an existing test file, run the main unittest test suite if it exists.
+# As fallback, run "python -m unittest discover" from the tests directory if present.
+
+if [ -f examples/game_gomoku/tests/test_board_agent.py ]; then
+    # Run the specific patched test file using unittest module path syntax
+    python -m unittest examples.game_gomoku.tests.test_board_agent
+else
+    # Check if 'tests' folder exists and run discover there
+    if [ -d tests ]; then
+        python -m unittest discover -s tests -p "*.py"
+    else
+        echo "No specified test file or 'tests' directory found to run."
+    fi
+fi
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 8b817541dac5128db2e47e55c920a289d02037a0

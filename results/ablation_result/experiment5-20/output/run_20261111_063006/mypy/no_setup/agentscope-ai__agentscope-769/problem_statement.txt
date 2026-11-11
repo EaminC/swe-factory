@@ -1,0 +1,56 @@
+[Bug]:AsStudio Run Statistics dashboard missing token usage info with VLLM model
+**Describe the bug**
+
+<img width="1395" height="828" alt="Image" src="https://github.com/user-attachments/assets/58e0b55d-21f3-4159-b8ed-346dc3a9ebd2" />
+
+As the pic shown above, the token usage info is empty
+**To Reproduce**
+Steps to reproduce the behavior:
+
+```python
+import asyncio
+import agentscope
+from agentscope.agent import ReActAgent, UserAgent
+from agentscope.model import OpenAIChatModel
+from agentscope.formatter import OpenAIChatFormatter
+from agentscope.memory import InMemoryMemory
+from agentscope.tool import Toolkit, execute_python_code, execute_shell_command 
+
+
+agentscope.init(project="Agent", name="Friday", studio_url="http://localhost:3002")
+
+
+async def main():
+    toolkit = Toolkit()
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(execute_shell_command)
+
+    agent = ReActAgent(
+        name="Friday",
+        sys_prompt="You're a helpful assistant named Friday.",
+        model=OpenAIChatModel(
+            model_name="qwen3-coder-30b-a3b-instruct",
+            api_key="<VLLM_API_KEY>",
+            stream=True,
+            client_args={"base_url": "<VLLM_API_BASE_URL>"}
+        ),
+        formatter=OpenAIChatFormatter(),
+        memory=InMemoryMemory(),
+        toolkit=toolkit,
+    )
+
+    user = UserAgent(name="user")
+
+    msg = None
+    while True:
+        msg = await agent(msg)
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+
+
+asyncio.run(main())
+```
+
+**Expected behavior**
+AsStudio shows the token usage info.

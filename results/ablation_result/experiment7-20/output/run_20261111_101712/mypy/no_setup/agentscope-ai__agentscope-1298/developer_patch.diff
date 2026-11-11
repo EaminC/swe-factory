@@ -1,0 +1,25 @@
+diff --git a/src/agentscope/hooks/_studio_hooks.py b/src/agentscope/hooks/_studio_hooks.py
+index 4687670318..5104b01b95 100644
+--- a/src/agentscope/hooks/_studio_hooks.py
++++ b/src/agentscope/hooks/_studio_hooks.py
+@@ -6,6 +6,7 @@
+ import shortuuid
+ 
+ from ..agent import AgentBase, UserAgent
++from .._logging import logger
+ 
+ 
+ def as_studio_forward_message_pre_print_hook(
+@@ -50,4 +51,11 @@ def as_studio_forward_message_pre_print_hook(
+                 n_retry += 1
+                 continue
+ 
+-            raise e from None
++            # Graceful degradation: log warning and return to avoid crashing
++            logger.warning(
++                "Failed to forward message to Studio after %d retries: %s. "
++                "Agent will continue without Studio forwarding.",
++                n_retry,
++                e,
++            )
++            return

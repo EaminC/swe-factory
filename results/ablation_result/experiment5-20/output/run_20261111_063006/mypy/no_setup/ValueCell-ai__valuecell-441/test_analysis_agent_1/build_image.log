@@ -1,0 +1,116 @@
+2026-11-11 06:34:09,553 - INFO - Building image valuecell-ai__valuecell-441
+Using dockerfile:
+# Use Ubuntu 22.04 as the base image for bash compatibility and stability
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies, including git, curl, wget, and build tools
+RUN apt update && apt install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    python3.12 \
+    python3.12-venv \
+    python3.12-distutils \
+    python3-pip \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv package manager (backend) - install via Python pip as per https://docs.astral.sh/uv/
+RUN python3.12 -m pip install --upgrade pip setuptools wheel \
+    && python3.12 -m pip install uv
+
+# Install bun (frontend package manager) - install via official bun install script
+RUN curl -fsSL https://bun.sh/install | bash \
+    && mv /root/.bun/bin/bun /usr/local/bin/bun
+
+# Set locale and timezone
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
+# Clone the target repo and checkout the specific commit, then set up the environment
+WORKDIR /testbed/
+RUN git clone https://github.com/ValueCell-ai/valuecell.git /testbed \
+    && git checkout a1ee111f912c54fb0678b608b98c47f5f8d17942 \
+    && chmod -R 777 /testbed
+
+# Backend dependencies installation using uv package manager in the python folder with extra dev
+RUN cd python \
+    # Copy .env.example to .env as required for env config step (no editing here, done externally)
+    && cp .env.example .env \
+    # Sync dependencies with uv including dev extras as recommended
+    && uv sync --extra dev
+
+# Install the backend python package itself in editable mode including dev extras (alternative to uv sync)
+RUN cd python && uv pip install --editable ".[dev]"
+
+# Frontend dependencies installation using bun in the frontend directory
+RUN cd frontend && bun install
+
+# Expose environment variables related to python path and bun (optional for convenience)
+ENV PATH="/root/.bun/bin:$PATH"
+
+# The container is now ready with python 3.12+, uv, bun, all repo dependencies installed, with code checked out at the specified commit.
+# Test execution will be handled outside of the Dockerfile.
+
+# Set default working directory
+WORKDIR /testbed/
+
+2026-11-11 06:34:09,581 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 06:34:09,746 - INFO -  ---> 076e7bf82319
+2026-11-11 06:34:09,747 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 06:34:10,155 - INFO -  ---> Running in 6fb57eb3f9da
+2026-11-11 06:34:12,066 - INFO -  ---> Removed intermediate container 6fb57eb3f9da
+2026-11-11 06:34:12,066 - INFO -  ---> 451ea09a25e3
+2026-11-11 06:34:12,067 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-11 06:34:12,286 - INFO -  ---> Running in 3b4b29e4b2c4
+2026-11-11 06:34:14,427 - INFO -  ---> Removed intermediate container 3b4b29e4b2c4
+2026-11-11 06:34:14,427 - INFO -  ---> fac68ac1161c
+2026-11-11 06:34:14,428 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-11 06:34:14,645 - INFO -  ---> Running in 8de9c2232a53
+2026-11-11 06:34:16,545 - INFO -  ---> Removed intermediate container 8de9c2232a53
+2026-11-11 06:34:16,547 - INFO -  ---> 16a7933ec522
+2026-11-11 06:34:16,547 - INFO - Step 5/15 : RUN apt update && apt install -y     git     curl     wget     build-essential     ca-certificates     python3.12     python3.12-venv     python3.12-distutils     python3-pip     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-11 06:34:16,706 - INFO -  ---> Running in 94b38b080745
+2026-11-11 06:34:17,490 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-11 06:34:17,919 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 06:34:17,977 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 06:34:19,044 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 06:34:19,310 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 06:34:19,353 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 06:34:20,199 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 06:34:20,704 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 06:34:20,731 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 06:34:20,913 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 06:34:21,323 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 06:34:21,932 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 06:34:23,009 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 06:34:23,231 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 06:34:24,135 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 06:34:24,291 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 06:34:24,306 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 06:34:24,742 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 06:34:24,752 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 06:34:32,580 - INFO - Fetched 49.4 MB in 15s (3301 kB/s)
+2026-11-11 06:34:43,020 - INFO - Reading package lists...
+2026-11-11 06:34:46,269 - INFO - Building dependency tree...
+2026-11-11 06:34:46,269 - INFO - Reading state information...
+2026-11-11 06:34:46,549 - INFO - 4 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2026-11-11 06:34:46,602 - INFO - WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2026-11-11 06:34:56,539 - INFO - Reading package lists...
+2026-11-11 06:34:59,586 - INFO - Building dependency tree...
+2026-11-11 06:34:59,594 - INFO - Reading state information...
+2026-11-11 06:35:00,999 - INFO - E: Unable to locate package python3.12
+2026-11-11 06:35:01,000 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-11-11 06:35:01,000 - INFO - E: Unable to locate package python3.12-venv
+2026-11-11 06:35:01,000 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-11-11 06:35:01,001 - INFO - E: Unable to locate package python3.12-distutils
+2026-11-11 06:35:01,001 - INFO - E: Couldn't find any package by glob 'python3.12-distutils'
+2026-11-11 06:35:03,414 - INFO -  ---> Removed intermediate container 94b38b080745
+2026-11-11 06:35:03,535 - ERROR - Error: The command '/bin/bash -c apt update && apt install -y     git     curl     wget     build-essential     ca-certificates     python3.12     python3.12-venv     python3.12-distutils     python3-pip     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 06:35:03,535 - ERROR - The command '/bin/bash -c apt update && apt install -y     git     curl     wget     build-essential     ca-certificates     python3.12     python3.12-venv     python3.12-distutils     python3-pip     locales     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

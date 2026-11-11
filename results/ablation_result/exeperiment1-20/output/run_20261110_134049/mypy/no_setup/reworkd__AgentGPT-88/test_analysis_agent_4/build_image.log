@@ -1,0 +1,66 @@
+2026-11-10 16:00:08,603 - INFO - Building image reworkd__agentgpt-88
+Using dockerfile:
+# Use Ubuntu 22.04 as base image with Bash shell available
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies: git, curl, nodejs, npm and other utilities
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    ca-certificates \
+    build-essential \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locales and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install Node.js v18.x and npm (recommended version >=18)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    node -v && npm -v
+
+# Create /testbed directory and set working directory
+WORKDIR /testbed/
+
+# Clone the repository, checkout the specific commit SHA, and install dependencies
+ARG REPO=https://github.com/reworkd/AgentGPT.git
+ARG COMMIT_SHA=9bae29c0727b7af51e0715ba6c20b00f7adefe33
+
+RUN git clone $REPO /testbed && \
+    cd /testbed && \
+    git reset --hard $COMMIT_SHA && \
+    # Install npm dependencies
+    npm install
+
+# Note: .env file needs to be created externally as per README instructions.  
+# This Dockerfile does not create or set secrets or environment variables such as NODE_ENV, NEXTAUTH_SECRET, etc.
+
+# Set default shell environment to bash for runtime
+ENV SHELL=/bin/bash
+
+# Leaving container ready for test execution externally
+
+2026-11-10 16:00:08,689 - INFO - Do not find previous image, images list is clean.
+2026-11-10 16:00:08,751 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 16:00:09,033 - INFO -  ---> 076e7bf82319
+2026-11-10 16:00:09,037 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 16:00:10,315 - INFO -  ---> Running in d6fbeac4ed8a
+2026-11-10 16:00:18,190 - INFO -  ---> Removed intermediate container d6fbeac4ed8a
+2026-11-10 16:00:18,190 - INFO -  ---> 57f56b9c9993
+2026-11-10 16:00:18,190 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-10 16:00:20,295 - INFO -  ---> Running in 0ee62783d5b3
+2026-11-10 16:00:27,980 - INFO -  ---> Removed intermediate container 0ee62783d5b3
+2026-11-10 16:00:27,981 - INFO -  ---> 07490e5fed6a
+2026-11-10 16:00:27,981 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-10 16:00:29,569 - INFO -  ---> Running in a45c8b56a9a8
+2026-11-10 16:00:33,061 - INFO -  ---> Removed intermediate container a45c8b56a9a8
+2026-11-10 16:00:33,088 - ERROR - Error: failed to export layer: CreateDiff: NotFound: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount3692353268: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount2913376423: failed to commit: lease does not exist: not found
+2026-11-10 16:00:33,089 - ERROR - failed to export layer: CreateDiff: NotFound: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount3692353268: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount2913376423: failed to commit: lease does not exist: not found

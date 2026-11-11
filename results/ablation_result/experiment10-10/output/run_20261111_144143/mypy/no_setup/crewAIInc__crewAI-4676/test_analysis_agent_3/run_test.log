@@ -1,0 +1,394 @@
+2026-11-11 15:54:46,857 - INFO - Checking if image crewaiinc__crewai-4676-dockerfile3:latest exists locally...
+2026-11-11 15:54:46,957 - INFO - Image crewaiinc__crewai-4676-dockerfile3:latest found locally.
+2026-11-11 15:54:46,957 - INFO - Creating container for crewaiinc__crewai-4676...
+2026-11-11 15:54:47,462 - INFO - Container for crewaiinc__crewai-4676 started: 1538fda6f869cb573d6c84b62dbdfeda90b5a04e491607cb44c9a2d688070d7f
+2026-11-11 15:54:47,462 - INFO - Intermediate patch for crewaiinc__crewai-4676 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4676/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 15:54:47,933 - INFO - Apply patch success:
+Checking patch lib/crewai/src/crewai/events/types/llm_events.py...
+Checking patch lib/crewai/src/crewai/llms/base_llm.py...
+Checking patch lib/crewai/src/crewai/llms/providers/gemini/completion.py...
+Applied patch lib/crewai/src/crewai/events/types/llm_events.py cleanly.
+Applied patch lib/crewai/src/crewai/llms/base_llm.py cleanly.
+Applied patch lib/crewai/src/crewai/llms/providers/gemini/completion.py cleanly.
+
+2026-11-11 15:54:52,241 - INFO - Git diff before:
+diff --git a/lib/crewai/src/crewai/events/types/llm_events.py b/lib/crewai/src/crewai/events/types/llm_events.py
+index 87087f100..73d743804 100644
+--- a/lib/crewai/src/crewai/events/types/llm_events.py
++++ b/lib/crewai/src/crewai/events/types/llm_events.py
+@@ -86,3 +86,11 @@ class LLMStreamChunkEvent(LLMEventBase):
+     tool_call: ToolCall | None = None
+     call_type: LLMCallType | None = None
+     response_id: str | None = None
++
++
++class LLMThinkingChunkEvent(LLMEventBase):
++    """Event emitted when a thinking/reasoning chunk is received from a thinking model"""
++
++    type: str = "llm_thinking_chunk"
++    chunk: str
++    response_id: str | None = None
+diff --git a/lib/crewai/src/crewai/llms/base_llm.py b/lib/crewai/src/crewai/llms/base_llm.py
+index dcb261fd7..1ab710706 100644
+--- a/lib/crewai/src/crewai/llms/base_llm.py
++++ b/lib/crewai/src/crewai/llms/base_llm.py
+@@ -26,6 +26,7 @@ from crewai.events.types.llm_events import (
+     LLMCallStartedEvent,
+     LLMCallType,
+     LLMStreamChunkEvent,
++    LLMThinkingChunkEvent,
+ )
+ from crewai.events.types.tool_usage_events import (
+     ToolUsageErrorEvent,
+@@ -368,9 +369,6 @@ class BaseLLM(ABC):
+         """Emit LLM call started event."""
+         from crewai.utilities.serialization import to_serializable
+ 
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMCallStartedEvent(
+@@ -416,9 +414,6 @@ class BaseLLM(ABC):
+         from_agent: Agent | None = None,
+     ) -> None:
+         """Emit LLM call failed event."""
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMCallFailedEvent(
+@@ -449,9 +444,6 @@ class BaseLLM(ABC):
+             call_type: The type of LLM call (LLM_CALL or TOOL_CALL).
+             response_id: Unique ID for a particular LLM response, chunks have same response_id.
+         """
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMStreamChunkEvent(
+@@ -465,6 +457,32 @@ class BaseLLM(ABC):
+             ),
+         )
+ 
++    def _emit_thinking_chunk_event(
++        self,
++        chunk: str,
++        from_task: Task | None = None,
++        from_agent: Agent | None = None,
++        response_id: str | None = None,
++    ) -> None:
++        """Emit thinking/reasoning chunk event from a thinking model.
++
++        Args:
++            chunk: The thinking text content.
++            from_task: The task that initiated the call.
++            from_agent: The agent that initiated the call.
++            response_id: Unique ID for a particular LLM response.
++        """
++        crewai_event_bus.emit(
++            self,
++            event=LLMThinkingChunkEvent(
++                chunk=chunk,
++                from_task=from_task,
++                from_agent=from_agent,
++                response_id=response_id,
++                call_id=get_current_call_id(),
++            ),
++        )
++
+     def _handle_tool_execution(
+         self,
+         function_name: str,
+diff --git a/lib/crewai/src/crewai/llms/providers/gemini/completion.py b/lib/crewai/src/crewai/llms/providers/gemini/completion.py
+index bd634c8dc..d854c150d 100644
+--- a/lib/crewai/src/crewai/llms/providers/gemini/completion.py
++++ b/lib/crewai/src/crewai/llms/providers/gemini/completion.py
+@@ -61,6 +61,7 @@ class GeminiCompletion(BaseLLM):
+         interceptor: BaseInterceptor[Any, Any] | None = None,
+         use_vertexai: bool | None = None,
+         response_format: type[BaseModel] | None = None,
++        thinking_config: types.ThinkingConfig | None = None,
+         **kwargs: Any,
+     ):
+         """Initialize Google Gemini chat completion client.
+@@ -93,6 +94,10 @@ class GeminiCompletion(BaseLLM):
+                          api_version="v1" is automatically configured.
+             response_format: Pydantic model for structured output. Used as default when
+                            response_model is not passed to call()/acall() methods.
++            thinking_config: ThinkingConfig for thinking models (gemini-2.5+, gemini-3+).
++                           Controls thought output via include_thoughts, thinking_budget,
++                           and thinking_level. When None, thinking models automatically
++                           get include_thoughts=True so thought content is surfaced.
+             **kwargs: Additional parameters
+         """
+         if interceptor is not None:
+@@ -139,6 +144,14 @@ class GeminiCompletion(BaseLLM):
+             version_match and float(version_match.group(1)) >= 2.0
+         )
+ 
++        self.thinking_config = thinking_config
++        if (
++            self.thinking_config is None
++            and version_match
++            and float(version_match.group(1)) >= 2.5
++        ):
++            self.thinking_config = types.ThinkingConfig(include_thoughts=True)
++
+     @property
+     def stop(self) -> list[str]:
+         """Get stop sequences sent to the API."""
+@@ -520,6 +533,9 @@ class GeminiCompletion(BaseLLM):
+         if self.safety_settings:
+             config_params["safety_settings"] = self.safety_settings
+ 
++        if self.thinking_config is not None:
++            config_params["thinking_config"] = self.thinking_config
++
+         return types.GenerateContentConfig(**config_params)
+ 
+     def _convert_tools_for_interference(  # type: ignore[override]
+@@ -931,15 +947,6 @@ class GeminiCompletion(BaseLLM):
+         if chunk.usage_metadata:
+             usage_data = self._extract_token_usage(chunk)
+ 
+-        if chunk.text:
+-            full_response += chunk.text
+-            self._emit_stream_chunk_event(
+-                chunk=chunk.text,
+-                from_task=from_task,
+-                from_agent=from_agent,
+-                response_id=response_id,
+-            )
+-
+         if chunk.candidates:
+             candidate = chunk.candidates[0]
+             if candidate.content and candidate.content.parts:
+@@ -976,6 +983,21 @@ class GeminiCompletion(BaseLLM):
+                             call_type=LLMCallType.TOOL_CALL,
+                             response_id=response_id,
+                         )
++                    elif part.thought and part.text:
++                        self._emit_thinking_chunk_event(
++                            chunk=part.text,
++                            from_task=from_task,
++                            from_agent=from_agent,
++                            response_id=response_id,
++                        )
++                    elif part.text:
++                        full_response += part.text
++                        self._emit_stream_chunk_event(
++                            chunk=part.text,
++                            from_task=from_task,
++                            from_agent=from_agent,
++                            response_id=response_id,
++                        )
+ 
+         return full_response, function_calls, usage_data
+ 
+@@ -1329,7 +1351,7 @@ class GeminiCompletion(BaseLLM):
+         text_parts = [
+             part.text
+             for part in candidate.content.parts
+-            if hasattr(part, "text") and part.text
++            if part.text and not part.thought
+         ]
+ 
+         return "".join(text_parts)
+2026-11-11 15:54:52,241 - INFO - Eval script for crewaiinc__crewai-4676 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4676/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 15:55:01,959 - INFO - Test output for crewaiinc__crewai-4676 written to /root/swe-factory/output/run_20261111_144143/mypy/crewAIInc__crewAI-4676/test_analysis_agent_3/test_output.txt
+2026-11-11 15:55:02,172 - INFO - Git diff after:
+diff --git a/lib/crewai/src/crewai/events/types/llm_events.py b/lib/crewai/src/crewai/events/types/llm_events.py
+index 87087f100..73d743804 100644
+--- a/lib/crewai/src/crewai/events/types/llm_events.py
++++ b/lib/crewai/src/crewai/events/types/llm_events.py
+@@ -86,3 +86,11 @@ class LLMStreamChunkEvent(LLMEventBase):
+     tool_call: ToolCall | None = None
+     call_type: LLMCallType | None = None
+     response_id: str | None = None
++
++
++class LLMThinkingChunkEvent(LLMEventBase):
++    """Event emitted when a thinking/reasoning chunk is received from a thinking model"""
++
++    type: str = "llm_thinking_chunk"
++    chunk: str
++    response_id: str | None = None
+diff --git a/lib/crewai/src/crewai/llms/base_llm.py b/lib/crewai/src/crewai/llms/base_llm.py
+index dcb261fd7..1ab710706 100644
+--- a/lib/crewai/src/crewai/llms/base_llm.py
++++ b/lib/crewai/src/crewai/llms/base_llm.py
+@@ -26,6 +26,7 @@ from crewai.events.types.llm_events import (
+     LLMCallStartedEvent,
+     LLMCallType,
+     LLMStreamChunkEvent,
++    LLMThinkingChunkEvent,
+ )
+ from crewai.events.types.tool_usage_events import (
+     ToolUsageErrorEvent,
+@@ -368,9 +369,6 @@ class BaseLLM(ABC):
+         """Emit LLM call started event."""
+         from crewai.utilities.serialization import to_serializable
+ 
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMCallStartedEvent(
+@@ -416,9 +414,6 @@ class BaseLLM(ABC):
+         from_agent: Agent | None = None,
+     ) -> None:
+         """Emit LLM call failed event."""
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMCallFailedEvent(
+@@ -449,9 +444,6 @@ class BaseLLM(ABC):
+             call_type: The type of LLM call (LLM_CALL or TOOL_CALL).
+             response_id: Unique ID for a particular LLM response, chunks have same response_id.
+         """
+-        if not hasattr(crewai_event_bus, "emit"):
+-            raise ValueError("crewai_event_bus does not have an emit method") from None
+-
+         crewai_event_bus.emit(
+             self,
+             event=LLMStreamChunkEvent(
+@@ -465,6 +457,32 @@ class BaseLLM(ABC):
+             ),
+         )
+ 
++    def _emit_thinking_chunk_event(
++        self,
++        chunk: str,
++        from_task: Task | None = None,
++        from_agent: Agent | None = None,
++        response_id: str | None = None,
++    ) -> None:
++        """Emit thinking/reasoning chunk event from a thinking model.
++
++        Args:
++            chunk: The thinking text content.
++            from_task: The task that initiated the call.
++            from_agent: The agent that initiated the call.
++            response_id: Unique ID for a particular LLM response.
++        """
++        crewai_event_bus.emit(
++            self,
++            event=LLMThinkingChunkEvent(
++                chunk=chunk,
++                from_task=from_task,
++                from_agent=from_agent,
++                response_id=response_id,
++                call_id=get_current_call_id(),
++            ),
++        )
++
+     def _handle_tool_execution(
+         self,
+         function_name: str,
+diff --git a/lib/crewai/src/crewai/llms/providers/gemini/completion.py b/lib/crewai/src/crewai/llms/providers/gemini/completion.py
+index bd634c8dc..d854c150d 100644
+--- a/lib/crewai/src/crewai/llms/providers/gemini/completion.py
++++ b/lib/crewai/src/crewai/llms/providers/gemini/completion.py
+@@ -61,6 +61,7 @@ class GeminiCompletion(BaseLLM):
+         interceptor: BaseInterceptor[Any, Any] | None = None,
+         use_vertexai: bool | None = None,
+         response_format: type[BaseModel] | None = None,
++        thinking_config: types.ThinkingConfig | None = None,
+         **kwargs: Any,
+     ):
+         """Initialize Google Gemini chat completion client.
+@@ -93,6 +94,10 @@ class GeminiCompletion(BaseLLM):
+                          api_version="v1" is automatically configured.
+             response_format: Pydantic model for structured output. Used as default when
+                            response_model is not passed to call()/acall() methods.
++            thinking_config: ThinkingConfig for thinking models (gemini-2.5+, gemini-3+).
++                           Controls thought output via include_thoughts, thinking_budget,
++                           and thinking_level. When None, thinking models automatically
++                           get include_thoughts=True so thought content is surfaced.
+             **kwargs: Additional parameters
+         """
+         if interceptor is not None:
+@@ -139,6 +144,14 @@ class GeminiCompletion(BaseLLM):
+             version_match and float(version_match.group(1)) >= 2.0
+         )
+ 
++        self.thinking_config = thinking_config
++        if (
++            self.thinking_config is None
++            and version_match
++            and float(version_match.group(1)) >= 2.5
++        ):
++            self.thinking_config = types.ThinkingConfig(include_thoughts=True)
++
+     @property
+     def stop(self) -> list[str]:
+         """Get stop sequences sent to the API."""
+@@ -520,6 +533,9 @@ class GeminiCompletion(BaseLLM):
+         if self.safety_settings:
+             config_params["safety_settings"] = self.safety_settings
+ 
++        if self.thinking_config is not None:
++            config_params["thinking_config"] = self.thinking_config
++
+         return types.GenerateContentConfig(**config_params)
+ 
+     def _convert_tools_for_interference(  # type: ignore[override]
+@@ -931,15 +947,6 @@ class GeminiCompletion(BaseLLM):
+         if chunk.usage_metadata:
+             usage_data = self._extract_token_usage(chunk)
+ 
+-        if chunk.text:
+-            full_response += chunk.text
+-            self._emit_stream_chunk_event(
+-                chunk=chunk.text,
+-                from_task=from_task,
+-                from_agent=from_agent,
+-                response_id=response_id,
+-            )
+-
+         if chunk.candidates:
+             candidate = chunk.candidates[0]
+             if candidate.content and candidate.content.parts:
+@@ -976,6 +983,21 @@ class GeminiCompletion(BaseLLM):
+                             call_type=LLMCallType.TOOL_CALL,
+                             response_id=response_id,
+                         )
++                    elif part.thought and part.text:
++                        self._emit_thinking_chunk_event(
++                            chunk=part.text,
++                            from_task=from_task,
++                            from_agent=from_agent,
++                            response_id=response_id,
++                        )
++                    elif part.text:
++                        full_response += part.text
++                        self._emit_stream_chunk_event(
++                            chunk=part.text,
++                            from_task=from_task,
++                            from_agent=from_agent,
++                            response_id=response_id,
++                        )
+ 
+         return full_response, function_calls, usage_data
+ 
+@@ -1329,7 +1351,7 @@ class GeminiCompletion(BaseLLM):
+         text_parts = [
+             part.text
+             for part in candidate.content.parts
+-            if hasattr(part, "text") and part.text
++            if part.text and not part.thought
+         ]
+ 
+         return "".join(text_parts)
+2026-11-11 15:55:02,172 - INFO - Attempting to stop container crewaiinc__crewai-4676-test3...
+2026-11-11 15:55:17,578 - INFO - Attempting to remove container crewaiinc__crewai-4676-test3...
+2026-11-11 15:55:17,950 - INFO - Container crewaiinc__crewai-4676-test3 removed.
+2026-11-11 15:55:17,950 - INFO - Attempting to remove image crewaiinc__crewai-4676-dockerfile3:latest...
+2026-11-11 15:55:26,677 - INFO - Image crewaiinc__crewai-4676-dockerfile3:latest removed.

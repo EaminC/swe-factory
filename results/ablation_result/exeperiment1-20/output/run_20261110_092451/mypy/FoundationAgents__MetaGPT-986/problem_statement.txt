@@ -1,0 +1,33 @@
+`utils.text.reduce_message_length` Not reducing text length
+**Bug description**
+I come across this issue.
+```python
+  File "/Users/azure/Documents/Workspace/Datasci/lib/python3.10/site-packages/metagpt/utils/text.py", line 31, in reduce_message_length
+    raise RuntimeError("fail to reduce message length")
+RuntimeError: fail to reduce message length
+```
+
+**Bug solved method**
+Digging into the code, I assume `utils.text.reduce_message_length()` only check if the token is short enough.
+If it's too long, it simply raise exception, instead of shorten it.
+Following it the code in `utils.text.reduce_message_length()`
+```python
+def reduce_message_length(
+    msgs: Generator[str, None, None],
+    model_name: str,
+    system_text: str,
+    reserved: int = 0,
+) -> str:
+    max_token = TOKEN_MAX.get(model_name, 2048) - count_string_tokens(system_text, model_name) - reserved
+    for msg in msgs:
+        if count_string_tokens(msg, model_name) < max_token or model_name not in TOKEN_MAX:
+            return msg
+
+    raise RuntimeError("fail to reduce message length")
+``` 
+
+- LLM type and model name:
+- System version:MetaGPT 0.7.4
+- Python version: Python 3.10.13
+
+Is it a feature that is not implemented yet, or I can try to create a PR to fix it

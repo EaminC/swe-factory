@@ -1,0 +1,31 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 811fb28a3dfd8c514e1b3f9fc10585069b35950d
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the Python virtual environment
+source /opt/venv/bin/activate
+
+# Ensure pytest-cov is installed to support coverage options
+pip install pytest-cov
+
+# Check if the test file exists after patch application before running tests
+if [[ -f "tests/test_token_usage_vllm.py" ]]; then
+    pytest --no-header -rA --tb=short --cov=agentscope tests/test_token_usage_vllm.py
+    rc=$?
+else
+    echo "Warning: tests/test_token_usage_vllm.py not found after applying patch, skipping pytest."
+    rc=1
+fi
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset repository state to clean patch effects; allow not-found errors to be ignored
+git checkout 811fb28a3dfd8c514e1b3f9fc10585069b35950d || true
+</script>

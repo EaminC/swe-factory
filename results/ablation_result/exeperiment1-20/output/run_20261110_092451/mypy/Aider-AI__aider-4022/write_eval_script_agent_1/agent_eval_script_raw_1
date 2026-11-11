@@ -1,0 +1,25 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 17d40a62c931ac91fc9c31288310b37b62175c47
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate conda and run the specified test file only, with concise output showing file names and pass/fail/skip statuses
+source /opt/miniconda/etc/profile.d/conda.sh
+conda activate testbed
+
+# Run pytest on the single specified test file with no header, showing summary of all tests, no traceback, and no cacheprovider plugin
+pytest --no-header -rA --tb=no -p no:cacheprovider tests/basic/test_models.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any changes to test files after running tests
+git checkout 17d40a62c931ac91fc9c31288310b37b62175c47
+</script>

@@ -1,0 +1,28 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+git checkout 2b8e056d5d4d14665b88a01c41356253c94b9259 
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Do NOT reset the patched test file to avoid undoing patch
+
+# Ensure OPENAI_API_KEY is set in the environment; exit if missing
+if [ -z "${OPENAI_API_KEY}" ]; then
+  echo "ERROR: OPENAI_API_KEY environment variable is not set. Please set it before running tests."
+  exit 1
+fi
+
+source /testbed/testbed/bin/activate
+
+# Run only the specified test file; show concise test names and statuses
+pytest --no-header -rA --tb=short tests/test_token_usage_log.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+</script>

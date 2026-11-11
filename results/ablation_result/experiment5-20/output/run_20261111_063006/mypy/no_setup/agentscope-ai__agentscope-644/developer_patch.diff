@@ -1,0 +1,237 @@
+diff --git a/applications/multisource_rag_app/src/utils/logging.py b/applications/multisource_rag_app/src/utils/logging.py
+index f297491937..d0512a0f9d 100644
+--- a/applications/multisource_rag_app/src/utils/logging.py
++++ b/applications/multisource_rag_app/src/utils/logging.py
+@@ -104,9 +104,13 @@ def error(*arg: Any, **kwargs: Any) -> Any:
+             )
+         if arg:
+             if kwargs:
++                context = json.dumps(
++                    kwargs,
++                    ensure_ascii=False,
++                    default=to_dict,
++                )
+                 return loguru_logger.error(
+-                    f"{arg[0]}, "
+-                    f"{json.dumps(kwargs,ensure_ascii=False,default=to_dict)}",
++                    f"{arg[0]}, {context}",
+                 )
+             else:
+                 return loguru_logger.error(f"{arg[0]}")
+diff --git a/examples/reactv2_agent_with_mcp/code/mcp_servers.py b/examples/reactv2_agent_with_mcp/code/mcp_servers.py
+new file mode 100644
+index 0000000000..14de75275e
+--- /dev/null
++++ b/examples/reactv2_agent_with_mcp/code/mcp_servers.py
+@@ -0,0 +1,58 @@
++# -*- coding: utf-8 -*-
++
++"""This module contains the server setup for FastMCP applications."""
++
++from contextlib import asynccontextmanager, AsyncExitStack
++from typing import AsyncGenerator, Any
++
++import uvicorn
++from mcp.server.fastmcp import FastMCP
++from starlette.applications import Starlette
++from starlette.routing import Mount
++from starlette.types import Lifespan
++
++# Define the addition tool
++mcp_add = FastMCP("Add")
++
++
++@mcp_add.tool()
++def add(a: int, b: int) -> int:
++    """Add two numbers."""
++    return a + b
++
++
++# Define the multiplication tool
++mcp_multiply = FastMCP("Multiply")
++
++
++@mcp_multiply.tool()
++def multiply(a: int, b: int) -> int:
++    """Multiply two numbers."""
++    return a * b
++
++
++def combine_lifespans(*lifespans: Any) -> Lifespan[Any]:
++    """Combine multiple lifespans into one asynchronous context manager."""
++
++    @asynccontextmanager
++    async def combined_lifespan(app: Any) -> AsyncGenerator[None, Any]:
++        async with AsyncExitStack() as stack:
++            for lifespan in lifespans:
++                ctx = lifespan(app)
++                await stack.enter_async_context(ctx)
++            yield
++
++    return combined_lifespan
++
++
++# Create the main application
++main_app = Starlette(
++    routes=[
++        Mount("/sse_app/", app=mcp_add.sse_app()),
++        Mount("/streamable_http_app/", app=mcp_multiply.streamable_http_app()),
++    ],
++    lifespan=combine_lifespans(lambda app: mcp_multiply.session_manager.run()),
++)
++
++if __name__ == "__main__":
++    uvicorn.run(main_app, host="0.0.0.0", port=8001)
+diff --git a/examples/reactv2_agent_with_mcp/code/reactv2_agent_with_http_mcp_demo.py b/examples/reactv2_agent_with_mcp/code/reactv2_agent_with_http_mcp_demo.py
+new file mode 100644
+index 0000000000..d460ad37b5
+--- /dev/null
++++ b/examples/reactv2_agent_with_mcp/code/reactv2_agent_with_http_mcp_demo.py
+@@ -0,0 +1,83 @@
++# -*- coding: utf-8 -*-
++
++""" AgentScope ReAct Agent V2 Example with MCP Servers. """
++
++import os
++from agentscope.agents import ReActAgentV2
++import agentscope
++from agentscope.formatters import OpenAIFormatter
++from agentscope.service import ServiceToolkit
++from agentscope.message import Msg
++
++
++# Model name
++model_name = "qwen-plus"
++
++custom_api_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
++
++# Load model configs
++agentscope.init(
++    model_configs=[
++        {
++            "config_name": "my_config",
++            "model_type": "dashscope_chat",
++            "model_name": "qwen-plus",
++            # When using ReActAgentV2, streaming (i.e., setting "stream": True)
++            # is not supported.
++            # "stream": False,
++        },
++        # Or you can use an OpenAI-compatible API, but note that non-OpenAI
++        # models need to be added to OpenAIFormatter later.
++        {
++            "config_name": "my_config2",
++            "client_args": {
++                # specify the base URL of the API
++                "base_url": custom_api_url,
++            },
++            "api_key": os.environ.get("DASHSCOPE_API_KEY"),
++            "model_type": "openai_chat",
++            "model_name": model_name,
++        },
++    ],
++)
++# If you choose to use the OpenAI-compatible API and if the model is not an
++# OpenAI model, make sure to append the model name to OpenAIFormatter.
++OpenAIFormatter.supported_model_regexes.append(model_name)
++
++# Add MCP servers
++toolkit = ServiceToolkit()
++toolkit.add_mcp_servers(
++    {
++        "mcpServers": {
++            "add-tool": {
++                "type": "sse",
++                "url": "http://127.0.0.1:8001/sse_app/sse",
++            },
++            "multiply-tool": {
++                "type": "streamable_http",
++                "url": "http://127.0.0.1:8001/streamable_http_app/mcp/",
++            },
++        },
++    },
++)
++
++agent = ReActAgentV2(
++    name="Friday",
++    max_iters=3,
++    model_config_name="my_config",
++    # model_config_name="my_config2",
++    service_toolkit=toolkit,
++    sys_prompt="You're a helpful assistant named Friday.",
++)
++
++if __name__ == "__main__":
++    # start the mcp servers before running this script
++    res_msg = agent(
++        Msg(
++            "user",
++            "Calculate 2345 multiplied by 3456, then add 4567 to the result,"
++            " what is the final outcome?",
++            "user",
++        ),
++    )
++    print(f"The final answer is: \n\t{res_msg.content}")
+diff --git a/src/agentscope/agents/_react_agent_v2.py b/src/agentscope/agents/_react_agent_v2.py
+index bade23b12e..a492b89412 100644
+--- a/src/agentscope/agents/_react_agent_v2.py
++++ b/src/agentscope/agents/_react_agent_v2.py
+@@ -132,6 +132,7 @@ def reply(
+                 self._finish_function,
+                 structured_model,
+             )
++            self._current_structured_model = structured_model
+ 
+         self.memory.add(x)
+ 
+diff --git a/src/agentscope/service/mcp_manager.py b/src/agentscope/service/mcp_manager.py
+index c0d88dab32..2529fca4c6 100644
+--- a/src/agentscope/service/mcp_manager.py
++++ b/src/agentscope/service/mcp_manager.py
+@@ -19,6 +19,7 @@
+     import mcp
+     from mcp.client.sse import sse_client
+     from mcp.client.stdio import stdio_client
++    from mcp.client.streamable_http import streamablehttp_client
+ 
+ except ImportError:
+     mcp = None
+@@ -99,11 +100,17 @@ def __init__(
+             } or
+             {
+                 "url": "http://xxx.xxx.xxx.xxx:xxxx/sse"
++            } or
++            {
++                "type": "streamable_http",
++                "url": "http://xxx.xxx.xxx.xxx:xxxx/mcp/"
+             }
+ 
+             - "command": (Optional) A string indicating the command to be
+                 executed, following the stdio protocol for communication.
+             - "args": (Optional) A list of arguments for the command.
++            - "type": (Optional) A string indicating the type of the MCP
++                server, which can be "sse" or "streamable_http".
+             - "url": (Optional) A string representing the server's endpoint,
+                 which follows the Server-Sent Events (SSE) protocol for data
+                 transmission.
+@@ -161,9 +168,18 @@ async def initialize(self) -> None:
+                     stdio_client(server_params),
+                 )
+             else:
+-                streams = await self._exit_stack.enter_async_context(
+-                    sse_client(url=self.config["url"]),
+-                )
++                if self.config.get("type") in [
++                    "streamable_http",
++                    "streamableHttp",
++                ]:
++                    streams = await self._exit_stack.enter_async_context(
++                        streamablehttp_client(url=self.config["url"]),
++                    )
++                    streams = (streams[0], streams[1])
++                else:
++                    streams = await self._exit_stack.enter_async_context(
++                        sse_client(url=self.config["url"]),
++                    )
+             session = await self._exit_stack.enter_async_context(
+                 mcp.ClientSession(*streams),
+             )

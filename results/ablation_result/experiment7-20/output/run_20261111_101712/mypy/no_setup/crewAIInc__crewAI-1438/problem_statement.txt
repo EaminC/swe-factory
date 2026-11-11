@@ -1,0 +1,53 @@
+[BUG] Wrong role type added to messages array for AgentAction
+### Description
+
+When the answer is an AgentAction, the message being appended to the messages array is set with role `user`. Since an AgentAction is a response from the AI/LLM, it should have the assistant role.
+
+### Steps to Reproduce
+
+1. Allow an agent to run a tool
+2. Inspect the messages sent to the LLM
+3. Notice the Thought: xxx, Action: xxx, Action Input: xxx, Observation: xxx message is a user message instead of an assistant message.
+
+### Expected behavior
+
+The AgentAction should be added to the messages list as an assistant message instead of a user message.
+
+### Screenshots/Code snippets
+
+<img width="474" alt="image" src="https://github.com/user-attachments/assets/cddac388-daff-4cf7-82d5-0941f0e057f4">
+<img width="902" alt="image" src="https://github.com/user-attachments/assets/9c210446-1cc0-4adb-885c-951a2df8ac5c">
+The third message should be tagged as assistant since it is the LLM thinking and choosing the tool to use.
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.10
+
+### crewAI Version
+
+0.67.1
+
+### crewAI Tools Version
+
+0.12.1
+
+### Virtual Environment
+
+Conda
+
+### Evidence
+
+<img width="803" alt="image" src="https://github.com/user-attachments/assets/e8885f38-d38d-44c4-853d-fc7e7a9f679d">
+The third message should be role `assistant`
+
+### Possible Solution
+
+Change user to assistant on line 154 of crew_agent_executor.py. I will be opening a PR for this.
+
+### Additional context
+
+N/A

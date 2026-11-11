@@ -1,0 +1,45 @@
+<dockerfile>
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essentials
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+RUN python3 -m pip install --upgrade pip
+
+# Create and activate python virtual environment, install dependencies
+RUN python3 -m venv /testbed_env
+ENV PATH="/testbed_env/bin:$PATH"
+
+# Clone the repository and checkout the specified commit
+WORKDIR /testbed
+RUN git clone https://github.com/MLSysOps/MLE-agent.git . && \
+    git checkout 77126b12032fdf38a35368cfa6d6dd34ab552c10
+
+# Upgrade pip inside venv and install dependencies from requirements.txt and install the package in editable mode
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
+# Install pytest explicitly as it's required for tests but not in requirements.txt
+RUN pip install pytest
+RUN pip install -e .
+
+# Ensure bashrc sources venv on container start so dev env is active
+RUN echo "source /testbed_env/bin/activate" >> /root/.bashrc
+</dockerfile>

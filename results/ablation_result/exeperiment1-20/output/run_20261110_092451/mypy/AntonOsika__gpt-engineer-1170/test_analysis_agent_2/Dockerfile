@@ -1,0 +1,63 @@
+# Use a stable Ubuntu base image with bash
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies, git, curl, wget, python3.10 and build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3.10-dev \
+    locales \
+    locales-all \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set default python alternative to python3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Create necessary directory structure and set permissions for Poetry installation
+RUN mkdir -p /root/.local/share/pypoetry && \
+    chown -R root:root /root/.local
+
+# Download Poetry installation script separately and run it explicitly to better handle errors
+RUN curl -sSL https://install.python-poetry.org -o install-poetry.py && \
+    python3 install-poetry.py --version 1.9.6 && \
+    rm install-poetry.py
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Verify poetry installation by printing version (fail early if install failed)
+RUN poetry --version
+
+# Clone the repository, checkout the given commit
+WORKDIR /testbed/
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    git reset --hard 3e589bf1356024fb471a9d17738e4626f21a953b
+
+# Configure Poetry to create virtual env inside project, install dependencies, then install package in editable mode
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-root --only main,dev
+
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install -e ."
+
+# Set default shell as bash
+SHELL ["/bin/bash", "-c"]
+
+# Default workdir
+WORKDIR /testbed/
+
+# Expose HOME environment to ensure Poetry and virtual env works smoothly
+ENV HOME=/root
+
+# Provide a bashrc line to activate poetry shell (virtual env) automatically for convenience during interactive use
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc

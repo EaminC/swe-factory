@@ -1,0 +1,54 @@
+[Bug]: Mem0LongTermMemory using ollama throws exception
+**<u>AgentScope is an open-source project. To involve a broader community, we recommend asking your questions in English.</u>**
+
+**Describe the bug**
+I'm trying to reproduce the use case of long term memory in documents, but it throws exception when calling record method
+
+**To Reproduce**
+Steps to reproduce the behavior:
+The code is as below,
+`class TestLongTermMemory(unittest.TestCase):
+    def test_record_and_retrieve(self):
+        long_term_memory = Mem0LongTermMemory(
+            agent_name="Friday",
+            user_name="user_123",
+            model=OllamaChatModel(
+                "qwen3:0.6b",
+                True,
+                host="http://host.docker.internal:11434",
+            ),
+            embedding_model=OllamaTextEmbedding(
+                "qwen3-embedding:0.6b",
+                1024,
+                host="http://host.docker.internal:11434",
+            ),
+            on_disk=False,
+        )
+
+        async def test():
+            await long_term_memory.record([Msg(name="user", content="我喜欢住民宿", role="user")])
+            retrieve_result = await long_term_memory.retrieve([Msg(name="user", content="我的住宿偏好", role="user")])
+            return retrieve_result
+
+        result = asyncio.run(test())
+        print(result)
+        assert True`
+
+**Expected behavior**
+expected no exception
+
+**Error messages**
+Traceback (most recent call last):
+  File "/agentic-trade/venv/lib/python3.14/site-packages/agentscope/memory/_long_term_memory/_mem0/_mem0_utils.py", line 148, in generate_response
+    if not response.content:
+           ^^^^^^^^^^^^^^^^
+AttributeError: 'async_generator' object has no attribute 'content'
+
+**Environment (please complete the following information):**
+
+- AgentScope Version: 1.0.12-dev0
+- Python Version: 3.14
+- OS: macos
+
+**Additional context**
+Add any other context about the problem here.

@@ -1,0 +1,48 @@
+<dockerfile>
+# Base image with bash and python 3.11 on Ubuntu 22.04
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, git, curl, python3.11 and pip-related packages
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3-setuptools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version
+RUN python3.11 -m pip install --upgrade pip
+
+# Create and activate a Python virtual environment named testbed
+RUN python3.11 -m venv /opt/testbed
+
+# Add the venv python and pip to PATH environment variable permanently
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Clone the target repository and checkout the specified commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed \
+    && cd /testbed \
+    && git reset --hard 71fab2dc51f9944a521a403af1924e0cf5bef76b
+
+WORKDIR /testbed
+
+# Install the repository in editable mode including all dependencies from requirements.txt
+RUN pip install --upgrade pip setuptools \
+    && pip install -r requirements.txt \
+    && pip install -e .
+
+# We do not run tests here as per instructions
+
+# Default shell should be bash for interactive usage
+SHELL ["/bin/bash", "-c"]
+</dockerfile>

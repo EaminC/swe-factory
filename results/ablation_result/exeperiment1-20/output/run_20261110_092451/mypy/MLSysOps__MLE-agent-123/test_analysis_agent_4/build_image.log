@@ -1,0 +1,85 @@
+2026-11-10 13:06:50,847 - INFO - Building image mlsysops__mle-agent-123
+Using dockerfile:
+# Use Ubuntu 22.04 (jammy) to ensure python3.11 packages are available in official repos and deadsnakes PPA
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system packages with no-install-recommends to keep image slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    curl \
+    ca-certificates \
+    git \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Python 3.11 virtual environment named testbed
+RUN python3.11 -m venv /opt/testbed
+
+# Upgrade pip, setuptools and wheel in the virtual environment
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Set environment variables for virtual environment usage
+ENV VIRTUAL_ENV=/opt/testbed
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Clone the target repository and checkout the specific commit SHA
+RUN git clone https://github.com/MLSysOps/MLE-agent.git /testbed \
+    && cd /testbed \
+    && git reset --hard cc7d248e9ec8f9359d7454017ddc6a31bde840b4
+
+# Install dependencies from requirements.txt and install the repository itself in editable mode
+RUN pip install -r /testbed/requirements.txt \
+    && pip install -e /testbed
+
+# Set working directory
+WORKDIR /testbed
+
+# Optional: activate virtual environment automatically on container start by sourcing in bashrc
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+2026-11-10 13:06:50,856 - INFO - Do not find previous image, images list is clean.
+2026-11-10 13:06:50,904 - INFO - Step 1/13 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 13:06:51,341 - INFO -  ---> 076e7bf82319
+2026-11-10 13:06:51,342 - INFO - Step 2/13 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 13:06:53,727 - INFO -  ---> Running in 9d1ef04651a8
+2026-11-10 13:06:57,203 - INFO -  ---> Removed intermediate container 9d1ef04651a8
+2026-11-10 13:06:57,204 - INFO -  ---> 722ffbc40046
+2026-11-10 13:06:57,204 - INFO - Step 3/13 : ENV TZ=Etc/UTC
+2026-11-10 13:06:59,476 - INFO -  ---> Running in 3c0ee6303083
+2026-11-10 13:07:05,497 - INFO -  ---> Removed intermediate container 3c0ee6303083
+2026-11-10 13:07:05,503 - INFO -  ---> 1ac62ea876f1
+2026-11-10 13:07:05,503 - INFO - Step 4/13 : SHELL ["/bin/bash", "-c"]
+2026-11-10 13:07:08,859 - INFO -  ---> Running in f5979edc4461
+2026-11-10 13:07:13,629 - INFO -  ---> Removed intermediate container f5979edc4461
+2026-11-10 13:07:13,629 - INFO -  ---> 732752a13e31
+2026-11-10 13:07:13,629 - INFO - Step 5/13 : RUN apt-get update && apt-get install -y --no-install-recommends     wget     curl     ca-certificates     git     build-essential     python3.11     python3.11-venv     python3.11-distutils     python3-pip     software-properties-common     && rm -rf /var/lib/apt/lists/*
+2026-11-10 13:07:14,571 - INFO -  ---> Running in ba7cdf26e342
+2026-11-10 13:07:16,818 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 13:07:16,909 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 13:07:17,742 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 13:07:17,991 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 13:07:19,264 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 13:07:19,590 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 13:07:19,726 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 13:07:20,303 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 13:07:21,197 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 13:07:21,375 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 13:07:21,851 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 13:07:21,895 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 13:07:22,826 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 13:07:22,826 - INFO - Get:14 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 13:07:22,983 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 13:07:23,219 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 13:07:23,271 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 13:07:23,759 - INFO - Get:18 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 13:07:42,905 - INFO - Fetched 49.4 MB in 26s (1872 kB/s)
+2026-11-10 13:07:47,669 - INFO - Reading package lists...

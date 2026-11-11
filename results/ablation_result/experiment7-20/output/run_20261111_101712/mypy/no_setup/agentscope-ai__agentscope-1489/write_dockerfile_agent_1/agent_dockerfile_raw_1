@@ -1,0 +1,67 @@
+<dockerfile>
+# Use Ubuntu 22.04 base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Update and install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales \
+    locales-all \
+    tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set python3 to point to python3.10 explicitly
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+
+# Upgrade pip for Python 3.10
+RUN python3 -m pip install --upgrade pip
+
+# Install Miniconda for environment management
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p /opt/miniconda3 && \
+    rm miniconda.sh
+
+# Update PATH
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and create 'testbed' environment with Python 3.10
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda config --append channels conda-forge && \
+    conda create -n testbed python=3.10 -y"
+
+# Activate environment and install dependencies
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install setuptools==78.1.1 wheel==0.45.1 && \
+    pip install -q coverage pytest pytest-asyncio pytest-forked pre-commit"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the target repository, checkout the specified commit, and install in dev mode with [dev] extras
+RUN /bin/bash -c " \
+    source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/agentscope-ai/agentscope /testbed && \
+    cd /testbed && \
+    git reset --hard 08b047e05b02b27a290ee1b850fb75210f186cdb && \
+    pip install -e .[dev] \
+"
+
+# Set GRPC_VERBOSITY=ERROR environment variable for tests
+ENV GRPC_VERBOSITY=ERROR
+
+# To enable conda environment activation automatically on bash startup
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+</dockerfile>

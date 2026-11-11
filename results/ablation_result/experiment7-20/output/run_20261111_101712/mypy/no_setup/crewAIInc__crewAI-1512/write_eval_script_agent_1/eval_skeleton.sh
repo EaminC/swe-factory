@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout f29f4abdd7ea4d3b4afeb8e1b403360ad7309ace 
+
+# Apply test patch to update target tests
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /testbed/.venv/bin/activate
+
+# Run only the specified test file(s) with pytest via uv tool for proper env resolution
+uv run pytest --no-header -rA --tb=short lib/crewai/tests/agents/test_agent.py
+
+rc=$?  # Save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Revert changes to the test file(s) after test run
+git checkout f29f4abdd7ea4d3b4afeb8e1b403360ad7309ace lib/crewai/tests/agents/test_agent.py

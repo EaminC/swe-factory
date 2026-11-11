@@ -1,0 +1,55 @@
+<dockerfile>
+# Use Ubuntu 22.04 LTS as base image for stable support
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Add deadsnakes PPA for Python 3.12 and update apt sources
+RUN apt-get update && apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && apt-get update
+
+# Install system dependencies including python3.12 and related packages
+RUN apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    wget \
+    locales \
+    locales-all \
+    tzdata \
+    ca-certificates \
+    python3.12 \
+    python3.12-venv \
+    python3-distutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for python3.12 using get-pip script
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+
+# Upgrade pip, setuptools, wheel to latest versions
+RUN python3.12 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install uv dependency manager tool as required by repository
+RUN python3.12 -m pip install --no-cache-dir uv
+
+# Set working directory for repository clone
+WORKDIR /testbed/
+
+# Clone the target repository and checkout the specified commit
+RUN git clone https://github.com/ValueCell-ai/valuecell.git /testbed && \
+    git reset --hard 67d56f93a45e712e924f5334119779c93830e208
+
+# Install dependencies locked and grouped as per uv lock file (all extras + dev)
+RUN uv sync --locked --all-extras --dev
+
+# Install repository in editable mode to ensure local source code usage
+RUN python3.12 -m pip install --no-cache-dir -e .
+
+# Set environment variable to ensure UTF-8 Python output encoding by default
+RUN echo "export PYTHONIOENCODING=utf-8" >> ~/.bashrc
+
+# Specify default shell explicitly
+ENV SHELL=/bin/bash
+</dockerfile>

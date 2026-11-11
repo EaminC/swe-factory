@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The eval script fails to run the tests because the command `uv run pytest ...` is not found, with the error: `/eval.sh: line 69: uv: command not found`. This indicates that the command `uv` is either a typo or a missing executable in the environment. The script should be corrected to run `pytest` directly, or ensure that the intended command is installed. Furthermore, the git checkout command at the end fails with `error: pathspec 'libs/prebuilt/tests/test_create_react_agent_type.py' did not match any file(s) known to git`. This likely happens because the test patch modifies the test file, so it is no longer recognizable by git as clean after patch application. Instead of reverting via git checkout of the single file, consider using `git reset --hard` to clean all changes after tests or another method to properly revert the patch. To fix the test invocation problem, replace the line\n\n`LANGGRAPH_TEST_FAST=1 uv run pytest libs/prebuilt/tests/test_create_react_agent_type.py --strict-markers --strict-config --durations=5 -vv`\n\nwith\n\n`LANGGRAPH_TEST_FAST=1 pytest libs/prebuilt/tests/test_create_react_agent_type.py --strict-markers --strict-config --durations=5 -vv`\n\nAlso, update the cleanup command to properly revert changes after tests to avoid git errors.",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": true
+}

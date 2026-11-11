@@ -1,0 +1,27 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 249e38976508007aeda1c74344c83e1e37ec8e14
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /opt/testbed/bin/activate
+
+# Run pytest only on the specified test file with concise output showing test names and results
+# Use -p no:warnings to suppress warnings as recommended in pytest config
+# Use -rA to show all extra test summary info (skip, fail, pass)
+# Use --maxfail=1 (optionally) to stop at first fail (commented out here for full run)
+pytest -p no:warnings -rA tests/basic/test_model_settings.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the patched test file to clean state
+git checkout 249e38976508007aeda1c74344c83e1e37ec8e14 tests/basic/test_model_settings.py
+</script>

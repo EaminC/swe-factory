@@ -1,0 +1,58 @@
+# Base image specification with Ubuntu 22.04 and bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies including git, python3.9, pip, build tools, and libraries
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python3.9 \
+    python3.9-venv \
+    python3.9-distutils \
+    python3-pip \
+    python-is-python3 \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version
+RUN python3.9 -m pip install --upgrade pip
+
+# Install Miniconda for environment management
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda3 \
+    && rm /tmp/miniconda.sh
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda for bash shell and add conda-forge channel
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && conda init bash && conda config --append channels conda-forge"
+
+# Create a conda environment named 'testbed' with Python 3.9 and activate it
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda create -n testbed python=3.9 -y"
+
+# Set working directory to /testbed
+WORKDIR /testbed/
+
+# Clone the agentscope repository, checkout the provided commit, and remove origin remote to ensure isolation
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    git clone https://github.com/agentscope-ai/agentscope.git /testbed && \
+    cd /testbed && \
+    git reset --hard 17676eaaf2346ff936fc2df78ec098fa7a81e3e0 && \
+    git remote remove origin"
+
+# Install the project with all optional dependencies (full) and test dependencies in editable mode
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install -e .[full] pytest pytest-cov coverage"
+
+# Add conda activation to bashrc for interactive sessions
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc

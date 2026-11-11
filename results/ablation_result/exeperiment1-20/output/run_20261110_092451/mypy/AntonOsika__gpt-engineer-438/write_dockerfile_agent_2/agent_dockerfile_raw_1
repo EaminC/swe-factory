@@ -1,0 +1,56 @@
+<dockerfile>
+# Use official Python slim image to avoid base image and venv issues
+FROM --platform=linux/x86_64 python:3.10-slim
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies and tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    curl \
+    ca-certificates \
+    locales \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Create workdir
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+ARG COMMIT_SHA=2b8e056d5d4d14665b88a01c41356253c94b9259
+RUN git clone https://github.com/AntonOsika/gpt-engineer /testbed/ && \
+    git reset --hard $COMMIT_SHA && \
+    chmod -R a+rwx /testbed/
+
+# Setup virtual environment in /testbed/venv
+RUN python -m venv /testbed/venv
+
+# Install project and dependencies inside the venv, including test and dev dependencies
+RUN /bin/bash -c "\
+    source /testbed/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -e . && \
+    pip install pytest pytest-cov pre-commit ruff mypy black click openai termcolor typer rudder-sdk-python dataclasses-json tabulate \
+"
+
+# Set environment variables for bash shell sessions in container
+ENV VIRTUAL_ENV=/testbed/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Set the working directory
+WORKDIR /testbed/
+
+# No testing or running commands here; tests executed separately
+</dockerfile>

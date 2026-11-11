@@ -1,0 +1,90 @@
+diff --git a/metagpt/actions/action.py b/metagpt/actions/action.py
+index 790295d551..6bdcc027de 100644
+--- a/metagpt/actions/action.py
++++ b/metagpt/actions/action.py
+@@ -9,7 +9,7 @@
+ from abc import ABC
+ from typing import Optional
+ 
+-from tenacity import retry, stop_after_attempt, wait_fixed
++from tenacity import retry, stop_after_attempt, wait_random_exponential
+ 
+ from metagpt.actions.action_output import ActionOutput
+ from metagpt.llm import LLM
+@@ -49,7 +49,7 @@ async def _aask(self, prompt: str, system_msgs: Optional[list[str]] = None) -> s
+         system_msgs.append(self.prefix)
+         return await self.llm.aask(prompt, system_msgs)
+ 
+-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
++    @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+     async def _aask_v1(
+         self,
+         prompt: str,
+diff --git a/metagpt/actions/write_code.py b/metagpt/actions/write_code.py
+index c000805c50..a5dc8e0596 100644
+--- a/metagpt/actions/write_code.py
++++ b/metagpt/actions/write_code.py
+@@ -11,7 +11,7 @@
+ from metagpt.logs import logger
+ from metagpt.schema import Message
+ from metagpt.utils.common import CodeParser
+-from tenacity import retry, stop_after_attempt, wait_fixed
++from tenacity import retry, stop_after_attempt, wait_random_exponential
+ 
+ PROMPT_TEMPLATE = """
+ NOTICE
+@@ -66,7 +66,7 @@ def _save(self, context, filename, code):
+         code_path.write_text(code)
+         logger.info(f"Saving Code to {code_path}")
+ 
+-    @retry(stop=stop_after_attempt(2), wait=wait_fixed(1))
++    @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+     async def write_code(self, prompt):
+         code_rsp = await self._aask(prompt)
+         code = CodeParser.parse_code(block="", text=code_rsp)
+diff --git a/metagpt/actions/write_code_review.py b/metagpt/actions/write_code_review.py
+index 4ff4d6cf6d..06282411a6 100644
+--- a/metagpt/actions/write_code_review.py
++++ b/metagpt/actions/write_code_review.py
+@@ -10,7 +10,7 @@
+ from metagpt.logs import logger
+ from metagpt.schema import Message
+ from metagpt.utils.common import CodeParser
+-from tenacity import retry, stop_after_attempt, wait_fixed
++from tenacity import retry, stop_after_attempt, wait_random_exponential
+ 
+ PROMPT_TEMPLATE = """
+ NOTICE
+@@ -65,7 +65,7 @@ class WriteCodeReview(Action):
+     def __init__(self, name="WriteCodeReview", context: list[Message] = None, llm=None):
+         super().__init__(name, context, llm)
+ 
+-    @retry(stop=stop_after_attempt(2), wait=wait_fixed(1))
++    @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+     async def write_code(self, prompt):
+         code_rsp = await self._aask(prompt)
+         code = CodeParser.parse_code(block="", text=code_rsp)
+diff --git a/metagpt/provider/openai_api.py b/metagpt/provider/openai_api.py
+index 6ebed2c16c..fa9397f20a 100644
+--- a/metagpt/provider/openai_api.py
++++ b/metagpt/provider/openai_api.py
+@@ -15,7 +15,7 @@
+     retry,
+     retry_if_exception_type,
+     stop_after_attempt,
+-    wait_fixed,
++    wait_random_exponential,
+ )
+ 
+ from metagpt.config import CONFIG
+@@ -226,8 +226,8 @@ async def acompletion(self, messages: list[dict]) -> dict:
+         return await self._achat_completion(messages)
+ 
+     @retry(
+-        stop=stop_after_attempt(3),
+-        wait=wait_fixed(1),
++        wait=wait_random_exponential(min=1, max=60),
++        stop=stop_after_attempt(6),
+         after=after_log(logger, logger.level("WARNING").name),
+         retry=retry_if_exception_type(APIConnectionError),
+         retry_error_callback=log_and_reraise,

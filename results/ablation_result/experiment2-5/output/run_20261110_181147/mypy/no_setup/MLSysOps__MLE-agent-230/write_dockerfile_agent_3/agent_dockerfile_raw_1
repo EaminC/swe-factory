@@ -1,0 +1,49 @@
+<dockerfile>
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt update && apt install -y \
+    wget \
+    git \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip for Python 3.11
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# Create virtual environment directory
+RUN python3.11 -m venv /opt/testbed
+
+# Activate venv and upgrade pip
+RUN /bin/bash -c "source /opt/testbed/bin/activate && pip install --upgrade pip"
+
+# Set working directory for the project
+WORKDIR /testbed/
+
+ARG REPO=https://github.com/MLSysOps/MLE-agent.git
+ARG COMMIT_SHA=985c24e1b2b8e9463aacfbeb2c8a47f27fa4523c
+
+# Clone the repository and fetch all refs to ensure the commit SHA exists locally,
+# then checkout the exact commit SHA and install dependencies in editable mode using the venv python
+RUN git clone $REPO /testbed && \
+    cd /testbed && \
+    git fetch --all --tags && \
+    git checkout $COMMIT_SHA && \
+    /bin/bash -c "source /opt/testbed/bin/activate && pip install -r requirements.txt && pip install -e ."
+
+# Persist venv activation on bash login
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc
+
+# Use bash as the default shell
+SHELL ["/bin/bash", "-c"]
+</dockerfile>

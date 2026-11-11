@@ -1,0 +1,178 @@
+diff --git a/src/agent/api/app.py b/src/agent/api/app.py
+index 8876560..ebc2e04 100644
+--- a/src/agent/api/app.py
++++ b/src/agent/api/app.py
+@@ -15,7 +15,7 @@ if TYPE_CHECKING:
+ 
+ from agent.a2a.agentcard import create_agent_card
+ from agent.config.constants import DEFAULT_SERVER_HOST, DEFAULT_SERVER_PORT
+-from agent.config.model import AgentType, LogFormat
++from agent.config.model import LogFormat
+ from agent.core.executor import AgentUpExecutor
+ from agent.push.notifier import EnhancedPushNotifier
+ from agent.services import AgentBootstrapper, ConfigurationManager
+@@ -100,6 +100,7 @@ def _setup_request_handler(app: FastAPI) -> None:
+     agent_type = config.get("agent_type", "reactive")
+ 
+     # Create agent configuration for executor
++    from agent.config.model import AgentType
+     from agent.core.models import AgentConfiguration
+ 
+     if agent_type == AgentType.ITERATIVE:
+@@ -113,12 +114,12 @@ def _setup_request_handler(app: FastAPI) -> None:
+         iterative_config = IterativeConfig(**iterative_config_data) if iterative_config_data else IterativeConfig()
+ 
+         agent_config = AgentConfiguration(
+-            agent_type=AgentType.ITERATIVE,  # Pass string directly
++            agent_type=AgentType.ITERATIVE,
+             memory=memory_config,
+             iterative=iterative_config,
+         )
+     else:
+-        agent_config = AgentConfiguration(agent_type=AgentType.REACTIVE)  # Pass string directly
++        agent_config = AgentConfiguration(agent_type=AgentType.REACTIVE)
+ 
+     request_handler = DefaultRequestHandler(
+         agent_executor=AgentUpExecutor(agent=agent_card, config=agent_config),
+diff --git a/src/agent/cli/commands/init_agent.py b/src/agent/cli/commands/init_agent.py
+index 08fefb2..beaf9de 100644
+--- a/src/agent/cli/commands/init_agent.py
++++ b/src/agent/cli/commands/init_agent.py
+@@ -7,7 +7,6 @@ import httpx
+ import questionary
+ 
+ from agent.cli.style import custom_style, print_error, print_header, print_success_footer
+-from agent.core.models import AgentType
+ from agent.generator import ProjectGenerator
+ from agent.templates import get_feature_choices
+ from agent.utils.git_utils import get_git_author_info, initialize_git_repo
+@@ -128,18 +127,18 @@ def _prompt_for_features(project_config: dict[str, Any], quick: bool, no_git: bo
+ 
+     # Agent type selection (always prompt, even in quick mode)
+     agent_type_choices = [
+-        questionary.Choice("Reactive (single-shot request/response)", value=AgentType.REACTIVE),
+-        questionary.Choice("Iterative (self-directed multi-turn loops)", value=AgentType.ITERATIVE),
++        questionary.Choice("Reactive (single-shot request/response)", value="reactive"),
++        questionary.Choice("Iterative (self-directed multi-turn loops)", value="iterative"),
+     ]
+ 
+     selected_agent_type = questionary.select(
+-        "Select agent execution type:", choices=agent_type_choices, default=AgentType.REACTIVE, style=custom_style
++        "Select agent execution type:", choices=agent_type_choices, default="reactive", style=custom_style
+     ).ask()
+ 
+     project_config["agent_type"] = selected_agent_type
+ 
+     # Configure iterative-specific settings if selected
+-    if selected_agent_type == AgentType.ITERATIVE:
++    if selected_agent_type == "iterative":
+         max_iterations = questionary.text(
+             "Maximum iterations per task (1-100):", default="10", style=custom_style
+         ).ask()
+diff --git a/src/agent/core/executor.py b/src/agent/core/executor.py
+index 7a2a8c6..ddd8a95 100644
+--- a/src/agent/core/executor.py
++++ b/src/agent/core/executor.py
+@@ -115,17 +115,20 @@ def create_agent_executor(
+     Returns:
+         Configured AgentUpExecutor instance
+     """
+-    # Parse agent type - AgentConfiguration accepts both strings and enums
+-    if isinstance(agent_type, AgentType):
+-        agent_type_value = agent_type
++    # Parse agent type - AgentConfiguration expects string values
++    if agent_type is None:
++        agent_type_value = "reactive"  # Default for None
++    elif isinstance(agent_type, AgentType):
++        agent_type_value = agent_type.value  # Convert enum to its string value
+     elif isinstance(agent_type, str):
+-        try:
+-            agent_type_value = AgentType(agent_type.lower())
+-        except ValueError:
++        agent_type_value = agent_type.lower()
++        if agent_type_value not in ["reactive", "iterative"]:
+             logger.warning(f"Invalid agent_type '{agent_type}', defaulting to reactive")
+-            agent_type_value = AgentType.REACTIVE
++            agent_type_value = "reactive"
+     else:
+-        agent_type_value = AgentType.REACTIVE  # Default
++        # This branch is unreachable with proper typing, but provides runtime safety
++        # for cases where type hints are not enforced (e.g., dynamic calls)
++        raise TypeError(f"Unsupported type for agent_type: {type(agent_type).__name__}")
+ 
+     # Create configuration
+     config = AgentConfiguration(agent_type=agent_type_value, **config_kwargs)
+diff --git a/src/agent/core/memory_integration.py b/src/agent/core/memory_integration.py
+index e04208c..a9e4f69 100644
+--- a/src/agent/core/memory_integration.py
++++ b/src/agent/core/memory_integration.py
+@@ -2,7 +2,7 @@ from typing import Any
+ 
+ import structlog
+ 
+-from agent.core.models import AgentType, IterationState, LearningInsight, MemoryContext
++from agent.core.models import IterationState, LearningInsight, MemoryContext
+ from agent.state import get_context_manager
+ 
+ logger = structlog.get_logger(__name__)
+@@ -120,7 +120,7 @@ class IterativeMemoryManager:
+             # Load existing memory context or create new one
+             memory_context = await self.load_memory_context(context_id)
+             if not memory_context:
+-                memory_context = MemoryContext(context_id=context_id, agent_type=AgentType.ITERATIVE)
++                memory_context = MemoryContext(context_id=context_id, agent_type="iterative")
+ 
+             # Add the insight
+             memory_context.add_insight(insight)
+@@ -175,7 +175,7 @@ class IterativeMemoryManager:
+             # Load or create memory context
+             memory_context = await self.load_memory_context(context_id)
+             if not memory_context:
+-                memory_context = MemoryContext(context_id=context_id, agent_type=AgentType.ITERATIVE)
++                memory_context = MemoryContext(context_id=context_id, agent_type="iterative")
+ 
+             # Update metrics
+             memory_context.increment_iteration()
+diff --git a/src/agent/core/models/configuration.py b/src/agent/core/models/configuration.py
+index ab0c6b9..f6b02a3 100644
+--- a/src/agent/core/models/configuration.py
++++ b/src/agent/core/models/configuration.py
+@@ -10,7 +10,7 @@ class AgentConfiguration(BaseModel):
+ 
+     model_config = {"use_enum_values": True}
+ 
+-    agent_type: AgentType = AgentType.REACTIVE
++    agent_type: AgentType | str = AgentType.REACTIVE
+     memory: MemoryConfig = Field(default_factory=MemoryConfig)
+     iterative: IterativeConfig = Field(default_factory=IterativeConfig)
+ 
+diff --git a/src/agent/core/strategies/iterative.py b/src/agent/core/strategies/iterative.py
+index ba7b7d8..a91cb90 100644
+--- a/src/agent/core/strategies/iterative.py
++++ b/src/agent/core/strategies/iterative.py
+@@ -11,7 +11,6 @@ from agent.core.base import AgentExecutorBase, get_current_auth_for_executor
+ from agent.core.models import (
+     ActionResult,
+     AgentConfiguration,
+-    AgentType,
+     GoalStatus,
+     IterationState,
+     LearningInsight,
+@@ -1123,7 +1122,7 @@ Evaluate the current state and decide: Is the goal complete, partially complete,
+ 
+             memory_context = MemoryContext(
+                 context_id=state.context_id,
+-                agent_type=AgentType.ITERATIVE,
++                agent_type="iterative",
+             )
+ 
+             for insight in insights:
+@@ -1285,7 +1284,7 @@ Evaluate the current state and decide: Is the goal complete, partially complete,
+ 
+                 memory_context = MemoryContext(
+                     context_id=state.context_id,
+-                    agent_type=AgentType.ITERATIVE,
++                    agent_type="iterative",
+                 )
+                 memory_context.mark_success()
+                 await self.memory_manager.set_variable(

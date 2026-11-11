@@ -1,0 +1,2241 @@
+2026-11-11 06:33:24.166 | INFO     | Model API request cost info: input_tokens=1461, output_tokens=317, cost=0.000000
+2026-11-11 06:33:24.171 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:33:25.695 | INFO     | Model API request cost info: input_tokens=758, output_tokens=109, cost=0.000000
+2026-11-11 06:33:25.696 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"README.md\", \"environment setup, programming language versions, dependencies installation, test execution commands including any specific commands for tests/test_lancedbmemory.py\")",
+    "browse_file_for_environment_info(\"requirements.txt\", \"list exact versions of Python dependencies and libraries\")",
+    "browse_file_for_environment_info(\"setup.py\", \"any environment setup and dependencies info, including exact versions\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 06:33:25.696 | DEBUG    | Extracted a valid json
+2026-11-11 06:33:25.701 | INFO     | entering browse
+2026-11-11 06:33:25.701 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+<div align="center">
+<h1 align="center">MLE-Agent: Your intelligent companion for seamless AI engineering and research.</h1>
+<img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
+<a href="https://trendshift.io/repositories/11658" target="_blank"><img src="https://trendshift.io/api/badge/repositories/11658" alt="MLSysOps%2FMLE-agent | Trendshift" style="width: 250px; height: 200px;" width="250" height="200px"/></a>
+<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
+
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg)
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg)
+![PyPI - Version](https://img.shields.io/pypi/v/mle-agent)
+[![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
+![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
+<a href="https://discord.gg/d9vcY7PA8Z"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
+
+[📚 Docs](https://mle-agent-site.vercel.app/) |
+[🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) |
+👋 Join us on <a href="https://discord.gg/d9vcY7PA8Z" target="_blank">Discord</a>
+
+</div>
+
+## Overview
+
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
+
+- 🤖 Autonomous Baseline: Automatically builds ML/AI baselines and solutions based on your requirements.
+- 🏅End-to-end ML Task: Participates in Kaggle competitions and completes tasks independently.
+- 🔍 [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) Integration: Access best practices
+  and state-of-the-art methods.
+- 🐛 Smart Debugging: Ensures high-quality code through automatic debugger-coder interactions.
+- 📂 File System Integration: Organizes your project structure efficiently.
+- 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
+- ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
+- 🧠 Smart Advisor: Provides personalized suggestions and recommendations for your ML/AI project.
+- 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
+
+https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
+
+## Milestones
+
+- :rocket: 09/24/2024: Release the `0.4.2` with enhanced `Auto-Kaggle` mode to complete an end-to-end competition with minimal effort.
+- :rocket: 09/10/2024: Release the `0.4.0` with new CLIs like `MLE report`, `MLE kaggle`, `MLE integration` and many new
+  models like `Mistral`.
+- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc. (v0.3.0)
+- :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- 👨‍🍼 **07/03/2024: Kaia is born**
+- :rocket: 06/01/2024: Release the first rule-based version of MLE agent (v0.1.0)
+
+## Get started
+
+### Installation
+
+```bash
+pip install mle-agent -U
+# or from source
+git clone git@github.com:MLSysOps/MLE-agent.git
+pip install -e .
+```
+
+### Usage
+
+```bash
+mle new <project name>
+```
+
+And a project directory will be created under the current path, you need to start the project under the project
+directory.
+
+```bash
+cd <project name>
+mle start
+```
+
+You can also start an interactive chat in the terminal under the project directory:
+
+```bash
+mle chat
+```
+
+## Use cases
+
+### 🧪 Prototype an ML Baseline
+
+MLE agent can help you prototype an ML baseline with the given requirements, and test the model on the local machine.
+The requirements can be vague, such as "I want to predict the stock price based on the historical data".
+
+```bash
+cd <project name>
+mle start
+```
+
+### :bar_chart: Generate Work Report
+
+MLE agent can help you summarize your weekly report, including development progress, communication notes, reference, and
+to-do lists.
+
+#### Mode 1: Web Application to Generate Report from GitHub
+
+```bash
+cd <project name>
+mle report
+```
+
+Then, you can visit http://localhost:3000/ to generate your report locally.
+
+#### Mode 2: CLI Tool to Generate Report from Local Git Repository
+```bash
+cd <project name>
+mle report-local --email=<git email> --start-date=YYYY-MM-DD --end-date=YYYY-MM-DD <path_to_git_repo>
+```
+
+- `--start-date` and `--end-date` are optional parameters. If omitted, the command will generate a report for the default date range of the last 7 days.
+- Replace `<git email>` with your Git email and `<path_to_git_repo>` with the path to your local Git repository.
+
+### :trophy: Start with Kaggle Competition
+
+MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training
+independently. Here is the basic command to start a Kaggle competition:
+
+```bash
+cd <project name>
+mle kaggle
+```
+
+Or you can let the agents finish the Kaggle task without human interaction if you have the dataset and submission file
+ready:
+
+```bash
+cd <project name>
+mle kaggle --auto \
+--datasets "<path_to_dataset1>,<path_to_dataset2>,..." \
+--description "<description_file_path_or_text>" \
+--submission "<submission_file_path>" \
+--sub_example "<submission_example_file_path>" \ 
+--comp_id "<competition_id>"
+```
+
+Please make sure you have joined the competition before running the command. For more details, see the [MLE-Agent Tutorials](https://mle-agent-site.vercel.app/tutorial/Start_a_kaggle_task).
+
+## Roadmap
+
+The following is a list of the tasks we plan to do, welcome to propose something new!
+
+<details>
+  <summary><b> :hammer: General Features</b></summary>
+
+- [x] Understand users' requirements to create an end-to-end AI project
+- [x] Suggest the SOTA data science solutions by using the web search
+- [x] Plan the ML engineering tasks with human interaction
+- [x] Execute the code on the local machine/cloud, debug and fix the errors
+- [x] Leverage the built-in functions to complete ML engineering tasks
+- [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
+- [x] Kaggle mode: to finish a Kaggle task without humans
+- [x] Summary and reflect the whole ML/AI pipeline
+- [ ] Integration with Cloud data and testing and debugging platforms
+- [x] Local RAG support to make personal ML/AI coding assistant
+- [ ] Function zoo: generate AI/ML functions and save them for future usage
+
+</details>
+
+<details>
+  <summary><b>:star: More LLMs and Serving Tools</b></summary>
+
+- [x] Ollama LLama3
+- [x] OpenAI GPTs
+- [x] Anthropic Claude 3.5 Sonnet
+
+</details>
+
+<details>
+  <summary><b>:sparkling_heart: Better user experience</b></summary>
+
+- [x] CLI Application
+- [x] Web UI
+- [x] Discord
+
+</details>
+
+<details>
+  <summary><b>:jigsaw: Functions and Integrations</b></summary>
+
+- [x] Local file system
+- [x] Local code exectutor
+- [x] Arxiv.org search
+- [x] Papers with Code search
+- [x] General keyword search
+- [ ] Hugging Face
+- [ ] SkyPilot cloud deployment
+- [ ] Snowflake data
+- [ ] AWS S3 data
+- [ ] Databricks data catalog
+- [ ] Wandb experiment monitoring
+- [ ] MLflow management
+- [ ] DBT data transform
+
+</details>
+
+## Contributing
+
+We welcome contributions from the community. We are looking for contributors to help us with the following tasks:
+
+- Benchmark and Evaluate the agent
+- Add more features to the agent
+- Improve the documentation
+- Write tests
+
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribute.
+
+## Support and Community
+
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please ask in the Discord community.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
+
+## License
+
+Check [MIT License](LICENSE) file for more information.
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+2026-11-11 06:33:25.701 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:33:28.671 | INFO     | Model API request cost info: input_tokens=2674, output_tokens=311, cost=0.000000
+2026-11-11 06:33:28.672 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:33:28.672 | INFO     | ******
+2026-11-11 06:33:28.672 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]
+- Environment Setup & Installation:
+  - Install via PyPI: `pip install mle-agent -U`
+  - Install from source:
+    - `git clone git@github.com:MLSysOps/MLE-agent.git`
+    - `pip install -e .`
+- Programming Language:
+  - Python (inferred from usage of pip and Python packages, no explicit version stated)
+- Dependencies:
+  - Not explicitly listed in README, but implied to be Python packages installable via pip.
+- Test Execution Commands:
+  - No explicit test commands found in the README.
+- Specific Commands for Individual Test Files (including tests/test_lancedbmemory.py):
+  - No commands for running individual or specific test files mentioned.
+- Other Notes:
+  - Usage of CLI 'mle' commands to start projects, chat, run Kaggle tasks, generate reports.
+  - No environment variables or config files explicitly specified.
+
+Summary:
+The README mostly covers installation via pip or source, usage commands, and features. It lacks explicit details on:
+- Programming language version specifics
+- Dependency versions
+- Test suite commands or how to run tests, individually or in bulk
+- Specific test commands targeting files like tests/test_lancedbmemory.py
+
+These details may reside in other files such as requirements.txt, setup.py, or dedicated test documentation.
+[/Key Information]
+2026-11-11 06:33:28.672 | INFO     | ******
+2026-11-11 06:33:28.672 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]\n- Environment Setup & Installation:\n  - Install via PyPI: `pip install mle-agent -U`\n  - Install from source:\n    - `git clone git@github.com:MLSysOps/MLE-agent.git`\n    - `pip install -e .`\n- Programming Language:\n  - Python (inferred from usage of pip and Python packages, no explicit version stated)\n- Dependencies:\n  - Not explicitly listed in README, but implied to be Python packages installable via pip.\n- Test Execution Commands:\n  - No explicit test commands found in the README.\n- Specific Commands for Individual Test Files (including tests/test_lancedbmemory.py):\n  - No commands for running individual or specific test files mentioned.\n- Other Notes:\n  - Usage of CLI 'mle' commands to start projects, chat, run Kaggle tasks, generate reports.\n  - No environment variables or config files explicitly specified.\n\nSummary:\nThe README mostly covers installation via pip or source, usage commands, and features. It lacks explicit details on:\n- Programming language version specifics\n- Dependency versions\n- Test suite commands or how to run tests, individually or in bulk\n- Specific test commands targeting files like tests/test_lancedbmemory.py\n\nThese details may reside in other files such as requirements.txt, setup.py, or dedicated test documentation.\n[/Key Information]", 'Get File Info', True)
+2026-11-11 06:33:28.673 | INFO     | entering browse
+2026-11-11 06:33:28.673 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt ===
+rich
+click
+py7zr~=0.22.0
+openai~=1.34.0
+pyyaml
+kaggle
+fastapi
+uvicorn
+requests
+GitPython
+tree-sitter==0.21.3
+onnxruntime
+questionary
+pandas~=2.2.2
+tavily-python
+instructor
+langfuse
+setuptools
+numexpr~=2.10.1
+bottleneck~=1.4.0
+google-api-python-client~=2.143.0
+google-auth-httplib2~=0.2.0
+google-auth-oauthlib~=1.2.1
+lancedb~=0.15.0
+tantivy~=0.22.0
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt ===
+2026-11-11 06:33:28.673 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:33:31.547 | INFO     | Model API request cost info: input_tokens=740, output_tokens=258, cost=0.000000
+2026-11-11 06:33:31.548 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:33:31.548 | INFO     | ******
+2026-11-11 06:33:31.548 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt]
+- Exact Python dependency versions:
+  - py7zr~=0.22.0
+  - openai~=1.34.0
+  - tree-sitter==0.21.3
+  - pandas~=2.2.2
+  - numexpr~=2.10.1
+  - bottleneck~=1.4.0
+  - google-api-python-client~=2.143.0
+  - google-auth-httplib2~=0.2.0
+  - google-auth-oauthlib~=1.2.1
+  - lancedb~=0.15.0
+  - tantivy~=0.22.0
+- Other dependencies without exact versions specified:
+  - rich
+  - click
+  - pyyaml
+  - kaggle
+  - fastapi
+  - uvicorn
+  - requests
+  - GitPython
+  - onnxruntime
+  - questionary
+  - tavily-python
+  - instructor
+  - langfuse
+  - setuptools
+[/Key Information]
+2026-11-11 06:33:31.548 | INFO     | ******
+2026-11-11 06:33:31.548 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt]\n- Exact Python dependency versions:\n  - py7zr~=0.22.0\n  - openai~=1.34.0\n  - tree-sitter==0.21.3\n  - pandas~=2.2.2\n  - numexpr~=2.10.1\n  - bottleneck~=1.4.0\n  - google-api-python-client~=2.143.0\n  - google-auth-httplib2~=0.2.0\n  - google-auth-oauthlib~=1.2.1\n  - lancedb~=0.15.0\n  - tantivy~=0.22.0\n- Other dependencies without exact versions specified:\n  - rich\n  - click\n  - pyyaml\n  - kaggle\n  - fastapi\n  - uvicorn\n  - requests\n  - GitPython\n  - onnxruntime\n  - questionary\n  - tavily-python\n  - instructor\n  - langfuse\n  - setuptools\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:33:31.548 | INFO     | entering browse
+2026-11-11 06:33:31.549 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py ===
+#!/usr/bin/env python
+from setuptools import find_packages, setup
+
+# read the contents of README file
+from os import path
+from io import open  # for Python 2 and 3 compatibility
+
+# get __version__ from _version.py
+ver_file = path.join('mle', 'version.py')
+with open(ver_file) as f:
+    exec(f.read())
+
+this_directory = path.abspath(path.dirname(__file__))
+
+
+# read the contents of README.md
+def readme():
+    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        return f.read()
+
+
+# read the contents of requirements.txt
+with open(path.join(this_directory, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().splitlines()
+
+setup(
+    name='mle-agent',
+    version=__version__,
+    description='MLE-agent: An agent to automate your MLE processes',
+    long_description=readme(),
+    long_description_content_type='text/markdown',
+    author='Yizheng Huang, Huaizheng Zhang',
+    author_email='huangyz0918@gmail.com',
+    url='https://github.com/MLSysOps/MLE-agent',
+    download_url='https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip',
+    keywords=['LLM', 'deep learning', 'MLOps', 'shell', 'neural networks'],
+    packages=find_packages(),
+    entry_points={
+        "console_scripts": [
+            "mle-agent=mle.cli:cli",
+            "mle=mle.cli:cli",
+        ]
+    },
+    zip_safe=False,
+    include_package_data=True,
+    install_requires=requirements,
+    setup_requires=['setuptools>=38.6.0'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Education',
+        'Intended Audience :: Financial and Insurance Industry',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3',
+        "Operating System :: OS Independent",
+    ],
+)
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py ===
+2026-11-11 06:33:31.549 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:33:33.816 | INFO     | Model API request cost info: input_tokens=1043, output_tokens=205, cost=0.000000
+2026-11-11 06:33:33.817 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:33:33.817 | INFO     | ******
+2026-11-11 06:33:33.817 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py]
+- Environment setup:
+  - Uses setuptools for package setup.
+  - Requires 'setuptools>=38.6.0' specifically for setup.
+
+- Dependencies:
+  - Listed in 'requirements.txt', read at setup time.
+  - Exact versions are not listed directly here but are expected in 'requirements.txt' file located in the same directory.
+
+- Python runtime:
+  - Compatible with Python 3 (implied by classifiers and coding style).
+  
+- Installation commands typically used (inferred):
+  - python setup.py install
+  - Or pip install . (to install the package along with requirements)
+
+- Entry points (console scripts):
+  - 'mle-agent' and 'mle' commands available, both pointing to 'mle.cli:cli'.
+
+- No environment variables explicitly listed in this file.
+[/Key Information]
+2026-11-11 06:33:33.818 | INFO     | ******
+2026-11-11 06:33:33.818 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py]\n- Environment setup:\n  - Uses setuptools for package setup.\n  - Requires 'setuptools>=38.6.0' specifically for setup.\n\n- Dependencies:\n  - Listed in 'requirements.txt', read at setup time.\n  - Exact versions are not listed directly here but are expected in 'requirements.txt' file located in the same directory.\n\n- Python runtime:\n  - Compatible with Python 3 (implied by classifiers and coding style).\n  \n- Installation commands typically used (inferred):\n  - python setup.py install\n  - Or pip install . (to install the package along with requirements)\n\n- Entry points (console scripts):\n  - 'mle-agent' and 'mle' commands available, both pointing to 'mle.cli:cli'.\n\n- No environment variables explicitly listed in this file.\n[/Key Information]", 'Get File Info', True)
+2026-11-11 06:33:39.647 | INFO     | Model API request cost info: input_tokens=3128, output_tokens=98, cost=0.000000
+2026-11-11 06:33:39.656 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:33:41.536 | INFO     | Model API request cost info: input_tokens=1160, output_tokens=154, cost=0.000000
+2026-11-11 06:33:41.537 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"environment setup and test commands\")",
+    "browse_folder(\".github\", \"2\")"
+  ],
+  "collected_information": "The user requested environment setup and test execution details specifically for tests/test_lancedbmemory.py. Initial analysis shows README.md and setup.py provide partial info but lack precise Python version and test command details. requirements.txt lists dependencies with some pinned versions. No test instructions found in README or setup.py. CONTRIBUTING.md and .github workflows may include relevant info. Therefore, further exploration of CONTRIBUTING.md for environment and test details and browsing .github workflows at depth 2 is required.",
+  "terminate": false
+}
+2026-11-11 06:33:41.537 | DEBUG    | Extracted a valid json
+2026-11-11 06:33:41.539 | INFO     | entering browse
+2026-11-11 06:33:41.540 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+# Contributing to MLE Agent
+
+This document is a work in progress. If you notice areas for improvement, please feel free to update this guide and submit a pull request!
+
+## Table of Contents
+
+- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Ensuring Your Pull Request Gets Accepted](#ensuring-your-pull-request-gets-accepted)
+- [The Review Process](#the-review-process)
+- [Work in Progress Pull Requests](#work-in-progress-pull-requests)
+- [Triaging Issues](#triaging-issues)
+
+## Submitting a Pull Request
+
+To contribute code to MLE Agent, you need to open a [pull request](https://help.github.com/articles/about-pull-requests/). The pull request will be reviewed by the community before it is merged into the core project. Generally, a pull request should be submitted when a unit of work is complete, but you can also share ideas or get feedback through a work in progress (WIP) pull request ([learn more](#work-in-progress-pull-requests)).
+
+1. Familiarize yourself with the project by reading our ["Getting Started Guide"](docs/GETTING_STARTED.md).
+
+2. Follow our [coding standards](docs/CODE_GUIDELINES.md) to ensure consistency across the project.
+
+3. Review our [testing guidelines](docs/TEST_GUIDELINES.md) to understand the project's automated testing framework.
+
+4. [Set up your development environment](docs/DEVELOPMENT_SETUP.md) to make sure you have everything you need to contribute.
+
+5. Make sure you have the latest version of the code by syncing your fork with the main repository:
+
+   ```sh
+   git remote add upstream https://github.com/MLSysOps/MLE-agent.git
+   git fetch upstream
+   git merge upstream/main
+   ```
+
+6. Create a branch for the code you will be working on:
+
+   ```sh
+   git checkout -b my-new-feature
+   ```
+
+7. Write your code, making sure to include tests as needed.
+
+8. Commit your changes with a meaningful commit message:
+
+   ```sh
+   git commit -m "Description of the changes"
+   ```
+
+9. Push your changes to your fork:
+
+   ```sh
+   git push origin my-new-feature
+   ```
+
+10. Open a pull request on GitHub. Make sure to include a detailed description of the changes you made and any relevant context.
+
+## Ensuring Your Pull Request Gets Accepted
+
+- Make sure your code follows the coding standards outlined in our code guidelines -- we use [flake8](https://flake8.pycqa.org/en/latest/) to enforce these standards.
+- Write tests for any new features or significant changes.
+- Ensure all tests pass before submitting your pull request.
+- Be responsive to feedback from reviewers.
+
+
+## The Review Process
+
+Once you submit a pull request, it will be reviewed by the maintainers. They might request changes or provide feedback. The goal is to ensure the code is high quality and aligns with the project's goals.
+
+## Work in Progress Pull Requests
+
+If you want feedback on your work before it's complete, you can open a WIP pull request. This allows you to get input from others on your approach or on specific parts of your code.
+When you're ready for a full review, you can mark the pull request as `MRG` for review by removing the `WIP` label.
+
+## Triaging Issues
+If you're not ready to submit code but still want to contribute, you can help by triaging issues. This involves confirming bugs, providing additional information, or suggesting ways to reproduce issues.
+
+Thank you for your interest in contributing to MLE Agent!
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+2026-11-11 06:33:41.540 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:33:43.716 | INFO     | Model API request cost info: input_tokens=1344, output_tokens=152, cost=0.000000
+2026-11-11 06:33:43.717 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:33:43.717 | INFO     | ******
+2026-11-11 06:33:43.717 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]
+- Environment setup:
+  - Refer to the document "docs/DEVELOPMENT_SETUP.md" for environment setup details.
+- Testing:
+  - Follow the testing guidelines in "docs/TEST_GUIDELINES.md" to understand the automated testing framework.
+  - Tests should be written for any new features or significant changes.
+  - All tests must pass before submitting a pull request.
+- Coding standards and tools:
+  - Use flake8 to enforce coding standards.
+- No explicit test commands or scripts are provided in this document.
+[/Key Information]
+2026-11-11 06:33:43.717 | INFO     | ******
+2026-11-11 06:33:43.717 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]\n- Environment setup:\n  - Refer to the document "docs/DEVELOPMENT_SETUP.md" for environment setup details.\n- Testing:\n  - Follow the testing guidelines in "docs/TEST_GUIDELINES.md" to understand the automated testing framework.\n  - Tests should be written for any new features or significant changes.\n  - All tests must pass before submitting a pull request.\n- Coding standards and tools:\n  - Use flake8 to enforce coding standards.\n- No explicit test commands or scripts are provided in this document.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:33:43.717 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github. The browsing Depth is 2.\nStructure of this directory:\n\nPULL_REQUEST_TEMPLATE.md\n\nOPEN_SOURCE_LICENSES.md\n\nCODEOWNERS\n\nISSUE_TEMPLATE.md\n\nworkflows/\n\n    publish.yml\n\n    lint.yml\n\n    test.yml\n\n', 'folder structure collected', True)
+2026-11-11 06:33:49.283 | INFO     | Model API request cost info: input_tokens=4102, output_tokens=173, cost=0.000000
+2026-11-11 06:33:49.290 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:33:51.305 | INFO     | Model API request cost info: input_tokens=1040, output_tokens=123, cost=0.000000
+2026-11-11 06:33:51.307 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"docs/DEVELOPMENT_SETUP.md\", \"environment setup details including Python version, dependencies, installation commands\")",
+    "browse_file_for_environment_info(\"docs/TEST_GUIDELINES.md\", \"testing instructions including how to run tests, test framework, specifics about tests/test_lancedbmemory.py\")",
+    "browse_file_for_environment_info(\".github/workflows/test.yml\", \"test execution commands and environment configuration like Python versions or test tools\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 06:33:51.307 | DEBUG    | Extracted a valid json
+2026-11-11 06:33:51.309 | INFO     | entering browse
+2026-11-11 06:33:51.310 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/docs/DEVELOPMENT_SETUP.md'
+2026-11-11 06:33:51.310 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 06:33:51.310 | INFO     | entering browse
+2026-11-11 06:33:51.310 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/docs/TEST_GUIDELINES.md'
+2026-11-11 06:33:51.310 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 06:33:51.310 | INFO     | entering browse
+2026-11-11 06:33:51.311 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml ===
+name: Unit Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install .
+      - name: Run Test
+        run: python -m unittest discover tests
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml ===
+2026-11-11 06:33:51.311 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:33:53.130 | INFO     | Model API request cost info: input_tokens=716, output_tokens=154, cost=0.000000
+2026-11-11 06:33:53.132 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:33:53.133 | INFO     | ******
+2026-11-11 06:33:53.133 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml]
+- Environment Configuration:
+  - Operating system: ubuntu-20.04
+  - Python version: 3.11
+- Test Tools:
+  - unittest (Python standard library test framework)
+- Test Execution Commands:
+  - Installing dependencies: `pip install .`
+  - Running tests: `python -m unittest discover tests`
+    - This command discovers and runs tests in the `tests` directory.
+- Notes:
+  - No explicit commands were found for running individual or specific test files; only the general discovery command is provided.
+[/Key Information]
+2026-11-11 06:33:53.133 | INFO     | ******
+2026-11-11 06:33:53.133 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml]\n- Environment Configuration:\n  - Operating system: ubuntu-20.04\n  - Python version: 3.11\n- Test Tools:\n  - unittest (Python standard library test framework)\n- Test Execution Commands:\n  - Installing dependencies: `pip install .`\n  - Running tests: `python -m unittest discover tests`\n    - This command discovers and runs tests in the `tests` directory.\n- Notes:\n  - No explicit commands were found for running individual or specific test files; only the general discovery command is provided.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:34:00.507 | INFO     | Model API request cost info: input_tokens=4619, output_tokens=928, cost=0.000000
+2026-11-11 06:34:00.565 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:34:04.439 | INFO     | Model API request cost info: input_tokens=1526, output_tokens=454, cost=0.000000
+2026-11-11 06:34:04.441 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "python_version": "3.11 (from CI workflow .github/workflows/test.yml)",
+    "dependency_installation": "pip install . to install package and dependencies listed in requirements.txt",
+    "dependencies_versions": {
+      "py7zr": "~=0.22.0",
+      "openai": "~=1.34.0",
+      "tree-sitter": "==0.21.3",
+      "pandas": "~=2.2.2",
+      "numexpr": "~=2.10.1",
+      "bottleneck": "~=1.4.0",
+      "google-api-python-client": "~=2.143.0",
+      "google-auth-httplib2": "~=0.2.0",
+      "google-auth-oauthlib": "~=1.2.1",
+      "lancedb": "~=0.15.0",
+      "tantivy": "~=0.22.0",
+      "others_without_versions": ["rich", "click", "pyyaml", "kaggle", "fastapi", "uvicorn", "requests", "GitPython", "onnxruntime", "questionary", "tavily-python", "instructor", "langfuse", "setuptools"]
+    },
+    "test_execution": "python -m unittest discover tests (runs all tests including tests/test_lancedbmemory.py)",
+    "testing_framework": "standard Python unittest from standard library",
+    "environment_vars_or_external_config": "none found",
+    "notes": [
+      "README.md provides environment setup instructions with pip install mle-agent -U or pip install -e . from source",
+      "setup.py requires setuptools >= 38.6.0 and confirms Python 3 compatibility",
+      "CONTRIBUTING.md points to missing docs/DEVELOPMENT_SETUP.md and docs/TEST_GUIDELINES.md",
+      "CI workflow .github/workflows/test.yml confirms environment and test commands",
+      "No special commands for running tests/test_lancedbmemory.py individually found or required"
+    ]
+  },
+  "terminate": true
+}
+2026-11-11 06:34:04.441 | DEBUG    | Extracted a valid json
+2026-11-11 06:34:04.446 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-11-11 06:34:09.815 | INFO     | Model API request cost info: input_tokens=2137, output_tokens=580, cost=0.000000
+2026-11-11 06:34:09.820 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-11-11 06:34:09.842 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 06:34:12.520 | INFO     | Model API request cost info: input_tokens=2287, output_tokens=178, cost=0.000000
+2026-11-11 06:34:12.523 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 06:55:19.176 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 4089d1bc6d2232a0c1f0794e93ffde7a6d7cab40686a3d836dd16f4233af05c8 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image mlsysops__mle-agent-274-dockerfile1:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 06:55:19.181 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 06:55:22.451 | INFO     | Model API request cost info: input_tokens=2615, output_tokens=309, cost=0.000000
+2026-11-11 06:55:22.453 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed with the error: 'ModuleNotFoundError: No module named 'pytest''. Although the test runner used is 'unittest', the test file 'tests/test_lancedbmemory.py' imports 'pytest' which is not installed in the current environment. Please modify the evaluation script or the environment setup to ensure that 'pytest' is installed prior to running the tests. The evaluation script should either install 'pytest' before test execution or the Dockerfile environment setup should include installing 'pytest' as a dependency. Additionally, verify if any other test dependencies are required. This error indicates missing dependencies needed to run the test, preventing the tests from running successfully.",
+  "guidance_for_context_retrieval_agent": "The error indicates that 'pytest' is required to run tests in 'tests/test_lancedbmemory.py'. To correctly fix the environment setup, retrieve and analyze files that define project dependencies and testing requirements: specifically, the 'requirements.txt', 'setup.py', and 'pyproject.toml' files from the repository root to check for any testing-related dependencies listed such as 'pytest'. Also, check for any documentation related to testing setup like 'README.md', 'CONTRIBUTING.md' and any files named like 'pytest.ini' or any CI workflows under '.github/workflows/' folder that might specify additional dependencies or test running instructions."
+}
+2026-11-11 06:55:22.453 | DEBUG    | Extracted a valid json
+2026-11-11 06:55:26.161 | INFO     | Model API request cost info: input_tokens=1611, output_tokens=300, cost=0.000000
+2026-11-11 06:55:26.168 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:55:28.046 | INFO     | Model API request cost info: input_tokens=745, output_tokens=144, cost=0.000000
+2026-11-11 06:55:28.047 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"requirements.txt\", \"test dependencies, pytest\")",
+    "browse_file_for_environment_info(\"setup.py\", \"test dependencies, pytest\")",
+    "browse_file_for_environment_info(\"README.md\", \"environment setup and running tests\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"environment setup and running tests\")",
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_file_for_environment_info(\"pytest.ini\", \"test configurations, pytest\")",
+    "browse_folder(\"tests\", \"1\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 06:55:28.047 | DEBUG    | Extracted a valid json
+2026-11-11 06:55:28.053 | INFO     | entering browse
+2026-11-11 06:55:28.056 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt ===
+rich
+click
+py7zr~=0.22.0
+openai~=1.34.0
+pyyaml
+kaggle
+fastapi
+uvicorn
+requests
+GitPython
+tree-sitter==0.21.3
+onnxruntime
+questionary
+pandas~=2.2.2
+tavily-python
+instructor
+langfuse
+setuptools
+numexpr~=2.10.1
+bottleneck~=1.4.0
+google-api-python-client~=2.143.0
+google-auth-httplib2~=0.2.0
+google-auth-oauthlib~=1.2.1
+lancedb~=0.15.0
+tantivy~=0.22.0
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt ===
+2026-11-11 06:55:28.056 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:55:29.421 | INFO     | Model API request cost info: input_tokens=736, output_tokens=79, cost=0.000000
+2026-11-11 06:55:29.423 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:55:29.423 | INFO     | ******
+2026-11-11 06:55:29.423 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt]
+- No explicit test dependencies or pytest listed.
+- The file only lists main package dependencies without specifying test frameworks or testing-related packages.
+[/Key Information]
+No relevant information found regarding test dependencies or pytest.
+2026-11-11 06:55:29.423 | INFO     | ******
+2026-11-11 06:55:29.423 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/requirements.txt]\n- No explicit test dependencies or pytest listed.\n- The file only lists main package dependencies without specifying test frameworks or testing-related packages.\n[/Key Information]\nNo relevant information found regarding test dependencies or pytest.', 'Get File Info', True)
+2026-11-11 06:55:29.423 | INFO     | entering browse
+2026-11-11 06:55:29.424 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py ===
+#!/usr/bin/env python
+from setuptools import find_packages, setup
+
+# read the contents of README file
+from os import path
+from io import open  # for Python 2 and 3 compatibility
+
+# get __version__ from _version.py
+ver_file = path.join('mle', 'version.py')
+with open(ver_file) as f:
+    exec(f.read())
+
+this_directory = path.abspath(path.dirname(__file__))
+
+
+# read the contents of README.md
+def readme():
+    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        return f.read()
+
+
+# read the contents of requirements.txt
+with open(path.join(this_directory, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().splitlines()
+
+setup(
+    name='mle-agent',
+    version=__version__,
+    description='MLE-agent: An agent to automate your MLE processes',
+    long_description=readme(),
+    long_description_content_type='text/markdown',
+    author='Yizheng Huang, Huaizheng Zhang',
+    author_email='huangyz0918@gmail.com',
+    url='https://github.com/MLSysOps/MLE-agent',
+    download_url='https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip',
+    keywords=['LLM', 'deep learning', 'MLOps', 'shell', 'neural networks'],
+    packages=find_packages(),
+    entry_points={
+        "console_scripts": [
+            "mle-agent=mle.cli:cli",
+            "mle=mle.cli:cli",
+        ]
+    },
+    zip_safe=False,
+    include_package_data=True,
+    install_requires=requirements,
+    setup_requires=['setuptools>=38.6.0'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Education',
+        'Intended Audience :: Financial and Insurance Industry',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3',
+        "Operating System :: OS Independent",
+    ],
+)
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py ===
+2026-11-11 06:55:29.424 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:55:31.061 | INFO     | Model API request cost info: input_tokens=1037, output_tokens=120, cost=0.000000
+2026-11-11 06:55:31.064 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:55:31.064 | INFO     | ******
+2026-11-11 06:55:31.064 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py]
+- The file references reading dependencies from "requirements.txt" for install_requires.
+- No explicit test dependencies or pytest mentioned in this file.
+- No test commands or scripts defined in this setup.py.
+- No environment variables or configuration related to tests.
+[/Key Information]
+
+No explicit test dependencies or pytest commands found in this file. Additional files like requirements-test.txt or a README might be needed to confirm test setup.
+2026-11-11 06:55:31.064 | INFO     | ******
+2026-11-11 06:55:31.064 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/setup.py]\n- The file references reading dependencies from "requirements.txt" for install_requires.\n- No explicit test dependencies or pytest mentioned in this file.\n- No test commands or scripts defined in this setup.py.\n- No environment variables or configuration related to tests.\n[/Key Information]\n\nNo explicit test dependencies or pytest commands found in this file. Additional files like requirements-test.txt or a README might be needed to confirm test setup.', 'Get File Info', True)
+2026-11-11 06:55:31.065 | INFO     | entering browse
+2026-11-11 06:55:31.066 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+<div align="center">
+<h1 align="center">MLE-Agent: Your intelligent companion for seamless AI engineering and research.</h1>
+<img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
+<a href="https://trendshift.io/repositories/11658" target="_blank"><img src="https://trendshift.io/api/badge/repositories/11658" alt="MLSysOps%2FMLE-agent | Trendshift" style="width: 250px; height: 200px;" width="250" height="200px"/></a>
+<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
+
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg)
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg)
+![PyPI - Version](https://img.shields.io/pypi/v/mle-agent)
+[![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
+![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
+<a href="https://discord.gg/d9vcY7PA8Z"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
+
+[📚 Docs](https://mle-agent-site.vercel.app/) |
+[🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) |
+👋 Join us on <a href="https://discord.gg/d9vcY7PA8Z" target="_blank">Discord</a>
+
+</div>
+
+## Overview
+
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
+
+- 🤖 Autonomous Baseline: Automatically builds ML/AI baselines and solutions based on your requirements.
+- 🏅End-to-end ML Task: Participates in Kaggle competitions and completes tasks independently.
+- 🔍 [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) Integration: Access best practices
+  and state-of-the-art methods.
+- 🐛 Smart Debugging: Ensures high-quality code through automatic debugger-coder interactions.
+- 📂 File System Integration: Organizes your project structure efficiently.
+- 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
+- ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
+- 🧠 Smart Advisor: Provides personalized suggestions and recommendations for your ML/AI project.
+- 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
+
+https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
+
+## Milestones
+
+- :rocket: 09/24/2024: Release the `0.4.2` with enhanced `Auto-Kaggle` mode to complete an end-to-end competition with minimal effort.
+- :rocket: 09/10/2024: Release the `0.4.0` with new CLIs like `MLE report`, `MLE kaggle`, `MLE integration` and many new
+  models like `Mistral`.
+- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc. (v0.3.0)
+- :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- 👨‍🍼 **07/03/2024: Kaia is born**
+- :rocket: 06/01/2024: Release the first rule-based version of MLE agent (v0.1.0)
+
+## Get started
+
+### Installation
+
+```bash
+pip install mle-agent -U
+# or from source
+git clone git@github.com:MLSysOps/MLE-agent.git
+pip install -e .
+```
+
+### Usage
+
+```bash
+mle new <project name>
+```
+
+And a project directory will be created under the current path, you need to start the project under the project
+directory.
+
+```bash
+cd <project name>
+mle start
+```
+
+You can also start an interactive chat in the terminal under the project directory:
+
+```bash
+mle chat
+```
+
+## Use cases
+
+### 🧪 Prototype an ML Baseline
+
+MLE agent can help you prototype an ML baseline with the given requirements, and test the model on the local machine.
+The requirements can be vague, such as "I want to predict the stock price based on the historical data".
+
+```bash
+cd <project name>
+mle start
+```
+
+### :bar_chart: Generate Work Report
+
+MLE agent can help you summarize your weekly report, including development progress, communication notes, reference, and
+to-do lists.
+
+#### Mode 1: Web Application to Generate Report from GitHub
+
+```bash
+cd <project name>
+mle report
+```
+
+Then, you can visit http://localhost:3000/ to generate your report locally.
+
+#### Mode 2: CLI Tool to Generate Report from Local Git Repository
+```bash
+cd <project name>
+mle report-local --email=<git email> --start-date=YYYY-MM-DD --end-date=YYYY-MM-DD <path_to_git_repo>
+```
+
+- `--start-date` and `--end-date` are optional parameters. If omitted, the command will generate a report for the default date range of the last 7 days.
+- Replace `<git email>` with your Git email and `<path_to_git_repo>` with the path to your local Git repository.
+
+### :trophy: Start with Kaggle Competition
+
+MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training
+independently. Here is the basic command to start a Kaggle competition:
+
+```bash
+cd <project name>
+mle kaggle
+```
+
+Or you can let the agents finish the Kaggle task without human interaction if you have the dataset and submission file
+ready:
+
+```bash
+cd <project name>
+mle kaggle --auto \
+--datasets "<path_to_dataset1>,<path_to_dataset2>,..." \
+--description "<description_file_path_or_text>" \
+--submission "<submission_file_path>" \
+--sub_example "<submission_example_file_path>" \ 
+--comp_id "<competition_id>"
+```
+
+Please make sure you have joined the competition before running the command. For more details, see the [MLE-Agent Tutorials](https://mle-agent-site.vercel.app/tutorial/Start_a_kaggle_task).
+
+## Roadmap
+
+The following is a list of the tasks we plan to do, welcome to propose something new!
+
+<details>
+  <summary><b> :hammer: General Features</b></summary>
+
+- [x] Understand users' requirements to create an end-to-end AI project
+- [x] Suggest the SOTA data science solutions by using the web search
+- [x] Plan the ML engineering tasks with human interaction
+- [x] Execute the code on the local machine/cloud, debug and fix the errors
+- [x] Leverage the built-in functions to complete ML engineering tasks
+- [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
+- [x] Kaggle mode: to finish a Kaggle task without humans
+- [x] Summary and reflect the whole ML/AI pipeline
+- [ ] Integration with Cloud data and testing and debugging platforms
+- [x] Local RAG support to make personal ML/AI coding assistant
+- [ ] Function zoo: generate AI/ML functions and save them for future usage
+
+</details>
+
+<details>
+  <summary><b>:star: More LLMs and Serving Tools</b></summary>
+
+- [x] Ollama LLama3
+- [x] OpenAI GPTs
+- [x] Anthropic Claude 3.5 Sonnet
+
+</details>
+
+<details>
+  <summary><b>:sparkling_heart: Better user experience</b></summary>
+
+- [x] CLI Application
+- [x] Web UI
+- [x] Discord
+
+</details>
+
+<details>
+  <summary><b>:jigsaw: Functions and Integrations</b></summary>
+
+- [x] Local file system
+- [x] Local code exectutor
+- [x] Arxiv.org search
+- [x] Papers with Code search
+- [x] General keyword search
+- [ ] Hugging Face
+- [ ] SkyPilot cloud deployment
+- [ ] Snowflake data
+- [ ] AWS S3 data
+- [ ] Databricks data catalog
+- [ ] Wandb experiment monitoring
+- [ ] MLflow management
+- [ ] DBT data transform
+
+</details>
+
+## Contributing
+
+We welcome contributions from the community. We are looking for contributors to help us with the following tasks:
+
+- Benchmark and Evaluate the agent
+- Add more features to the agent
+- Improve the documentation
+- Write tests
+
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribute.
+
+## Support and Community
+
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please ask in the Discord community.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
+
+## License
+
+Check [MIT License](LICENSE) file for more information.
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+2026-11-11 06:55:31.067 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:55:33.737 | INFO     | Model API request cost info: input_tokens=2654, output_tokens=244, cost=0.000000
+2026-11-11 06:55:33.739 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:55:33.739 | INFO     | ******
+2026-11-11 06:55:33.740 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]
+- Environment setup:
+  - Installation via pip:
+    - `pip install mle-agent -U` (to install or upgrade)
+  - Alternatively, install from source:
+    - `git clone git@github.com:MLSysOps/MLE-agent.git`
+    - `pip install -e .`
+  - No explicit Python version or other runtime mentioned here.
+
+- Running tests:
+  - The README does not provide explicit commands or scripts to run tests.
+  - The README mentions welcoming contributions including writing tests but no test running instructions.
+  - No environment variables or configuration files related to tests are specified in this README.
+
+- Additional notes:
+  - The tool provides various CLI commands for usage like `mle new`, `mle start`, `mle chat`, `mle report`, `mle report-local`, and `mle kaggle`.
+  - No direct mention of test running or test suite commands.
+
+No relevant information about test commands or environment variables for testing beyond installation found.
+[/Key Information]
+2026-11-11 06:55:33.740 | INFO     | ******
+2026-11-11 06:55:33.740 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]\n- Environment setup:\n  - Installation via pip:\n    - `pip install mle-agent -U` (to install or upgrade)\n  - Alternatively, install from source:\n    - `git clone git@github.com:MLSysOps/MLE-agent.git`\n    - `pip install -e .`\n  - No explicit Python version or other runtime mentioned here.\n\n- Running tests:\n  - The README does not provide explicit commands or scripts to run tests.\n  - The README mentions welcoming contributions including writing tests but no test running instructions.\n  - No environment variables or configuration files related to tests are specified in this README.\n\n- Additional notes:\n  - The tool provides various CLI commands for usage like `mle new`, `mle start`, `mle chat`, `mle report`, `mle report-local`, and `mle kaggle`.\n  - No direct mention of test running or test suite commands.\n\nNo relevant information about test commands or environment variables for testing beyond installation found.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:55:33.740 | INFO     | entering browse
+2026-11-11 06:55:33.741 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+# Contributing to MLE Agent
+
+This document is a work in progress. If you notice areas for improvement, please feel free to update this guide and submit a pull request!
+
+## Table of Contents
+
+- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Ensuring Your Pull Request Gets Accepted](#ensuring-your-pull-request-gets-accepted)
+- [The Review Process](#the-review-process)
+- [Work in Progress Pull Requests](#work-in-progress-pull-requests)
+- [Triaging Issues](#triaging-issues)
+
+## Submitting a Pull Request
+
+To contribute code to MLE Agent, you need to open a [pull request](https://help.github.com/articles/about-pull-requests/). The pull request will be reviewed by the community before it is merged into the core project. Generally, a pull request should be submitted when a unit of work is complete, but you can also share ideas or get feedback through a work in progress (WIP) pull request ([learn more](#work-in-progress-pull-requests)).
+
+1. Familiarize yourself with the project by reading our ["Getting Started Guide"](docs/GETTING_STARTED.md).
+
+2. Follow our [coding standards](docs/CODE_GUIDELINES.md) to ensure consistency across the project.
+
+3. Review our [testing guidelines](docs/TEST_GUIDELINES.md) to understand the project's automated testing framework.
+
+4. [Set up your development environment](docs/DEVELOPMENT_SETUP.md) to make sure you have everything you need to contribute.
+
+5. Make sure you have the latest version of the code by syncing your fork with the main repository:
+
+   ```sh
+   git remote add upstream https://github.com/MLSysOps/MLE-agent.git
+   git fetch upstream
+   git merge upstream/main
+   ```
+
+6. Create a branch for the code you will be working on:
+
+   ```sh
+   git checkout -b my-new-feature
+   ```
+
+7. Write your code, making sure to include tests as needed.
+
+8. Commit your changes with a meaningful commit message:
+
+   ```sh
+   git commit -m "Description of the changes"
+   ```
+
+9. Push your changes to your fork:
+
+   ```sh
+   git push origin my-new-feature
+   ```
+
+10. Open a pull request on GitHub. Make sure to include a detailed description of the changes you made and any relevant context.
+
+## Ensuring Your Pull Request Gets Accepted
+
+- Make sure your code follows the coding standards outlined in our code guidelines -- we use [flake8](https://flake8.pycqa.org/en/latest/) to enforce these standards.
+- Write tests for any new features or significant changes.
+- Ensure all tests pass before submitting your pull request.
+- Be responsive to feedback from reviewers.
+
+
+## The Review Process
+
+Once you submit a pull request, it will be reviewed by the maintainers. They might request changes or provide feedback. The goal is to ensure the code is high quality and aligns with the project's goals.
+
+## Work in Progress Pull Requests
+
+If you want feedback on your work before it's complete, you can open a WIP pull request. This allows you to get input from others on your approach or on specific parts of your code.
+When you're ready for a full review, you can mark the pull request as `MRG` for review by removing the `WIP` label.
+
+## Triaging Issues
+If you're not ready to submit code but still want to contribute, you can help by triaging issues. This involves confirming bugs, providing additional information, or suggesting ways to reproduce issues.
+
+Thank you for your interest in contributing to MLE Agent!
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+2026-11-11 06:55:33.741 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:55:35.776 | INFO     | Model API request cost info: input_tokens=1344, output_tokens=149, cost=0.000000
+2026-11-11 06:55:35.779 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:55:35.779 | INFO     | ******
+2026-11-11 06:55:35.779 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]
+- Environment Setup:
+  - Refer to the document "docs/DEVELOPMENT_SETUP.md" for detailed instructions on setting up the development environment.
+- Testing:
+  - Follow the "docs/TEST_GUIDELINES.md" for understanding the automated testing framework.
+  - Ensure all tests pass before submitting pull requests.
+  - Write tests for any new features or significant changes.
+  - The project uses flake8 to enforce coding standards.
+- No explicit commands for running tests or environment details provided in this file.
+[/Key Information]
+2026-11-11 06:55:35.779 | INFO     | ******
+2026-11-11 06:55:35.779 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]\n- Environment Setup:\n  - Refer to the document "docs/DEVELOPMENT_SETUP.md" for detailed instructions on setting up the development environment.\n- Testing:\n  - Follow the "docs/TEST_GUIDELINES.md" for understanding the automated testing framework.\n  - Ensure all tests pass before submitting pull requests.\n  - Write tests for any new features or significant changes.\n  - The project uses flake8 to enforce coding standards.\n- No explicit commands for running tests or environment details provided in this file.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:55:35.779 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\npublish.yml\n\nlint.yml\n\ntest.yml\n\n', 'folder structure collected', True)
+2026-11-11 06:55:35.780 | INFO     | entering browse
+2026-11-11 06:55:35.780 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/pytest.ini'
+2026-11-11 06:55:35.780 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 06:55:35.780 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/tests. The browsing Depth is 1.\nStructure of this directory:\n\n__init__.py\n\n', 'folder structure collected', True)
+2026-11-11 06:55:39.458 | INFO     | Model API request cost info: input_tokens=2679, output_tokens=398, cost=0.000000
+2026-11-11 06:55:39.468 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:55:40.629 | INFO     | Model API request cost info: input_tokens=996, output_tokens=36, cost=0.000000
+2026-11-11 06:55:40.630 | DEBUG    | {
+  "API_calls": ["browse_file_for_environment_info(\".github/workflows/test.yml\")"],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 06:55:40.631 | DEBUG    | Extracted a valid json
+2026-11-11 06:55:44.247 | INFO     | Model API request cost info: input_tokens=3380, output_tokens=395, cost=0.000000
+2026-11-11 06:55:44.259 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:55:46.168 | INFO     | Model API request cost info: input_tokens=993, output_tokens=112, cost=0.000000
+2026-11-11 06:55:46.171 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\".github/workflows/test.yml\", \"extract test run commands and installed dependencies, focusing on pytest usage\")",
+    "browse_folder(\"docs\", \"1\")"
+  ],
+  "collected_information": "Current environment and test setup information is incomplete. Missing details about pytest usage and test execution commands from the `.github/workflows/test.yml` file. Other potential sources in the docs directory for environment setup and test guidelines have not been explored.",
+  "terminate": false
+}
+2026-11-11 06:55:46.172 | DEBUG    | Extracted a valid json
+2026-11-11 06:55:46.178 | INFO     | entering browse
+2026-11-11 06:55:46.181 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml ===
+name: Unit Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install .
+      - name: Run Test
+        run: python -m unittest discover tests
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml ===
+2026-11-11 06:55:46.181 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 06:55:47.907 | INFO     | Model API request cost info: input_tokens=716, output_tokens=111, cost=0.000000
+2026-11-11 06:55:47.911 | SUCCESS  | Successfully extracted environment config
+2026-11-11 06:55:47.911 | INFO     | ******
+2026-11-11 06:55:47.911 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml]
+- Python version: 3.11
+- Installed dependencies command:
+  - pip install .
+- Test run command:
+  - python -m unittest discover tests
+- Notes:
+  - Testing uses unittest framework, no pytest usage detected.
+  - No explicit pytest installation or commands for pytest or running individual test files found.
+[/Key Information]
+2026-11-11 06:55:47.914 | INFO     | ******
+2026-11-11 06:55:47.914 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/.github/workflows/test.yml]\n- Python version: 3.11\n- Installed dependencies command:\n  - pip install .\n- Test run command:\n  - python -m unittest discover tests\n- Notes:\n  - Testing uses unittest framework, no pytest usage detected.\n  - No explicit pytest installation or commands for pytest or running individual test files found.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 06:55:47.915 | DEBUG    | Result of dispatch_intent: ('Path not found', 'Path not found', False)
+2026-11-11 06:55:52.972 | INFO     | Model API request cost info: input_tokens=4190, output_tokens=555, cost=0.000000
+2026-11-11 06:55:53.002 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 06:55:55.353 | INFO     | Model API request cost info: input_tokens=1154, output_tokens=188, cost=0.000000
+2026-11-11 06:55:55.358 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "requirements.txt": "Lists main package dependencies, no test dependencies or pytest.",
+    "setup.py": "Reads install_requires from requirements.txt. No test dependencies or pytest found.",
+    "README.md": "Install via pip: `pip install mle-agent -U` or clone and `pip install -e .`. No explicit test commands or environment variables mentioned.",
+    "CONTRIBUTING.md": "Refers to missing docs/DEVELOPMENT_SETUP.md and docs/TEST_GUIDELINES.md for setup. Enforces flake8. No explicit test commands or environment variables provided.",
+    ".github/workflows/test.yml": "Uses Python 3.11. Installs dependencies with `pip install .`. Runs tests with `python -m unittest discover tests`. Uses unittest framework; no pytest usage."
+  },
+  "terminate": true
+}
+2026-11-11 06:55:55.358 | DEBUG    | Extracted a valid json
+2026-11-11 06:55:55.364 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 06:55:58.198 | INFO     | Model API request cost info: input_tokens=3543, output_tokens=179, cost=0.000000
+2026-11-11 06:55:58.200 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 07:25:54.928 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 8c66dc10bdb63a9ecafb85470ae292908a55c565ac9817668e473c594aaa960b started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image mlsysops__mle-agent-274-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 07:25:54.941 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 07:25:58.435 | INFO     | Model API request cost info: input_tokens=3150, output_tokens=289, cost=0.000000
+2026-11-11 07:25:58.436 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution failed because the unittest discovery attempted to import the test file 'test_lancedbmemory.py' which imports 'pytest', but the Python environment used to run the tests does not have access to the installed pytest module. The error message from the log is: 'ModuleNotFoundError: No module named 'pytest''. Although 'pip install pytest' is run prior to the test command, the test was executed using 'python -m unittest', which expects unittest style tests but the test requires pytest. \n\nRecommended fixes:\n1. Modify the eval script to run tests using pytest instead of unittest, because this test file imports pytest and likely uses pytest features. Replace:\n   python -m unittest discover -s tests -p test_lancedbmemory.py -v\nwith:\n   pytest tests/test_lancedbmemory.py -v\n\n2. Ensure pytest is installed before running pytest.\n3. Keep capturing the exit code and echo \"OMNIGRIL_EXIT_CODE=$rc\" as done currently.\n\nThis change aligns the test runner with the test file requirements and resolves the 'No module named pytest' failure currently happening due to the mismatch in test command usage.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-11-11 07:25:58.437 | DEBUG    | Extracted a valid json
+2026-11-11 07:25:58.444 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 07:26:01.587 | INFO     | Model API request cost info: input_tokens=4729, output_tokens=174, cost=0.000000
+2026-11-11 07:26:01.592 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 07:47:51.462 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 07b38dfee11efd18094c0e9a2d8ef7aaa4d831b4d7746038eeae6d4f1cf15643 started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image mlsysops__mle-agent-274-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 07:47:51.474 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 07:47:55.572 | INFO     | Model API request cost info: input_tokens=3750, output_tokens=367, cost=0.000000
+2026-11-11 07:47:55.574 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test executed by the eval script failed with a TypeError due to 'NoneType' object not being subscriptable at line 90 of mle/utils/memory.py when accessing config[\"platform\"]. The failure indicates that the LanceDBMemory class is not handling a missing or None config gracefully, which the test 'test_lancedbmemory_init_with_no_config' explicitly expects. The test did run and output is present, and the eval script correctly captures and echoes the exit code. Therefore, the issue is not with how tests are run but rather with the runtime behavior during the test. Suggest improving the eval script to possibly add setup steps or environment variables if missing, but primarily, this is a test failure caused by the code under test, not the eval script itself. No immediate change to eval script syntax or commands is required to run tests.",
+  "guidance_for_context_retrieval_agent": "The error originates from accessing config[\"platform\"] where config is None. To diagnose and fix this, retrieve the following for analysis: (1) the source code of the get_config function used in mle/utils/memory.py since it returns None unexpectedly, (2) any configuration files or default config loading logic that should supply this config in normal runs, (3) the content and context of the tests/test_lancedbmemory.py test file to understand how missing configs are simulated, and (4) any documentation such as README.md or CONTRIBUTING.md that describe configuration setup or test prerequisites. This information will help assess whether environment variables, files, or initial setup steps are missing from the Dockerfile or eval script or if code changes are required."
+}
+2026-11-11 07:47:55.574 | DEBUG    | Extracted a valid json
+2026-11-11 07:47:57.805 | INFO     | Model API request cost info: input_tokens=1674, output_tokens=12, cost=0.000000
+2026-11-11 07:47:57.812 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:47:58.985 | INFO     | Model API request cost info: input_tokens=788, output_tokens=37, cost=0.000000
+2026-11-11 07:47:58.988 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"mle/utils\", \"1\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-11-11 07:47:58.988 | DEBUG    | Extracted a valid json
+2026-11-11 07:47:59.017 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils. The browsing Depth is 1.\nStructure of this directory:\n\nparser.py\n\nsystem.py\n\ncache.py\n\ndata.py\n\nmemory.py\n\n__init__.py\n\nchunk.py\n\n', 'folder structure collected', True)
+2026-11-11 07:48:02.231 | INFO     | Model API request cost info: input_tokens=2306, output_tokens=27, cost=0.000000
+2026-11-11 07:48:02.249 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:03.494 | INFO     | Model API request cost info: input_tokens=876, output_tokens=48, cost=0.000000
+2026-11-11 07:48:03.496 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"mle/utils/memory.py\", \"def get_config function source code\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 07:48:03.496 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:03.501 | INFO     | entering browse
+2026-11-11 07:48:03.505 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py ===
+import uuid
+from typing import List, Dict, Optional
+
+import lancedb
+from lancedb.embeddings import get_registry
+
+from mle.utils import get_config
+
+
+class LanceDBMemory:
+
+    def __init__(self, project_path: str):
+        """
+        Memory: A base class for memory and external knowledge management.
+        Args:
+            project_path: the path to store the data.
+        """
+        self.db_name = '.mle'
+        self.table_name = 'memory'
+        self.client = lancedb.connect(uri=self.db_name)
+
+        config = get_config(project_path)
+        if config["platform"] == "OpenAI":
+            self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
+        else:
+            raise NotImplementedError
+
+    def add(
+            self,
+            texts: List[str],
+            metadata: Optional[List[Dict]] = None,
+            table_name: Optional[str] = None,
+            ids: Optional[List[str]] = None,
+    ) -> List[str]:
+        """
+        Adds a list of text items to the specified memory table in the database.
+
+        Args:
+            texts (List[str]): A list of text strings to be added.
+            metadata (Optional[List[Dict]]): A list of metadata to be added.
+            table_name (Optional[str]): The name of the table to add data to. Defaults to self.table_name.
+            ids (Optional[List[str]]): A list of unique IDs for the text items.
+                If not provided, random UUIDs are generated.
+
+        Returns:
+            List[str]: A list of IDs associated with the added text items.
+        """
+        if isinstance(texts, str):
+            texts = (texts,)
+
+        if metadata is None:
+            metadata = [None, ] * len(texts)
+        elif isinstance(metadata, dict):
+            metadata = (metadata,)
+        else:
+            assert len(texts) == len(metadata)
+
+        embeds = self.text_embedding.compute_source_embeddings(texts)
+
+        table_name = table_name or self.table_name
+        ids = ids or [str(uuid.uuid4()) for _ in range(len(texts))]
+
+        data = [
+            {
+                "vector": embed,
+                "text": text,
+                "id": idx,
+                "metadata": meta,
+            } for idx, text, embed, meta in zip(ids, texts, embeds, metadata)
+        ]
+
+        if table_name not in self.client.table_names():
+            table = self.client.create_table(table_name, data=data)
+            table.create_fts_index("id")
+        else:
+            self.client.open_table(table_name).add(data=data)
+
+        return ids
+
+    def query(self, query_texts: List[str], table_name: Optional[str] = None, n_results: int = 5) -> List[List[dict]]:
+        """
+        Queries the specified memory table for similar text embeddings.
+
+        Args:
+            query_texts (List[str]): A list of query text strings.
+            table_name (Optional[str]): The name of the table to query. Defaults to self.table_name.
+            n_results (int): The maximum number of results to retrieve per query. Default is 5.
+
+        Returns:
+            List[List[dict]]: A list of results for each query text, each result being a dictionary with
+            keys such as "vector", "text", and "id".
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        query_embeds = self.text_embedding.compute_source_embeddings(query_texts)
+
+        results = [table.search(query).limit(n_results).to_list() for query in query_embeds]
+        return results
+
+    def list_all_keys(self, table_name: Optional[str] = None):
+        """
+        Lists all IDs in the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to list IDs from. Defaults to the instance's table name.
+
+        Returns:
+            List[str]: A list of all IDs in the table.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return [item["id"] for item in table.search(query_type="fts").to_list()]
+
+    def get(self, record_id: str, table_name: Optional[str] = None):
+        """
+        Retrieves a record by its ID from the specified memory table.
+
+        Args:
+            record_id (str): The ID of the record to retrieve.
+            table_name (Optional[str]): The name of the table to query. Defaults to the instance's table name.
+
+        Returns:
+            List[dict]: A list containing the matching record, or an empty list if not found.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.search(query_type="fts") \
+            .where(f"id = '{record_id}'") \
+            .limit(1).to_list()
+
+    def get_by_metadata(self, key: str, value: str, table_name: Optional[str] = None, n_results: int = 5):
+        """
+        Retrieves records matching a specific metadata key-value pair.
+
+        Args:
+            key (str): The metadata key to filter by.
+            value (str): The value of the metadata key to filter by.
+            table_name (Optional[str]): The name of the table to query. Defaults to the instance's table name.
+            n_results (int): The maximum number of results to retrieve. Defaults to 5.
+
+        Returns:
+            List[dict]: A list of records matching the metadata criteria.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.search(query_type="fts") \
+            .where(f"metadata.{key} = '{value}'") \
+            .limit(n_results).to_list()
+
+    def delete(self, record_id: str, table_name: Optional[str] = None) -> bool:
+        """
+        Deletes a record from the specified memory table.
+
+        Args:
+            record_id (str): The ID of the record to delete.
+            table_name (Optional[str]): The name of the table to delete the record from. Defaults to self.table_name.
+
+        Returns:
+            bool: True if the deletion was successful, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.delete(f"id = '{record_id}'")
+
+    def delete_by_metadata(self, key: str, value: str, table_name: Optional[str] = None):
+        """
+        Deletes records from the specified memory table based on a metadata key-value pair.
+
+        Args:
+            key (str): The metadata key to filter by.
+            value (str): The value of the metadata key to filter by.
+            table_name (Optional[str]): The name of the table to delete records from. Defaults to the instance's table name.
+
+        Returns:
+            bool: True if deletion was successful, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.delete(f"metadata.{key} = '{value}'")
+
+    def drop(self, table_name: Optional[str] = None) -> bool:
+        """
+        Drops (deletes) the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to delete. Defaults to self.table_name.
+
+        Returns:
+            bool: True if the table was successfully dropped, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        return self.client.drop_table(table_name)
+
+    def count(self, table_name: Optional[str] = None) -> int:
+        """
+        Counts the number of records in the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to count records in. Defaults to self.table_name.
+
+        Returns:
+            int: The number of records in the table.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.count_rows()
+
+    def reset(self) -> None:
+        """
+        Resets the memory by dropping the default memory table.
+        """
+        self.drop()
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py ===
+2026-11-11 07:48:03.505 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:48:04.492 | INFO     | Model API request cost info: input_tokens=2300, output_tokens=12, cost=0.000000
+2026-11-11 07:48:04.496 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:48:04.496 | INFO     | ******
+2026-11-11 07:48:04.496 | INFO     | No relevant information found.
+2026-11-11 07:48:04.497 | INFO     | ******
+2026-11-11 07:48:04.497 | DEBUG    | Result of dispatch_intent: ('No relevant information found.', 'Get File Info', True)
+2026-11-11 07:48:07.914 | INFO     | Model API request cost info: input_tokens=2895, output_tokens=24, cost=0.000000
+2026-11-11 07:48:07.989 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:09.247 | INFO     | Model API request cost info: input_tokens=892, output_tokens=68, cost=0.000000
+2026-11-11 07:48:09.249 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"tests/test_lancedbmemory.py\")",
+    "browse_file_for_environment_info(\"README.md\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\")"
+  ],
+  "collected_information": "",
+  "terminate": false
+}
+2026-11-11 07:48:09.249 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:12.547 | INFO     | Model API request cost info: input_tokens=3552, output_tokens=9, cost=0.000000
+2026-11-11 07:48:12.575 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:14.580 | INFO     | Model API request cost info: input_tokens=882, output_tokens=106, cost=0.000000
+2026-11-11 07:48:14.584 | DEBUG    | {
+  "API_calls": [
+    "search_files_by_keyword(\"get_config\")"
+  ],
+  "collected_information": "Initial API calls to extract contents from tests/test_lancedbmemory.py, README.md, and CONTRIBUTING.md failed due to missing argument specifications. The critical source defining get_config and relevant test and configuration setup details remain unidentified. Next step is to search the repository for occurrences of get_config to locate its definition or references to gather configuration usage and setup information.",
+  "terminate": false
+}
+2026-11-11 07:48:14.584 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:14.587 | DEBUG    | Result of dispatch_intent: ("No files found containing the keyword 'get_config'.", 'No matching files found', True)
+2026-11-11 07:48:18.143 | INFO     | Model API request cost info: input_tokens=4185, output_tokens=9, cost=0.000000
+2026-11-11 07:48:18.164 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:20.144 | INFO     | Model API request cost info: input_tokens=943, output_tokens=138, cost=0.000000
+2026-11-11 07:48:20.146 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\"tests\", \"1\")",
+    "browse_file_for_environment_info(\"tests/test_lancedbmemory.py\", \"full content and test setup\")",
+    "browse_file_for_environment_info(\"mle/utils/memory.py\", \"full content and configuration retrieval logic\")",
+    "browse_file_for_environment_info(\"README.md\", \"environment and configuration setup instructions for tests\")",
+    "browse_file_for_environment_info(\"CONTRIBUTING.md\", \"environment and configuration setup instructions for tests\")",
+    "search_files_by_keyword(\"config\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 07:48:20.146 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:20.154 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/tests. The browsing Depth is 1.\nStructure of this directory:\n\n__init__.py\n\n', 'folder structure collected', True)
+2026-11-11 07:48:20.156 | INFO     | entering browse
+2026-11-11 07:48:20.156 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/tests/test_lancedbmemory.py'
+2026-11-11 07:48:20.156 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:48:20.157 | INFO     | entering browse
+2026-11-11 07:48:20.157 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py ===
+import uuid
+from typing import List, Dict, Optional
+
+import lancedb
+from lancedb.embeddings import get_registry
+
+from mle.utils import get_config
+
+
+class LanceDBMemory:
+
+    def __init__(self, project_path: str):
+        """
+        Memory: A base class for memory and external knowledge management.
+        Args:
+            project_path: the path to store the data.
+        """
+        self.db_name = '.mle'
+        self.table_name = 'memory'
+        self.client = lancedb.connect(uri=self.db_name)
+
+        config = get_config(project_path)
+        if config["platform"] == "OpenAI":
+            self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
+        else:
+            raise NotImplementedError
+
+    def add(
+            self,
+            texts: List[str],
+            metadata: Optional[List[Dict]] = None,
+            table_name: Optional[str] = None,
+            ids: Optional[List[str]] = None,
+    ) -> List[str]:
+        """
+        Adds a list of text items to the specified memory table in the database.
+
+        Args:
+            texts (List[str]): A list of text strings to be added.
+            metadata (Optional[List[Dict]]): A list of metadata to be added.
+            table_name (Optional[str]): The name of the table to add data to. Defaults to self.table_name.
+            ids (Optional[List[str]]): A list of unique IDs for the text items.
+                If not provided, random UUIDs are generated.
+
+        Returns:
+            List[str]: A list of IDs associated with the added text items.
+        """
+        if isinstance(texts, str):
+            texts = (texts,)
+
+        if metadata is None:
+            metadata = [None, ] * len(texts)
+        elif isinstance(metadata, dict):
+            metadata = (metadata,)
+        else:
+            assert len(texts) == len(metadata)
+
+        embeds = self.text_embedding.compute_source_embeddings(texts)
+
+        table_name = table_name or self.table_name
+        ids = ids or [str(uuid.uuid4()) for _ in range(len(texts))]
+
+        data = [
+            {
+                "vector": embed,
+                "text": text,
+                "id": idx,
+                "metadata": meta,
+            } for idx, text, embed, meta in zip(ids, texts, embeds, metadata)
+        ]
+
+        if table_name not in self.client.table_names():
+            table = self.client.create_table(table_name, data=data)
+            table.create_fts_index("id")
+        else:
+            self.client.open_table(table_name).add(data=data)
+
+        return ids
+
+    def query(self, query_texts: List[str], table_name: Optional[str] = None, n_results: int = 5) -> List[List[dict]]:
+        """
+        Queries the specified memory table for similar text embeddings.
+
+        Args:
+            query_texts (List[str]): A list of query text strings.
+            table_name (Optional[str]): The name of the table to query. Defaults to self.table_name.
+            n_results (int): The maximum number of results to retrieve per query. Default is 5.
+
+        Returns:
+            List[List[dict]]: A list of results for each query text, each result being a dictionary with
+            keys such as "vector", "text", and "id".
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        query_embeds = self.text_embedding.compute_source_embeddings(query_texts)
+
+        results = [table.search(query).limit(n_results).to_list() for query in query_embeds]
+        return results
+
+    def list_all_keys(self, table_name: Optional[str] = None):
+        """
+        Lists all IDs in the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to list IDs from. Defaults to the instance's table name.
+
+        Returns:
+            List[str]: A list of all IDs in the table.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return [item["id"] for item in table.search(query_type="fts").to_list()]
+
+    def get(self, record_id: str, table_name: Optional[str] = None):
+        """
+        Retrieves a record by its ID from the specified memory table.
+
+        Args:
+            record_id (str): The ID of the record to retrieve.
+            table_name (Optional[str]): The name of the table to query. Defaults to the instance's table name.
+
+        Returns:
+            List[dict]: A list containing the matching record, or an empty list if not found.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.search(query_type="fts") \
+            .where(f"id = '{record_id}'") \
+            .limit(1).to_list()
+
+    def get_by_metadata(self, key: str, value: str, table_name: Optional[str] = None, n_results: int = 5):
+        """
+        Retrieves records matching a specific metadata key-value pair.
+
+        Args:
+            key (str): The metadata key to filter by.
+            value (str): The value of the metadata key to filter by.
+            table_name (Optional[str]): The name of the table to query. Defaults to the instance's table name.
+            n_results (int): The maximum number of results to retrieve. Defaults to 5.
+
+        Returns:
+            List[dict]: A list of records matching the metadata criteria.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.search(query_type="fts") \
+            .where(f"metadata.{key} = '{value}'") \
+            .limit(n_results).to_list()
+
+    def delete(self, record_id: str, table_name: Optional[str] = None) -> bool:
+        """
+        Deletes a record from the specified memory table.
+
+        Args:
+            record_id (str): The ID of the record to delete.
+            table_name (Optional[str]): The name of the table to delete the record from. Defaults to self.table_name.
+
+        Returns:
+            bool: True if the deletion was successful, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.delete(f"id = '{record_id}'")
+
+    def delete_by_metadata(self, key: str, value: str, table_name: Optional[str] = None):
+        """
+        Deletes records from the specified memory table based on a metadata key-value pair.
+
+        Args:
+            key (str): The metadata key to filter by.
+            value (str): The value of the metadata key to filter by.
+            table_name (Optional[str]): The name of the table to delete records from. Defaults to the instance's table name.
+
+        Returns:
+            bool: True if deletion was successful, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.delete(f"metadata.{key} = '{value}'")
+
+    def drop(self, table_name: Optional[str] = None) -> bool:
+        """
+        Drops (deletes) the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to delete. Defaults to self.table_name.
+
+        Returns:
+            bool: True if the table was successfully dropped, False otherwise.
+        """
+        table_name = table_name or self.table_name
+        return self.client.drop_table(table_name)
+
+    def count(self, table_name: Optional[str] = None) -> int:
+        """
+        Counts the number of records in the specified memory table.
+
+        Args:
+            table_name (Optional[str]): The name of the table to count records in. Defaults to self.table_name.
+
+        Returns:
+            int: The number of records in the table.
+        """
+        table_name = table_name or self.table_name
+        table = self.client.open_table(table_name)
+        return table.count_rows()
+
+    def reset(self) -> None:
+        """
+        Resets the memory by dropping the default memory table.
+        """
+        self.drop()
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py ===
+2026-11-11 07:48:20.157 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:48:23.930 | INFO     | Model API request cost info: input_tokens=2300, output_tokens=455, cost=0.000000
+2026-11-11 07:48:23.931 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:48:23.931 | INFO     | ******
+2026-11-11 07:48:23.932 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py]
+- The file contains a class `LanceDBMemory` that manages memory and external knowledge using LanceDB.
+- Initialization requires a `project_path` which is passed to a `get_config(project_path)` function to retrieve configuration.
+- The `get_config` function (imported from `mle.utils`) is expected to return a dictionary containing at least:
+  - `"platform"` key, checked to confirm it equals `"OpenAI"`.
+  - `"api_key"` key, used to instantiate the OpenAI embedding from the LanceDB registry.
+  
+- Core configuration retrieval logic is:
+  ```python
+  config = get_config(project_path)
+  if config["platform"] == "OpenAI":
+      self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
+  else:
+      raise NotImplementedError
+  ```
+- This indicates that the environment or project configuration must provide these keys, especially the API key under `api_key`.
+
+- The class supports storing texts and their metadata with unique IDs (UUIDs generated if not provided).
+- It supports querying by text embeddings, IDs, and metadata key-value pairs.
+- It provides methods for adding, retrieving, deleting, counting, and resetting these memory records.
+
+- No explicit environment variables or external configuration files are shown in this file except the indirect dependency on `get_config`.
+- Libraries/packages:
+  - `lancedb` (no specific version stated)
+  - `lancedb.embeddings` for embedding registry access
+  - Standard Python `uuid`, `typing` modules.
+
+- No test commands or test suites are shown in this file.
+  
+Summary of configuration logic:
+- The user must supply a valid project path for `get_config`.
+- `get_config` must return a dict containing keys:
+  - `"platform"` (currently only supports `"OpenAI"`)
+  - `"api_key"` (OpenAI API key)
+- The OpenAI embedding is created via LanceDB embedding registry passing the API key from the obtained config.
+
+[/Key Information]
+2026-11-11 07:48:23.932 | INFO     | ******
+2026-11-11 07:48:23.932 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/memory.py]\n- The file contains a class `LanceDBMemory` that manages memory and external knowledge using LanceDB.\n- Initialization requires a `project_path` which is passed to a `get_config(project_path)` function to retrieve configuration.\n- The `get_config` function (imported from `mle.utils`) is expected to return a dictionary containing at least:\n  - `"platform"` key, checked to confirm it equals `"OpenAI"`.\n  - `"api_key"` key, used to instantiate the OpenAI embedding from the LanceDB registry.\n  \n- Core configuration retrieval logic is:\n  ```python\n  config = get_config(project_path)\n  if config["platform"] == "OpenAI":\n      self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])\n  else:\n      raise NotImplementedError\n  ```\n- This indicates that the environment or project configuration must provide these keys, especially the API key under `api_key`.\n\n- The class supports storing texts and their metadata with unique IDs (UUIDs generated if not provided).\n- It supports querying by text embeddings, IDs, and metadata key-value pairs.\n- It provides methods for adding, retrieving, deleting, counting, and resetting these memory records.\n\n- No explicit environment variables or external configuration files are shown in this file except the indirect dependency on `get_config`.\n- Libraries/packages:\n  - `lancedb` (no specific version stated)\n  - `lancedb.embeddings` for embedding registry access\n  - Standard Python `uuid`, `typing` modules.\n\n- No test commands or test suites are shown in this file.\n  \nSummary of configuration logic:\n- The user must supply a valid project path for `get_config`.\n- `get_config` must return a dict containing keys:\n  - `"platform"` (currently only supports `"OpenAI"`)\n  - `"api_key"` (OpenAI API key)\n- The OpenAI embedding is created via LanceDB embedding registry passing the API key from the obtained config.\n\n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:48:23.932 | INFO     | entering browse
+2026-11-11 07:48:23.933 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+<div align="center">
+<h1 align="center">MLE-Agent: Your intelligent companion for seamless AI engineering and research.</h1>
+<img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
+<a href="https://trendshift.io/repositories/11658" target="_blank"><img src="https://trendshift.io/api/badge/repositories/11658" alt="MLSysOps%2FMLE-agent | Trendshift" style="width: 250px; height: 200px;" width="250" height="200px"/></a>
+<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
+
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg)
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg)
+![PyPI - Version](https://img.shields.io/pypi/v/mle-agent)
+[![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
+![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
+<a href="https://discord.gg/d9vcY7PA8Z"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
+
+[📚 Docs](https://mle-agent-site.vercel.app/) |
+[🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) |
+👋 Join us on <a href="https://discord.gg/d9vcY7PA8Z" target="_blank">Discord</a>
+
+</div>
+
+## Overview
+
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
+
+- 🤖 Autonomous Baseline: Automatically builds ML/AI baselines and solutions based on your requirements.
+- 🏅End-to-end ML Task: Participates in Kaggle competitions and completes tasks independently.
+- 🔍 [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) Integration: Access best practices
+  and state-of-the-art methods.
+- 🐛 Smart Debugging: Ensures high-quality code through automatic debugger-coder interactions.
+- 📂 File System Integration: Organizes your project structure efficiently.
+- 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
+- ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
+- 🧠 Smart Advisor: Provides personalized suggestions and recommendations for your ML/AI project.
+- 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
+
+https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
+
+## Milestones
+
+- :rocket: 09/24/2024: Release the `0.4.2` with enhanced `Auto-Kaggle` mode to complete an end-to-end competition with minimal effort.
+- :rocket: 09/10/2024: Release the `0.4.0` with new CLIs like `MLE report`, `MLE kaggle`, `MLE integration` and many new
+  models like `Mistral`.
+- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc. (v0.3.0)
+- :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- 👨‍🍼 **07/03/2024: Kaia is born**
+- :rocket: 06/01/2024: Release the first rule-based version of MLE agent (v0.1.0)
+
+## Get started
+
+### Installation
+
+```bash
+pip install mle-agent -U
+# or from source
+git clone git@github.com:MLSysOps/MLE-agent.git
+pip install -e .
+```
+
+### Usage
+
+```bash
+mle new <project name>
+```
+
+And a project directory will be created under the current path, you need to start the project under the project
+directory.
+
+```bash
+cd <project name>
+mle start
+```
+
+You can also start an interactive chat in the terminal under the project directory:
+
+```bash
+mle chat
+```
+
+## Use cases
+
+### 🧪 Prototype an ML Baseline
+
+MLE agent can help you prototype an ML baseline with the given requirements, and test the model on the local machine.
+The requirements can be vague, such as "I want to predict the stock price based on the historical data".
+
+```bash
+cd <project name>
+mle start
+```
+
+### :bar_chart: Generate Work Report
+
+MLE agent can help you summarize your weekly report, including development progress, communication notes, reference, and
+to-do lists.
+
+#### Mode 1: Web Application to Generate Report from GitHub
+
+```bash
+cd <project name>
+mle report
+```
+
+Then, you can visit http://localhost:3000/ to generate your report locally.
+
+#### Mode 2: CLI Tool to Generate Report from Local Git Repository
+```bash
+cd <project name>
+mle report-local --email=<git email> --start-date=YYYY-MM-DD --end-date=YYYY-MM-DD <path_to_git_repo>
+```
+
+- `--start-date` and `--end-date` are optional parameters. If omitted, the command will generate a report for the default date range of the last 7 days.
+- Replace `<git email>` with your Git email and `<path_to_git_repo>` with the path to your local Git repository.
+
+### :trophy: Start with Kaggle Competition
+
+MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training
+independently. Here is the basic command to start a Kaggle competition:
+
+```bash
+cd <project name>
+mle kaggle
+```
+
+Or you can let the agents finish the Kaggle task without human interaction if you have the dataset and submission file
+ready:
+
+```bash
+cd <project name>
+mle kaggle --auto \
+--datasets "<path_to_dataset1>,<path_to_dataset2>,..." \
+--description "<description_file_path_or_text>" \
+--submission "<submission_file_path>" \
+--sub_example "<submission_example_file_path>" \ 
+--comp_id "<competition_id>"
+```
+
+Please make sure you have joined the competition before running the command. For more details, see the [MLE-Agent Tutorials](https://mle-agent-site.vercel.app/tutorial/Start_a_kaggle_task).
+
+## Roadmap
+
+The following is a list of the tasks we plan to do, welcome to propose something new!
+
+<details>
+  <summary><b> :hammer: General Features</b></summary>
+
+- [x] Understand users' requirements to create an end-to-end AI project
+- [x] Suggest the SOTA data science solutions by using the web search
+- [x] Plan the ML engineering tasks with human interaction
+- [x] Execute the code on the local machine/cloud, debug and fix the errors
+- [x] Leverage the built-in functions to complete ML engineering tasks
+- [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
+- [x] Kaggle mode: to finish a Kaggle task without humans
+- [x] Summary and reflect the whole ML/AI pipeline
+- [ ] Integration with Cloud data and testing and debugging platforms
+- [x] Local RAG support to make personal ML/AI coding assistant
+- [ ] Function zoo: generate AI/ML functions and save them for future usage
+
+</details>
+
+<details>
+  <summary><b>:star: More LLMs and Serving Tools</b></summary>
+
+- [x] Ollama LLama3
+- [x] OpenAI GPTs
+- [x] Anthropic Claude 3.5 Sonnet
+
+</details>
+
+<details>
+  <summary><b>:sparkling_heart: Better user experience</b></summary>
+
+- [x] CLI Application
+- [x] Web UI
+- [x] Discord
+
+</details>
+
+<details>
+  <summary><b>:jigsaw: Functions and Integrations</b></summary>
+
+- [x] Local file system
+- [x] Local code exectutor
+- [x] Arxiv.org search
+- [x] Papers with Code search
+- [x] General keyword search
+- [ ] Hugging Face
+- [ ] SkyPilot cloud deployment
+- [ ] Snowflake data
+- [ ] AWS S3 data
+- [ ] Databricks data catalog
+- [ ] Wandb experiment monitoring
+- [ ] MLflow management
+- [ ] DBT data transform
+
+</details>
+
+## Contributing
+
+We welcome contributions from the community. We are looking for contributors to help us with the following tasks:
+
+- Benchmark and Evaluate the agent
+- Add more features to the agent
+- Improve the documentation
+- Write tests
+
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribute.
+
+## Support and Community
+
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please ask in the Discord community.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
+
+## License
+
+Check [MIT License](LICENSE) file for more information.
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md ===
+2026-11-11 07:48:23.933 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:48:26.393 | INFO     | Model API request cost info: input_tokens=2656, output_tokens=224, cost=0.000000
+2026-11-11 07:48:26.397 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:48:26.397 | INFO     | ******
+2026-11-11 07:48:26.397 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]
+- Installation:
+  - pip install mle-agent -U
+  - or from source:
+    - git clone git@github.com:MLSysOps/MLE-agent.git
+    - pip install -e .
+- Usage commands (imply usage/testing steps under project directory):
+  - mle new <project name>
+  - cd <project name>
+  - mle start
+- No explicit environment variables or configuration files mentioned specifically for tests.
+- No explicit test command or test suite instructions found.
+- No specific libraries or exact versions listed besides the mle-agent itself (version badges imply versions available on PyPI).
+- No mention of prerequisites such as OS packages, language runtimes, or configuration needed only for testing.
+- No explicit commands for running individual or specific test files identified.
+- The README indicates tests are part of the repository and mentions welcoming contributors "Write tests" but no test commands are provided.
+[/Key Information]
+2026-11-11 07:48:26.398 | INFO     | ******
+2026-11-11 07:48:26.398 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/README.md]\n- Installation:\n  - pip install mle-agent -U\n  - or from source:\n    - git clone git@github.com:MLSysOps/MLE-agent.git\n    - pip install -e .\n- Usage commands (imply usage/testing steps under project directory):\n  - mle new <project name>\n  - cd <project name>\n  - mle start\n- No explicit environment variables or configuration files mentioned specifically for tests.\n- No explicit test command or test suite instructions found.\n- No specific libraries or exact versions listed besides the mle-agent itself (version badges imply versions available on PyPI).\n- No mention of prerequisites such as OS packages, language runtimes, or configuration needed only for testing.\n- No explicit commands for running individual or specific test files identified.\n- The README indicates tests are part of the repository and mentions welcoming contributors "Write tests" but no test commands are provided.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:48:26.398 | INFO     | entering browse
+2026-11-11 07:48:26.399 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+# Contributing to MLE Agent
+
+This document is a work in progress. If you notice areas for improvement, please feel free to update this guide and submit a pull request!
+
+## Table of Contents
+
+- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Ensuring Your Pull Request Gets Accepted](#ensuring-your-pull-request-gets-accepted)
+- [The Review Process](#the-review-process)
+- [Work in Progress Pull Requests](#work-in-progress-pull-requests)
+- [Triaging Issues](#triaging-issues)
+
+## Submitting a Pull Request
+
+To contribute code to MLE Agent, you need to open a [pull request](https://help.github.com/articles/about-pull-requests/). The pull request will be reviewed by the community before it is merged into the core project. Generally, a pull request should be submitted when a unit of work is complete, but you can also share ideas or get feedback through a work in progress (WIP) pull request ([learn more](#work-in-progress-pull-requests)).
+
+1. Familiarize yourself with the project by reading our ["Getting Started Guide"](docs/GETTING_STARTED.md).
+
+2. Follow our [coding standards](docs/CODE_GUIDELINES.md) to ensure consistency across the project.
+
+3. Review our [testing guidelines](docs/TEST_GUIDELINES.md) to understand the project's automated testing framework.
+
+4. [Set up your development environment](docs/DEVELOPMENT_SETUP.md) to make sure you have everything you need to contribute.
+
+5. Make sure you have the latest version of the code by syncing your fork with the main repository:
+
+   ```sh
+   git remote add upstream https://github.com/MLSysOps/MLE-agent.git
+   git fetch upstream
+   git merge upstream/main
+   ```
+
+6. Create a branch for the code you will be working on:
+
+   ```sh
+   git checkout -b my-new-feature
+   ```
+
+7. Write your code, making sure to include tests as needed.
+
+8. Commit your changes with a meaningful commit message:
+
+   ```sh
+   git commit -m "Description of the changes"
+   ```
+
+9. Push your changes to your fork:
+
+   ```sh
+   git push origin my-new-feature
+   ```
+
+10. Open a pull request on GitHub. Make sure to include a detailed description of the changes you made and any relevant context.
+
+## Ensuring Your Pull Request Gets Accepted
+
+- Make sure your code follows the coding standards outlined in our code guidelines -- we use [flake8](https://flake8.pycqa.org/en/latest/) to enforce these standards.
+- Write tests for any new features or significant changes.
+- Ensure all tests pass before submitting your pull request.
+- Be responsive to feedback from reviewers.
+
+
+## The Review Process
+
+Once you submit a pull request, it will be reviewed by the maintainers. They might request changes or provide feedback. The goal is to ensure the code is high quality and aligns with the project's goals.
+
+## Work in Progress Pull Requests
+
+If you want feedback on your work before it's complete, you can open a WIP pull request. This allows you to get input from others on your approach or on specific parts of your code.
+When you're ready for a full review, you can mark the pull request as `MRG` for review by removing the `WIP` label.
+
+## Triaging Issues
+If you're not ready to submit code but still want to contribute, you can help by triaging issues. This involves confirming bugs, providing additional information, or suggesting ways to reproduce issues.
+
+Thank you for your interest in contributing to MLE Agent!
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md ===
+2026-11-11 07:48:26.399 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:48:30.671 | INFO     | Model API request cost info: input_tokens=1346, output_tokens=192, cost=0.000000
+2026-11-11 07:48:30.673 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:48:30.673 | INFO     | ******
+2026-11-11 07:48:30.673 | INFO     | [Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]
+- To set up the environment for contributing and testing, refer to the document:
+  - docs/DEVELOPMENT_SETUP.md (for environment setup instructions)
+  - docs/TEST_GUIDELINES.md (for automated testing framework and testing guidelines)
+- Use flake8 for coding standards enforcement.
+- Testing requires writing tests for new features and ensuring all tests pass before submitting PRs.
+- No direct commands or detailed environment variables for running tests are provided in this file.
+- Recommended workflow to keep code updated:
+  - git remote add upstream https://github.com/MLSysOps/MLE-agent.git
+  - git fetch upstream
+  - git merge upstream/main
+- No explicit configuration files or environment variables are mentioned here.
+[/Key Information]
+2026-11-11 07:48:30.673 | INFO     | ******
+2026-11-11 07:48:30.673 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/CONTRIBUTING.md]\n- To set up the environment for contributing and testing, refer to the document:\n  - docs/DEVELOPMENT_SETUP.md (for environment setup instructions)\n  - docs/TEST_GUIDELINES.md (for automated testing framework and testing guidelines)\n- Use flake8 for coding standards enforcement.\n- Testing requires writing tests for new features and ensuring all tests pass before submitting PRs.\n- No direct commands or detailed environment variables for running tests are provided in this file.\n- Recommended workflow to keep code updated:\n  - git remote add upstream https://github.com/MLSysOps/MLE-agent.git\n  - git fetch upstream\n  - git merge upstream/main\n- No explicit configuration files or environment variables are mentioned here.\n[/Key Information]', 'Get File Info', True)
+2026-11-11 07:48:30.674 | DEBUG    | Result of dispatch_intent: ("Found 5 files containing the keyword 'config':\n\n- .git/config\n- web/tsconfig.json\n- web/tailwind.config.ts\n- web/postcss.config.mjs\n- web/next.config.mjs", 'File search completed successfully', True)
+2026-11-11 07:48:37.624 | INFO     | Model API request cost info: input_tokens=5518, output_tokens=918, cost=0.000000
+2026-11-11 07:48:37.643 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:40.486 | INFO     | Model API request cost info: input_tokens=1516, output_tokens=328, cost=0.000000
+2026-11-11 07:48:40.487 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"mle/utils/__init__.py\", \"get_config implementation\")",
+    "browse_file_for_environment_info(\"tests/test_lancedbmemory.py\", \"full test file content\")",
+    "browse_file_for_environment_info(\"docs/DEVELOPMENT_SETUP.md\", \"environment setup details\")",
+    "browse_file_for_environment_info(\"docs/TEST_GUIDELINES.md\", \"test setup and test execution instructions\")"
+  ],
+  "collected_information": {
+    "from_mle_utils_memory_py": {
+      "LanceDBMemory_class": "requires configuration dict from get_config(project_path)",
+      "get_config_import_origin": "mle.utils but source not found",
+      "required_config_keys": ["platform (must be 'OpenAI')", "api_key"],
+      "notes": "No explicit environment variables or config files identified from this file"
+    },
+    "from_README_md": {
+      "installation": "pip install mle-agent -U or pip install -e .",
+      "basic_usage_commands": ["mle new <project>", "cd <project>", "mle start"],
+      "no_test_or_config_details": true
+    },
+    "from_CONTRIBUTING_md": {
+      "external_docs_referenced": ["docs/DEVELOPMENT_SETUP.md", "docs/TEST_GUIDELINES.md"],
+      "mentioned_tools": ["flake8", "test writing", "PR workflow"],
+      "no_direct_config_or_test_command_details": true
+    }
+  },
+  "terminate": false
+}
+2026-11-11 07:48:40.488 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:40.490 | INFO     | entering browse
+2026-11-11 07:48:40.492 | INFO     | === FILE START: testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/__init__.py ===
+from .system import *
+from .cache import *
+from .memory import *
+from .data import *
+from .chunk import *
+
+=== FILE END:   testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/mle/utils/__init__.py ===
+2026-11-11 07:48:40.492 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 07:48:41.391 | INFO     | Model API request cost info: input_tokens=616, output_tokens=12, cost=0.000000
+2026-11-11 07:48:41.392 | SUCCESS  | Successfully extracted environment config
+2026-11-11 07:48:41.392 | INFO     | ******
+2026-11-11 07:48:41.392 | INFO     | No relevant information found.
+2026-11-11 07:48:41.392 | INFO     | ******
+2026-11-11 07:48:41.393 | DEBUG    | Result of dispatch_intent: ('No relevant information found.', 'Get File Info', True)
+2026-11-11 07:48:41.397 | INFO     | entering browse
+2026-11-11 07:48:41.397 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/tests/test_lancedbmemory.py'
+2026-11-11 07:48:41.397 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:48:41.398 | INFO     | entering browse
+2026-11-11 07:48:41.398 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/docs/DEVELOPMENT_SETUP.md'
+2026-11-11 07:48:41.398 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:48:41.398 | INFO     | entering browse
+2026-11-11 07:48:41.398 | INFO     | File not found: File not found: 'testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47/docs/TEST_GUIDELINES.md'
+2026-11-11 07:48:41.399 | DEBUG    | Result of dispatch_intent: ('File not found', 'File not found', False)
+2026-11-11 07:48:48.259 | INFO     | Model API request cost info: input_tokens=6812, output_tokens=764, cost=0.000000
+2026-11-11 07:48:48.286 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 07:48:51.722 | INFO     | Model API request cost info: input_tokens=1362, output_tokens=399, cost=0.000000
+2026-11-11 07:48:51.725 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"requirements.txt\", \"environment setup and dependencies\")"
+  ],
+  "collected_information": {
+    "key_findings": {
+      "memory_py": {
+        "LanceDBMemory": {
+          "depends_on": "get_config(project_path)",
+          "config_requirements": {
+            "platform": "OpenAI",
+            "api_key": "required for OpenAI embeddings"
+          }
+        }
+      },
+      "README.md": {
+        "install_commands": [
+          "pip install mle-agent -U",
+          "pip install -e ."
+        ],
+        "usage_commands": [
+          "mle new <project>",
+          "cd <project>",
+          "mle start"
+        ],
+        "no_explicit_env_or_tests_setup": true
+      },
+      "CONTRIBUTING.md": {
+        "refers_to_missing_docs": [
+          "docs/DEVELOPMENT_SETUP.md",
+          "docs/TEST_GUIDELINES.md"
+        ],
+        "no_direct_env_or_test_instructions": true
+      },
+      "missing_files": [
+        "source code of get_config function",
+        "tests/test_lancedbmemory.py",
+        "docs/DEVELOPMENT_SETUP.md",
+        "docs/TEST_GUIDELINES.md"
+      ],
+      "general_env_and_tests_info": {
+        "no_explicit_test_commands": true,
+        "no_config_files_for_platform_or_api_key": true,
+        "likely_test_runners": [
+          "pytest",
+          "unittest"
+        ],
+        "testing_env": "Incomplete"
+      }
+    },
+    "summary": "Due to missing critical implementation and documentation files, the full environment setup and test instructions cannot be determined. Partial info suggests installation via requirements.txt and pip commands, plus configuration with platform=OpenAI and api_key required for LanceDBMemory class."
+  },
+  "terminate": true
+}
+2026-11-11 07:48:51.726 | DEBUG    | Extracted a valid json
+2026-11-11 07:48:51.736 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 07:48:55.933 | INFO     | Model API request cost info: input_tokens=6144, output_tokens=212, cost=0.000000
+2026-11-11 07:48:55.937 | INFO     | Raw script and produced in try 1. Writing script into file.

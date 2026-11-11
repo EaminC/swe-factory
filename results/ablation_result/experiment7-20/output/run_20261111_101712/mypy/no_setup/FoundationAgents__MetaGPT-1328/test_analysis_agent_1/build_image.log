@@ -1,0 +1,112 @@
+2026-11-11 10:30:53,384 - INFO - Building image foundationagents__metagpt-1328
+Using dockerfile:
+# Base image specification with Ubuntu 22.04 and bash
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+# Noninteractive frontend for apt and set timezone environment variable
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools including git, python3.9, pip, npm (for mermaid-cli), curl, locales, and build essentials
+RUN apt-get update && apt-get install -y \
+    git \
+    python3.9 \
+    python3.9-venv \
+    python3-pip \
+    python3-distutils \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    build-essential \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to avoid locale warnings
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip
+RUN python3.9 -m pip install --upgrade pip
+
+# Create and activate Python virtual environment named testbed
+RUN python3.9 -m venv /testbed/testbed
+
+# Ensure pip inside the virtual environment is upgraded and required global Node dependencies are installed
+RUN /bin/bash -c "source /testbed/testbed/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    npm install -g @mermaid-js/mermaid-cli"
+
+# Clone the repository and checkout the specified commit SHA inside /testbed
+RUN git clone https://github.com/geekan/MetaGPT.git /testbed && \
+    cd /testbed && \
+    git checkout 5e8bd105177e08848990d32b9ea636daa639be19
+
+# Install Python dependencies in editable mode with test extras inside the virtual environment including running playwright install with deps
+RUN /bin/bash -c "source /testbed/testbed/bin/activate && \
+    cd /testbed && \
+    pip install -e .[test] && \
+    pip install --upgrade metagpt && \
+    pip install --upgrade git+https://github.com/geekan/MetaGPT.git && \
+    playwright install --with-deps"
+
+# Copy test config file config2.yaml from repository to ~/.metagpt/config2.yaml for tests
+RUN mkdir -p /root/.metagpt && cp /testbed/tests/config2.yaml /root/.metagpt/config2.yaml
+
+# Set working directory to /testbed
+WORKDIR /testbed
+
+# Set environment so that bash activates virtual environment automatically
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# Default shell to bash explicitly
+SHELL ["/bin/bash", "--login", "-c"]
+
+2026-11-11 10:30:53,481 - INFO - Step 1/18 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 10:30:54,974 - INFO -  ---> 076e7bf82319
+2026-11-11 10:30:54,975 - INFO - Step 2/18 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 10:30:59,380 - INFO -  ---> Running in eab7b869bc53
+2026-11-11 10:31:20,378 - INFO -  ---> Removed intermediate container eab7b869bc53
+2026-11-11 10:31:20,379 - INFO -  ---> 85ba38948dea
+2026-11-11 10:31:20,379 - INFO - Step 3/18 : ENV TZ=Etc/UTC
+2026-11-11 10:31:21,870 - INFO -  ---> Running in 7f0905bc3725
+2026-11-11 10:31:43,974 - INFO -  ---> Removed intermediate container 7f0905bc3725
+2026-11-11 10:31:43,976 - INFO -  ---> 387396d867b8
+2026-11-11 10:31:43,976 - INFO - Step 4/18 : SHELL ["/bin/bash", "-c"]
+2026-11-11 10:31:46,773 - INFO -  ---> Running in f6b7c1f0321c
+2026-11-11 10:32:30,579 - INFO -  ---> Removed intermediate container f6b7c1f0321c
+2026-11-11 10:32:30,579 - INFO -  ---> 47a2a66ebb2f
+2026-11-11 10:32:30,580 - INFO - Step 5/18 : RUN apt-get update && apt-get install -y     git     python3.9     python3.9-venv     python3-pip     python3-distutils     curl     locales     locales-all     tzdata     build-essential     npm     && rm -rf /var/lib/apt/lists/*
+2026-11-11 10:32:36,770 - INFO -  ---> Running in 25104488d866
+2026-11-11 10:32:54,171 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 10:32:54,682 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 10:32:55,676 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 10:32:55,983 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 10:33:06,277 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 10:33:09,288 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 10:33:18,271 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 10:33:18,972 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 10:33:20,170 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 10:33:21,274 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 10:33:21,479 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 10:33:28,989 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 10:33:38,679 - INFO - Get:13 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 10:33:48,773 - INFO - Get:14 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 10:33:52,774 - INFO - Get:15 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 10:33:55,772 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 10:33:56,876 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 10:33:58,884 - INFO - Get:18 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 10:34:46,084 - INFO - Fetched 49.4 MB in 1min 52s (441 kB/s)
+2026-11-11 10:36:09,671 - INFO - Reading package lists...
+2026-11-11 10:37:02,974 - INFO - Reading package lists...
+2026-11-11 10:37:13,583 - INFO - Building dependency tree...
+2026-11-11 10:37:13,583 - INFO - Reading state information...
+2026-11-11 10:37:18,777 - INFO - E: Unable to locate package python3.9-venv
+2026-11-11 10:37:18,777 - INFO - E: Couldn't find any package by glob 'python3.9-venv'
+2026-11-11 10:37:18,777 - INFO - E: Couldn't find any package by regex 'python3.9-venv'
+2026-11-11 10:37:25,771 - INFO -  ---> Removed intermediate container 25104488d866
+2026-11-11 10:37:25,968 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     python3.9     python3.9-venv     python3-pip     python3-distutils     curl     locales     locales-all     tzdata     build-essential     npm     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 10:37:25,969 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     python3.9     python3.9-venv     python3-pip     python3-distutils     curl     locales     locales-all     tzdata     build-essential     npm     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

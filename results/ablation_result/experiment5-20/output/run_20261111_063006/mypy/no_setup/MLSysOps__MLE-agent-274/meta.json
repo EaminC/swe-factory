@@ -1,0 +1,22 @@
+{
+    "task_id": "MLSysOps__MLE-agent-274",
+    "setup_info": {
+        "repo_path": "testbed/MLSysOps__MLE-agent-274_2026-11-11_06-32-47",
+        "repo_cache_path": "testbed/MLSysOps/MLE-agent_cache"
+    },
+    "task_info": {
+        "repo": "MLSysOps/MLE-agent",
+        "pull_number": 274,
+        "instance_id": "MLSysOps__MLE-agent-274",
+        "issue_numbers": [
+            "273"
+        ],
+        "base_commit": "ea7393b7c5e6009b77bcac00f41dd5dcfd41df7a",
+        "patch": "diff --git a/mle/cli.py b/mle/cli.py\nindex 32990b4..7855938 100644\n--- a/mle/cli.py\n+++ b/mle/cli.py\n@@ -19,11 +19,10 @@ from mle.utils.system import (\n     startup_web,\n     print_in_box,\n )\n-from mle.utils import LanceDBMemory, list_files, read_file\n from mle.utils import CodeChunker\n+from mle.utils import LanceDBMemory, list_files, read_file\n \n console = Console()\n-memory = LanceDBMemory(os.getcwd())\n \n \n @click.group()\n@@ -199,6 +198,7 @@ def chat(model, build_mem):\n     if not check_config(console):\n         return\n \n+    memory = LanceDBMemory(os.getcwd())\n     if build_mem:\n         working_dir = os.getcwd()\n         table_name = 'mle_chat_' + working_dir.split('/')[-1]\ndiff --git a/requirements.txt b/requirements.txt\nindex 6ec76fd..ce25273 100644\n--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,7 +1,7 @@\n rich\n click\n py7zr~=0.22.0\n-openai~=1.34.0\n+openai\n pyyaml\n kaggle\n fastapi\n",
+        "test_patch": "diff --git a/tests/test_lancedbmemory.py b/tests/test_lancedbmemory.py\nnew file mode 100644\nindex 0000000..e69de29\n--- /dev/null\n+++ b/tests/test_lancedbmemory.py\n@@ -0,0 +1,18 @@\n+import os\n+import pytest\n+from mle.utils import LanceDBMemory\n+\n+def test_lancedbmemory_init_with_no_config(tmp_path):\n+    # Simulate a directory with no config file or config returns None\n+    os.chdir(tmp_path)\n+    # LanceDBMemory should handle missing or None config gracefully\n+    # and not raise TypeError when accessing config[\"platform\"]\n+    try:\n+        memory = LanceDBMemory(str(tmp_path))\n+    except TypeError:\n+        pytest.fail(\"LanceDBMemory raised TypeError on missing config\")\n+\n+    # If LanceDBMemory exposes config attribute, it should be None or dict\n+    if hasattr(memory, 'config'):\n+        assert memory.config is None or isinstance(memory.config, dict)\n+\n",
+        "problem_statement": "LanceDB error when the first time setup a project\n```\nTraceback(most recent call last):\n\nFile \"/Users/zachkoo/miniconda3/envs/mle/bin/mle\", line 33, in <module>sys exit(load_entry_point('mle-\nagent','console_scripts','mle')())File \"/Users/zachkoo/miniconda3/envs/mle/bin/mle\", line 25, in \nimportlib_load_entry_pointo return next(matches).load()File \n\"/Users/zachkoo/miniconda3/envs/mle/lib/python3.9/importlib/metadata.py\", line 86, in loadmodule =import \nmodule(match.group(\"module'))File \"/Users/zachkoo/miniconda3/envs/mle/lib/python3.9/importlib/_init_.py\", line 127, in \nimport_moduleYesreturn bootstrap._gcd_import(name[level:], package, level)File \"<frozen importlib.sbootstrap>\"line \n1030,in gcd importFile \"<frozen importlib. bootstrap>\"line 1007,in find_and loadline 986,in find_and load_unlockedFile,\"\n<frozenimportlib.. bootstrap>File \"<frozen importlib. bootstrap>\".line 680,in load unlocked.File \"<frozen importlib..\n bootstrap_external>\",line 850,in exec moduleFileg\"\"<frozen importlib.bootstrap>\",line 228,in \ncall_with_frames_removedFile \"/Users/zachkoo/Desktop/MLE-agent/mle/cli.py\", line 26, in \n<module>memory=LanceDBMemory(os.getcwd())File \"/Users/zachkoo/Desktop/MLE-agent/mle/utils/memory.py\",line 23,in_init\nif config[\"platform\"]-*OpenAI\":\nTypeError:'NoneType'object is not subscriptable\n```",
+        "hints_text": "",
+        "created_at": "2024-11-28T00:26:58Z",
+        "version": "0.4"
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile fails to build due to a containerd mount error during the installation of packages. The error message is: \"failed to export layer: CreateDiff: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount356936935: failed to write compressed diff: failed to create diff tar stream: lstat /var/lib/containerd/tmpmounts/containerd-mount356936935/usr/include/c++/11/bits/localefwd.h: no such file or directory\". This indicates a problem related to the container runtime's filesystem snapshotting or overlayFS when handling large package installations or build layers. To fix this, consider the following: 1) Ensure Docker/Containerd is updated to the latest stable version to avoid known bugs. 2) Split the large RUN apt-get install command into smaller segments to reduce layer complexity. 3) Add missing dependencies or tools related to build environments, such as 'apt-utils' or ensure locales are correctly configured before package installation. 4) Alternatively, change the base image or use a different python image (e.g., official python:3.10-slim) to avoid complex lower-level system dependencies. 5) Verify the host filesystem has enough space and the Docker daemon has correct permissions to write to /var/lib/containerd/tmpmounts. Overall, the failure is environmental or container runtime related rather than package or command syntax errors.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

@@ -1,0 +1,22 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout dc7a2bd0f546ea29929faa57b8e618c413c86bb2 
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+git checkout dc7a2bd0f546ea29929faa57b8e618c413c86bb2 
+
+# Run only the specified test file with pytest, showing names and status of each test
+pytest --no-header -rA --tb=short tests/test_azure_openai.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the patched test file to clean state
+git checkout dc7a2bd0f546ea29929faa57b8e618c413c86bb2 tests/test_azure_openai.py
+</script>

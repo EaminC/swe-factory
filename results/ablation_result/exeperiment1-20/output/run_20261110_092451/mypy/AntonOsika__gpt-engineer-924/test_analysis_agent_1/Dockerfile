@@ -1,0 +1,51 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    build-essential \
+    libffi-dev \
+    python3-pip \
+    python3-venv \
+    python3-distutils \
+    curl \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry (dependency manager)
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA
+ARG REPO_URL=https://github.com/AntonOsika/gpt-engineer.git
+ARG COMMIT_SHA=a74c5ebcf0abf9db63abf3ba39ac123f6f74eb82
+
+RUN git clone ${REPO_URL} /testbed && \
+    cd /testbed && \
+    git reset --hard ${COMMIT_SHA} && \
+    chmod -R a+rwx /testbed
+
+# Install dependencies using Poetry inside a virtual environment
+RUN python3 -m venv /testbed/testbed-venv
+
+# Install the project dependencies and project itself in editable mode with poetry
+RUN source /testbed/testbed-venv/bin/activate && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi && \
+    pip install -e .
+
+# Provide an easy way to activate the environment by default in bash
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash explicitly
+ENV SHELL=/bin/bash

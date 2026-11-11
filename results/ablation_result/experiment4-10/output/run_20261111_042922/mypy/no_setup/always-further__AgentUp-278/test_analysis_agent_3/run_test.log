@@ -1,0 +1,350 @@
+2026-11-11 05:18:02,216 - INFO - Checking if image always-further__agentup-278-dockerfile3:latest exists locally...
+2026-11-11 05:18:02,441 - INFO - Image always-further__agentup-278-dockerfile3:latest found locally.
+2026-11-11 05:18:02,441 - INFO - Creating container for always-further__agentup-278...
+2026-11-11 05:18:03,457 - INFO - Container for always-further__agentup-278 started: 63a593f02051313c9cf4735df9239a2374e1b011f16e63a607734316af17ccb5
+2026-11-11 05:18:03,457 - INFO - Intermediate patch for always-further__agentup-278 written to /root/swe-factory/output/run_20261111_042922/mypy/always-further__AgentUp-278/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 05:18:04,236 - INFO - Apply patch success:
+Checking patch docs/getting-started/first-agent.md...
+Checking patch src/agent/cli/commands/init_agent.py...
+Checking patch src/agent/llm_providers/ollama.py...
+Checking patch src/agent/templates/config/agentup.yml.j2...
+Applied patch docs/getting-started/first-agent.md cleanly.
+Applied patch src/agent/cli/commands/init_agent.py cleanly.
+Applied patch src/agent/llm_providers/ollama.py cleanly.
+Applied patch src/agent/templates/config/agentup.yml.j2 cleanly.
+
+2026-11-11 05:18:04,687 - INFO - Git diff before:
+diff --git a/docs/getting-started/first-agent.md b/docs/getting-started/first-agent.md
+index 2c998b8..b3701cc 100644
+--- a/docs/getting-started/first-agent.md
++++ b/docs/getting-started/first-agent.md
+@@ -488,5 +488,5 @@ curl -s http://localhost:8000/.well-known/agent.json |jq
+     }
+     ```
+ 
+-The key points to note in the agent card, are how are plugin 'hello' is listed under `skills`, and the security scheme is defined under `securitySchemes`. This card provides a machine-readable description of your agent's capabilities and how to interact with it.
++Note the key points in the agent card, specifically how the 'hello' plugin is listed under `skills`, and the security scheme is defined under `securitySchemes`. This card provides a machine-readable description of your agent's capabilities and how to interact with it.
+ ```bash
+diff --git a/src/agent/cli/commands/init_agent.py b/src/agent/cli/commands/init_agent.py
+index 6d4a0fb..e7e4d58 100644
+--- a/src/agent/cli/commands/init_agent.py
++++ b/src/agent/cli/commands/init_agent.py
+@@ -1,7 +1,9 @@
++import asyncio
+ from pathlib import Path
+ from typing import Any
+ 
+ import click
++import httpx
+ import questionary
+ 
+ from agent.cli.style import custom_style, print_error, print_header, print_success_footer
+@@ -145,6 +147,7 @@ def _prompt_for_features(project_config: dict[str, Any], quick: bool, no_git: bo
+ 
+     # Configure AI provider
+     if "ai_provider" in project_config.get("features", []):
++        print_header("AI Provider Configuration")
+         ai_provider_choice = questionary.select(
+             "Please select an AI Provider:",
+             choices=[
+@@ -157,8 +160,24 @@ def _prompt_for_features(project_config: dict[str, Any], quick: bool, no_git: bo
+         if ai_provider_choice:
+             project_config["ai_provider_config"] = {"provider": ai_provider_choice}
+ 
++            if ai_provider_choice == "ollama":
++                ollama_models = asyncio.run(get_ollama_models())
++                if not ollama_models:
++                    click.echo("No models found locally. Defaulting to 'llama3:latest'.", err=True)
++                    model_choice = "llama3"
++                else:
++                    model_choice = questionary.select(
++                        "Please select an Ollama model:",
++                        choices=ollama_models,
++                        style=custom_style,
++                    ).ask()
++
++                if model_choice:
++                    project_config["ai_provider_config"]["model"] = model_choice
++
+     # Configure external services
+     if "services" in project_config.get("features", []):
++        print_header("External Services Configuration")
+         service_choices = [
+             questionary.Choice("Valkey", value="valkey"),
+             questionary.Choice("Custom API", value="custom"),
+@@ -178,10 +197,36 @@ def _handle_git_initialization(output_dir: Path, no_git: bool):
+             click.echo(f"{click.style(f'Warning: Could not initialize git repository: {error}', fg='yellow')}")
+ 
+ 
++async def get_ollama_models() -> list[str]:
++    """Pings the local Ollama API and returns a list of available model names.
++
++    This function is a standalone helper that doesn't rely on a class instance.
++    """
++    import os
++
++    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
++    try:
++        async with httpx.AsyncClient(base_url=base_url) as client:
++            response = await client.get("/api/tags", timeout=5.0)
++            response.raise_for_status()  # Raise an exception for bad status codes
++
++            data = response.json()
++            models = data.get("models", [])
++            return [model["name"] for model in models]
++
++    except httpx.HTTPError as e:
++        click.echo(f"Warning: Could not connect to Ollama or retrieve models. Error: {e}", err=True)
++        return []
++    except KeyError:
++        click.echo("Warning: Ollama API response is missing the 'models' key.", err=True)
++        return []
++
++
+ def configure_features(features: list) -> dict[str, Any]:
+     config = {}
+ 
+     if "middleware" in features:
++        print_header("Middleware Configuration")
+         middleware_choices = [
+             questionary.Choice("Rate Limiting", value="rate_limit", checked=True),
+             questionary.Choice("Caching", value="cache", checked=True),
+@@ -203,6 +248,7 @@ def configure_features(features: list) -> dict[str, Any]:
+             config["cache_backend"] = cache_backend_choice
+ 
+     if "state_management" in features:
++        print_header("State Management Configuration")
+         state_backend_choice = questionary.select(
+             "Select state management backend:",
+             choices=[
+@@ -215,6 +261,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["state_backend"] = state_backend_choice
+ 
+     if "auth" in features:
++        print_header("Authentication Configuration")
+         auth_choice = questionary.select(
+             "Select authentication method:",
+             choices=[
+@@ -239,6 +286,7 @@ def configure_features(features: list) -> dict[str, Any]:
+             config["oauth2_provider"] = oauth2_provider
+ 
+     if "push_notifications" in features:
++        print_header("Push Notifications Configuration")
+         push_backend_choice = questionary.select(
+             "Select push notifications backend:",
+             choices=[
+@@ -256,6 +304,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["push_validate_urls"] = validate_urls
+ 
+     if "development" in features:
++        print_header("Development Features Configuration")
+         dev_enabled = questionary.confirm(
+             "Enable development features? (filesystem plugins, debug mode)",
+             default=False,
+@@ -283,6 +332,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["mcp_filesystem_path"] = fs_path
+ 
+     if "deployment" in features:
++        print_header("Deployment Configuration", "Configure deployment options for your agent")
+         # Docker configuration
+         docker_enabled = questionary.confirm(
+             "Generate Docker files? (Dockerfile, docker-compose.yml)",
+diff --git a/src/agent/llm_providers/ollama.py b/src/agent/llm_providers/ollama.py
+index ec5758d..17bb98e 100644
+--- a/src/agent/llm_providers/ollama.py
++++ b/src/agent/llm_providers/ollama.py
+@@ -52,8 +52,8 @@ class OllamaProvider(BaseLLMService):
+             if response.status_code != 200:
+                 raise LLMProviderAPIError(f"Failed to check Ollama models: {response.status_code}")
+ 
+-            data = response.json()
+-            model_names = [model["name"].split(":")[0] for model in data.get("models", [])]
++            models = response.json().get("models", [])
++            model_names = [model["name"] for model in models]
+ 
+             if self.model not in model_names:
+                 logger.info(f"Model {self.model} not found locally, attempting to pull...")
+diff --git a/src/agent/templates/config/agentup.yml.j2 b/src/agent/templates/config/agentup.yml.j2
+index 11657d4..0c72cb8 100644
+--- a/src/agent/templates/config/agentup.yml.j2
++++ b/src/agent/templates/config/agentup.yml.j2
+@@ -203,7 +203,7 @@ ai_provider:
+   model: {{ ai_provider_config.model | default('claude-3-5-sonnet-20241022') }}
+ {% elif ai_provider_config.provider == 'ollama' %}
+   model: {{ ai_provider_config.model | default('llama3') }}
+-  base_url: ${OLLAMA_BASE_URL:http://localhost:11434/v1}
++  base_url: ${OLLAMA_BASE_URL:http://localhost:11434}
+ {% endif %}
+   temperature: {{ ai_temperature | default(0.7) }}
+   max_tokens: {{ ai_max_tokens | default(1000) }}
+2026-11-11 05:18:04,687 - INFO - Eval script for always-further__agentup-278 written to /root/swe-factory/output/run_20261111_042922/mypy/always-further__AgentUp-278/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 05:18:07,752 - INFO - Test output for always-further__agentup-278 written to /root/swe-factory/output/run_20261111_042922/mypy/always-further__AgentUp-278/test_analysis_agent_3/test_output.txt
+2026-11-11 05:18:07,924 - INFO - Git diff after:
+diff --git a/docs/getting-started/first-agent.md b/docs/getting-started/first-agent.md
+index 2c998b8..b3701cc 100644
+--- a/docs/getting-started/first-agent.md
++++ b/docs/getting-started/first-agent.md
+@@ -488,5 +488,5 @@ curl -s http://localhost:8000/.well-known/agent.json |jq
+     }
+     ```
+ 
+-The key points to note in the agent card, are how are plugin 'hello' is listed under `skills`, and the security scheme is defined under `securitySchemes`. This card provides a machine-readable description of your agent's capabilities and how to interact with it.
++Note the key points in the agent card, specifically how the 'hello' plugin is listed under `skills`, and the security scheme is defined under `securitySchemes`. This card provides a machine-readable description of your agent's capabilities and how to interact with it.
+ ```bash
+diff --git a/src/agent/cli/commands/init_agent.py b/src/agent/cli/commands/init_agent.py
+index 6d4a0fb..e7e4d58 100644
+--- a/src/agent/cli/commands/init_agent.py
++++ b/src/agent/cli/commands/init_agent.py
+@@ -1,7 +1,9 @@
++import asyncio
+ from pathlib import Path
+ from typing import Any
+ 
+ import click
++import httpx
+ import questionary
+ 
+ from agent.cli.style import custom_style, print_error, print_header, print_success_footer
+@@ -145,6 +147,7 @@ def _prompt_for_features(project_config: dict[str, Any], quick: bool, no_git: bo
+ 
+     # Configure AI provider
+     if "ai_provider" in project_config.get("features", []):
++        print_header("AI Provider Configuration")
+         ai_provider_choice = questionary.select(
+             "Please select an AI Provider:",
+             choices=[
+@@ -157,8 +160,24 @@ def _prompt_for_features(project_config: dict[str, Any], quick: bool, no_git: bo
+         if ai_provider_choice:
+             project_config["ai_provider_config"] = {"provider": ai_provider_choice}
+ 
++            if ai_provider_choice == "ollama":
++                ollama_models = asyncio.run(get_ollama_models())
++                if not ollama_models:
++                    click.echo("No models found locally. Defaulting to 'llama3:latest'.", err=True)
++                    model_choice = "llama3"
++                else:
++                    model_choice = questionary.select(
++                        "Please select an Ollama model:",
++                        choices=ollama_models,
++                        style=custom_style,
++                    ).ask()
++
++                if model_choice:
++                    project_config["ai_provider_config"]["model"] = model_choice
++
+     # Configure external services
+     if "services" in project_config.get("features", []):
++        print_header("External Services Configuration")
+         service_choices = [
+             questionary.Choice("Valkey", value="valkey"),
+             questionary.Choice("Custom API", value="custom"),
+@@ -178,10 +197,36 @@ def _handle_git_initialization(output_dir: Path, no_git: bool):
+             click.echo(f"{click.style(f'Warning: Could not initialize git repository: {error}', fg='yellow')}")
+ 
+ 
++async def get_ollama_models() -> list[str]:
++    """Pings the local Ollama API and returns a list of available model names.
++
++    This function is a standalone helper that doesn't rely on a class instance.
++    """
++    import os
++
++    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
++    try:
++        async with httpx.AsyncClient(base_url=base_url) as client:
++            response = await client.get("/api/tags", timeout=5.0)
++            response.raise_for_status()  # Raise an exception for bad status codes
++
++            data = response.json()
++            models = data.get("models", [])
++            return [model["name"] for model in models]
++
++    except httpx.HTTPError as e:
++        click.echo(f"Warning: Could not connect to Ollama or retrieve models. Error: {e}", err=True)
++        return []
++    except KeyError:
++        click.echo("Warning: Ollama API response is missing the 'models' key.", err=True)
++        return []
++
++
+ def configure_features(features: list) -> dict[str, Any]:
+     config = {}
+ 
+     if "middleware" in features:
++        print_header("Middleware Configuration")
+         middleware_choices = [
+             questionary.Choice("Rate Limiting", value="rate_limit", checked=True),
+             questionary.Choice("Caching", value="cache", checked=True),
+@@ -203,6 +248,7 @@ def configure_features(features: list) -> dict[str, Any]:
+             config["cache_backend"] = cache_backend_choice
+ 
+     if "state_management" in features:
++        print_header("State Management Configuration")
+         state_backend_choice = questionary.select(
+             "Select state management backend:",
+             choices=[
+@@ -215,6 +261,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["state_backend"] = state_backend_choice
+ 
+     if "auth" in features:
++        print_header("Authentication Configuration")
+         auth_choice = questionary.select(
+             "Select authentication method:",
+             choices=[
+@@ -239,6 +286,7 @@ def configure_features(features: list) -> dict[str, Any]:
+             config["oauth2_provider"] = oauth2_provider
+ 
+     if "push_notifications" in features:
++        print_header("Push Notifications Configuration")
+         push_backend_choice = questionary.select(
+             "Select push notifications backend:",
+             choices=[
+@@ -256,6 +304,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["push_validate_urls"] = validate_urls
+ 
+     if "development" in features:
++        print_header("Development Features Configuration")
+         dev_enabled = questionary.confirm(
+             "Enable development features? (filesystem plugins, debug mode)",
+             default=False,
+@@ -283,6 +332,7 @@ def configure_features(features: list) -> dict[str, Any]:
+         config["mcp_filesystem_path"] = fs_path
+ 
+     if "deployment" in features:
++        print_header("Deployment Configuration", "Configure deployment options for your agent")
+         # Docker configuration
+         docker_enabled = questionary.confirm(
+             "Generate Docker files? (Dockerfile, docker-compose.yml)",
+diff --git a/src/agent/llm_providers/ollama.py b/src/agent/llm_providers/ollama.py
+index ec5758d..17bb98e 100644
+--- a/src/agent/llm_providers/ollama.py
++++ b/src/agent/llm_providers/ollama.py
+@@ -52,8 +52,8 @@ class OllamaProvider(BaseLLMService):
+             if response.status_code != 200:
+                 raise LLMProviderAPIError(f"Failed to check Ollama models: {response.status_code}")
+ 
+-            data = response.json()
+-            model_names = [model["name"].split(":")[0] for model in data.get("models", [])]
++            models = response.json().get("models", [])
++            model_names = [model["name"] for model in models]
+ 
+             if self.model not in model_names:
+                 logger.info(f"Model {self.model} not found locally, attempting to pull...")
+diff --git a/src/agent/templates/config/agentup.yml.j2 b/src/agent/templates/config/agentup.yml.j2
+index 11657d4..0c72cb8 100644
+--- a/src/agent/templates/config/agentup.yml.j2
++++ b/src/agent/templates/config/agentup.yml.j2
+@@ -203,7 +203,7 @@ ai_provider:
+   model: {{ ai_provider_config.model | default('claude-3-5-sonnet-20241022') }}
+ {% elif ai_provider_config.provider == 'ollama' %}
+   model: {{ ai_provider_config.model | default('llama3') }}
+-  base_url: ${OLLAMA_BASE_URL:http://localhost:11434/v1}
++  base_url: ${OLLAMA_BASE_URL:http://localhost:11434}
+ {% endif %}
+   temperature: {{ ai_temperature | default(0.7) }}
+   max_tokens: {{ ai_max_tokens | default(1000) }}
+2026-11-11 05:18:07,924 - INFO - Attempting to stop container always-further__agentup-278-test3...
+2026-11-11 05:18:23,227 - INFO - Attempting to remove container always-further__agentup-278-test3...
+2026-11-11 05:18:23,283 - INFO - Container always-further__agentup-278-test3 removed.
+2026-11-11 05:18:23,283 - INFO - Attempting to remove image always-further__agentup-278-dockerfile3:latest...
+2026-11-11 05:18:28,523 - INFO - Image always-further__agentup-278-dockerfile3:latest removed.

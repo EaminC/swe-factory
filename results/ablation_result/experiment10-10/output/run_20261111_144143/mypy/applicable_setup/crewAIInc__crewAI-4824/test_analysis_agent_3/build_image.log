@@ -1,0 +1,99 @@
+2026-11-11 14:56:00,848 - INFO - Building image crewaiinc__crewai-4824
+Using dockerfile:
+# Use Ubuntu 23.04 as base image for native Python 3.13 support without needing external PPAs
+FROM --platform=linux/x86_64 ubuntu:23.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, build essentials, python3.13 packages, rust, etc.
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    rustc \
+    cargo \
+    python3.13 \
+    python3.13-venv \
+    python3.13-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Make python3 point to python3.13 explicitly, upgrade pip, setuptools and wheel for python3.13
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv CLI tool (CrewAI's environment manager)
+RUN python3 -m pip install uv
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the target repository and checkout specific commit SHA (as argument to docker build)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=542afe61a8adfca1b9a0434189b9f339dfb07817
+RUN git clone ${REPO} . && \
+    git reset --hard ${COMMIT_SHA}
+
+# Create UV-managed virtual environment and install the local repository plus optional 'tools' dependencies in editable mode
+RUN /bin/bash -c "\
+    uv venv && \
+    source .venv/bin/activate && \
+    uv pip install --upgrade pip && \
+    uv pip install 'crewai[tools]' && \
+    uv pip install -e . \
+    "
+
+# Set environment variable for unbuffered Python output
+ENV PYTHONUNBUFFERED=1
+
+# Append environment activation to root bashrc for convenience if interactive shell is used
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default shell explicitly bash
+SHELL ["/bin/bash", "-c"]
+
+2026-11-11 14:56:00,907 - INFO - Do not find previous image, images list is clean.
+2026-11-11 14:56:00,980 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:23.04
+2026-11-11 14:56:16,147 - INFO -  ---> 5a828e28de10
+2026-11-11 14:56:16,147 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 14:56:16,464 - INFO -  ---> Running in dbcdde271e22
+2026-11-11 14:56:21,496 - INFO -  ---> Removed intermediate container dbcdde271e22
+2026-11-11 14:56:21,497 - INFO -  ---> b7892ef6dc52
+2026-11-11 14:56:21,497 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-11 14:56:21,904 - INFO -  ---> Running in 38db3f72c374
+2026-11-11 14:56:25,461 - INFO -  ---> Removed intermediate container 38db3f72c374
+2026-11-11 14:56:25,463 - INFO -  ---> c2622fab7940
+2026-11-11 14:56:25,463 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-11 14:56:26,279 - INFO -  ---> Running in c01a94c63d4f
+2026-11-11 14:56:29,629 - INFO -  ---> Removed intermediate container c01a94c63d4f
+2026-11-11 14:56:29,629 - INFO -  ---> cd934c966ff6
+2026-11-11 14:56:29,629 - INFO - Step 5/15 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-11 14:56:29,849 - INFO -  ---> Running in 15c9cc600d0c
+2026-11-11 14:56:32,640 - INFO - Ign:1 http://archive.ubuntu.com/ubuntu lunar InRelease
+2026-11-11 14:56:32,672 - INFO - Ign:2 http://security.ubuntu.com/ubuntu lunar-security InRelease
+2026-11-11 14:56:32,823 - INFO - Ign:3 http://archive.ubuntu.com/ubuntu lunar-updates InRelease
+2026-11-11 14:56:32,863 - INFO - Err:4 http://security.ubuntu.com/ubuntu lunar-security Release
+2026-11-11 14:56:32,863 - INFO -   404  Not Found [IP: 91.189.92.23 80]
+2026-11-11 14:56:33,012 - INFO - Ign:5 http://archive.ubuntu.com/ubuntu lunar-backports InRelease
+2026-11-11 14:56:33,198 - INFO - Err:6 http://archive.ubuntu.com/ubuntu lunar Release
+2026-11-11 14:56:33,198 - INFO -   404  Not Found [IP: 91.189.92.24 80]
+2026-11-11 14:56:33,389 - INFO - Err:7 http://archive.ubuntu.com/ubuntu lunar-updates Release
+2026-11-11 14:56:33,389 - INFO -   404  Not Found [IP: 91.189.92.24 80]
+2026-11-11 14:56:33,573 - INFO - Err:8 http://archive.ubuntu.com/ubuntu lunar-backports Release
+2026-11-11 14:56:33,573 - INFO -   404  Not Found [IP: 91.189.92.24 80]
+2026-11-11 14:56:33,629 - INFO - Reading package lists...
+2026-11-11 14:56:33,638 - INFO - E: The repository 'http://security.ubuntu.com/ubuntu lunar-security Release' does not have a Release file.
+2026-11-11 14:56:33,638 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar Release' does not have a Release file.
+2026-11-11 14:56:33,638 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar-updates Release' does not have a Release file.
+2026-11-11 14:56:33,638 - INFO - E: The repository 'http://archive.ubuntu.com/ubuntu lunar-backports Release' does not have a Release file.
+2026-11-11 14:56:34,249 - INFO -  ---> Removed intermediate container 15c9cc600d0c
+2026-11-11 14:56:34,275 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 14:56:34,275 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

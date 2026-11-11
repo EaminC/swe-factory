@@ -1,0 +1,130 @@
+2026-11-10 11:13:22,423 - INFO - Building image antonosika__gpt-engineer-1170
+Using dockerfile:
+# Use python 3.10 bullseye image for better compatibility and avoid missing system binaries errors
+FROM python:3.10-bullseye
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies and tools (git, curl, build-essential)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    build-essential \
+    locales \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale to UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Create necessary directory structure and set permissions for Poetry installation
+RUN mkdir -p /root/.local/share/pypoetry && \
+    chown -R root:root /root/.local
+
+# Download Poetry installation script separately and explicitly run it to better handle errors and layer snapshot issues
+RUN curl -sSL https://install.python-poetry.org -o install-poetry.py && \
+    python3 install-poetry.py --version 1.9.6 && \
+    rm install-poetry.py
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Verify poetry installation by printing version (fail early if install failed)
+RUN poetry --version
+
+# Clone the repository, checkout the given commit
+WORKDIR /testbed/
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed && \
+    git reset --hard 3e589bf1356024fb471a9d17738e4626f21a953b
+
+# Configure Poetry to create virtual env inside project, install dependencies, then install package in editable mode
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-root --only main,dev
+
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && pip install -e ."
+
+# Set default shell as bash
+SHELL ["/bin/bash", "-c"]
+
+# Default workdir
+WORKDIR /testbed/
+
+# Expose HOME environment to ensure Poetry and virtual env works smoothly
+ENV HOME=/root
+
+# Provide a bashrc line to activate poetry shell (virtual env) automatically for convenience during interactive use
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+2026-11-10 11:13:22,427 - INFO - Do not find previous image, images list is clean.
+2026-11-10 11:13:22,433 - INFO - Step 1/20 : FROM python:3.10-bullseye
+2026-11-10 11:14:41,475 - INFO -  ---> 65c6bdcca22d
+2026-11-10 11:14:41,483 - INFO - Step 2/20 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 11:14:46,189 - INFO -  ---> Running in 66bfdde4e9c6
+2026-11-10 11:15:13,204 - INFO -  ---> Removed intermediate container 66bfdde4e9c6
+2026-11-10 11:15:13,204 - INFO -  ---> 2d733a46922d
+2026-11-10 11:15:13,204 - INFO - Step 3/20 : ENV TZ=Etc/UTC
+2026-11-10 11:15:16,932 - INFO -  ---> Running in ce97543aa15d
+2026-11-10 11:15:37,797 - INFO -  ---> Removed intermediate container ce97543aa15d
+2026-11-10 11:15:37,797 - INFO -  ---> adf33a12e3f4
+2026-11-10 11:15:37,797 - INFO - Step 4/20 : RUN apt-get update && apt-get install -y --no-install-recommends     git     curl     build-essential     locales     tzdata     bash     && rm -rf /var/lib/apt/lists/*
+2026-11-10 11:15:40,134 - INFO -  ---> Running in 249d47df1bc2
+2026-11-10 11:15:43,527 - INFO - Get:1 http://deb.debian.org/debian bullseye InRelease [75.1 kB]
+2026-11-10 11:15:43,550 - INFO - Get:2 http://deb.debian.org/debian-security bullseye-security InRelease [27.1 kB]
+2026-11-10 11:15:43,731 - INFO - Get:3 http://deb.debian.org/debian bullseye-updates InRelease [44.0 kB]
+2026-11-10 11:15:43,910 - INFO - Get:4 http://deb.debian.org/debian bullseye/main amd64 Packages [8066 kB]
+2026-11-10 11:15:44,354 - INFO - Get:5 http://deb.debian.org/debian-security bullseye-security/main amd64 Packages [475 kB]
+2026-11-10 11:15:44,558 - INFO - Get:6 http://deb.debian.org/debian bullseye-updates/main amd64 Packages [18.8 kB]
+2026-11-10 11:15:46,390 - INFO - Fetched 8706 kB in 3s (3021 kB/s)
+2026-11-10 11:15:47,269 - INFO - Reading package lists...
+2026-11-10 11:15:48,069 - INFO - Reading package lists...
+2026-11-10 11:15:48,252 - INFO - Building dependency tree...
+2026-11-10 11:15:48,253 - INFO - Reading state information...
+2026-11-10 11:15:48,381 - INFO - bash is already the newest version (5.1-2+deb11u1).
+2026-11-10 11:15:48,381 - INFO - bash set to manually installed.
+2026-11-10 11:15:48,381 - INFO - The following additional packages will be installed:
+2026-11-10 11:15:48,382 - INFO -   libc-l10n libcurl4 libcurl4-openssl-dev
+2026-11-10 11:15:48,382 - INFO - Suggested packages:
+2026-11-10 11:15:48,382 - INFO -   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-el git-email
+2026-11-10 11:15:48,382 - INFO -   git-gui gitk gitweb git-cvs git-mediawiki git-svn libcurl4-doc libidn11-dev
+2026-11-10 11:15:48,382 - INFO -   libldap2-dev librtmp-dev libssh2-1-dev
+2026-11-10 11:15:48,382 - INFO - Recommended packages:
+2026-11-10 11:15:48,382 - INFO -   less
+2026-11-10 11:15:48,412 - INFO - The following NEW packages will be installed:
+2026-11-10 11:15:48,413 - INFO -   build-essential libc-l10n locales
+2026-11-10 11:15:48,413 - INFO - The following packages will be upgraded:
+2026-11-10 11:15:48,413 - INFO -   curl git libcurl4 libcurl4-openssl-dev tzdata
+2026-11-10 11:15:48,615 - INFO - 5 upgraded, 3 newly installed, 0 to remove and 98 not upgraded.
+2026-11-10 11:15:48,616 - INFO - Need to get 11.9 MB of archives.
+2026-11-10 11:15:48,616 - INFO - After this operation, 20.9 MB of additional disk space will be used.
+2026-11-10 11:15:48,616 - INFO - Err:1 http://deb.debian.org/debian-security bullseye-security/main amd64 tzdata all 2026b-0+deb11u1
+2026-11-10 11:15:48,616 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:48,789 - INFO - Err:2 http://deb.debian.org/debian-security bullseye-security/main amd64 libc-l10n all 2.31-13+deb11u14
+2026-11-10 11:15:48,789 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:48,969 - INFO - Err:3 http://deb.debian.org/debian-security bullseye-security/main amd64 locales all 2.31-13+deb11u14
+2026-11-10 11:15:48,969 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:48,972 - INFO - Get:4 http://deb.debian.org/debian bullseye/main amd64 build-essential amd64 12.9 [7704 B]
+2026-11-10 11:15:49,145 - INFO - Err:5 http://deb.debian.org/debian-security bullseye-security/main amd64 libcurl4-openssl-dev amd64 7.74.0-1.3+deb11u16
+2026-11-10 11:15:49,145 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,325 - INFO - Err:6 http://deb.debian.org/debian-security bullseye-security/main amd64 curl amd64 7.74.0-1.3+deb11u16
+2026-11-10 11:15:49,325 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,505 - INFO - Err:7 http://deb.debian.org/debian-security bullseye-security/main amd64 libcurl4 amd64 7.74.0-1.3+deb11u16
+2026-11-10 11:15:49,505 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,682 - INFO - Err:8 http://deb.debian.org/debian-security bullseye-security/main amd64 git amd64 1:2.30.2-1+deb11u5
+2026-11-10 11:15:49,682 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,691 - INFO - Fetched 7704 B in 1s (6088 B/s)
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/t/tzdata/tzdata_2026b-0%2bdeb11u1_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/libc-l10n_2.31-13%2bdeb11u14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/locales_2.31-13%2bdeb11u14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/libcurl4-openssl-dev_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/curl_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/libcurl4_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/git/git_2.30.2-1%2bdeb11u5_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-10 11:15:49,695 - INFO - E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+2026-11-10 11:15:52,607 - INFO -  ---> Removed intermediate container 249d47df1bc2
+2026-11-10 11:15:52,644 - ERROR - Error: The command '/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     git     curl     build-essential     locales     tzdata     bash     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 11:15:52,644 - ERROR - The command '/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     git     curl     build-essential     locales     tzdata     bash     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

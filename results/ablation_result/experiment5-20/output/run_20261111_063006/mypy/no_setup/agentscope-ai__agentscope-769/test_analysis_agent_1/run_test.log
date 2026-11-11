@@ -1,0 +1,1715 @@
+2026-11-11 08:01:50,836 - INFO - Checking if image agentscope-ai__agentscope-769-dockerfile1:latest exists locally...
+2026-11-11 08:01:51,177 - INFO - Image agentscope-ai__agentscope-769-dockerfile1:latest found locally.
+2026-11-11 08:01:51,177 - INFO - Creating container for agentscope-ai__agentscope-769...
+2026-11-11 08:01:52,136 - INFO - Container for agentscope-ai__agentscope-769 started: 1e8caeebccdadd31342b5ede8024738339142dc543bcf287de9cbd84d95775da
+2026-11-11 08:01:52,136 - INFO - Intermediate patch for agentscope-ai__agentscope-769 written to /root/swe-factory/output/run_20261111_063006/mypy/agentscope-ai__agentscope-769/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-11 08:01:52,883 - INFO - Apply patch success:
+Checking patch README_zh.md...
+Checking patch docs/tutorial/en/src/task_eval.py...
+Checking patch docs/tutorial/zh_CN/src/task_eval.py...
+Checking patch src/agentscope/evaluate/_ace_benchmark/_ace_metric.py...
+Checking patch src/agentscope/evaluate/_evaluator/_general_evaluator.py...
+Checking patch src/agentscope/evaluate/_evaluator/_ray_evaluator.py...
+Checking patch src/agentscope/evaluate/_metric_base.py...
+Checking patch src/agentscope/evaluate/_task.py...
+Checking patch src/agentscope/model/_openai_model.py...
+Checking patch tests/evaluation_test.py...
+Applied patch README_zh.md cleanly.
+Applied patch docs/tutorial/en/src/task_eval.py cleanly.
+Applied patch docs/tutorial/zh_CN/src/task_eval.py cleanly.
+Applied patch src/agentscope/evaluate/_ace_benchmark/_ace_metric.py cleanly.
+Applied patch src/agentscope/evaluate/_evaluator/_general_evaluator.py cleanly.
+Applied patch src/agentscope/evaluate/_evaluator/_ray_evaluator.py cleanly.
+Applied patch src/agentscope/evaluate/_metric_base.py cleanly.
+Applied patch src/agentscope/evaluate/_task.py cleanly.
+Applied patch src/agentscope/model/_openai_model.py cleanly.
+Applied patch tests/evaluation_test.py cleanly.
+
+2026-11-11 08:01:53,531 - INFO - Git diff before:
+diff --git a/README_zh.md b/README_zh.md
+index 1586effc..ca67dacf 100644
+--- a/README_zh.md
++++ b/README_zh.md
+@@ -366,7 +366,7 @@ as_studio
+ 
+ ## ⚖️ 许可
+ 
+-AgentScope 基于 Apache License 2.0发布。
++AgentScope 基于 Apache License 2.0 发布。
+ 
+ ## 📚 论文
+ 
+diff --git a/docs/tutorial/en/src/task_eval.py b/docs/tutorial/en/src/task_eval.py
+index 43b50a8d..d7f3902d 100644
+--- a/docs/tutorial/en/src/task_eval.py
++++ b/docs/tutorial/en/src/task_eval.py
+@@ -101,7 +101,7 @@ class CheckEqual(MetricBase):
+         )
+         self.ground_truth = ground_truth
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -239,7 +239,7 @@ async def toy_solution_generation(
+ 
+ async def main() -> None:
+     evaluator = GeneralEvaluator(
+-        name="Toy benchmark evaluation",
++        name="ACEbench evaluation",
+         benchmark=ToyBenchmark(),
+         # Repeat how many times
+         n_repeat=1,
+diff --git a/docs/tutorial/zh_CN/src/task_eval.py b/docs/tutorial/zh_CN/src/task_eval.py
+index f58ecc4e..2bf88146 100644
+--- a/docs/tutorial/zh_CN/src/task_eval.py
++++ b/docs/tutorial/zh_CN/src/task_eval.py
+@@ -100,7 +100,7 @@ class CheckEqual(MetricBase):
+         )
+         self.ground_truth = ground_truth
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -237,7 +237,7 @@ async def toy_solution_generation(
+ 
+ async def main() -> None:
+     evaluator = GeneralEvaluator(
+-        name="Toy benchmark evaluation",
++        name="ACEbench evaluation",
+         benchmark=ToyBenchmark(),
+         # 重复多少次
+         n_repeat=1,
+diff --git a/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py b/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
+index 49257786..d25b1526 100644
+--- a/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
++++ b/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
+@@ -20,7 +20,7 @@ class ACEProcessAccuracy(MetricBase):
+         )
+         self.mile_stone = mile_stone
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -82,7 +82,7 @@ class ACEAccuracy(MetricBase):
+         )
+         self.state = state
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+diff --git a/src/agentscope/evaluate/_evaluator/_general_evaluator.py b/src/agentscope/evaluate/_evaluator/_general_evaluator.py
+index 40edc62d..ce121c15 100644
+--- a/src/agentscope/evaluate/_evaluator/_general_evaluator.py
++++ b/src/agentscope/evaluate/_evaluator/_general_evaluator.py
+@@ -39,14 +39,14 @@ class GeneralEvaluator(EvaluatorBase):
+         self.n_repeat = n_repeat
+         self.n_workers = n_workers
+ 
+-    async def run_evaluation(
++    def run_evaluation(
+         self,
+         task: Task,
+         repeat_id: str,
+         solution_output: SolutionOutput,
+     ) -> None:
+         """Run the evaluation for a task and solution result."""
+-        evaluation_results = await task.evaluate(solution_output)
++        evaluation_results = task.evaluate(solution_output)
+         # store the evaluation result
+         for result in evaluation_results:
+             self.storage.save_evaluation_result(
+@@ -91,7 +91,7 @@ class GeneralEvaluator(EvaluatorBase):
+                 repeat_id,
+                 metric.name,
+             ):
+-                await self.run_evaluation(
++                self.run_evaluation(
+                     task,
+                     repeat_id,
+                     solution_result,
+diff --git a/src/agentscope/evaluate/_evaluator/_ray_evaluator.py b/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
+index 1b7b8653..a8f4a014 100644
+--- a/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
++++ b/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
+@@ -15,29 +15,57 @@ from .._task import Task
+ from .._evaluator_storage import EvaluatorStorageBase
+ 
+ 
+-@ray.remote
+-class RayEvaluationActor:
+-    """
+-    Actor class for running evaluation with ray remote.
+-    """
++def _lazy_ray_remote(func: Callable) -> Callable:
++    """Decorator to lazily initialize ray.remote."""
++    try:
++        import ray as lazy_ray
++
++        return lazy_ray.remote(func)
++
++    except ImportError:
++        return func
++
++
++class RayEvaluator(EvaluatorBase):
++    """The ray-based evaluator that supports distributed and parallel
++    evaluation."""
++
++    def __init__(
++        self,
++        name: str,
++        benchmark: BenchmarkBase,
++        n_repeat: int,
++        storage: EvaluatorStorageBase,
++        n_workers: int,
++    ) -> None:
++        """Initialize the evaluator."""
++        super().__init__(
++            name=name,
++            benchmark=benchmark,
++            n_repeat=n_repeat,
++            storage=storage,
++        )
++
++        assert isinstance(benchmark, BenchmarkBase)
++
++        assert n_repeat >= 1, "n_repeat must be at least 1"
++
++        assert n_workers >= 1, "n_workers must be at least 1"
++
++        self.benchmark = benchmark
++        self.n_repeat = n_repeat
++        self.n_workers = n_workers
+ 
+     @staticmethod
+-    async def run(
++    @_lazy_ray_remote
++    def run_evaluation(
+         storage: EvaluatorStorageBase,
+         task: Task,
+         repeat_id: str,
+         solution_output: SolutionOutput,
+     ) -> None:
+-        """
+-        Run the evaluation for a task and solution result.
+-
+-        Args:
+-            storage (EvaluatorStorageBase): Evaluator storage.
+-            task (Task): Task to be evaluated.
+-            repeat_id (str): Repeat ID
+-            solution_output (SolutionOutput): output data after execute agents.
+-        """
+-        evaluation_results = await task.evaluate(solution_output)
++        """Run the evaluation for a task and solution result."""
++        evaluation_results = task.evaluate(solution_output)
+         # store the evaluation result
+         for result in evaluation_results:
+             storage.save_evaluation_result(
+@@ -46,20 +74,9 @@ class RayEvaluationActor:
+                 evaluation=result,
+             )
+ 
+-
+-@ray.remote
+-class RaySolutionActor:
+-    """
+-    Actor class for running agent solutions with ray remote.
+-    """
+-
+-    def __init__(self, n_workers: int = 1):
+-        self.eval_actor = RayEvaluationActor.options(
+-            max_concurrency=n_workers,
+-        ).remote()
+-
+-    async def run(
+-        self,
++    @staticmethod
++    @_lazy_ray_remote
++    def run_solution(
+         storage: EvaluatorStorageBase,
+         repeat_id: str,
+         task: Task,
+@@ -68,16 +85,7 @@ class RaySolutionActor:
+             Coroutine[Any, Any, SolutionOutput],
+         ],
+     ) -> None:
+-        """Generate a solution to a task and evaluate.
+-
+-        Args:
+-            storage (EvaluatorStorageBase): Evaluator storage.
+-            repeat_id (str): Repeat ID.
+-            task (Task): Task to be evaluated.
+-            solution
+-                (Callable[[Task, Callable], Awaitable[SolutionOutput, Any]]):
+-                callable function to execute agents and generate results.
+-        """
++        """Generate a solution to a task and evaluate."""
+         if storage.solution_result_exists(task.id, repeat_id):
+             # Obtain from storage
+             solution_result = storage.get_solution_result(
+@@ -87,14 +95,15 @@ class RaySolutionActor:
+ 
+         else:
+             # Run the solution
+-            solution_result = await solution(
+-                task,
+-                storage.get_agent_pre_print_hook(
+-                    task.id,
+-                    repeat_id,
++            solution_result = asyncio.run(
++                solution(
++                    task,
++                    storage.get_agent_pre_print_hook(
++                        task.id,
++                        repeat_id,
++                    ),
+                 ),
+             )
+-
+             storage.save_solution_result(
+                 task.id,
+                 repeat_id,
+@@ -110,46 +119,14 @@ class RaySolutionActor:
+                 metric.name,
+             ):
+                 futures.append(
+-                    self.eval_actor.run.remote(
++                    RayEvaluator.run_evaluation.remote(
+                         storage,
+                         task,
+                         repeat_id,
+                         solution_result,
+                     ),
+                 )
+-        if futures:
+-            await asyncio.gather(*futures)
+-
+-
+-class RayEvaluator(EvaluatorBase):
+-    """The ray-based evaluator that supports distributed and parallel
+-    evaluation."""
+-
+-    def __init__(
+-        self,
+-        name: str,
+-        benchmark: BenchmarkBase,
+-        n_repeat: int,
+-        storage: EvaluatorStorageBase,
+-        n_workers: int,
+-    ) -> None:
+-        """Initialize the evaluator."""
+-        super().__init__(
+-            name=name,
+-            benchmark=benchmark,
+-            n_repeat=n_repeat,
+-            storage=storage,
+-        )
+-
+-        assert isinstance(benchmark, BenchmarkBase)
+-
+-        assert n_repeat >= 1, "n_repeat must be at least 1"
+-
+-        assert n_workers >= 1, "n_workers must be at least 1"
+-
+-        self.benchmark = benchmark
+-        self.n_repeat = n_repeat
+-        self.n_workers = n_workers
++        ray.get(futures)
+ 
+     async def run(
+         self,
+@@ -170,20 +147,16 @@ class RayEvaluator(EvaluatorBase):
+         await self._save_evaluation_meta()
+ 
+         futures = []
+-        solution_actor = RaySolutionActor.options(
+-            max_concurrency=self.n_workers,
+-        ).remote(n_workers=self.n_workers)
+         for repeat_id in range(self.n_repeat):
+             for task in self.benchmark:
+                 futures.append(
+-                    solution_actor.run.remote(
++                    RayEvaluator.run_solution.remote(
+                         self.storage,
+                         str(repeat_id),
+                         task,
+                         solution,
+                     ),
+                 )
+-        if futures:
+-            await asyncio.gather(*futures)
++        ray.get(futures)
+ 
+         await self.aggregate()
+diff --git a/src/agentscope/evaluate/_metric_base.py b/src/agentscope/evaluate/_metric_base.py
+index edab9910..649b48d2 100644
+--- a/src/agentscope/evaluate/_metric_base.py
++++ b/src/agentscope/evaluate/_metric_base.py
+@@ -79,7 +79,7 @@ class MetricBase(ABC):
+         self.categories = categories
+ 
+     @abstractmethod
+-    async def __call__(
++    def __call__(
+         self,
+         *args: Any,
+         **kwargs: Any,
+diff --git a/src/agentscope/evaluate/_task.py b/src/agentscope/evaluate/_task.py
+index 8ad1f9a7..ed33ba30 100644
+--- a/src/agentscope/evaluate/_task.py
++++ b/src/agentscope/evaluate/_task.py
+@@ -35,7 +35,7 @@ class Task:
+     )
+     """Additional metadata for the task."""
+ 
+-    async def evaluate(self, solution: SolutionOutput) -> list[MetricResult]:
++    def evaluate(self, solution: SolutionOutput) -> list[MetricResult]:
+         """Evaluate the task with the given solution.
+ 
+         Args:
+@@ -48,6 +48,6 @@ class Task:
+         """
+         evaluations = []
+         for metric in self.metrics:
+-            result = await metric(solution)
++            result = metric(solution)
+             evaluations.append(result)
+         return evaluations
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index a8785d24..f767dd47 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -243,6 +243,7 @@ class OpenAIChatModel(ChatModelBase):
+         thinking = ""
+         tool_calls = OrderedDict()
+         metadata = None
++        contents: List[TextBlock | ToolUseBlock | ThinkingBlock] = []
+ 
+         async with response as stream:
+             async for item in stream:
+@@ -260,71 +261,80 @@ class OpenAIChatModel(ChatModelBase):
+                         time=(datetime.now() - start_datetime).total_seconds(),
+                     )
+ 
+-                if chunk.choices:
+-                    choice = chunk.choices[0]
+-
+-                    thinking += (
+-                        getattr(choice.delta, "reasoning_content", None) or ""
+-                    )
+-                    text += choice.delta.content or ""
+-
+-                    for tool_call in choice.delta.tool_calls or []:
+-                        if tool_call.index in tool_calls:
+-                            if tool_call.function.arguments is not None:
+-                                tool_calls[tool_call.index][
+-                                    "input"
+-                                ] += tool_call.function.arguments
+-
+-                        else:
+-                            tool_calls[tool_call.index] = {
+-                                "type": "tool_use",
+-                                "id": tool_call.id,
+-                                "name": tool_call.function.name,
+-                                "input": tool_call.function.arguments or "",
+-                            }
+-
+-                    contents: List[
+-                        TextBlock | ToolUseBlock | ThinkingBlock
+-                    ] = []
+-
+-                    if thinking:
+-                        contents.append(
+-                            ThinkingBlock(
+-                                type="thinking",
+-                                thinking=thinking,
+-                            ),
+-                        )
+-
+-                    if text:
+-                        contents.append(
+-                            TextBlock(
+-                                type="text",
+-                                text=text,
+-                            ),
+-                        )
+-
+-                        if structured_model:
+-                            metadata = _json_loads_with_repair(text)
+-
+-                    for tool_call in tool_calls.values():
+-                        contents.append(
+-                            ToolUseBlock(
+-                                type=tool_call["type"],
+-                                id=tool_call["id"],
+-                                name=tool_call["name"],
+-                                input=_json_loads_with_repair(
+-                                    tool_call["input"] or "{}",
+-                                ),
+-                            ),
+-                        )
+-
+-                    if contents:
++                if not chunk.choices:
++                    if usage and contents:
+                         res = ChatResponse(
+                             content=contents,
+                             usage=usage,
+                             metadata=metadata,
+                         )
+                         yield res
++                    continue
++
++                choice = chunk.choices[0]
++
++                thinking += (
++                    getattr(choice.delta, "reasoning_content", None) or ""
++                )
++                text += choice.delta.content or ""
++
++                for tool_call in choice.delta.tool_calls or []:
++                    if tool_call.index in tool_calls:
++                        if tool_call.function.arguments is not None:
++                            tool_calls[tool_call.index][
++                                "input"
++                            ] += tool_call.function.arguments
++
++                    else:
++                        tool_calls[tool_call.index] = {
++                            "type": "tool_use",
++                            "id": tool_call.id,
++                            "name": tool_call.function.name,
++                            "input": tool_call.function.arguments or "",
++                        }
++
++                contents = []
++
++                if thinking:
++                    contents.append(
++                        ThinkingBlock(
++                            type="thinking",
++                            thinking=thinking,
++                        ),
++                    )
++
++                if text:
++                    contents.append(
++                        TextBlock(
++                            type="text",
++                            text=text,
++                        ),
++                    )
++
++                    if structured_model:
++                        metadata = _json_loads_with_repair(text)
++
++                for tool_call in tool_calls.values():
++                    contents.append(
++                        ToolUseBlock(
++                            type=tool_call["type"],
++                            id=tool_call["id"],
++                            name=tool_call["name"],
++                            input=_json_loads_with_repair(
++                                tool_call["input"] or "{}",
++                            ),
++                        ),
++                    )
++
++                if not contents:
++                    continue
++
++                res = ChatResponse(
++                    content=contents,
++                    usage=usage,
++                    metadata=metadata,
++                )
++                yield res
+ 
+     def _parse_openai_completion_response(
+         self,
+diff --git a/tests/evaluation_test.py b/tests/evaluation_test.py
+deleted file mode 100644
+index 29529def..00000000
+--- a/tests/evaluation_test.py
++++ /dev/null
+@@ -1,287 +0,0 @@
+-# -*- coding: utf-8 -*-
+-"""Evaluation module tests in agentscope."""
+-import os
+-import sys
+-import shutil
+-from typing import Generator, Callable, Any, cast
+-from unittest.async_case import IsolatedAsyncioTestCase
+-import ray
+-
+-from agentscope.agent import AgentBase
+-from agentscope.message import Msg
+-from agentscope.evaluate import (
+-    SolutionOutput,
+-    MetricBase,
+-    MetricResult,
+-    MetricType,
+-    Task,
+-    BenchmarkBase,
+-    GeneralEvaluator,
+-    RayEvaluator,
+-    FileEvaluatorStorage,
+-)
+-
+-
+-TASK_ID_1 = "math_problem_1"
+-TASK_ID_2 = "math_problem_2"
+-
+-TOY_BENCHMARK = [
+-    {
+-        "id": TASK_ID_1,
+-        "question": "What is 2 + 2?",
+-        "ground_truth": 4.0,
+-        "tags": {
+-            "difficulty": "easy",
+-            "category": "math",
+-        },
+-    },
+-    {
+-        "id": TASK_ID_2,
+-        "question": "What is 12345 + 54321 + 6789 + 9876?",
+-        "ground_truth": 83331,
+-        "tags": {
+-            "difficulty": "medium",
+-            "category": "math",
+-        },
+-    },
+-]
+-
+-
+-METRIC_NAME = "math_check_number_equal"
+-
+-
+-class CheckEqual(MetricBase):
+-    """Metric to check whether the provide answer is equal to ground truth."""
+-
+-    def __init__(
+-        self,
+-        ground_truth: float,
+-    ):
+-        super().__init__(
+-            name=METRIC_NAME,
+-            metric_type=MetricType.NUMERICAL,
+-            description="Toy metric checking if two numbers are equal",
+-            categories=[],
+-        )
+-        self.ground_truth = ground_truth
+-
+-    async def __call__(
+-        self,
+-        solution: SolutionOutput,
+-    ) -> MetricResult:
+-        if solution.output == self.ground_truth:
+-            return MetricResult(
+-                name=self.name,
+-                result=1.0,
+-                message="Correct",
+-            )
+-        else:
+-            return MetricResult(
+-                name=self.name,
+-                result=0.0,
+-                message="Incorrect",
+-            )
+-
+-
+-class ToyBenchmark(BenchmarkBase):
+-    """A toy benchmark for testing"""
+-
+-    def __init__(self) -> None:
+-        super().__init__(
+-            name="Toy bench",
+-            description="A toy benchmark for testing "
+-            "the evaluation module.",
+-        )
+-        self.dataset = self._load_data()
+-
+-    @staticmethod
+-    def _load_data() -> list[Task]:
+-        dataset = []
+-        for item in TOY_BENCHMARK:
+-            dataset.append(
+-                Task(
+-                    id=item["id"],
+-                    input=item["question"],
+-                    ground_truth=item["ground_truth"],
+-                    tags=item.get("tags", {}),
+-                    metrics=[
+-                        CheckEqual(cast(float, item["ground_truth"])),
+-                    ],
+-                    metadata={},
+-                ),
+-            )
+-        return dataset
+-
+-    def __iter__(self) -> Generator[Task, None, None]:
+-        """Iterate over the benchmark."""
+-        for task in self.dataset:
+-            yield task
+-
+-    def __getitem__(self, index: int) -> Task:
+-        """Get a task by index."""
+-        return self.dataset[index]
+-
+-    def __len__(self) -> int:
+-        """Get the length of the benchmark."""
+-        return len(self.dataset)
+-
+-
+-class EvalTestAgent(AgentBase):
+-    """Test agent class for testing hooks."""
+-
+-    def __init__(self) -> None:
+-        """Initialize the test agent."""
+-        super().__init__()
+-        self.records: list[str] = []
+-        self.memory: list[Msg] = []
+-
+-    async def reply(self, msg: Msg) -> Msg:
+-        """Reply to the message."""
+-        return Msg(
+-            name="test_eval_agent",
+-            content=msg.content,
+-            role="assistant",
+-            metadata={"answer_as_number": 4.0},
+-        )
+-
+-    async def handle_interrupt(
+-        self,
+-        *args: Any,
+-        **kwargs: Any,
+-    ) -> Msg:
+-        """Dummy handle interrupt."""
+-        print(args, kwargs)
+-
+-    async def observe(self, msg: Msg | list[Msg] | None) -> None:
+-        """Dummy observe function."""
+-        print(msg.content)
+-
+-
+-async def dummy_solution_generation(
+-    task: Task,
+-    pre_hook: Callable,  # pylint: disable=W0613
+-) -> SolutionOutput:
+-    """Solution generation function for test"""
+-    agent = EvalTestAgent()
+-
+-    msg_input = Msg("user", task.input, role="user")
+-    res = await agent(msg_input)
+-    return SolutionOutput(
+-        success=True,
+-        output=res.metadata.get("answer_as_number", None),
+-        trajectory=[],
+-    )
+-
+-
+-class EvaluatorTest(IsolatedAsyncioTestCase):
+-    """Test for evaluators in AS"""
+-
+-    async def asyncSetUp(self) -> None:
+-        """Set up the test environment."""
+-        current_dir = os.path.dirname(os.path.abspath(__file__))
+-        self.file_storage_general = FileEvaluatorStorage(
+-            save_dir=os.path.join(
+-                current_dir,
+-                "general_results",
+-            ),
+-        )
+-        self.file_storage_ray = FileEvaluatorStorage(
+-            save_dir=os.path.join(
+-                current_dir,
+-                "ray_results",
+-            ),
+-        )
+-        # Initialize Ray with proper serialization settings
+-        if not ray.is_initialized():
+-            # Add the current directory to Python path for Ray workers
+-            current_dir = os.path.dirname(os.path.abspath(__file__))
+-            if current_dir not in sys.path:
+-                sys.path.insert(0, current_dir)
+-
+-            ray.init(
+-                _temp_dir=None,  # Use default temp directory
+-                ignore_reinit_error=True,  # Allow re-initialization
+-                runtime_env={
+-                    "working_dir": current_dir,
+-                    "py_modules": [__file__],  # Include this test file
+-                },
+-            )
+-
+-    async def test_general_evaluator(self) -> None:
+-        """Test general evaluator."""
+-        evaluator = GeneralEvaluator(
+-            name="Test evaluation",
+-            benchmark=ToyBenchmark(),
+-            # Repeat how many times
+-            n_repeat=1,
+-            storage=self.file_storage_general,
+-            # How many workers to use
+-            n_workers=1,
+-        )
+-
+-        # Run the evaluation
+-        await evaluator.run(dummy_solution_generation)
+-        metric_result_1 = self.file_storage_general.get_evaluation_result(
+-            task_id=TASK_ID_1,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_1.result,
+-            1.0,
+-        )
+-        metric_result_2 = self.file_storage_general.get_evaluation_result(
+-            task_id=TASK_ID_2,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_2.result,
+-            0.0,
+-        )
+-
+-    async def test_ray_evaluator(self) -> None:
+-        """Test ray evaluator."""
+-        evaluator = RayEvaluator(
+-            name="Test evaluation",
+-            benchmark=ToyBenchmark(),
+-            # Repeat how many times
+-            n_repeat=1,
+-            storage=self.file_storage_ray,
+-            # How many workers to use
+-            n_workers=1,
+-        )
+-
+-        # Run the evaluation
+-        await evaluator.run(dummy_solution_generation)
+-        metric_result_1 = self.file_storage_ray.get_evaluation_result(
+-            task_id=TASK_ID_1,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_1.result,
+-            1.0,
+-        )
+-        metric_result_2 = self.file_storage_ray.get_evaluation_result(
+-            task_id=TASK_ID_2,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_2.result,
+-            0.0,
+-        )
+-
+-    async def asyncTearDown(self) -> None:
+-        """Clean up the test environment."""
+-        # Shutdown Ray if it was initialized
+-        if ray.is_initialized():
+-            ray.shutdown()
+-
+-        # clean written files
+-        if os.path.exists(self.file_storage_general.save_dir):
+-            shutil.rmtree(self.file_storage_general.save_dir)
+-
+-        if os.path.exists(self.file_storage_ray.save_dir):
+-            shutil.rmtree(self.file_storage_ray.save_dir)
+2026-11-11 08:01:53,532 - INFO - Eval script for agentscope-ai__agentscope-769 written to /root/swe-factory/output/run_20261111_063006/mypy/agentscope-ai__agentscope-769/test_analysis_agent_1/patch.diff, now applying to container...
+2026-11-11 08:01:55,750 - INFO - Test output for agentscope-ai__agentscope-769 written to /root/swe-factory/output/run_20261111_063006/mypy/agentscope-ai__agentscope-769/test_analysis_agent_1/test_output.txt
+2026-11-11 08:01:56,019 - INFO - Git diff after:
+diff --git a/README_zh.md b/README_zh.md
+index 1586effc..ca67dacf 100644
+--- a/README_zh.md
++++ b/README_zh.md
+@@ -366,7 +366,7 @@ as_studio
+ 
+ ## ⚖️ 许可
+ 
+-AgentScope 基于 Apache License 2.0发布。
++AgentScope 基于 Apache License 2.0 发布。
+ 
+ ## 📚 论文
+ 
+diff --git a/docs/tutorial/en/src/task_eval.py b/docs/tutorial/en/src/task_eval.py
+index 43b50a8d..d7f3902d 100644
+--- a/docs/tutorial/en/src/task_eval.py
++++ b/docs/tutorial/en/src/task_eval.py
+@@ -101,7 +101,7 @@ class CheckEqual(MetricBase):
+         )
+         self.ground_truth = ground_truth
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -239,7 +239,7 @@ async def toy_solution_generation(
+ 
+ async def main() -> None:
+     evaluator = GeneralEvaluator(
+-        name="Toy benchmark evaluation",
++        name="ACEbench evaluation",
+         benchmark=ToyBenchmark(),
+         # Repeat how many times
+         n_repeat=1,
+diff --git a/docs/tutorial/zh_CN/src/task_eval.py b/docs/tutorial/zh_CN/src/task_eval.py
+index f58ecc4e..2bf88146 100644
+--- a/docs/tutorial/zh_CN/src/task_eval.py
++++ b/docs/tutorial/zh_CN/src/task_eval.py
+@@ -100,7 +100,7 @@ class CheckEqual(MetricBase):
+         )
+         self.ground_truth = ground_truth
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -237,7 +237,7 @@ async def toy_solution_generation(
+ 
+ async def main() -> None:
+     evaluator = GeneralEvaluator(
+-        name="Toy benchmark evaluation",
++        name="ACEbench evaluation",
+         benchmark=ToyBenchmark(),
+         # 重复多少次
+         n_repeat=1,
+diff --git a/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py b/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
+index 49257786..d25b1526 100644
+--- a/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
++++ b/src/agentscope/evaluate/_ace_benchmark/_ace_metric.py
+@@ -20,7 +20,7 @@ class ACEProcessAccuracy(MetricBase):
+         )
+         self.mile_stone = mile_stone
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+@@ -82,7 +82,7 @@ class ACEAccuracy(MetricBase):
+         )
+         self.state = state
+ 
+-    async def __call__(
++    def __call__(
+         self,
+         solution: SolutionOutput,
+     ) -> MetricResult:
+diff --git a/src/agentscope/evaluate/_evaluator/_general_evaluator.py b/src/agentscope/evaluate/_evaluator/_general_evaluator.py
+index 40edc62d..ce121c15 100644
+--- a/src/agentscope/evaluate/_evaluator/_general_evaluator.py
++++ b/src/agentscope/evaluate/_evaluator/_general_evaluator.py
+@@ -39,14 +39,14 @@ class GeneralEvaluator(EvaluatorBase):
+         self.n_repeat = n_repeat
+         self.n_workers = n_workers
+ 
+-    async def run_evaluation(
++    def run_evaluation(
+         self,
+         task: Task,
+         repeat_id: str,
+         solution_output: SolutionOutput,
+     ) -> None:
+         """Run the evaluation for a task and solution result."""
+-        evaluation_results = await task.evaluate(solution_output)
++        evaluation_results = task.evaluate(solution_output)
+         # store the evaluation result
+         for result in evaluation_results:
+             self.storage.save_evaluation_result(
+@@ -91,7 +91,7 @@ class GeneralEvaluator(EvaluatorBase):
+                 repeat_id,
+                 metric.name,
+             ):
+-                await self.run_evaluation(
++                self.run_evaluation(
+                     task,
+                     repeat_id,
+                     solution_result,
+diff --git a/src/agentscope/evaluate/_evaluator/_ray_evaluator.py b/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
+index 1b7b8653..a8f4a014 100644
+--- a/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
++++ b/src/agentscope/evaluate/_evaluator/_ray_evaluator.py
+@@ -15,29 +15,57 @@ from .._task import Task
+ from .._evaluator_storage import EvaluatorStorageBase
+ 
+ 
+-@ray.remote
+-class RayEvaluationActor:
+-    """
+-    Actor class for running evaluation with ray remote.
+-    """
++def _lazy_ray_remote(func: Callable) -> Callable:
++    """Decorator to lazily initialize ray.remote."""
++    try:
++        import ray as lazy_ray
++
++        return lazy_ray.remote(func)
++
++    except ImportError:
++        return func
++
++
++class RayEvaluator(EvaluatorBase):
++    """The ray-based evaluator that supports distributed and parallel
++    evaluation."""
++
++    def __init__(
++        self,
++        name: str,
++        benchmark: BenchmarkBase,
++        n_repeat: int,
++        storage: EvaluatorStorageBase,
++        n_workers: int,
++    ) -> None:
++        """Initialize the evaluator."""
++        super().__init__(
++            name=name,
++            benchmark=benchmark,
++            n_repeat=n_repeat,
++            storage=storage,
++        )
++
++        assert isinstance(benchmark, BenchmarkBase)
++
++        assert n_repeat >= 1, "n_repeat must be at least 1"
++
++        assert n_workers >= 1, "n_workers must be at least 1"
++
++        self.benchmark = benchmark
++        self.n_repeat = n_repeat
++        self.n_workers = n_workers
+ 
+     @staticmethod
+-    async def run(
++    @_lazy_ray_remote
++    def run_evaluation(
+         storage: EvaluatorStorageBase,
+         task: Task,
+         repeat_id: str,
+         solution_output: SolutionOutput,
+     ) -> None:
+-        """
+-        Run the evaluation for a task and solution result.
+-
+-        Args:
+-            storage (EvaluatorStorageBase): Evaluator storage.
+-            task (Task): Task to be evaluated.
+-            repeat_id (str): Repeat ID
+-            solution_output (SolutionOutput): output data after execute agents.
+-        """
+-        evaluation_results = await task.evaluate(solution_output)
++        """Run the evaluation for a task and solution result."""
++        evaluation_results = task.evaluate(solution_output)
+         # store the evaluation result
+         for result in evaluation_results:
+             storage.save_evaluation_result(
+@@ -46,20 +74,9 @@ class RayEvaluationActor:
+                 evaluation=result,
+             )
+ 
+-
+-@ray.remote
+-class RaySolutionActor:
+-    """
+-    Actor class for running agent solutions with ray remote.
+-    """
+-
+-    def __init__(self, n_workers: int = 1):
+-        self.eval_actor = RayEvaluationActor.options(
+-            max_concurrency=n_workers,
+-        ).remote()
+-
+-    async def run(
+-        self,
++    @staticmethod
++    @_lazy_ray_remote
++    def run_solution(
+         storage: EvaluatorStorageBase,
+         repeat_id: str,
+         task: Task,
+@@ -68,16 +85,7 @@ class RaySolutionActor:
+             Coroutine[Any, Any, SolutionOutput],
+         ],
+     ) -> None:
+-        """Generate a solution to a task and evaluate.
+-
+-        Args:
+-            storage (EvaluatorStorageBase): Evaluator storage.
+-            repeat_id (str): Repeat ID.
+-            task (Task): Task to be evaluated.
+-            solution
+-                (Callable[[Task, Callable], Awaitable[SolutionOutput, Any]]):
+-                callable function to execute agents and generate results.
+-        """
++        """Generate a solution to a task and evaluate."""
+         if storage.solution_result_exists(task.id, repeat_id):
+             # Obtain from storage
+             solution_result = storage.get_solution_result(
+@@ -87,14 +95,15 @@ class RaySolutionActor:
+ 
+         else:
+             # Run the solution
+-            solution_result = await solution(
+-                task,
+-                storage.get_agent_pre_print_hook(
+-                    task.id,
+-                    repeat_id,
++            solution_result = asyncio.run(
++                solution(
++                    task,
++                    storage.get_agent_pre_print_hook(
++                        task.id,
++                        repeat_id,
++                    ),
+                 ),
+             )
+-
+             storage.save_solution_result(
+                 task.id,
+                 repeat_id,
+@@ -110,46 +119,14 @@ class RaySolutionActor:
+                 metric.name,
+             ):
+                 futures.append(
+-                    self.eval_actor.run.remote(
++                    RayEvaluator.run_evaluation.remote(
+                         storage,
+                         task,
+                         repeat_id,
+                         solution_result,
+                     ),
+                 )
+-        if futures:
+-            await asyncio.gather(*futures)
+-
+-
+-class RayEvaluator(EvaluatorBase):
+-    """The ray-based evaluator that supports distributed and parallel
+-    evaluation."""
+-
+-    def __init__(
+-        self,
+-        name: str,
+-        benchmark: BenchmarkBase,
+-        n_repeat: int,
+-        storage: EvaluatorStorageBase,
+-        n_workers: int,
+-    ) -> None:
+-        """Initialize the evaluator."""
+-        super().__init__(
+-            name=name,
+-            benchmark=benchmark,
+-            n_repeat=n_repeat,
+-            storage=storage,
+-        )
+-
+-        assert isinstance(benchmark, BenchmarkBase)
+-
+-        assert n_repeat >= 1, "n_repeat must be at least 1"
+-
+-        assert n_workers >= 1, "n_workers must be at least 1"
+-
+-        self.benchmark = benchmark
+-        self.n_repeat = n_repeat
+-        self.n_workers = n_workers
++        ray.get(futures)
+ 
+     async def run(
+         self,
+@@ -170,20 +147,16 @@ class RayEvaluator(EvaluatorBase):
+         await self._save_evaluation_meta()
+ 
+         futures = []
+-        solution_actor = RaySolutionActor.options(
+-            max_concurrency=self.n_workers,
+-        ).remote(n_workers=self.n_workers)
+         for repeat_id in range(self.n_repeat):
+             for task in self.benchmark:
+                 futures.append(
+-                    solution_actor.run.remote(
++                    RayEvaluator.run_solution.remote(
+                         self.storage,
+                         str(repeat_id),
+                         task,
+                         solution,
+                     ),
+                 )
+-        if futures:
+-            await asyncio.gather(*futures)
++        ray.get(futures)
+ 
+         await self.aggregate()
+diff --git a/src/agentscope/evaluate/_metric_base.py b/src/agentscope/evaluate/_metric_base.py
+index edab9910..649b48d2 100644
+--- a/src/agentscope/evaluate/_metric_base.py
++++ b/src/agentscope/evaluate/_metric_base.py
+@@ -79,7 +79,7 @@ class MetricBase(ABC):
+         self.categories = categories
+ 
+     @abstractmethod
+-    async def __call__(
++    def __call__(
+         self,
+         *args: Any,
+         **kwargs: Any,
+diff --git a/src/agentscope/evaluate/_task.py b/src/agentscope/evaluate/_task.py
+index 8ad1f9a7..ed33ba30 100644
+--- a/src/agentscope/evaluate/_task.py
++++ b/src/agentscope/evaluate/_task.py
+@@ -35,7 +35,7 @@ class Task:
+     )
+     """Additional metadata for the task."""
+ 
+-    async def evaluate(self, solution: SolutionOutput) -> list[MetricResult]:
++    def evaluate(self, solution: SolutionOutput) -> list[MetricResult]:
+         """Evaluate the task with the given solution.
+ 
+         Args:
+@@ -48,6 +48,6 @@ class Task:
+         """
+         evaluations = []
+         for metric in self.metrics:
+-            result = await metric(solution)
++            result = metric(solution)
+             evaluations.append(result)
+         return evaluations
+diff --git a/src/agentscope/model/_openai_model.py b/src/agentscope/model/_openai_model.py
+index a8785d24..f767dd47 100644
+--- a/src/agentscope/model/_openai_model.py
++++ b/src/agentscope/model/_openai_model.py
+@@ -243,6 +243,7 @@ class OpenAIChatModel(ChatModelBase):
+         thinking = ""
+         tool_calls = OrderedDict()
+         metadata = None
++        contents: List[TextBlock | ToolUseBlock | ThinkingBlock] = []
+ 
+         async with response as stream:
+             async for item in stream:
+@@ -260,71 +261,80 @@ class OpenAIChatModel(ChatModelBase):
+                         time=(datetime.now() - start_datetime).total_seconds(),
+                     )
+ 
+-                if chunk.choices:
+-                    choice = chunk.choices[0]
+-
+-                    thinking += (
+-                        getattr(choice.delta, "reasoning_content", None) or ""
+-                    )
+-                    text += choice.delta.content or ""
+-
+-                    for tool_call in choice.delta.tool_calls or []:
+-                        if tool_call.index in tool_calls:
+-                            if tool_call.function.arguments is not None:
+-                                tool_calls[tool_call.index][
+-                                    "input"
+-                                ] += tool_call.function.arguments
+-
+-                        else:
+-                            tool_calls[tool_call.index] = {
+-                                "type": "tool_use",
+-                                "id": tool_call.id,
+-                                "name": tool_call.function.name,
+-                                "input": tool_call.function.arguments or "",
+-                            }
+-
+-                    contents: List[
+-                        TextBlock | ToolUseBlock | ThinkingBlock
+-                    ] = []
+-
+-                    if thinking:
+-                        contents.append(
+-                            ThinkingBlock(
+-                                type="thinking",
+-                                thinking=thinking,
+-                            ),
+-                        )
+-
+-                    if text:
+-                        contents.append(
+-                            TextBlock(
+-                                type="text",
+-                                text=text,
+-                            ),
+-                        )
+-
+-                        if structured_model:
+-                            metadata = _json_loads_with_repair(text)
+-
+-                    for tool_call in tool_calls.values():
+-                        contents.append(
+-                            ToolUseBlock(
+-                                type=tool_call["type"],
+-                                id=tool_call["id"],
+-                                name=tool_call["name"],
+-                                input=_json_loads_with_repair(
+-                                    tool_call["input"] or "{}",
+-                                ),
+-                            ),
+-                        )
+-
+-                    if contents:
++                if not chunk.choices:
++                    if usage and contents:
+                         res = ChatResponse(
+                             content=contents,
+                             usage=usage,
+                             metadata=metadata,
+                         )
+                         yield res
++                    continue
++
++                choice = chunk.choices[0]
++
++                thinking += (
++                    getattr(choice.delta, "reasoning_content", None) or ""
++                )
++                text += choice.delta.content or ""
++
++                for tool_call in choice.delta.tool_calls or []:
++                    if tool_call.index in tool_calls:
++                        if tool_call.function.arguments is not None:
++                            tool_calls[tool_call.index][
++                                "input"
++                            ] += tool_call.function.arguments
++
++                    else:
++                        tool_calls[tool_call.index] = {
++                            "type": "tool_use",
++                            "id": tool_call.id,
++                            "name": tool_call.function.name,
++                            "input": tool_call.function.arguments or "",
++                        }
++
++                contents = []
++
++                if thinking:
++                    contents.append(
++                        ThinkingBlock(
++                            type="thinking",
++                            thinking=thinking,
++                        ),
++                    )
++
++                if text:
++                    contents.append(
++                        TextBlock(
++                            type="text",
++                            text=text,
++                        ),
++                    )
++
++                    if structured_model:
++                        metadata = _json_loads_with_repair(text)
++
++                for tool_call in tool_calls.values():
++                    contents.append(
++                        ToolUseBlock(
++                            type=tool_call["type"],
++                            id=tool_call["id"],
++                            name=tool_call["name"],
++                            input=_json_loads_with_repair(
++                                tool_call["input"] or "{}",
++                            ),
++                        ),
++                    )
++
++                if not contents:
++                    continue
++
++                res = ChatResponse(
++                    content=contents,
++                    usage=usage,
++                    metadata=metadata,
++                )
++                yield res
+ 
+     def _parse_openai_completion_response(
+         self,
+diff --git a/tests/evaluation_test.py b/tests/evaluation_test.py
+deleted file mode 100644
+index 29529def..00000000
+--- a/tests/evaluation_test.py
++++ /dev/null
+@@ -1,287 +0,0 @@
+-# -*- coding: utf-8 -*-
+-"""Evaluation module tests in agentscope."""
+-import os
+-import sys
+-import shutil
+-from typing import Generator, Callable, Any, cast
+-from unittest.async_case import IsolatedAsyncioTestCase
+-import ray
+-
+-from agentscope.agent import AgentBase
+-from agentscope.message import Msg
+-from agentscope.evaluate import (
+-    SolutionOutput,
+-    MetricBase,
+-    MetricResult,
+-    MetricType,
+-    Task,
+-    BenchmarkBase,
+-    GeneralEvaluator,
+-    RayEvaluator,
+-    FileEvaluatorStorage,
+-)
+-
+-
+-TASK_ID_1 = "math_problem_1"
+-TASK_ID_2 = "math_problem_2"
+-
+-TOY_BENCHMARK = [
+-    {
+-        "id": TASK_ID_1,
+-        "question": "What is 2 + 2?",
+-        "ground_truth": 4.0,
+-        "tags": {
+-            "difficulty": "easy",
+-            "category": "math",
+-        },
+-    },
+-    {
+-        "id": TASK_ID_2,
+-        "question": "What is 12345 + 54321 + 6789 + 9876?",
+-        "ground_truth": 83331,
+-        "tags": {
+-            "difficulty": "medium",
+-            "category": "math",
+-        },
+-    },
+-]
+-
+-
+-METRIC_NAME = "math_check_number_equal"
+-
+-
+-class CheckEqual(MetricBase):
+-    """Metric to check whether the provide answer is equal to ground truth."""
+-
+-    def __init__(
+-        self,
+-        ground_truth: float,
+-    ):
+-        super().__init__(
+-            name=METRIC_NAME,
+-            metric_type=MetricType.NUMERICAL,
+-            description="Toy metric checking if two numbers are equal",
+-            categories=[],
+-        )
+-        self.ground_truth = ground_truth
+-
+-    async def __call__(
+-        self,
+-        solution: SolutionOutput,
+-    ) -> MetricResult:
+-        if solution.output == self.ground_truth:
+-            return MetricResult(
+-                name=self.name,
+-                result=1.0,
+-                message="Correct",
+-            )
+-        else:
+-            return MetricResult(
+-                name=self.name,
+-                result=0.0,
+-                message="Incorrect",
+-            )
+-
+-
+-class ToyBenchmark(BenchmarkBase):
+-    """A toy benchmark for testing"""
+-
+-    def __init__(self) -> None:
+-        super().__init__(
+-            name="Toy bench",
+-            description="A toy benchmark for testing "
+-            "the evaluation module.",
+-        )
+-        self.dataset = self._load_data()
+-
+-    @staticmethod
+-    def _load_data() -> list[Task]:
+-        dataset = []
+-        for item in TOY_BENCHMARK:
+-            dataset.append(
+-                Task(
+-                    id=item["id"],
+-                    input=item["question"],
+-                    ground_truth=item["ground_truth"],
+-                    tags=item.get("tags", {}),
+-                    metrics=[
+-                        CheckEqual(cast(float, item["ground_truth"])),
+-                    ],
+-                    metadata={},
+-                ),
+-            )
+-        return dataset
+-
+-    def __iter__(self) -> Generator[Task, None, None]:
+-        """Iterate over the benchmark."""
+-        for task in self.dataset:
+-            yield task
+-
+-    def __getitem__(self, index: int) -> Task:
+-        """Get a task by index."""
+-        return self.dataset[index]
+-
+-    def __len__(self) -> int:
+-        """Get the length of the benchmark."""
+-        return len(self.dataset)
+-
+-
+-class EvalTestAgent(AgentBase):
+-    """Test agent class for testing hooks."""
+-
+-    def __init__(self) -> None:
+-        """Initialize the test agent."""
+-        super().__init__()
+-        self.records: list[str] = []
+-        self.memory: list[Msg] = []
+-
+-    async def reply(self, msg: Msg) -> Msg:
+-        """Reply to the message."""
+-        return Msg(
+-            name="test_eval_agent",
+-            content=msg.content,
+-            role="assistant",
+-            metadata={"answer_as_number": 4.0},
+-        )
+-
+-    async def handle_interrupt(
+-        self,
+-        *args: Any,
+-        **kwargs: Any,
+-    ) -> Msg:
+-        """Dummy handle interrupt."""
+-        print(args, kwargs)
+-
+-    async def observe(self, msg: Msg | list[Msg] | None) -> None:
+-        """Dummy observe function."""
+-        print(msg.content)
+-
+-
+-async def dummy_solution_generation(
+-    task: Task,
+-    pre_hook: Callable,  # pylint: disable=W0613
+-) -> SolutionOutput:
+-    """Solution generation function for test"""
+-    agent = EvalTestAgent()
+-
+-    msg_input = Msg("user", task.input, role="user")
+-    res = await agent(msg_input)
+-    return SolutionOutput(
+-        success=True,
+-        output=res.metadata.get("answer_as_number", None),
+-        trajectory=[],
+-    )
+-
+-
+-class EvaluatorTest(IsolatedAsyncioTestCase):
+-    """Test for evaluators in AS"""
+-
+-    async def asyncSetUp(self) -> None:
+-        """Set up the test environment."""
+-        current_dir = os.path.dirname(os.path.abspath(__file__))
+-        self.file_storage_general = FileEvaluatorStorage(
+-            save_dir=os.path.join(
+-                current_dir,
+-                "general_results",
+-            ),
+-        )
+-        self.file_storage_ray = FileEvaluatorStorage(
+-            save_dir=os.path.join(
+-                current_dir,
+-                "ray_results",
+-            ),
+-        )
+-        # Initialize Ray with proper serialization settings
+-        if not ray.is_initialized():
+-            # Add the current directory to Python path for Ray workers
+-            current_dir = os.path.dirname(os.path.abspath(__file__))
+-            if current_dir not in sys.path:
+-                sys.path.insert(0, current_dir)
+-
+-            ray.init(
+-                _temp_dir=None,  # Use default temp directory
+-                ignore_reinit_error=True,  # Allow re-initialization
+-                runtime_env={
+-                    "working_dir": current_dir,
+-                    "py_modules": [__file__],  # Include this test file
+-                },
+-            )
+-
+-    async def test_general_evaluator(self) -> None:
+-        """Test general evaluator."""
+-        evaluator = GeneralEvaluator(
+-            name="Test evaluation",
+-            benchmark=ToyBenchmark(),
+-            # Repeat how many times
+-            n_repeat=1,
+-            storage=self.file_storage_general,
+-            # How many workers to use
+-            n_workers=1,
+-        )
+-
+-        # Run the evaluation
+-        await evaluator.run(dummy_solution_generation)
+-        metric_result_1 = self.file_storage_general.get_evaluation_result(
+-            task_id=TASK_ID_1,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_1.result,
+-            1.0,
+-        )
+-        metric_result_2 = self.file_storage_general.get_evaluation_result(
+-            task_id=TASK_ID_2,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_2.result,
+-            0.0,
+-        )
+-
+-    async def test_ray_evaluator(self) -> None:
+-        """Test ray evaluator."""
+-        evaluator = RayEvaluator(
+-            name="Test evaluation",
+-            benchmark=ToyBenchmark(),
+-            # Repeat how many times
+-            n_repeat=1,
+-            storage=self.file_storage_ray,
+-            # How many workers to use
+-            n_workers=1,
+-        )
+-
+-        # Run the evaluation
+-        await evaluator.run(dummy_solution_generation)
+-        metric_result_1 = self.file_storage_ray.get_evaluation_result(
+-            task_id=TASK_ID_1,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_1.result,
+-            1.0,
+-        )
+-        metric_result_2 = self.file_storage_ray.get_evaluation_result(
+-            task_id=TASK_ID_2,
+-            repeat_id="0",
+-            metric_name=METRIC_NAME,
+-        )
+-        self.assertEqual(
+-            metric_result_2.result,
+-            0.0,
+-        )
+-
+-    async def asyncTearDown(self) -> None:
+-        """Clean up the test environment."""
+-        # Shutdown Ray if it was initialized
+-        if ray.is_initialized():
+-            ray.shutdown()
+-
+-        # clean written files
+-        if os.path.exists(self.file_storage_general.save_dir):
+-            shutil.rmtree(self.file_storage_general.save_dir)
+-
+-        if os.path.exists(self.file_storage_ray.save_dir):
+-            shutil.rmtree(self.file_storage_ray.save_dir)
+2026-11-11 08:01:56,019 - INFO - Attempting to stop container agentscope-ai__agentscope-769-test1...
+2026-11-11 08:02:12,156 - INFO - Attempting to remove container agentscope-ai__agentscope-769-test1...
+2026-11-11 08:02:13,711 - INFO - Container agentscope-ai__agentscope-769-test1 removed.
+2026-11-11 08:02:13,711 - INFO - Attempting to remove image agentscope-ai__agentscope-769-dockerfile1:latest...
+2026-11-11 08:03:13,809 - INFO - Failed to remove image agentscope-ai__agentscope-769-dockerfile1:latest: UnixHTTPConnectionPool(host='localhost', port=None): Read timed out. (read timeout=60)
+Traceback (most recent call last):
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connection.py", line 507, in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/http/client.py", line 1478, in getresponse
+    response.begin()
+  File "/root/miniconda/envs/swefactory/lib/python3.12/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/http/client.py", line 304, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connectionpool.py", line 843, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connectionpool.py", line 789, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connectionpool.py", line 538, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/urllib3/connectionpool.py", line 369, in _raise_timeout
+    raise ReadTimeoutError(
+urllib3.exceptions.ReadTimeoutError: UnixHTTPConnectionPool(host='localhost', port=None): Read timed out. (read timeout=60)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/root/swe-factory/app/agents/test_analysis_agent/docker_utils.py", line 89, in remove_image
+    client.images.remove(image_id, force=True)
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/docker/models/images.py", line 482, in remove
+    self.client.api.remove_image(*args, **kwargs)
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/docker/utils/decorators.py", line 19, in wrapped
+    return f(self, resource_id, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/docker/api/image.py", line 513, in remove_image
+    res = self._delete(self._url("/images/{0}", image), params=params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/docker/utils/decorators.py", line 44, in inner
+    return f(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/docker/api/client.py", line 254, in _delete
+    return self.delete(url, **self._set_request_timeout(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/requests/sessions.py", line 671, in delete
+    return self.request("DELETE", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda/envs/swefactory/lib/python3.12/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: UnixHTTPConnectionPool(host='localhost', port=None): Read timed out. (read timeout=60)
+

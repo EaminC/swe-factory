@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uxo pipefail
+
+# Activate the python venv environment
+source /opt/testbed/bin/activate
+
+cd /testbed
+git checkout ba00896c5673990923abd0e99dba147938871512
+
+# Apply test patch (content omitted, will be injected)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the target test file with pytest, showing concise test names and statuses
+pytest --tb=short --disable-warnings --no-header tests/test_benchmark_feedback.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset modified files to clean state
+git checkout ba00896c5673990923abd0e99dba147938871512 tests/test_benchmark_feedback.py

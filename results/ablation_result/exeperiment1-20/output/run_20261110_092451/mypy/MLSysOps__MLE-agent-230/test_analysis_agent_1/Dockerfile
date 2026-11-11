@@ -1,0 +1,52 @@
+# Base image specification. Defines the foundation OS and architecture for the container (Required)
+FROM --platform=linux/x86_64 ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# System dependencies installation. Installs essential tools and libraries required for development and runtime (Required)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    libffi-dev \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure locales and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Ensure python3 and pip point to python3.11 versions
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+    && python3 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone repo and checkout specific commit; install dependencies in editable mode inside a virtual env
+RUN git clone https://github.com/MLSysOps/MLE-agent /testbed/ && \
+    cd /testbed/ && \
+    git checkout 985c24e1b2b8e9463aacfbeb2c8a47f27fa4523c
+
+# Create python virtual environment and install dependencies from setup.py/requirements.txt, install package in dev mode
+RUN python3 -m venv /testbed/testbed-venv
+
+# Activate virtual environment and install dependencies using pip
+RUN /bin/bash -c "source /testbed/testbed-venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install 'openai~=1.34.0' 'pandas~=2.2.2' 'numexpr~=2.10.1' 'bottleneck~=1.4.0' 'google-api-python-client~=2.143.0' 'google-auth-httplib2~=0.2.0' 'google-auth-oauthlib~=1.2.1' && \
+    pip install rich click pyyaml fastapi uvicorn requests chromadb GitPython onnxruntime questionary tavily-python instructor langfuse setuptools && \
+    pip install -e ."
+
+# Add virtual environment activation in bashrc for convenience
+RUN echo "source /testbed/testbed-venv/bin/activate" >> /root/.bashrc

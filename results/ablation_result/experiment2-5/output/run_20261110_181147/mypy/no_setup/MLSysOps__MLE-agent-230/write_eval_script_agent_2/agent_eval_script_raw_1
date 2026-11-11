@@ -1,0 +1,22 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+git fetch --all --tags
+git checkout 985c24e1b2b8e9463aacfb2c8a47f27fa4523c
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+source /opt/testbed/bin/activate
+
+python -m unittest -v tests/test_gemini_model.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 985c24e1b2b8e9463aacfbeb2c8a47f27fa4523c
+</script>

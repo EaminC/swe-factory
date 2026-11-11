@@ -1,0 +1,228 @@
+diff --git a/src/components/AutonomousAgent.ts b/src/components/AutonomousAgent.ts
+index a7b9f7ba..71ae2847 100644
+--- a/src/components/AutonomousAgent.ts
++++ b/src/components/AutonomousAgent.ts
+@@ -67,7 +67,7 @@ class AutonomousAgent {
+     }
+ 
+     this.numLoops += 1;
+-    const maxLoops = this.customApiKey === "" ? 3 : 25;
++    const maxLoops = this.customApiKey === "" ? 4 : 25;
+     if (this.numLoops > maxLoops) {
+       this.sendLoopMessage();
+       this.shutdown();
+diff --git a/src/components/Drawer.tsx b/src/components/Drawer.tsx
+index b3ff2cce..50f76fe9 100644
+--- a/src/components/Drawer.tsx
++++ b/src/components/Drawer.tsx
+@@ -93,20 +93,26 @@ const Drawer = ({
+           <DrawerItem
+             icon={<FaDiscord />}
+             text="Discord"
+-            href="https://discord.gg/jdSBAnmdnY"
+-            target="_blank"
++            onClick={() =>
++              window.open("https://discord.gg/jdSBAnmdnY", "_blank")
++            }
+           />
+           <DrawerItem
+             icon={<FaTwitter />}
+             text="Twitter"
+-            href="https://twitter.com/asimdotshrestha/status/1644883727707959296"
+-            target="_blank"
++            onClick={() =>
++              window.open(
++                "https://twitter.com/asimdotshrestha/status/1644883727707959296",
++                "_blank"
++              )
++            }
+           />
+           <DrawerItem
+             icon={<FaGithub />}
+             text="GitHub"
+-            href="https://github.com/reworkd/AgentGPT"
+-            target="_blank"
++            onClick={() =>
++              window.open("https://github.com/reworkd/AgentGPT", "_blank")
++            }
+           />
+         </div>
+       </div>
+@@ -114,7 +120,7 @@ const Drawer = ({
+   );
+ };
+ 
+-interface DrawerItemProps extends Pick<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target'> {
++interface DrawerItemProps {
+   icon: React.ReactNode;
+   text: string;
+   border?: boolean;
+@@ -122,48 +128,25 @@ interface DrawerItemProps extends Pick<React.AnchorHTMLAttributes<HTMLAnchorElem
+   className?: string;
+ }
+ 
+-const DrawerItem = (props: DrawerItemProps) => {
+-  const {
+-    icon,
+-    text,
+-    border,
+-    href,
+-    target,
+-    onClick,
+-    className,
+-  } = props;
+-
+-  if ( href ) {
+-    return (
+-      <a
+-        className={clsx(
+-          "flex cursor-pointer flex-row items-center rounded-md rounded-md p-2 hover:bg-white/5",
+-          border && "border-[1px] border-white/20",
+-          `${className || ""}`
+-        )}
+-        href={href}
+-        target={target ?? "_blank"}
+-      >
+-        {icon}
+-        <span className="text-md ml-4">{text}</span>
+-      </a>
+-    );
+-  }
+-  else {
+-    return (
+-      <button
+-        type='button'
+-        className={clsx(
+-          "flex cursor-pointer flex-row items-center rounded-md rounded-md p-2 hover:bg-white/5",
+-          border && "border-[1px] border-white/20",
+-          `${className || ""}`
+-        )}
+-        onClick={onClick}
+-      >
+-        {icon}
+-        <span className="text-md ml-4">{text}</span>
+-      </button>
+-    );
+-  }
++const DrawerItem = ({
++  icon,
++  text,
++  border,
++  onClick,
++  className,
++}: DrawerItemProps) => {
++  return (
++    <div
++      className={clsx(
++        "flex cursor-pointer flex-row items-center rounded-md rounded-md p-2 hover:bg-white/5",
++        border && "border-[1px] border-white/20",
++        `${className || ""}`
++      )}
++      onClick={onClick}
++    >
++      {icon}
++      <span className="text-md ml-4">{text}</span>
++    </div>
++  );
+ };
+ export default Drawer;
+diff --git a/src/layout/default.tsx b/src/layout/default.tsx
+index 7f816d3f..7a668922 100644
+--- a/src/layout/default.tsx
++++ b/src/layout/default.tsx
+@@ -1,7 +1,6 @@
+ import { type ReactNode } from "react";
+ import Head from "next/head";
+ import DottedGridBackground from "../components/DottedGridBackground";
+-import Script from "next/script";
+ 
+ interface LayoutProps {
+   children: ReactNode;
+@@ -46,11 +45,11 @@ const DefaultLayout = (props: LayoutProps) => {
+           content="sG4QDkC8g2oxKSopgJdIe2hQ_SaJDaEaBjwCXZNkNWA"
+         />
+         <link rel="icon" href="/favicon.ico" />
+-        <Script
+-          src="https://plausible.io/js/script.js"
+-          strategy="afterInteractive"
++        <script
++          defer
+           data-domain="agentgpt.reworkd.ai"
+-        />
++          src="https://plausible.io/js/script.js"
++        ></script>
+       </Head>
+       <DottedGridBackground>{props.children}</DottedGridBackground>
+     </div>
+diff --git a/src/pages/api/chain.ts b/src/pages/api/chain.ts
+index 6c04db7a..5654d80f 100644
+--- a/src/pages/api/chain.ts
++++ b/src/pages/api/chain.ts
+@@ -1,4 +1,9 @@
+-import { createModel, extractArray, startGoalAgent } from "../../utils/chain";
++import {
++  createModel,
++  extractArray,
++  realTasksFilter,
++  startGoalAgent,
++} from "../../utils/chain";
+ import type { NextRequest } from "next/server";
+ import { NextResponse } from "next/server";
+ 
+@@ -20,7 +25,9 @@ export default async (request: NextRequest) => {
+       data.goal
+     );
+ 
+-    const tasks = extractArray(completion.text as string);
++    const tasks = extractArray(completion.text as string).filter(
++      realTasksFilter
++    );
+     return NextResponse.json({ tasks });
+   } catch (e) {}
+ 
+diff --git a/src/pages/api/create.ts b/src/pages/api/create.ts
+index d0b8b442..9959cb33 100644
+--- a/src/pages/api/create.ts
++++ b/src/pages/api/create.ts
+@@ -2,6 +2,7 @@ import {
+   createModel,
+   executeCreateTaskAgent,
+   extractArray,
++  realTasksFilter,
+ } from "../../utils/chain";
+ import type { NextRequest } from "next/server";
+ import { NextResponse } from "next/server";
+@@ -30,7 +31,9 @@ export default async (request: NextRequest) => {
+       data.result
+     );
+ 
+-    const tasks = extractArray(completion.text as string);
++    const tasks = extractArray(completion.text as string).filter(
++      realTasksFilter
++    );
+     return NextResponse.json({ tasks });
+   } catch (e) {}
+ 
+diff --git a/src/utils/chain.ts b/src/utils/chain.ts
+index 300512c4..c13e64e8 100644
+--- a/src/utils/chain.ts
++++ b/src/utils/chain.ts
+@@ -75,3 +75,18 @@ export const extractArray = (inputStr: string): string[] => {
+   console.error("Error, could not extract array from inputString:", inputStr);
+   return [];
+ };
++
++// Model will return tasks such as "No tasks added". We should filter these
++export const realTasksFilter = (input: string): boolean => {
++  const noTaskRegex =
++    /^No( (new|further|additional|extra|other))? tasks? (is )?(required|needed|added|created|inputted).*$/i;
++  const taskCompleteRegex =
++    /^Task (complete|completed|finished|done|over|success).*/i;
++  const doNothingRegex = /^(\s*|Do nothing(\s.*)?)$/i;
++
++  return (
++    !noTaskRegex.test(input) &&
++    !taskCompleteRegex.test(input) &&
++    !doNothingRegex.test(input)
++  );
++};

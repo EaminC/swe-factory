@@ -1,0 +1,36 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout d63b15dc4721d48cb8368fe9011398df417fbc32 
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Verify poetry-installed packages and specifically langgraph package presence
+echo "=== Poetry show installed packages ==="
+poetry show
+
+# Check import of langgraph and submodule checkpoint.postgres to ensure packages are discoverable
+echo "=== Checking import of langgraph package ==="
+poetry run python -c "import langgraph"
+
+echo "=== Checking import of langgraph.checkpoint.postgres submodule ==="
+poetry run python -c "import langgraph.checkpoint.postgres"
+
+# Set PYTHONPATH to /testbed explicitly since langgraph is in /testbed/langgraph
+export PYTHONPATH=/testbed${PYTHONPATH:+:$PYTHONPATH}
+
+# Run only the target test file with pytest, concise output with test status
+poetry run pytest --no-header -rA --tb=short libs/checkpoint-postgres/tests/test_continue_thread.py
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup changes after test run
+git restore libs/checkpoint-postgres/tests/test_continue_thread.py || true
+git clean -fd || true
+
+git reset --hard d63b15dc4721d48cb8368fe9011398df417fbc32

@@ -1,0 +1,408 @@
+2026-11-11 07:38:35,759 - INFO - Checking if image antonosika__gpt-engineer-640-dockerfile3:latest exists locally...
+2026-11-11 07:38:36,657 - INFO - Image antonosika__gpt-engineer-640-dockerfile3:latest found locally.
+2026-11-11 07:38:36,657 - INFO - Creating container for antonosika__gpt-engineer-640...
+2026-11-11 07:38:38,449 - INFO - Container for antonosika__gpt-engineer-640 started: cd28949ae3298b605b91639c1c957586b1269ebd9813cb01175fe8637f9728e9
+2026-11-11 07:38:38,451 - INFO - Intermediate patch for antonosika__gpt-engineer-640 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-640/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 07:38:40,073 - INFO - Apply patch success:
+Checking patch README.md...
+Checking patch gpt_engineer/ai.py...
+Checking patch gpt_engineer/learning.py...
+Checking patch gpt_engineer/main.py...
+Checking patch gpt_engineer/steps.py...
+Applied patch README.md cleanly.
+Applied patch gpt_engineer/ai.py cleanly.
+Applied patch gpt_engineer/learning.py cleanly.
+Applied patch gpt_engineer/main.py cleanly.
+Applied patch gpt_engineer/steps.py cleanly.
+
+2026-11-11 07:38:40,566 - INFO - Git diff before:
+diff --git a/README.md b/README.md
+index b7d7851..9d7325e 100644
+--- a/README.md
++++ b/README.md
+@@ -55,6 +55,13 @@ Check the [Windows README](./WINDOWS_README.md) for windows usage.
+ 
+ By running gpt-engineer you agree to our [terms](https://github.com/AntonOsika/gpt-engineer/blob/main/TERMS_OF_USE.md).
+ 
++**Azure OpenAI Service**
++
++You'll set your Azure OpenAI KEY 1 or KEY 2 as:
++- `export OPENAI_API_KEY=[your api key]`
++
++Then you call `gpt-engineer` with your service endpoint `--azure https://aoi-resource-name.openai.azure.com` and set your deployment name (which you created in the Azure AI Studio) as the model name. Example: `gpt-engineer --azure https://myairesource.openai.azure.com ./projects/example/ my-gpt4-deployment-name`
++
+ **Results**
+ 
+ Check the generated files in `projects/my-new-project/workspace`
+diff --git a/gpt_engineer/ai.py b/gpt_engineer/ai.py
+index b9def69..e801f4d 100644
+--- a/gpt_engineer/ai.py
++++ b/gpt_engineer/ai.py
+@@ -10,7 +10,7 @@ import openai
+ import tiktoken
+ 
+ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+-from langchain.chat_models import ChatOpenAI
++from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
+ from langchain.chat_models.base import BaseChatModel
+ from langchain.schema import (
+     AIMessage,
+@@ -37,7 +37,7 @@ class TokenUsage:
+ 
+ 
+ class AI:
+-    def __init__(self, model_name="gpt-4", temperature=0.1):
++    def __init__(self, model_name="gpt-4", temperature=0.1, azure_endpoint=""):
+         """
+         Initialize the AI class.
+ 
+@@ -49,9 +49,13 @@ class AI:
+             The temperature to use for the model, by default 0.1.
+         """
+         self.temperature = temperature
+-        self.model_name = fallback_model(model_name)
+-        self.llm = create_chat_model(self.model_name, temperature)
++        self.azure_endpoint = azure_endpoint
++        self.model_name = (
++            fallback_model(model_name) if azure_endpoint == "" else model_name
++        )
++        self.llm = create_chat_model(self, self.model_name, self.temperature)
+         self.tokenizer = get_tokenizer(self.model_name)
++        logger.debug(f"Using model {self.model_name} with llm {self.llm}")
+ 
+         # initialize token usage log
+         self.cumulative_prompt_tokens = 0
+@@ -335,7 +339,7 @@ def fallback_model(model: str) -> str:
+         return "gpt-3.5-turbo"
+ 
+ 
+-def create_chat_model(model: str, temperature) -> BaseChatModel:
++def create_chat_model(self, model: str, temperature) -> BaseChatModel:
+     """
+     Create a chat model with the specified model name and temperature.
+ 
+@@ -351,6 +355,16 @@ def create_chat_model(model: str, temperature) -> BaseChatModel:
+     BaseChatModel
+         The created chat model.
+     """
++    if self.azure_endpoint:
++        return AzureChatOpenAI(
++            # client=openai.ChatCompletion,
++            openai_api_base=self.azure_endpoint,
++            openai_api_version="2023-05-15",  # might need to be flexible in the future
++            deployment_name=model,
++            openai_api_type="azure",
++            streaming=True,
++            # tiktoken_model_name
++        )
+     if model == "gpt-4":
+         return ChatOpenAI(
+             model="gpt-4",
+diff --git a/gpt_engineer/learning.py b/gpt_engineer/learning.py
+index f5f19d7..198c4ea 100644
+--- a/gpt_engineer/learning.py
++++ b/gpt_engineer/learning.py
+@@ -61,6 +61,9 @@ def human_review_input() -> Review:
+         The user's review of the generated code.
+     """
+     print()
++    if not check_consent():
++        return None
++    print()
+     print(
+         colored("To help gpt-engineer learn, please answer 3 questions:", "light_green")
+     )
+@@ -92,8 +95,6 @@ def human_review_input() -> Review:
+             + colored("(ok to leave blank)\n", "light_green")
+         )
+ 
+-    check_consent()
+-
+     return Review(
+         raw=", ".join([ran, perfect, useful]),
+         ran={"y": True, "n": False, "u": None, "": None}[ran],
+@@ -103,14 +104,14 @@ def human_review_input() -> Review:
+     )
+ 
+ 
+-def check_consent():
++def check_consent() -> bool:
+     """
+     Check if the user has given consent to store their data.
+     If not, ask for their consent.
+     """
+     path = Path(".gpte_consent")
+     if path.exists() and path.read_text() == "true":
+-        return
++        return True
+     answer = input("Is it ok if we store your prompts to learn? (y/n)")
+     while answer.lower() not in ("y", "n"):
+         answer = input("Invalid input. Please enter y or n: ")
+@@ -120,8 +121,10 @@ def check_consent():
+         print(colored("Thank you️", "light_green"))
+         print()
+         print("(If you change your mind, delete the file .gpte_consent)")
++        return True
+     else:
+         print(colored("We understand ❤️", "light_green"))
++        return False
+ 
+ 
+ def collect_consent() -> bool:
+diff --git a/gpt_engineer/main.py b/gpt_engineer/main.py
+index a023328..f00a7a1 100644
+--- a/gpt_engineer/main.py
++++ b/gpt_engineer/main.py
+@@ -37,6 +37,13 @@ def main(
+         "-i",
+         help="Improve code from existing project.",
+     ),
++    azure_endpoint: str = typer.Option(
++        "",
++        "--azure",
++        "-a",
++        help="""Endpoint for your Azure OpenAI Service (https://xx.openai.azure.com).
++            In that case, the given model is the deployment name chosen in the Azure AI Studio.""",
++    ),
+     verbose: bool = typer.Option(False, "--verbose", "-v"),
+ ):
+     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
+@@ -53,6 +60,7 @@ def main(
+     ai = AI(
+         model_name=model,
+         temperature=temperature,
++        azure_endpoint=azure_endpoint,
+     )
+ 
+     input_path = Path(project_path).absolute()
+diff --git a/gpt_engineer/steps.py b/gpt_engineer/steps.py
+index a4f6938..4970026 100644
+--- a/gpt_engineer/steps.py
++++ b/gpt_engineer/steps.py
+@@ -218,11 +218,17 @@ def gen_code_after_unit_tests(ai: AI, dbs: DBs) -> List[dict]:
+ def execute_entrypoint(ai: AI, dbs: DBs) -> List[dict]:
+     command = dbs.workspace["run.sh"]
+ 
+-    print("Do you want to execute this code?")
++    print()
++    print(
++        colored(
++            "Do you want to execute this code? (y/n)",
++            "red",
++        )
++    )
+     print()
+     print(command)
+     print()
+-    print('If yes, press enter. Otherwise, type "no"')
++    print("To execute, you can also press enter.")
+     print()
+     if input() not in ["", "y", "yes"]:
+         print("Ok, not executing the code.")
+@@ -374,7 +380,8 @@ def fix_code(ai: AI, dbs: DBs):
+ def human_review(ai: AI, dbs: DBs):
+     """Collects and stores human review of the code"""
+     review = human_review_input()
+-    dbs.memory["review"] = review.to_json()  # type: ignore
++    if review is not None:
++        dbs.memory["review"] = review.to_json()  # type: ignore
+     return []
+2026-11-11 07:38:40,566 - INFO - Eval script for antonosika__gpt-engineer-640 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-640/test_analysis_agent_3/patch.diff, now applying to container...
+2026-11-11 07:38:53,238 - INFO - Test output for antonosika__gpt-engineer-640 written to /root/swe-factory/output/run_20261111_063006/mypy/AntonOsika__gpt-engineer-640/test_analysis_agent_3/test_output.txt
+2026-11-11 07:38:53,541 - INFO - Git diff after:
+diff --git a/README.md b/README.md
+index b7d7851..9d7325e 100644
+--- a/README.md
++++ b/README.md
+@@ -55,6 +55,13 @@ Check the [Windows README](./WINDOWS_README.md) for windows usage.
+ 
+ By running gpt-engineer you agree to our [terms](https://github.com/AntonOsika/gpt-engineer/blob/main/TERMS_OF_USE.md).
+ 
++**Azure OpenAI Service**
++
++You'll set your Azure OpenAI KEY 1 or KEY 2 as:
++- `export OPENAI_API_KEY=[your api key]`
++
++Then you call `gpt-engineer` with your service endpoint `--azure https://aoi-resource-name.openai.azure.com` and set your deployment name (which you created in the Azure AI Studio) as the model name. Example: `gpt-engineer --azure https://myairesource.openai.azure.com ./projects/example/ my-gpt4-deployment-name`
++
+ **Results**
+ 
+ Check the generated files in `projects/my-new-project/workspace`
+diff --git a/gpt_engineer/ai.py b/gpt_engineer/ai.py
+index b9def69..e801f4d 100644
+--- a/gpt_engineer/ai.py
++++ b/gpt_engineer/ai.py
+@@ -10,7 +10,7 @@ import openai
+ import tiktoken
+ 
+ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+-from langchain.chat_models import ChatOpenAI
++from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
+ from langchain.chat_models.base import BaseChatModel
+ from langchain.schema import (
+     AIMessage,
+@@ -37,7 +37,7 @@ class TokenUsage:
+ 
+ 
+ class AI:
+-    def __init__(self, model_name="gpt-4", temperature=0.1):
++    def __init__(self, model_name="gpt-4", temperature=0.1, azure_endpoint=""):
+         """
+         Initialize the AI class.
+ 
+@@ -49,9 +49,13 @@ class AI:
+             The temperature to use for the model, by default 0.1.
+         """
+         self.temperature = temperature
+-        self.model_name = fallback_model(model_name)
+-        self.llm = create_chat_model(self.model_name, temperature)
++        self.azure_endpoint = azure_endpoint
++        self.model_name = (
++            fallback_model(model_name) if azure_endpoint == "" else model_name
++        )
++        self.llm = create_chat_model(self, self.model_name, self.temperature)
+         self.tokenizer = get_tokenizer(self.model_name)
++        logger.debug(f"Using model {self.model_name} with llm {self.llm}")
+ 
+         # initialize token usage log
+         self.cumulative_prompt_tokens = 0
+@@ -335,7 +339,7 @@ def fallback_model(model: str) -> str:
+         return "gpt-3.5-turbo"
+ 
+ 
+-def create_chat_model(model: str, temperature) -> BaseChatModel:
++def create_chat_model(self, model: str, temperature) -> BaseChatModel:
+     """
+     Create a chat model with the specified model name and temperature.
+ 
+@@ -351,6 +355,16 @@ def create_chat_model(model: str, temperature) -> BaseChatModel:
+     BaseChatModel
+         The created chat model.
+     """
++    if self.azure_endpoint:
++        return AzureChatOpenAI(
++            # client=openai.ChatCompletion,
++            openai_api_base=self.azure_endpoint,
++            openai_api_version="2023-05-15",  # might need to be flexible in the future
++            deployment_name=model,
++            openai_api_type="azure",
++            streaming=True,
++            # tiktoken_model_name
++        )
+     if model == "gpt-4":
+         return ChatOpenAI(
+             model="gpt-4",
+diff --git a/gpt_engineer/learning.py b/gpt_engineer/learning.py
+index f5f19d7..198c4ea 100644
+--- a/gpt_engineer/learning.py
++++ b/gpt_engineer/learning.py
+@@ -61,6 +61,9 @@ def human_review_input() -> Review:
+         The user's review of the generated code.
+     """
+     print()
++    if not check_consent():
++        return None
++    print()
+     print(
+         colored("To help gpt-engineer learn, please answer 3 questions:", "light_green")
+     )
+@@ -92,8 +95,6 @@ def human_review_input() -> Review:
+             + colored("(ok to leave blank)\n", "light_green")
+         )
+ 
+-    check_consent()
+-
+     return Review(
+         raw=", ".join([ran, perfect, useful]),
+         ran={"y": True, "n": False, "u": None, "": None}[ran],
+@@ -103,14 +104,14 @@ def human_review_input() -> Review:
+     )
+ 
+ 
+-def check_consent():
++def check_consent() -> bool:
+     """
+     Check if the user has given consent to store their data.
+     If not, ask for their consent.
+     """
+     path = Path(".gpte_consent")
+     if path.exists() and path.read_text() == "true":
+-        return
++        return True
+     answer = input("Is it ok if we store your prompts to learn? (y/n)")
+     while answer.lower() not in ("y", "n"):
+         answer = input("Invalid input. Please enter y or n: ")
+@@ -120,8 +121,10 @@ def check_consent():
+         print(colored("Thank you️", "light_green"))
+         print()
+         print("(If you change your mind, delete the file .gpte_consent)")
++        return True
+     else:
+         print(colored("We understand ❤️", "light_green"))
++        return False
+ 
+ 
+ def collect_consent() -> bool:
+diff --git a/gpt_engineer/main.py b/gpt_engineer/main.py
+index a023328..f00a7a1 100644
+--- a/gpt_engineer/main.py
++++ b/gpt_engineer/main.py
+@@ -37,6 +37,13 @@ def main(
+         "-i",
+         help="Improve code from existing project.",
+     ),
++    azure_endpoint: str = typer.Option(
++        "",
++        "--azure",
++        "-a",
++        help="""Endpoint for your Azure OpenAI Service (https://xx.openai.azure.com).
++            In that case, the given model is the deployment name chosen in the Azure AI Studio.""",
++    ),
+     verbose: bool = typer.Option(False, "--verbose", "-v"),
+ ):
+     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
+@@ -53,6 +60,7 @@ def main(
+     ai = AI(
+         model_name=model,
+         temperature=temperature,
++        azure_endpoint=azure_endpoint,
+     )
+ 
+     input_path = Path(project_path).absolute()
+diff --git a/gpt_engineer/steps.py b/gpt_engineer/steps.py
+index a4f6938..4970026 100644
+--- a/gpt_engineer/steps.py
++++ b/gpt_engineer/steps.py
+@@ -218,11 +218,17 @@ def gen_code_after_unit_tests(ai: AI, dbs: DBs) -> List[dict]:
+ def execute_entrypoint(ai: AI, dbs: DBs) -> List[dict]:
+     command = dbs.workspace["run.sh"]
+ 
+-    print("Do you want to execute this code?")
++    print()
++    print(
++        colored(
++            "Do you want to execute this code? (y/n)",
++            "red",
++        )
++    )
+     print()
+     print(command)
+     print()
+-    print('If yes, press enter. Otherwise, type "no"')
++    print("To execute, you can also press enter.")
+     print()
+     if input() not in ["", "y", "yes"]:
+         print("Ok, not executing the code.")
+@@ -374,7 +380,8 @@ def fix_code(ai: AI, dbs: DBs):
+ def human_review(ai: AI, dbs: DBs):
+     """Collects and stores human review of the code"""
+     review = human_review_input()
+-    dbs.memory["review"] = review.to_json()  # type: ignore
++    if review is not None:
++        dbs.memory["review"] = review.to_json()  # type: ignore
+     return []
+2026-11-11 07:38:53,542 - INFO - Attempting to stop container antonosika__gpt-engineer-640-test2...
+2026-11-11 07:39:09,307 - INFO - Attempting to remove container antonosika__gpt-engineer-640-test2...
+2026-11-11 07:39:09,478 - INFO - Container antonosika__gpt-engineer-640-test2 removed.
+2026-11-11 07:39:09,478 - INFO - Attempting to remove image antonosika__gpt-engineer-640-dockerfile3:latest...
+2026-11-11 07:39:35,555 - INFO - Image antonosika__gpt-engineer-640-dockerfile3:latest removed.

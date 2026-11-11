@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build process fails during the Poetry installation step with the following error: \"failed to export layer: CreateDiff: mount callback failed on ... lstat /root/.local/share/pypoetry/venv/lib/python3.10/site-packages/distlib-0.4.4.dist-info: no such file or directory.\" This suggests a problem with the layered filesystem or possibly file permissions or incomplete installation of Poetry inside the container. To fix this, consider the following steps:\n\n1. Instead of piping the Poetry installer script directly to python3, download the installer as a separate step and run it to better handle errors and file system operations.\n2. Add a step to verify Poetry installation immediately after installation (e.g., run `poetry --version`).\n3. Confirm that the Poetry installation directory (/root/.local) exists and has correct permissions.\n4. Try explicitly creating missing directories or cleaning any cache related to Poetry prior to installation.\n5. Consider using a different method to install Poetry such as installing via pip or installing a specific Poetry version known to be stable.\n6. Ensure Docker build environment and storage are stable since \"failed to export layer\" errors often relate to Docker daemon or storage driver issues.\n\nInclude the original error message in the fix explanation for traceability and debugging.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

@@ -1,0 +1,49 @@
+# Use Ubuntu 22.04 LTS as base image, includes /bin/bash
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential system dependencies including git, python3.10 and build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    ca-certificates \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN python3.10 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the specific repository, checkout the specific commit
+RUN git clone https://github.com/modelscope/agentscope.git /testbed && \
+    git reset --hard e7ed12bec5a45d9d6a365a10cde42c5acb214e65
+
+# Create and activate virtual environment, then install in editable mode with dev extras (includes test dependencies)
+RUN python3.10 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN /bin/bash -c "pip install --upgrade pip setuptools wheel && \
+    pip install -e .[dev]"
+
+# Ensure bash is default shell
+SHELL ["/bin/bash", "-c"]
+
+# Environment variables placeholder (set at container runtime)
+ENV OPENAI_API_KEY=""
+ENV OPENAI_ORGANIZATION=""
+
+# Set working directory explicitly (redundant but safe)
+WORKDIR /testbed/

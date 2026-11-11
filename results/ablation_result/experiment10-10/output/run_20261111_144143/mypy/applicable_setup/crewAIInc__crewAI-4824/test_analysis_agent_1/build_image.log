@@ -1,0 +1,115 @@
+2026-11-11 14:50:13,871 - INFO - Building image crewaiinc__crewai-4824
+Using dockerfile:
+# Use Ubuntu 22.04 as base image for a stable, bash-included environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, build essentials, python3.13 related packages and rust (required for building some wheels)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    software-properties-common \
+    libssl-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    rustc \
+    cargo \
+    python3.13 \
+    python3.13-venv \
+    python3.13-distutils \
+    python3-pip \
+    python3-setuptools \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.13 explicitly, and pip for python3.13 is accessible as pip3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+# Install uv CLI tool (CrewAI's environment manager)
+RUN python3 -m pip install uv
+
+# Setup work directory
+WORKDIR /testbed/
+
+# Clone the target repository and checkout specific commit SHA (as argument to docker build)
+ARG REPO=https://github.com/crewAIInc/crewAI.git
+ARG COMMIT_SHA=542afe61a8adfca1b9a0434189b9f339dfb07817
+RUN git clone ${REPO} . && \
+    git reset --hard ${COMMIT_SHA}
+
+# Create and activate UV-managed virtual environment, install package + dependencies as per instructions
+RUN /bin/bash -c "\
+    uv venv && \
+    source .venv/bin/activate && \
+    uv pip install --upgrade pip && \
+    uv pip install crewai && \
+    uv pip install 'crewai[tools]' && \
+    uv pip install -e . \
+    "
+
+# Setup environment variables to avoid buffering and enable proper python unbuffered output (commonly needed in Docker)
+ENV PYTHONUNBUFFERED=1
+
+# Append environment activation to bashrc for convenience if shell is interactive
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Default shell explicitly bash
+SHELL ["/bin/bash", "-c"]
+
+2026-11-11 14:50:13,909 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 14:50:14,012 - INFO -  ---> 076e7bf82319
+2026-11-11 14:50:14,012 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 14:50:14,436 - INFO -  ---> Running in 4231e9188518
+2026-11-11 14:50:15,807 - INFO -  ---> Removed intermediate container 4231e9188518
+2026-11-11 14:50:15,807 - INFO -  ---> 5cbab02e9e80
+2026-11-11 14:50:15,807 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-11 14:50:15,979 - INFO -  ---> Running in e601b76e1cd6
+2026-11-11 14:50:17,648 - INFO -  ---> Removed intermediate container e601b76e1cd6
+2026-11-11 14:50:17,648 - INFO -  ---> b49e46c0730f
+2026-11-11 14:50:17,649 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-11 14:50:17,849 - INFO -  ---> Running in 8bc503a79f2d
+2026-11-11 14:50:19,873 - INFO -  ---> Removed intermediate container 8bc503a79f2d
+2026-11-11 14:50:19,874 - INFO -  ---> c615c28b4410
+2026-11-11 14:50:19,874 - INFO - Step 5/15 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     software-properties-common     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*
+2026-11-11 14:50:20,140 - INFO -  ---> Running in 7fc4171edb50
+2026-11-11 14:50:21,011 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 14:50:22,016 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 14:50:22,261 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 14:50:22,511 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 14:50:22,935 - INFO - Get:5 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 14:50:23,164 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 14:50:23,173 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 14:50:24,023 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 14:50:24,067 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 14:50:24,473 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 14:50:24,489 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 14:50:24,830 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 14:50:24,898 - INFO - Get:13 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 14:50:24,914 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 14:50:24,918 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 14:50:26,065 - INFO - Get:16 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 14:50:26,880 - INFO - Get:17 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 14:50:27,163 - INFO - Get:18 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 14:50:32,811 - INFO - Fetched 49.4 MB in 12s (4105 kB/s)
+2026-11-11 14:50:42,311 - INFO - Reading package lists...
+2026-11-11 14:50:51,648 - INFO - Reading package lists...
+2026-11-11 14:50:55,377 - INFO - Building dependency tree...
+2026-11-11 14:50:55,377 - INFO - Reading state information...
+2026-11-11 14:50:57,564 - INFO - E: Unable to locate package python3.13
+2026-11-11 14:50:57,564 - INFO - E: Couldn't find any package by glob 'python3.13'
+2026-11-11 14:50:57,564 - INFO - E: Couldn't find any package by regex 'python3.13'
+2026-11-11 14:50:57,564 - INFO - E: Unable to locate package python3.13-venv
+2026-11-11 14:50:57,565 - INFO - E: Couldn't find any package by glob 'python3.13-venv'
+2026-11-11 14:50:57,565 - INFO - E: Couldn't find any package by regex 'python3.13-venv'
+2026-11-11 14:50:57,565 - INFO - E: Unable to locate package python3.13-distutils
+2026-11-11 14:50:57,565 - INFO - E: Couldn't find any package by glob 'python3.13-distutils'
+2026-11-11 14:50:57,565 - INFO - E: Couldn't find any package by regex 'python3.13-distutils'
+2026-11-11 14:50:58,348 - INFO -  ---> Removed intermediate container 7fc4171edb50
+2026-11-11 14:50:58,356 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     software-properties-common     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 14:50:58,356 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     software-properties-common     libssl-dev     libffi-dev     libsqlite3-dev     rustc     cargo     python3.13     python3.13-venv     python3.13-distutils     python3-pip     python3-setuptools     locales-all     tzdata     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

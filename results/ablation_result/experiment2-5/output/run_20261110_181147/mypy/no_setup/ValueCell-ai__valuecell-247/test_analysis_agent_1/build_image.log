@@ -1,0 +1,123 @@
+2026-11-10 18:12:52,528 - INFO - Building image valuecell-ai__valuecell-247
+Using dockerfile:
+# Base image: Ubuntu 22.04 with bash shell by default
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies:
+# - git: for cloning the repository
+# - curl, wget: for downloads
+# - build-essential: compilation tools
+# - python3.12, python3.12-venv, python3.12-dev, python3-pip: python environment and headers
+# - locales-all: for locale support
+# - tzdata: timezone data
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    locales-all \
+    tzdata \
+    python3.12 \
+    python3.12-venv \
+    python3.12-dev \
+    python3-pip \
+    python3.12-distutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.12 and pip to pip3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
+ && python3 -m pip install --upgrade pip setuptools wheel
+
+# Install bun (JS/TS toolkit) - system-wide (latest stable) per https://bun.sh
+RUN curl -fsSL https://bun.sh/install | bash
+
+ENV PATH="/root/.bun/bin:${PATH}"
+
+# Install uv tool globally:
+# uv is installed via its install script from https://docs.astral.sh/uv/
+RUN curl -fsSL https://raw.githubusercontent.com/astral-sh/uv/main/scripts/install.sh | bash
+
+# Setup working directory
+WORKDIR /testbed/
+
+# Clone the repo and checkout the specific commit SHA
+RUN git clone https://github.com/ValueCell-ai/valuecell.git /testbed && \
+    cd /testbed && \
+    git reset --hard 146faeb125cb123d94ee9393db4513d2e5d113aa
+
+# Set up Python virtual environment (named testbed) at /testbed/venv and activate it
+RUN python3 -m venv /testbed/venv
+
+# Upgrade pip inside the venv
+RUN /testbed/venv/bin/pip install --upgrade pip setuptools wheel
+
+# Install Python backend dependencies inside the venv per instructions:
+# - cd python
+# - use uv sync --extra dev OR uv pip install --editable ".[dev]"
+# We'll use uv pip install --editable ".[dev]"
+RUN /bin/bash -c "\
+    source /testbed/venv/bin/activate && \
+    cd /testbed/python && \
+    uv pip install --editable '.[dev]' \
+"
+
+# Install frontend dependencies using bun (in /testbed/frontend)
+RUN cd /testbed/frontend && bun install
+
+# Make sure bash is the default shell and add environment activation in .bashrc for convenience
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+SHELL ["/bin/bash", "-c"]
+
+2026-11-10 18:12:52,534 - INFO - Step 1/16 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-10 18:13:16,748 - INFO -  ---> 076e7bf82319
+2026-11-10 18:13:16,748 - INFO - Step 2/16 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 18:13:29,938 - INFO -  ---> Running in 6018f125fca9
+2026-11-10 18:13:41,106 - INFO -  ---> Removed intermediate container 6018f125fca9
+2026-11-10 18:13:41,106 - INFO -  ---> a14d80e0c71f
+2026-11-10 18:13:41,106 - INFO - Step 3/16 : ENV TZ=Etc/UTC
+2026-11-10 18:13:42,786 - INFO -  ---> Running in c2041a3c4046
+2026-11-10 18:13:55,637 - INFO -  ---> Removed intermediate container c2041a3c4046
+2026-11-10 18:13:55,638 - INFO -  ---> 7fd1ce66020d
+2026-11-10 18:13:55,639 - INFO - Step 4/16 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     locales-all     tzdata     python3.12     python3.12-venv     python3.12-dev     python3-pip     python3.12-distutils     && rm -rf /var/lib/apt/lists/*
+2026-11-10 18:13:58,053 - INFO -  ---> Running in c332e1085570
+2026-11-10 18:14:00,259 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-10 18:14:00,397 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-10 18:14:01,238 - INFO - Get:3 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-10 18:14:01,843 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-10 18:14:02,157 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-10 18:14:02,507 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-10 18:14:02,519 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-10 18:14:02,697 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-10 18:14:02,720 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-10 18:14:02,747 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-10 18:14:03,021 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-10 18:14:04,562 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-10 18:14:04,773 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-10 18:14:05,253 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-10 18:14:05,255 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-10 18:14:05,552 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-10 18:14:05,666 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-10 18:14:05,666 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-10 18:14:06,104 - INFO - Fetched 49.4 MB in 6s (7988 kB/s)
+2026-11-10 18:14:07,565 - INFO - Reading package lists...
+2026-11-10 18:14:08,937 - INFO - Reading package lists...
+2026-11-10 18:14:09,300 - INFO - Building dependency tree...
+2026-11-10 18:14:09,300 - INFO - Reading state information...
+2026-11-10 18:14:09,671 - INFO - E: Unable to locate package python3.12
+2026-11-10 18:14:09,671 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-11-10 18:14:09,671 - INFO - E: Couldn't find any package by regex 'python3.12'
+2026-11-10 18:14:09,671 - INFO - E: Unable to locate package python3.12-venv
+2026-11-10 18:14:09,671 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-11-10 18:14:09,671 - INFO - E: Couldn't find any package by regex 'python3.12-venv'
+2026-11-10 18:14:09,671 - INFO - E: Unable to locate package python3.12-dev
+2026-11-10 18:14:09,672 - INFO - E: Couldn't find any package by glob 'python3.12-dev'
+2026-11-10 18:14:09,672 - INFO - E: Couldn't find any package by regex 'python3.12-dev'
+2026-11-10 18:14:09,672 - INFO - E: Unable to locate package python3.12-distutils
+2026-11-10 18:14:09,672 - INFO - E: Couldn't find any package by glob 'python3.12-distutils'
+2026-11-10 18:14:09,672 - INFO - E: Couldn't find any package by regex 'python3.12-distutils'
+2026-11-10 18:14:12,471 - INFO -  ---> Removed intermediate container c332e1085570
+2026-11-10 18:14:12,931 - ERROR - Error: The command '/bin/sh -c apt-get update && apt-get install -y     git     curl     wget     build-essential     locales-all     tzdata     python3.12     python3.12-venv     python3.12-dev     python3-pip     python3.12-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 18:14:12,931 - ERROR - The command '/bin/sh -c apt-get update && apt-get install -y     git     curl     wget     build-essential     locales-all     tzdata     python3.12     python3.12-venv     python3.12-dev     python3-pip     python3.12-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

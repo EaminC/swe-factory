@@ -1,0 +1,48 @@
+2026-11-11 15:50:22,797 - INFO - Checking if image langchain-ai__langgraph-5748-dockerfile5:latest exists locally...
+2026-11-11 15:50:22,888 - INFO - Image langchain-ai__langgraph-5748-dockerfile5:latest found locally.
+2026-11-11 15:50:22,888 - INFO - Creating container for langchain-ai__langgraph-5748...
+2026-11-11 15:50:23,468 - INFO - Container for langchain-ai__langgraph-5748 started: 6947362159fac0db915b7c0b2f87bbb9b765bd7960e761c138d123613519bbc6
+2026-11-11 15:50:23,468 - INFO - Intermediate patch for langchain-ai__langgraph-5748 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-5748/test_analysis_agent_5/patch.diff, now applying to container...
+2026-11-11 15:50:23,994 - INFO - Apply patch success:
+Checking patch libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py...
+Applied patch libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py cleanly.
+
+2026-11-11 15:50:25,614 - INFO - Git diff before:
+diff --git a/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py b/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
+index 6c3f0a4c0..0f71a981f 100644
+--- a/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
++++ b/libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
+@@ -254,6 +254,13 @@ def create_react_agent(
+         LanguageModelLike,
+         Callable[[StateSchema, Runtime[ContextT]], BaseChatModel],
+         Callable[[StateSchema, Runtime[ContextT]], Awaitable[BaseChatModel]],
++        Callable[
++            [StateSchema, Runtime[ContextT]], Runnable[LanguageModelInput, BaseMessage]
++        ],
++        Callable[
++            [StateSchema, Runtime[ContextT]],
++            Awaitable[Runnable[LanguageModelInput, BaseMessage]],
++        ],
+     ],
+     tools: Union[Sequence[Union[BaseTool, Callable, dict[str, Any]]], ToolNode],
+     *,
+@@ -287,6 +294,9 @@ def create_react_agent(
+             - **Dynamic model**: A callable with signature
+               `(state, runtime) -> BaseChatModel` that returns different models
+               based on runtime context
++              If the model has tools bound via `.bind_tools()` or other configurations,
++              the return type should be a Runnable[LanguageModelInput, BaseMessage]
++              Coroutines are also supported, allowing for asynchronous model selection.
+ 
+             Dynamic functions receive graph state and runtime, enabling
+             context-dependent model selection. Must return a `BaseChatModel`
+2026-11-11 15:50:25,614 - INFO - Eval script for langchain-ai__langgraph-5748 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-5748/test_analysis_agent_5/patch.diff, now applying to container...
+2026-11-11 15:50:29,364 - INFO - Test output for langchain-ai__langgraph-5748 written to /root/swe-factory/output/run_20261111_144143/mypy/langchain-ai__langgraph-5748/test_analysis_agent_5/test_output.txt
+2026-11-11 15:50:29,470 - INFO - Git diff after:
+
+2026-11-11 15:50:29,470 - INFO - Git diff changed after running eval script
+2026-11-11 15:50:29,470 - INFO - Attempting to stop container langchain-ai__langgraph-5748-test4...
+2026-11-11 15:50:44,853 - INFO - Attempting to remove container langchain-ai__langgraph-5748-test4...
+2026-11-11 15:50:45,273 - INFO - Container langchain-ai__langgraph-5748-test4 removed.
+2026-11-11 15:50:45,273 - INFO - Attempting to remove image langchain-ai__langgraph-5748-dockerfile5:latest...
+2026-11-11 15:50:49,040 - INFO - Image langchain-ai__langgraph-5748-dockerfile5:latest removed.

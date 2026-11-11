@@ -1,0 +1,81 @@
+2026-11-10 12:03:47,714 - INFO - Building image foundationagents__metagpt-1328
+Using dockerfile:
+# Use official Miniconda3 base image to avoid filesystem permission issues during conda installation
+FROM continuumio/miniconda3:latest
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Update and install necessary system dependencies for git, curl, build tools and Python system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    build-essential \
+    ca-certificates \
+    libffi-dev \
+    libssl-dev \
+    locales \
+    python3-venv \
+    python3-distutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create conda environment named 'testbed' with python 3.9
+RUN conda create -y -n testbed python=3.9 && conda clean -afy
+
+# Ensure conda environment activation in bashrc for interactive shells
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc
+
+ENV PATH=/opt/conda/envs/testbed/bin:$PATH
+
+# Clone repository, checkout the specified commit SHA, and install dependencies from repo only (no pre-install from PyPI)
+ARG COMMIT_SHA=5e8bd105177e08848990d32b9ea636daa639be19
+
+RUN git clone https://github.com/geekan/MetaGPT /testbed && \
+    cd /testbed && \
+    git reset --hard ${COMMIT_SHA} && \
+    /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate testbed && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -e . && \
+    pip install -r requirements.txt"
+
+# Set working directory to /testbed
+WORKDIR /testbed/
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Environment variable to disable openai calls during testing as per context hint
+ENV ALLOW_OPENAI_API_CALL=0
+
+2026-11-10 12:03:47,793 - INFO - Do not find previous image, images list is clean.
+2026-11-10 12:03:47,815 - INFO - Step 1/12 : FROM continuumio/miniconda3:latest
+2026-11-10 12:04:40,645 - INFO -  ---> eca594d684f4
+2026-11-10 12:04:40,645 - INFO - Step 2/12 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-10 12:04:43,313 - INFO -  ---> Running in 67904ef21340
+2026-11-10 12:05:10,931 - INFO -  ---> Removed intermediate container 67904ef21340
+2026-11-10 12:05:10,933 - INFO -  ---> 795e0a57997f
+2026-11-10 12:05:10,933 - INFO - Step 3/12 : ENV TZ=Etc/UTC
+2026-11-10 12:05:19,930 - INFO -  ---> Running in 8f714f20b5ca
+2026-11-10 12:05:52,123 - INFO -  ---> Removed intermediate container 8f714f20b5ca
+2026-11-10 12:05:52,123 - INFO -  ---> ec6d0e4224a0
+2026-11-10 12:05:52,123 - INFO - Step 4/12 : RUN apt-get update && apt-get install -y --no-install-recommends     git     wget     curl     build-essential     ca-certificates     libffi-dev     libssl-dev     locales     python3-venv     python3-distutils     && rm -rf /var/lib/apt/lists/*
+2026-11-10 12:06:04,156 - INFO -  ---> Running in b1193a4a22d1
+2026-11-10 12:06:09,939 - INFO - Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+2026-11-10 12:06:09,957 - INFO - Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-11-10 12:06:09,957 - INFO - Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-11-10 12:06:09,986 - INFO - Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9678 kB]
+2026-11-10 12:06:10,119 - INFO - Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [1108 B]
+2026-11-10 12:06:10,124 - INFO - Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [301 kB]
+2026-11-10 12:06:12,022 - INFO - Fetched 10.2 MB in 2s (4867 kB/s)
+2026-11-10 12:06:12,825 - INFO - Reading package lists...
+2026-11-10 12:06:13,705 - INFO - Reading package lists...
+2026-11-10 12:06:13,993 - INFO - Building dependency tree...
+2026-11-10 12:06:13,993 - INFO - Reading state information...
+2026-11-10 12:06:14,024 - INFO - Package python3-distutils is not available, but is referred to by another package.
+2026-11-10 12:06:14,024 - INFO - This may mean that the package is missing, has been obsoleted, or
+2026-11-10 12:06:14,024 - INFO - is only available from another source
+2026-11-10 12:06:14,029 - INFO - E: Package 'python3-distutils' has no installation candidate
+2026-11-10 12:06:21,538 - INFO -  ---> Removed intermediate container b1193a4a22d1
+2026-11-10 12:06:21,817 - ERROR - Error: The command '/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     git     wget     curl     build-essential     ca-certificates     libffi-dev     libssl-dev     locales     python3-venv     python3-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-10 12:06:21,817 - ERROR - The command '/bin/sh -c apt-get update && apt-get install -y --no-install-recommends     git     wget     curl     build-essential     ca-certificates     libffi-dev     libssl-dev     locales     python3-venv     python3-distutils     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

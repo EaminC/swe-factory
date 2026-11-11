@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 3d5257592b440fca8c46b77471e1c34c901ee57f 
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Install test dependencies including pytest using correct poetry extras option
+poetry install --extras test --no-interaction --no-ansi
+
+# Check if test file exists before running pytest
+if git ls-files --error-unmatch tests/test_paths.py > /dev/null 2>&1; then
+  poetry run pytest -v tests/test_paths.py
+  rc=$?
+else
+  echo "Test file tests/test_paths.py not found in git repository."
+  rc=1
+fi
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Restore test file state if it exists
+if git ls-files --error-unmatch tests/test_paths.py > /dev/null 2>&1; then
+  git checkout 3d5257592b440fca8c46b77471e1c34c901ee57f tests/test_paths.py
+fi

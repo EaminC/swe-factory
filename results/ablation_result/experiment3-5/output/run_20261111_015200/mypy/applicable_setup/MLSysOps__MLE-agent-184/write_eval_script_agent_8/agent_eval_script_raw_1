@@ -1,0 +1,40 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Configure git to consider /testbed a safe directory to avoid ownership issues
+git config --global --add safe.directory /testbed
+
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Do not reset git after patch to preserve changes during test execution
+
+# Activate python virtual environment
+source /testbed/testbed-env/bin/activate
+
+# Ensure pytest is installed
+pip install pytest
+
+# Check for existence of test file before running tests
+if [ -f "tests/test_cli_report_mode.py" ]; then
+  pytest tests/test_cli_report_mode.py
+else
+  echo "Warning: test file tests/test_cli_report_mode.py does not exist, running unittest discover instead"
+  python -m unittest discover -s tests
+fi
+
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset repository state after testing
+git checkout b95f56b446a2fe55247eee717ab85fe45f857d27
+
+</script>

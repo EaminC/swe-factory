@@ -1,0 +1,73 @@
++ cd /testbed
++ git checkout 18887e9f86a6d8675a2b4aed03a1c190ef6e1581
+HEAD is now at 18887e9f8 fix(langgraph): Remove duplicate call to ensure_config (#5768)
+M	libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py
++ git apply -v -
+Checking patch libs/prebuilt/tests/test_create_react_agent_type.py...
+Applied patch libs/prebuilt/tests/test_create_react_agent_type.py cleanly.
++ LANGGRAPH_TEST_FAST=1
++ pytest libs/prebuilt/tests/test_create_react_agent_type.py --strict-markers --strict-config --durations=5 -vv
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /testbed/libs/prebuilt
+configfile: pyproject.toml
+plugins: asyncio-1.2.0, anyio-4.12.1, mock-3.15.1, syrupy-4.9.1, langsmith-0.4.37
+asyncio: mode=auto, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+libs/prebuilt/tests/test_create_react_agent_type.py::test_create_react_agent_accepts_runnable_dynamic_model FAILED [ 50%]
+libs/prebuilt/tests/test_create_react_agent_type.py::test_create_react_agent_accepts_async_runnable_dynamic_model FAILED [100%]
+
+=================================== FAILURES ===================================
+____________ test_create_react_agent_accepts_runnable_dynamic_model ____________
+
+    def test_create_react_agent_accepts_runnable_dynamic_model():
+        # Should not raise type errors or runtime errors
+        agent = create_react_agent(
+            model=dummy_dynamic_model,
+            tools=[],
+>           state_schema=StateSchema(),
+            runtime=Runtime(),
+        )
+E       TypeError: 'TypeVar' object is not callable
+
+libs/prebuilt/tests/test_create_react_agent_type.py:37: TypeError
+_________ test_create_react_agent_accepts_async_runnable_dynamic_model _________
+
+    @pytest.mark.asyncio
+    async def test_create_react_agent_accepts_async_runnable_dynamic_model():
+        agent = create_react_agent(
+            model=dummy_dynamic_model_async,
+            tools=[],
+>           state_schema=StateSchema(),
+            runtime=Runtime(),
+        )
+E       TypeError: 'TypeVar' object is not callable
+
+libs/prebuilt/tests/test_create_react_agent_type.py:47: TypeError
+=============================== warnings summary ===============================
+libs/prebuilt/tests/conftest.py:31
+  /testbed/libs/prebuilt/tests/conftest.py:31: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.memory_assert
+    pytest.register_assert_rewrite("tests.memory_assert")
+
+../usr/local/lib/python3.10/dist-packages/langgraph/checkpoint/base/__init__.py:18
+  /usr/local/lib/python3.10/dist-packages/langgraph/checkpoint/base/__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations ==============================
+0.00s setup    tests/test_create_react_agent_type.py::test_create_react_agent_accepts_runnable_dynamic_model
+0.00s setup    tests/test_create_react_agent_type.py::test_create_react_agent_accepts_async_runnable_dynamic_model
+0.00s teardown tests/test_create_react_agent_type.py::test_create_react_agent_accepts_async_runnable_dynamic_model
+0.00s call     tests/test_create_react_agent_type.py::test_create_react_agent_accepts_async_runnable_dynamic_model
+0.00s call     tests/test_create_react_agent_type.py::test_create_react_agent_accepts_runnable_dynamic_model
+=========================== short test summary info ============================
+FAILED libs/prebuilt/tests/test_create_react_agent_type.py::test_create_react_agent_accepts_runnable_dynamic_model - TypeError: 'TypeVar' object is not callable
+FAILED libs/prebuilt/tests/test_create_react_agent_type.py::test_create_react_agent_accepts_async_runnable_dynamic_model - TypeError: 'TypeVar' object is not callable
+======================== 2 failed, 2 warnings in 0.24s =========================
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git reset --hard 18887e9f86a6d8675a2b4aed03a1c190ef6e1581
+OMNIGRIL_EXIT_CODE=1
+HEAD is now at 18887e9f8 fix(langgraph): Remove duplicate call to ensure_config (#5768)
