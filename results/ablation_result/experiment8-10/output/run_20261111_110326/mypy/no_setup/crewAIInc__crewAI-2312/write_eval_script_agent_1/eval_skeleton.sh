@@ -1,0 +1,23 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout e655412aca3f7acb9852473b9d336372e635f8ce
+
+# Apply the patch for test modifications if any
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment
+source /opt/testbed/bin/activate
+
+# Run only the specified test file with verbose output showing test file names and their statuses
+pytest -v tests/test_reset_memories.py
+
+rc=$?  # Capture exit code of pytest
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any modifications after test run to keep repo clean
+git checkout e655412aca3f7acb9852473b9d336372e635f8ce tests/test_reset_memories.py

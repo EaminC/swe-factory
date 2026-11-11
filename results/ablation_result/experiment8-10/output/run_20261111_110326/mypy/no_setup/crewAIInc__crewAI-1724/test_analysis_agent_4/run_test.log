@@ -1,0 +1,78 @@
+2026-11-11 12:33:51,390 - INFO - Checking if image crewaiinc__crewai-1724-dockerfile4:latest exists locally...
+2026-11-11 12:33:51,496 - INFO - Image crewaiinc__crewai-1724-dockerfile4:latest found locally.
+2026-11-11 12:33:51,496 - INFO - Creating container for crewaiinc__crewai-1724...
+2026-11-11 12:33:51,990 - INFO - Container for crewaiinc__crewai-1724 started: 8a9c7e134187ec9836b55586c3690ac55ee42f10402d81088a90ed4db0e4ecb4
+2026-11-11 12:33:51,991 - INFO - Intermediate patch for crewaiinc__crewai-1724 written to /root/swe-factory/output/run_20261111_110326/mypy/crewAIInc__crewAI-1724/test_analysis_agent_4/patch.diff, now applying to container...
+2026-11-11 12:33:52,489 - INFO - Apply patch success:
+Checking patch src/crewai/knowledge/storage/knowledge_storage.py...
+Checking patch src/crewai/memory/storage/rag_storage.py...
+Applied patch src/crewai/knowledge/storage/knowledge_storage.py cleanly.
+Applied patch src/crewai/memory/storage/rag_storage.py cleanly.
+
+2026-11-11 12:33:52,920 - INFO - Git diff before:
+diff --git a/src/crewai/knowledge/storage/knowledge_storage.py b/src/crewai/knowledge/storage/knowledge_storage.py
+index e0e36f4a7..acbbe75a1 100644
+--- a/src/crewai/knowledge/storage/knowledge_storage.py
++++ b/src/crewai/knowledge/storage/knowledge_storage.py
+@@ -3,6 +3,7 @@ import hashlib
+ import io
+ import logging
+ import os
++import shutil
+ from typing import Any, Dict, List, Optional, Union, cast
+ 
+ import chromadb
+@@ -15,6 +16,7 @@ from crewai.knowledge.storage.base_knowledge_storage import BaseKnowledgeStorage
+ from crewai.utilities import EmbeddingConfigurator
+ from crewai.utilities.logger import Logger
+ from crewai.utilities.paths import db_storage_path
++from crewai.utilities.constants import KNOWLEDGE_DIRECTORY
+ 
+ 
+ @contextlib.contextmanager
+@@ -105,15 +107,17 @@ class KnowledgeStorage(BaseKnowledgeStorage):
+             raise Exception("Failed to create or get collection")
+ 
+     def reset(self):
+-        if self.app:
+-            self.app.reset()
+-        else:
+-            base_path = os.path.join(db_storage_path(), "knowledge")
++        base_path = os.path.join(db_storage_path(), KNOWLEDGE_DIRECTORY)
++        if not self.app:
+             self.app = chromadb.PersistentClient(
+                 path=base_path,
+                 settings=Settings(allow_reset=True),
+             )
+-            self.app.reset()
++
++        self.app.reset()
++        shutil.rmtree(base_path)
++        self.app = None
++        self.collection = None
+ 
+     def save(
+         self,
+diff --git a/src/crewai/memory/storage/rag_storage.py b/src/crewai/memory/storage/rag_storage.py
+index bf40aee96..fd4c77838 100644
+--- a/src/crewai/memory/storage/rag_storage.py
++++ b/src/crewai/memory/storage/rag_storage.py
+@@ -150,9 +150,11 @@ class RAGStorage(BaseRAGStorage):
+ 
+     def reset(self) -> None:
+         try:
+-            shutil.rmtree(f"{db_storage_path()}/{self.type}")
+             if self.app:
+                 self.app.reset()
++                shutil.rmtree(f"{db_storage_path()}/{self.type}")
++                self.app = None
++                self.collection = None
+         except Exception as e:
+             if "attempt to write a readonly database" in str(e):
+                 # Ignore this specific error
+2026-11-11 12:33:52,920 - INFO - Eval script for crewaiinc__crewai-1724 written to /root/swe-factory/output/run_20261111_110326/mypy/crewAIInc__crewAI-1724/test_analysis_agent_4/patch.diff, now applying to container...
+2026-11-11 12:35:13,196 - INFO - Test output for crewaiinc__crewai-1724 written to /root/swe-factory/output/run_20261111_110326/mypy/crewAIInc__crewAI-1724/test_analysis_agent_4/test_output.txt
+2026-11-11 12:35:13,364 - INFO - Git diff after:
+
+2026-11-11 12:35:13,364 - INFO - Git diff changed after running eval script
+2026-11-11 12:35:13,365 - INFO - Attempting to stop container crewaiinc__crewai-1724-test3...

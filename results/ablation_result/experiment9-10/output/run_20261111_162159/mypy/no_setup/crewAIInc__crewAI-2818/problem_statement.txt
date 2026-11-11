@@ -1,0 +1,94 @@
+[BUG] Segmentation fault (core dumped)
+### Description
+
+When I use multithreading or asyncio to make requests concurrently, I eventually get a "Segmentation fault (core dumped)" error. There aren’t any other logs — it just crashes. It usually happens after the different crews have been running in parallel for a while. The same problem for two approaches. Tried with 5+ threads / semaphores.
+
+I'm using Python 3.10, 32 GB of RAM. For the LLM, I’m connecting to a private API where the model is hosted by vLLM.
+
+### Steps to Reproduce
+
+use concurrency in Python for the Crew
+
+### Expected behavior
+
+no crash + appropriate logging of errors / warnings if possible
+
+### Screenshots/Code snippets
+
+## 1. Threads 
+
+```
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def generate_response(payload: dict):
+    try:
+        output = MyAgent().crew().kickoff(inputs=payload['inputs'])
+    except Exception as e:
+        output = None
+    return output
+
+def main():
+    results = []
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(generate_response_draft(payload) for payload in payloads]
+
+        for future in as_completed(futures):
+            results.append(future.result())
+```
+
+
+## 2. Coroutines
+
+```
+import asyncio
+
+sem = asyncio.Semaphore(5)
+
+async def generate_response(payloads: dict):
+    with sem:
+        try:
+            output = await MyAgent().crew().kickoff_async(inputs=payloads['inputs'])
+        except Exception as e:
+            output = None
+        return output
+
+async def main():
+    tasks = [generate_response_draft(payload) for payload in payloads]
+    results = await asyncio.gather(*tasks)
+
+```
+      
+
+
+### Operating System
+
+Ubuntu 20.04
+
+### Python Version
+
+3.10
+
+### crewAI Version
+
+0.108.0
+
+### crewAI Tools Version
+
+0.38.1
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+Crash with a message: Segmentation fault (core dumped). No other logs. 
+
+### Possible Solution
+
+None
+
+### Additional context
+
+None

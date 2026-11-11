@@ -1,0 +1,105 @@
+[BUG] CrewAI >= 1.4.0 - Structured outputs no longer working with azure models
+### Description
+
+After updating to crewai 1.4.1, I can no longer use structured outputs with my Azure models
+
+I always get this error:
+```
+ERROR:root:Azure API call failed: Unsupported `response_format` {'type': 'json_schema', 'json_schema': {<MYJSONSCHEMA>}
+```
+
+### Steps to Reproduce
+
+1. Use crewai[azure-ai-inference] 1.4.1
+2. Use an Azure model
+3. Create an agent or call a Azure LLM with a pydantic model as response format
+
+### Expected behavior
+
+It should just return the structured response as written in the docs
+
+### Screenshots/Code snippets
+
+```py
+from crewai import LLM, Agent
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+class Greeting(BaseModel):
+    name: str
+    message: str
+
+GPT_4_1_NANO = LLM(
+    temperature=0,
+    model="azure/gpt-4.1-nano",
+    api_key=os.getenv("AZURE_API_KEY"),
+    endpoint=os.getenv("MYDEPLOYMENTURL"),
+    max_retries=5,
+)
+
+greeting_agent = Agent(
+    role="Greeter",
+    goal="Greet the user with a friendly message.",
+    backstory="An AI assistant that loves to greet people.",
+    llm=GPT_4_1_NANO,
+)
+
+res = greeting_agent.kickoff("My name is Alice.", response_format=Greeting)
+print("Agent Res:", res)
+```
+
+Same with this:
+
+```py
+from crewai import LLM, Agent
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+class Greeting(BaseModel):
+    name: str
+    message: str
+
+GPT_4_1_NANO = LLM(
+    temperature=0,
+    model="azure/gpt-4.1-nano",
+    api_key=os.getenv("AZURE_API_KEY"),
+    endpoint=os.getenv("MYDEPLOYMENTURL"),
+    max_retries=5,
+)
+
+res = GPT_4_1_NANO.call("My name is Alice.", response_model=Greeting)
+print("Agent Res:", res)
+```
+
+### Operating System
+
+Ubuntu 20.04
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+1.4.1
+"crewai[azure-ai-inference]>=1.4.1",
+
+### crewAI Tools Version
+
+N.A
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+<img width="1831" height="1022" alt="Image" src="https://github.com/user-attachments/assets/88ff47ec-24f8-4553-81ee-4ab93f147ebb" />
+
+### Possible Solution
+
+None
+
+### Additional context
+
+N.A

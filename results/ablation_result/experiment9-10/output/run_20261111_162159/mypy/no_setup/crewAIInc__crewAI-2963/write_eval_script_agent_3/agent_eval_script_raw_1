@@ -1,0 +1,20 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+source /opt/testbed/bin/activate
+
+cd /testbed
+
+git checkout b0d89698fdd3eb5aced8e659f2241f0648b8a40b
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run the tests immediately after applying the patch, before any reset
+pytest --tb=short -rA --disable-warnings tests/test_openai_version.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+</script>

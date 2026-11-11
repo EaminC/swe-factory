@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 4e496d7a202802917ad4f47eb9efdd6a41f06e18
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate python virtual environment
+source /testbed/venv/bin/activate
+
+# Run only the target test file with uv command and pytest
+# Use -rA to show all test summary info and --tb=short to keep tracebacks concise
+uv run pytest -rA --tb=short tests/test_concurrency.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 4e496d7a202802917ad4f47eb9efdd6a41f06e18 tests/test_concurrency.py

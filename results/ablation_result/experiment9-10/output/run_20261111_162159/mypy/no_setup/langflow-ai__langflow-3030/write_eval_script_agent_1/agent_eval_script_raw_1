@@ -1,0 +1,23 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout c7575b18df4d9c7d728589d7a2d8ecef14a89b6d 
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate poetry env
+export POETRY_VIRTUALENVS_IN_PROJECT=true
+source $(poetry env info -p)/bin/activate
+
+# Run only the specified test file with pytest, showing concise results
+poetry run pytest --no-header -rA --tb=short tests/base/agents/test_tool_calling_agent_chat_history.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout c7575b18df4d9c7d728589d7a2d8ecef14a89b6d tests/base/agents/test_tool_calling_agent_chat_history.py
+</script>

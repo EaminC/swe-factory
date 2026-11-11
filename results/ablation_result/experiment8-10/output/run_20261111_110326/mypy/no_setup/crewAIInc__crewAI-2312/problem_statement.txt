@@ -1,0 +1,82 @@
+[BUG] errors on "crewai reset-memories" CLI command
+### Description
+
+Error running command `crewai reset-memories --knowledge` or `crewai reset-memories -a`  from inside a crew project. 
+
+Error message:
+
+```
+An unexpected error occurred: No crew found.
+```
+
+### Steps to Reproduce
+
+1. Create new crewai project
+2. cd, install, etc.
+3. Run `crewai reset-memories -kn` or `crewai reset-memories --knowledge`
+4. See "An unexpected error occurred: No crew found." message
+
+### Expected behavior
+
+Expected "memory system is not initialized message":
+
+```
+[2025-03-07 12:11:35][ERROR]: Failed to reset knowledge memory: knowledge memory system is not initialized
+An unexpected error occurred: Failed to reset knowledge memory: knowledge memory system is not initialized
+```
+
+### Screenshots/Code snippets
+
+```bash
+$ crewai reset-memories -a         
+An unexpected error occurred: No crew found.
+
+$ crewai reset-memories -s
+An unexpected error occurred: No crew found.
+
+$ crewai reset-memories -l
+An unexpected error occurred: No crew found.
+
+$ crewai reset-memories -kn
+An unexpected error occurred: No crew found.
+```
+
+### Operating System
+
+OS X
+
+### Python Version
+
+3.10
+
+### crewAI Version
+
+0.102.0
+
+### crewAI Tools Version
+
+0.36.0
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+```bash
+$ crewai reset-memories -a         
+An unexpected error occurred: No crew found.
+
+$ crewai reset-memories --knowledge
+An unexpected error occurred: No crew found.
+```
+
+### Possible Solution
+
+Fix the way `get_crew` looks for and returns a crew instance.
+
+https://github.com/crewAIInc/crewAI/pull/2309
+
+### Additional context
+
+Works fine in previous version `0.100.0.`

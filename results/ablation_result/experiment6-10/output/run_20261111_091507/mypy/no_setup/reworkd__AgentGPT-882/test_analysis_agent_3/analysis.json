@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The eval script attempts to source the poetry virtual environment activation script at /testbed/.venv/bin/activate but this path does not exist, leading to the error: '/eval.sh: line 70: /testbed/.venv/bin/activate: No such file or directory'. This is likely because the Dockerfile configures poetry to create virtualenvs inside the 'platform' directory (via 'poetry config virtualenvs.in-project true') and installs dependencies inside /testbed/platform/. Consequently, the virtual environment directory is probably located at /testbed/platform/.venv/, not /testbed/.venv/. Therefore, modify the eval script to source the virtual environment from /testbed/platform/.venv/bin/activate instead of /testbed/.venv/bin/activate. Also, the poetry run pytest command fails due to 'Poetry could not find a pyproject.toml file in /testbed or its parents', indicating the current directory when running pytest should be inside /testbed/platform/. Update the eval script to 'cd /testbed/platform' before running 'poetry run pytest ...' on the target test file. This will ensure poetry finds pyproject.toml and runs tests properly. Finally, confirm you preserve echoing the exit code as done. These changes will fix the errors and allow tests to actually run.",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": true
+}

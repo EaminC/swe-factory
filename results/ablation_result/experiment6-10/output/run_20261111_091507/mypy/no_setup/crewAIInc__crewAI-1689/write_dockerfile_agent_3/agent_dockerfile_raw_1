@@ -1,0 +1,58 @@
+<dockerfile>
+# Base image specification: Ubuntu 22.04 with Bash as default shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install system dependencies: wget, git, curl, build essentials, python3.11, python3-pip, bash, locales
+# Install python3.11-distutils required for setuptools and pkg_resources
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    python3.11-distutils \
+    locales \
+    locales-all \
+    tzdata \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup python3.11 as default python3 and pip3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 -
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit SHA
+RUN git clone https://github.com/crewAIInc/crewAI /testbed/ && \
+    git reset --hard 4bc23affe0e322f4c48be7ea4e5abb0e273569d6 && \
+    git remote remove origin
+
+# Create virtual environment
+RUN python3 -m venv /testbed/.venv
+
+# Activate virtual environment and upgrade essential packaging tools, explicitly ensure setuptools installed (for pkg_resources)
+ENV PATH="/testbed/.venv/bin:$PATH"
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install --force-reinstall setuptools
+
+# Install project and development dependencies in editable mode with extras
+RUN pip install -e .[dev]
+
+# Add virtual environment activation to root bashrc for interactive use
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash explicitly
+SHELL ["/bin/bash", "-c"]
+
+# Environment variable placeholders to be set at runtime
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+
+# WORKDIR already set to /testbed/
+</dockerfile>

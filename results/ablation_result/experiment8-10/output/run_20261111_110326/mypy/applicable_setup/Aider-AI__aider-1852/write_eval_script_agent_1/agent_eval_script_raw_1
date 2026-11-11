@@ -1,0 +1,26 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+
+# Checkout to specific commit and restore the exact state of test files before patching
+git checkout 9789668ca4d14d3b6c24e56f3fe956147ea78039 "file.py" "tests/basic/test_commit_messages.py"
+
+# Apply the test patch to update target test files (placeholder for patch content)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment
+source ./venv/bin/activate
+
+# Run only the specified test files with pytest, concise output, show test file names and statuses
+pytest -p no:warnings --tb=short --disable-warnings "file.py" "tests/basic/test_commit_messages.py"
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: revert changes to test files after testing
+git checkout 9789668ca4d14d3b6c24e56f3fe956147ea78039 "file.py" "tests/basic/test_commit_messages.py"
+</script>

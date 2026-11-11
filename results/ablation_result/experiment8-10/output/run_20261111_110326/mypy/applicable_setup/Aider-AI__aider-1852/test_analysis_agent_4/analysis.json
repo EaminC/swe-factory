@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails at the step where it tries to install the Python dependencies. The root cause is the failure to clone the 'litellm' dependency from GitHub via SSH during 'pip install -r requirements.txt'. The error message is: 'Host key verification failed. fatal: Could not read from remote repository. Please make sure you have the correct access rights and the repository exists.' This indicates the Docker image environment does not have SSH keys or known hosts configured for accessing private or SSH-based Git repositories. To fix this, modify the Dockerfile to replace the SSH URL for litellm with a HTTPS URL, without relying on SSH authentication, or configure SSH keys and known_hosts properly. Since the Dockerfile currently tries SSH URL first and falls back to HTTPS only if the sed command fails, this approach isn't reliable in this environment. Instead, directly change all litellm references in requirements.txt and requirements/requirements-dev.txt to use HTTPS URLs, or consider packaging litellm as a wheel if possible. Alternatively, you can configure the Docker environment to allow SSH access by adding SSH keys and known hosts, but this complicates the setup. The main error causing Docker build failure: 'Host key verification failed. fatal: Could not read from remote repository.'",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

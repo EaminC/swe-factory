@@ -1,0 +1,57 @@
+<dockerfile>
+# Use Ubuntu 22.04 base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies for Python development and git
+RUN apt-get update && apt-get install -y \
+    git \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    curl \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locales and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
+# Upgrade pip and install pip-tools (to match repo usage if needed)
+RUN python3.11 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/Aider-AI/aider.git /testbed && \
+    git reset --hard 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4
+
+# Setup Python virtual environment named "testbed" and activate it,
+# then install dependencies following project recommendations
+RUN python3.11 -m venv /testbed/venv
+
+# Install repository dependencies inside virtual environment: 
+# - install pinned dependencies using requirements.txt and requirements-dev.txt
+# - install the repository itself in editable mode (-e .) 
+RUN /bin/bash -c " \
+    source /testbed/venv/bin/activate && \
+    pip install --upgrade pip && \
+    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi; \
+    if [ -f requirements/requirements-dev.txt ]; then pip install -r requirements/requirements-dev.txt; fi; \
+    pip install -e . \
+"
+
+# Add virtual environment activation in bashrc for user convenience
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash
+ENV SHELL=/bin/bash
+</dockerfile>

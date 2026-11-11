@@ -1,0 +1,49 @@
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and essential tools
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-distutils \
+    locales \
+    locales-all \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda3 \
+    && rm /tmp/miniconda.sh
+
+ENV PATH=/opt/miniconda3/bin:$PATH
+
+# Initialize conda and create the testbed environment with Python 3.10 (recommended >=3.10 for aider dependencies)
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda init bash && \
+    conda config --append channels conda-forge && \
+    conda create -n testbed python=3.10 -y"
+
+# Set WORKDIR and clone repository at specific commit SHA
+WORKDIR /testbed/
+RUN git clone https://github.com/Aider-AI/aider.git /testbed && \
+    git reset --hard 17d40a62c931ac91fc9c31288310b37b62175c47
+
+# Install Python dependencies inside conda environment and install the project in editable mode
+RUN /bin/bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate testbed && \
+    pip install -r requirements.txt && \
+    pip install -e ."
+
+# Set environment variable for test execution context
+ENV AIDER_ANALYTICS=false
+
+# Prepare bash environment for conda activation by default
+RUN echo "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed" >> /root/.bashrc

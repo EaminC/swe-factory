@@ -1,0 +1,56 @@
+# Use Ubuntu 22.04 base image for compatibility and bash support
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install essential packages including locales, rust, python 3.11 and build tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    python3.11 \
+    python3.11-distutils \
+    python3.11-venv \
+    python3-pip \
+    rustc \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Reconfigure locales to avoid missing files error, generate and set environment variables for locale
+RUN locale-gen en_US.UTF-8 && \
+    dpkg-reconfigure -f noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
+# Upgrade pip for Python 3.11
+RUN python3.11 -m pip install --upgrade pip
+
+# Create Python virtual environment in /opt/testbed and add it to PATH
+RUN python3.11 -m venv /opt/testbed
+ENV PATH="/opt/testbed/bin:$PATH"
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+RUN git clone https://github.com/crewAIInc/crewAI . && \
+    git reset --hard b0d89698fdd3eb5aced8e659f2241f0648b8a40b
+
+# Install the package in editable mode and required extras inside the virtual environment
+RUN /bin/bash -c "\
+    source /opt/testbed/bin/activate && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -e . && \
+    pip install --no-cache-dir 'crewai[tools]' 'crewai[embeddings]'"
+
+# Use bash as default shell
+SHELL ["/bin/bash", "-c"]
+
+# Automatically activate virtual environment in interactive shells
+RUN echo "source /opt/testbed/bin/activate" >> /root/.bashrc

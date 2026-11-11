@@ -1,0 +1,58 @@
+# Use Ubuntu 22.04 as base image to ensure bash availability and stability
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system packages: git, curl, build tools, python3.11, python3.11-venv, pip, and other needed libs
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    python3.11-distutils \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3.11 is the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN python -m pip install --upgrade pip
+
+# Create and activate virtual environment named "testbed"
+RUN python -m venv /opt/testbed
+
+# Upgrade pip within virtual environment and install 'uv' package manager (required to run uv commands)
+RUN /opt/testbed/bin/pip install --upgrade pip setuptools wheel
+RUN /opt/testbed/bin/pip install uv
+
+# Set environment variables for python & uv usage
+ENV PATH="/opt/testbed/bin:$PATH"
+ENV UV_VENV="/opt/testbed"
+
+# Create working directory
+WORKDIR /testbed/
+
+# Clone target repository and checkout specific commit
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed \
+    && cd /testbed \
+    && git reset --hard c4f7eaf2599c5709260d660d48e810aae7a8c124 \
+    && git remote remove origin
+
+# Install the project and its dependencies in development mode using uv commands
+# Add UV_VENV_CLEAR=1 environment variable when running uv venv to clear existing virtual environment
+RUN cd /testbed \
+    && uv lock \
+    && uv sync \
+    && UV_VENV_CLEAR=1 uv venv \
+    && uv build
+
+# Set environment variables needed for runtime/testing (values to be set externally)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED="true"
+
+# Ensure bash is the default shell
+CMD ["/bin/bash"]

@@ -1,0 +1,57 @@
+# Use Ubuntu 22.04 base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies for Python development, build tools, and git
+RUN apt-get update && apt-get install -y \
+    git \
+    python3 \
+    python3-venv \
+    python3-distutils \
+    python3-pip \
+    build-essential \
+    curl \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locales and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
+# Upgrade pip and install setuptools >=68 and setuptools_scm[toml] >=8 to satisfy build system requirements
+RUN python3 -m pip install --upgrade pip setuptools>=68 setuptools_scm[toml]>=8 wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/Aider-AI/aider.git /testbed && \
+    git reset --hard 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4
+
+# Setup Python virtual environment named "testbed"
+RUN python3 -m venv /testbed/venv
+
+# Install repository dependencies inside virtual environment:
+# - Install pinned dependencies from requirements.txt (including litellm==1.47.0)
+# - Install pinned dev dependencies from requirements/requirements-dev.txt
+# - Install the repository itself in editable mode (-e .)
+# Added build-essential for possible build steps; no external or private indexes since not specified
+RUN /bin/bash -c " \
+    source /testbed/venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install -r requirements/requirements-dev.txt && \
+    pip install -e . \
+"
+
+# Add virtual environment activation in bashrc for user convenience
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash
+ENV SHELL=/bin/bash

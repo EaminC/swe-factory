@@ -1,0 +1,84 @@
+[BUG] CrewAI fails to add new memories to Mem0 when in external memory
+### Description
+
+CrewAI fails to add memories to mem0 when in an external memory
+
+Failed to add to external memory: API request failed: {"messages":["Expected a list of items but got type \"str\"."],"agent_id":["agent_id is too 
+long. Maximum length allowed is 255 characters."]}
+
+### Steps to Reproduce
+
+Add external memory to your crew using 
+
+external_memory = ExternalMemory(
+			embedder_config={
+				"provider": "mem0", 
+				"config": {"user_id": "deck"}
+			}
+		)
+
+and in the crew 
+
+return Crew(
+			agents=self.agents, # Automatically created by the @agent decorator
+			tasks=self.tasks, # Automatically created by the @task decorator
+			process=Process.sequential,
+			verbose=True,
+			memory=True,
+			external_memory=external_memory,
+	)
+
+Run - it fails with 
+
+
+Failed to add to external memory: API request failed: {"messages":["Expected a list of items but got type \"str\"."],"agent_id":["agent_id is too 
+long. Maximum length allowed is 255 characters."]}
+
+every time it tries to add a memory
+
+
+### Expected behavior
+
+Adding a memory in mem0 
+
+you can see this in https://app.mem0.ai/dashboard/r
+
+### Screenshots/Code snippets
+
+<img width="1051" alt="Image" src="https://github.com/user-attachments/assets/5e70fcf5-0a64-4306-96e2-29357821cda9" />
+
+<img width="1083" alt="Image" src="https://github.com/user-attachments/assets/8665600f-4904-4736-8e2c-5c2e9816d258" />
+
+
+
+### Operating System
+
+macOS Sonoma
+
+### Python Version
+
+3.12
+
+### crewAI Version
+
+crewai, version 0.126.0
+
+### crewAI Tools Version
+
+crewai, version 0.126.0
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+<img width="1083" alt="Image" src="https://github.com/user-attachments/assets/0ce22d89-55e7-4c8f-8fef-4eda2e5b2964" />
+
+### Possible Solution
+
+Reduce the length of the call? 
+
+### Additional context
+
+This will cause ALL mem0 implementations to fail in the add. The retrieve still works

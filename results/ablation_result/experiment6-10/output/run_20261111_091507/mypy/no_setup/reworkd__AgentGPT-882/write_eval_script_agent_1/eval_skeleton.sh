@@ -1,0 +1,19 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout ed41e877e1c493a7aec13312a8284b209b67495b
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate poetry virtual environment for python dependencies
+source /testbed/.venv/bin/activate
+
+# Run pytest on the specified test file only; concise output with names and statuses
+poetry run pytest --tb=short -r a --disable-warnings platform/reworkd_platform/tests/agent/test_open_ai_agent_service.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout ed41e877e1c493a7aec13312a8284b209b67495b platform/reworkd_platform/tests/agent/test_open_ai_agent_service.py

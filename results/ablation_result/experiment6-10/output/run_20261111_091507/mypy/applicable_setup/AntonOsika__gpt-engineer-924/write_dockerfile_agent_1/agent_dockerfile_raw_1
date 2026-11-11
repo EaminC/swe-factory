@@ -1,0 +1,57 @@
+<dockerfile>
+# Use a stable Ubuntu base image with bash
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, python3.10, pip, build essentials, and related libs
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    python3-setuptools \
+    libffi-dev \
+    libssl-dev \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale (optional, but good practice)
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install poetry via pipx (recommended by CI, but to avoid pipx complexity, install directly via pip)
+RUN python3.10 -m pip install --upgrade pip
+RUN python3.10 -m pip install poetry
+
+# Set working directory for the target repo
+WORKDIR /testbed/
+
+# Clone the repository, checkout the specified commit, install dependencies via poetry
+# and install the project in editable mode
+ARG COMMIT_SHA=a74c5ebcf0abf9db63abf3ba39ac123f6f74eb82
+RUN git clone https://github.com/AntonOsika/gpt-engineer.git /testbed \
+    && cd /testbed \
+    && git checkout $COMMIT_SHA \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-root \
+    && poetry run pip install -e .
+
+# Expose environment for bash shell with poetry-enabled environment
+ENV PATH="/root/.local/bin:$PATH"
+
+# Configure bash to use poetry environment automatically
+RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >> /root/.bashrc
+
+# Set default shell to bash explicitly
+ENV SHELL=/bin/bash
+</dockerfile>

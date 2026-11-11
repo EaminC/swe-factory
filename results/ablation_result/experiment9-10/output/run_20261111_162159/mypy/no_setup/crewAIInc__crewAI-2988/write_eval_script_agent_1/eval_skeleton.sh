@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 99133104dd1a3f77a8558aa882243d702893a1ca 
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment
+source /testbed/testbed/bin/activate
+
+# Run only the specified target test files with pytest using uv run as recommended
+uv run pytest -q --tb=short tests/test_mem0_storage.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset any changes made by the test patch
+git checkout 99133104dd1a3f77a8558aa882243d702893a1ca

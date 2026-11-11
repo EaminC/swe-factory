@@ -1,0 +1,110 @@
++ cd /testbed
++ git checkout 409892d65fab88e4a390f05c46b399b5a9260463
+Note: switching to '409892d65fab88e4a390f05c46b399b5a9260463'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 409892d65 Portkey Integration with CrewAI (#1233)
+M	src/crewai/knowledge/knowledge.py
+M	src/crewai/knowledge/source/base_file_knowledge_source.py
+M	src/crewai/knowledge/source/base_knowledge_source.py
+M	uv.lock
++ git apply -v -
+Checking patch tests/test_knowledge_embedder.py...
+Applied patch tests/test_knowledge_embedder.py cleanly.
++ source /testbed/.venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/testbed/.venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/testbed/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(.venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(.venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ '[' -n /bin/bash -o -n '' ']'
+++ hash -r
++ uv run pytest -vv tests/test_knowledge_embedder.py
+Uninstalled 1 package in 182ms
+Installed 1 package in 3ms
+/testbed/.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-8.3.3, pluggy-1.5.0 -- /testbed/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /testbed
+configfile: pyproject.toml
+plugins: vcr-1.0.2, subprocess-1.5.2, anyio-4.6.2.post1, asyncio-0.24.0
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 3 items
+
+tests/test_knowledge_embedder.py::test_storage_optional_and_embedder_config FAILED [ 33%]
+tests/test_knowledge_embedder.py::test_base_knowledge_source_storage_none_raises_on_save FAILED [ 66%]
+tests/test_knowledge_embedder.py::test_base_file_knowledge_source_storage_none_raises_on_save FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ test_storage_optional_and_embedder_config ___________________
+
+    def test_storage_optional_and_embedder_config():
+        # Test Knowledge with storage=None and embedder_config set
+>       knowledge = Knowledge(sources=[], storage=None, embedder_config={"provider": "watson", "config": {"model": "ibm/slate-125m-english-rtrvr"}})
+E       TypeError: Knowledge.__init__() missing 1 required positional argument: 'collection_name'
+
+tests/test_knowledge_embedder.py:24: TypeError
+____________ test_base_knowledge_source_storage_none_raises_on_save ____________
+
+    def test_base_knowledge_source_storage_none_raises_on_save():
+>       source = DummyKnowledgeSource(storage=None)
+E       TypeError: Can't instantiate abstract class DummyKnowledgeSource with abstract methods add, validate_content
+
+tests/test_knowledge_embedder.py:29: TypeError
+_________ test_base_file_knowledge_source_storage_none_raises_on_save __________
+
+    def test_base_file_knowledge_source_storage_none_raises_on_save():
+>       source = BaseFileKnowledgeSource(file_path=[Path("/tmp/file.txt")], storage=None)
+E       TypeError: Can't instantiate abstract class BaseFileKnowledgeSource with abstract methods add, load_content
+
+tests/test_knowledge_embedder.py:34: TypeError
+=============================== warnings summary ===============================
+src/crewai/tools/base_tool.py:30
+  /testbed/src/crewai/tools/base_tool.py:30: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.9/migration/
+    @validator("args_schema", always=True, pre=True)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_knowledge_embedder.py::test_storage_optional_and_embedder_config - TypeError: Knowledge.__init__() missing 1 required positional argument: 'collection_name'
+FAILED tests/test_knowledge_embedder.py::test_base_knowledge_source_storage_none_raises_on_save - TypeError: Can't instantiate abstract class DummyKnowledgeSource with abstract methods add, validate_content
+FAILED tests/test_knowledge_embedder.py::test_base_file_knowledge_source_storage_none_raises_on_save - TypeError: Can't instantiate abstract class BaseFileKnowledgeSource with abstract methods add, load_content
+======================== 3 failed, 1 warning in 21.21s =========================
+OMNIGRIL_EXIT_CODE=1
++ rc=1
++ echo OMNIGRIL_EXIT_CODE=1
++ git checkout 409892d65fab88e4a390f05c46b399b5a9260463 tests/test_knowledge_embedder.py
+error: pathspec 'tests/test_knowledge_embedder.py' did not match any file(s) known to git

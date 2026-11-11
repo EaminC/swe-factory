@@ -1,0 +1,1831 @@
+2026-11-11 11:08:16.159 | INFO     | Model API request cost info: input_tokens=1368, output_tokens=31, cost=0.000000
+2026-11-11 11:08:16.212 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:08:17.546 | INFO     | Model API request cost info: input_tokens=656, output_tokens=50, cost=0.000000
+2026-11-11 11:08:17.551 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"README.md\", \"extract environment setup instructions including dependencies, versions, and test commands\")"
+  ],
+  "collected_information": {},
+  "terminate": false
+}
+2026-11-11 11:08:17.553 | DEBUG    | Extracted a valid json
+2026-11-11 11:08:17.572 | INFO     | entering browse
+2026-11-11 11:08:17.573 | INFO     | === FILE START: testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md ===
+<div align="center">
+
+![Logo of CrewAI](./docs/crewai_logo.png)
+
+# **CrewAI**
+
+**CrewAI**: Production-grade framework for orchestrating sophisticated AI agent systems. From simple automations to complex real-world applications, CrewAI provides precise control and deep customization. By fostering collaborative intelligence through flexible, production-ready architecture, CrewAI empowers agents to work together seamlessly, tackling complex business challenges with predictable, consistent results.
+
+**CrewAI Enterprise**
+Want to plan, build (+ no code), deploy, monitor and interare your agents: [CrewAI Enterprise](https://www.crewai.com/enterprise). Designed for complex, real-world applications, our enterprise solution offers:
+
+- **Seamless Integrations**
+- **Scalable & Secure Deployment**
+- **Actionable Insights**
+- **24/7 Support**
+
+<h3>
+
+[Homepage](https://www.crewai.com/) | [Documentation](https://docs.crewai.com/) | [Chat with Docs](https://chatg.pt/DWjSBZn) | [Examples](https://github.com/crewAIInc/crewAI-examples) | [Discourse](https://community.crewai.com)
+
+</h3>
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/joaomdmoura/crewAI)](https://github.com/crewAIInc/crewAI)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+</div>
+
+## Table of contents
+
+- [Why CrewAI?](#why-crewai)
+- [Getting Started](#getting-started)
+- [Key Features](#key-features)
+- [Understanding Flows and Crews](#understanding-flows-and-crews)
+- [CrewAI vs LangGraph](#how-crewai-compares)
+- [Examples](#examples)
+  - [Quick Tutorial](#quick-tutorial)
+  - [Write Job Descriptions](#write-job-descriptions)
+  - [Trip Planner](#trip-planner)
+  - [Stock Analysis](#stock-analysis)
+  - [Using Crews and Flows Together](#using-crews-and-flows-together)
+- [Connecting Your Crew to a Model](#connecting-your-crew-to-a-model)
+- [How CrewAI Compares](#how-crewai-compares)
+- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
+- [Contribution](#contribution)
+- [Telemetry](#telemetry)
+- [License](#license)
+
+## Why CrewAI?
+
+The power of AI collaboration has too much to offer.
+CrewAI is a standalone framework, built from the ground up without dependencies on Langchain or other agent frameworks. It's designed to enable AI agents to assume roles, share goals, and operate in a cohesive unit - much like a well-oiled crew. Whether you're building a smart assistant platform, an automated customer service ensemble, or a multi-agent research team, CrewAI provides the backbone for sophisticated multi-agent interactions.
+
+## Getting Started
+
+### Learning Resources
+
+Learn CrewAI through our comprehensive courses:
+- [Multi AI Agent Systems with CrewAI](https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/) - Master the fundamentals of multi-agent systems
+- [Practical Multi AI Agents and Advanced Use Cases](https://www.deeplearning.ai/short-courses/practical-multi-ai-agents-and-advanced-use-cases-with-crewai/) - Deep dive into advanced implementations
+
+### Understanding Flows and Crews
+
+CrewAI offers two powerful, complementary approaches that work seamlessly together to build sophisticated AI applications:
+
+1. **Crews**: Teams of AI agents with true autonomy and agency, working together to accomplish complex tasks through role-based collaboration. Crews enable:
+   - Natural, autonomous decision-making between agents
+   - Dynamic task delegation and collaboration
+   - Specialized roles with defined goals and expertise
+   - Flexible problem-solving approaches
+
+2. **Flows**: Production-ready, event-driven workflows that deliver precise control over complex automations. Flows provide:
+   - Fine-grained control over execution paths for real-world scenarios
+   - Secure, consistent state management between tasks
+   - Clean integration of AI agents with production Python code
+   - Conditional branching for complex business logic
+
+The true power of CrewAI emerges when combining Crews and Flows. This synergy allows you to:
+- Build complex, production-grade applications
+- Balance autonomy with precise control
+- Handle sophisticated real-world scenarios
+- Maintain clean, maintainable code structure
+
+### Getting Started with Installation
+
+To get started with CrewAI, follow these simple steps:
+
+### 1. Installation
+
+Ensure you have Python >=3.10 <3.13 installed on your system. CrewAI uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+
+First, install CrewAI:
+
+```shell
+pip install crewai
+```
+If you want to install the 'crewai' package along with its optional features that include additional tools for agents, you can do so by using the following command:
+
+```shell
+pip install 'crewai[tools]'
+```
+The command above installs the basic package and also adds extra components which require more dependencies to function.
+
+### Troubleshooting Dependencies
+
+If you encounter issues during installation or usage, here are some common solutions:
+
+#### Common Issues
+
+1. **ModuleNotFoundError: No module named 'tiktoken'**
+   - Install tiktoken explicitly: `pip install 'crewai[embeddings]'`
+   - If using embedchain or other tools: `pip install 'crewai[tools]'`
+
+2. **Failed building wheel for tiktoken**
+   - Ensure Rust compiler is installed (see installation steps above)
+   - For Windows: Verify Visual C++ Build Tools are installed
+   - Try upgrading pip: `pip install --upgrade pip`
+   - If issues persist, use a pre-built wheel: `pip install tiktoken --prefer-binary`
+
+### 2. Setting Up Your Crew with the YAML Configuration
+
+To create a new CrewAI project, run the following CLI (Command Line Interface) command:
+
+```shell
+crewai create crew <project_name>
+```
+
+This command creates a new project folder with the following structure:
+
+```
+my_project/
+├── .gitignore
+├── pyproject.toml
+├── README.md
+├── .env
+└── src/
+    └── my_project/
+        ├── __init__.py
+        ├── main.py
+        ├── crew.py
+        ├── tools/
+        │   ├── custom_tool.py
+        │   └── __init__.py
+        └── config/
+            ├── agents.yaml
+            └── tasks.yaml
+```
+
+You can now start developing your crew by editing the files in the `src/my_project` folder. The `main.py` file is the entry point of the project, the `crew.py` file is where you define your crew, the `agents.yaml` file is where you define your agents, and the `tasks.yaml` file is where you define your tasks.
+
+#### To customize your project, you can:
+
+- Modify `src/my_project/config/agents.yaml` to define your agents.
+- Modify `src/my_project/config/tasks.yaml` to define your tasks.
+- Modify `src/my_project/crew.py` to add your own logic, tools, and specific arguments.
+- Modify `src/my_project/main.py` to add custom inputs for your agents and tasks.
+- Add your environment variables into the `.env` file.
+
+#### Example of a simple crew with a sequential process:
+
+Instantiate your crew:
+
+```shell
+crewai create crew latest-ai-development
+```
+
+Modify the files as needed to fit your use case:
+
+**agents.yaml**
+
+```yaml
+# src/my_project/config/agents.yaml
+researcher:
+  role: >
+    {topic} Senior Data Researcher
+  goal: >
+    Uncover cutting-edge developments in {topic}
+  backstory: >
+    You're a seasoned researcher with a knack for uncovering the latest
+    developments in {topic}. Known for your ability to find the most relevant
+    information and present it in a clear and concise manner.
+
+reporting_analyst:
+  role: >
+    {topic} Reporting Analyst
+  goal: >
+    Create detailed reports based on {topic} data analysis and research findings
+  backstory: >
+    You're a meticulous analyst with a keen eye for detail. You're known for
+    your ability to turn complex data into clear and concise reports, making
+    it easy for others to understand and act on the information you provide.
+```
+
+**tasks.yaml**
+
+```yaml
+# src/my_project/config/tasks.yaml
+research_task:
+  description: >
+    Conduct a thorough research about {topic}
+    Make sure you find any interesting and relevant information given
+    the current year is 2025.
+  expected_output: >
+    A list with 10 bullet points of the most relevant information about {topic}
+  agent: researcher
+
+reporting_task:
+  description: >
+    Review the context you got and expand each topic into a full section for a report.
+    Make sure the report is detailed and contains any and all relevant information.
+  expected_output: >
+    A fully fledge reports with the mains topics, each with a full section of information.
+    Formatted as markdown without '```'
+  agent: reporting_analyst
+  output_file: report.md
+```
+
+**crew.py**
+
+```python
+# src/my_project/crew.py
+from crewai import Agent, Crew, Process, Task
+from crewai.project import CrewBase, agent, crew, task
+from crewai_tools import SerperDevTool
+
+@CrewBase
+class LatestAiDevelopmentCrew():
+	"""LatestAiDevelopment crew"""
+
+	@agent
+	def researcher(self) -> Agent:
+		return Agent(
+			config=self.agents_config['researcher'],
+			verbose=True,
+			tools=[SerperDevTool()]
+		)
+
+	@agent
+	def reporting_analyst(self) -> Agent:
+		return Agent(
+			config=self.agents_config['reporting_analyst'],
+			verbose=True
+		)
+
+	@task
+	def research_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['research_task'],
+		)
+
+	@task
+	def reporting_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['reporting_task'],
+			output_file='report.md'
+		)
+
+	@crew
+	def crew(self) -> Crew:
+		"""Creates the LatestAiDevelopment crew"""
+		return Crew(
+			agents=self.agents, # Automatically created by the @agent decorator
+			tasks=self.tasks, # Automatically created by the @task decorator
+			process=Process.sequential,
+			verbose=True,
+		)
+```
+
+**main.py**
+
+```python
+#!/usr/bin/env python
+# src/my_project/main.py
+import sys
+from latest_ai_development.crew import LatestAiDevelopmentCrew
+
+def run():
+    """
+    Run the crew.
+    """
+    inputs = {
+        'topic': 'AI Agents'
+    }
+    LatestAiDevelopmentCrew().crew().kickoff(inputs=inputs)
+```
+
+### 3. Running Your Crew
+
+Before running your crew, make sure you have the following keys set as environment variables in your `.env` file:
+
+- An [OpenAI API key](https://platform.openai.com/account/api-keys) (or other LLM API key): `OPENAI_API_KEY=sk-...`
+- A [Serper.dev](https://serper.dev/) API key: `SERPER_API_KEY=YOUR_KEY_HERE`
+
+Lock the dependencies and install them by using the CLI command but first, navigate to your project directory:
+
+```shell
+cd my_project
+crewai install (Optional)
+```
+
+To run your crew, execute the following command in the root of your project:
+
+```bash
+crewai run
+```
+
+or
+
+```bash
+python src/my_project/main.py
+```
+
+If an error happens due to the usage of poetry, please run the following command to update your crewai package:
+
+```bash
+crewai update
+```
+
+You should see the output in the console and the `report.md` file should be created in the root of your project with the full final report.
+
+In addition to the sequential process, you can use the hierarchical process, which automatically assigns a manager to the defined crew to properly coordinate the planning and execution of tasks through delegation and validation of results. [See more about the processes here](https://docs.crewai.com/core-concepts/Processes/).
+
+## Key Features
+
+**Note**: CrewAI is a standalone framework built from the ground up, without dependencies on Langchain or other agent frameworks.
+
+- **Deep Customization**: Build sophisticated agents with full control over the system - from overriding inner prompts to accessing low-level APIs. Customize roles, goals, tools, and behaviors while maintaining clean abstractions.
+- **Autonomous Inter-Agent Delegation**: Agents can autonomously delegate tasks and inquire amongst themselves, enabling complex problem-solving in real-world scenarios.
+- **Flexible Task Management**: Define and customize tasks with granular control, from simple operations to complex multi-step processes.
+- **Production-Grade Architecture**: Support for both high-level abstractions and low-level customization, with robust error handling and state management.
+- **Predictable Results**: Ensure consistent, accurate outputs through programmatic guardrails, agent training capabilities, and flow-based execution control. See our [documentation on guardrails](https://docs.crewai.com/how-to/guardrails/) for implementation details.
+- **Model Flexibility**: Run your crew using OpenAI or open source models with production-ready integrations. See [Connect CrewAI to LLMs](https://docs.crewai.com/how-to/LLM-Connections/) for detailed configuration options.
+- **Event-Driven Flows**: Build complex, real-world workflows with precise control over execution paths, state management, and conditional logic.
+- **Process Orchestration**: Achieve any workflow pattern through flows - from simple sequential and hierarchical processes to complex, custom orchestration patterns with conditional branching and parallel execution.
+
+![CrewAI Mind Map](./docs/crewAI-mindmap.png "CrewAI Mind Map")
+
+## Examples
+
+You can test different real life examples of AI crews in the [CrewAI-examples repo](https://github.com/crewAIInc/crewAI-examples?tab=readme-ov-file):
+
+- [Landing Page Generator](https://github.com/crewAIInc/crewAI-examples/tree/main/landing_page_generator)
+- [Having Human input on the execution](https://docs.crewai.com/how-to/Human-Input-on-Execution)
+- [Trip Planner](https://github.com/crewAIInc/crewAI-examples/tree/main/trip_planner)
+- [Stock Analysis](https://github.com/crewAIInc/crewAI-examples/tree/main/stock_analysis)
+
+### Quick Tutorial
+
+[![CrewAI Tutorial](https://img.youtube.com/vi/tnejrr-0a94/maxresdefault.jpg)](https://www.youtube.com/watch?v=tnejrr-0a94 "CrewAI Tutorial")
+
+### Write Job Descriptions
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/job-posting) or watch a video below:
+
+[![Jobs postings](https://img.youtube.com/vi/u98wEMz-9to/maxresdefault.jpg)](https://www.youtube.com/watch?v=u98wEMz-9to "Jobs postings")
+
+### Trip Planner
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/trip_planner) or watch a video below:
+
+[![Trip Planner](https://img.youtube.com/vi/xis7rWp-hjs/maxresdefault.jpg)](https://www.youtube.com/watch?v=xis7rWp-hjs "Trip Planner")
+
+### Stock Analysis
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/stock_analysis) or watch a video below:
+
+[![Stock Analysis](https://img.youtube.com/vi/e0Uj4yWdaAg/maxresdefault.jpg)](https://www.youtube.com/watch?v=e0Uj4yWdaAg "Stock Analysis")
+
+### Using Crews and Flows Together
+
+CrewAI's power truly shines when combining Crews with Flows to create sophisticated automation pipelines. Here's how you can orchestrate multiple Crews within a Flow:
+
+```python
+from crewai.flow.flow import Flow, listen, start, router
+from crewai import Crew, Agent, Task
+from pydantic import BaseModel
+
+# Define structured state for precise control
+class MarketState(BaseModel):
+    sentiment: str = "neutral"
+    confidence: float = 0.0
+    recommendations: list = []
+
+class AdvancedAnalysisFlow(Flow[MarketState]):
+    @start()
+    def fetch_market_data(self):
+        # Demonstrate low-level control with structured state
+        self.state.sentiment = "analyzing"
+        return {"sector": "tech", "timeframe": "1W"}  # These parameters match the task description template
+
+    @listen(fetch_market_data)
+    def analyze_with_crew(self, market_data):
+        # Show crew agency through specialized roles
+        analyst = Agent(
+            role="Senior Market Analyst",
+            goal="Conduct deep market analysis with expert insight",
+            backstory="You're a veteran analyst known for identifying subtle market patterns"
+        )
+        researcher = Agent(
+            role="Data Researcher",
+            goal="Gather and validate supporting market data",
+            backstory="You excel at finding and correlating multiple data sources"
+        )
+
+        analysis_task = Task(
+            description="Analyze {sector} sector data for the past {timeframe}",
+            expected_output="Detailed market analysis with confidence score",
+            agent=analyst
+        )
+        research_task = Task(
+            description="Find supporting data to validate the analysis",
+            expected_output="Corroborating evidence and potential contradictions",
+            agent=researcher
+        )
+
+        # Demonstrate crew autonomy
+        analysis_crew = Crew(
+            agents=[analyst, researcher],
+            tasks=[analysis_task, research_task],
+            process=Process.sequential,
+            verbose=True
+        )
+        return analysis_crew.kickoff(inputs=market_data)  # Pass market_data as named inputs
+
+    @router(analyze_with_crew)
+    def determine_next_steps(self):
+        # Show flow control with conditional routing
+        if self.state.confidence > 0.8:
+            return "high_confidence"
+        elif self.state.confidence > 0.5:
+            return "medium_confidence"
+        return "low_confidence"
+
+    @listen("high_confidence")
+    def execute_strategy(self):
+        # Demonstrate complex decision making
+        strategy_crew = Crew(
+            agents=[
+                Agent(role="Strategy Expert",
+                      goal="Develop optimal market strategy")
+            ],
+            tasks=[
+                Task(description="Create detailed strategy based on analysis",
+                     expected_output="Step-by-step action plan")
+            ]
+        )
+        return strategy_crew.kickoff()
+
+    @listen("medium_confidence", "low_confidence")
+    def request_additional_analysis(self):
+        self.state.recommendations.append("Gather more data")
+        return "Additional analysis required"
+```
+
+This example demonstrates how to:
+1. Use Python code for basic data operations
+2. Create and execute Crews as steps in your workflow
+3. Use Flow decorators to manage the sequence of operations
+4. Implement conditional branching based on Crew results
+
+## Connecting Your Crew to a Model
+
+CrewAI supports using various LLMs through a variety of connection options. By default your agents will use the OpenAI API when querying the model. However, there are several other ways to allow your agents to connect to models. For example, you can configure your agents to use a local model via the Ollama tool.
+
+Please refer to the [Connect CrewAI to LLMs](https://docs.crewai.com/how-to/LLM-Connections/) page for details on configuring you agents' connections to models.
+
+## How CrewAI Compares
+
+**CrewAI's Advantage**: CrewAI combines autonomous agent intelligence with precise workflow control through its unique Crews and Flows architecture. The framework excels at both high-level orchestration and low-level customization, enabling complex, production-grade systems with granular control.
+
+- **LangGraph**: While LangGraph provides a foundation for building agent workflows, its approach requires significant boilerplate code and complex state management patterns. The framework's tight coupling with LangChain can limit flexibility when implementing custom agent behaviors or integrating with external systems.
+
+*P.S. CrewAI demonstrates significant performance advantages over LangGraph, executing 5.76x faster in certain cases like this QA task example ([see comparison](https://github.com/crewAIInc/crewAI-examples/tree/main/Notebooks/CrewAI%20Flows%20%26%20Langgraph/QA%20Agent)) while achieving higher evaluation scores with faster completion times in certain coding tasks, like in this example ([detailed analysis](https://github.com/crewAIInc/crewAI-examples/blob/main/Notebooks/CrewAI%20Flows%20%26%20Langgraph/Coding%20Assistant/coding_assistant_eval.ipynb)).*
+
+- **Autogen**: While Autogen excels at creating conversational agents capable of working together, it lacks an inherent concept of process. In Autogen, orchestrating agents' interactions requires additional programming, which can become complex and cumbersome as the scale of tasks grows.
+
+- **ChatDev**: ChatDev introduced the idea of processes into the realm of AI agents, but its implementation is quite rigid. Customizations in ChatDev are limited and not geared towards production environments, which can hinder scalability and flexibility in real-world applications.
+
+## Contribution
+
+CrewAI is open-source and we welcome contributions. If you're looking to contribute, please:
+
+- Fork the repository.
+- Create a new branch for your feature.
+- Add your feature or improvement.
+- Send a pull request.
+- We appreciate your input!
+
+### Installing Dependencies
+
+```bash
+uv lock
+uv sync
+```
+
+### Virtual Env
+
+```bash
+uv venv
+```
+
+### Pre-commit hooks
+
+```bash
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+uv run pytest .
+```
+
+### Running static type checks
+
+```bash
+uvx mypy src
+```
+
+### Packaging
+
+```bash
+uv build
+```
+
+### Installing Locally
+
+```bash
+pip install dist/*.tar.gz
+```
+
+## Telemetry
+
+CrewAI uses anonymous telemetry to collect usage data with the main purpose of helping us improve the library by focusing our efforts on the most used features, integrations and tools.
+
+It's pivotal to understand that **NO data is collected** concerning prompts, task descriptions, agents' backstories or goals, usage of tools, API calls, responses, any data processed by the agents, or secrets and environment variables, with the exception of the conditions mentioned. When the `share_crew` feature is enabled, detailed data including task descriptions, agents' backstories or goals, and other specific attributes are collected to provide deeper insights while respecting user privacy. Users can disable telemetry by setting the environment variable OTEL_SDK_DISABLED to true.
+
+Data collected includes:
+
+- Version of CrewAI
+  - So we can understand how many users are using the latest version
+- Version of Python
+  - So we can decide on what versions to better support
+- General OS (e.g. number of CPUs, macOS/Windows/Linux)
+  - So we know what OS we should focus on and if we could build specific OS related features
+- Number of agents and tasks in a crew
+  - So we make sure we are testing internally with similar use cases and educate people on the best practices
+- Crew Process being used
+  - Understand where we should focus our efforts
+- If Agents are using memory or allowing delegation
+  - Understand if we improved the features or maybe even drop them
+- If Tasks are being executed in parallel or sequentially
+  - Understand if we should focus more on parallel execution
+- Language model being used
+  - Improved support on most used languages
+- Roles of agents in a crew
+  - Understand high level use cases so we can build better tools, integrations and examples about it
+- Tools names available
+  - Understand out of the publicly available tools, which ones are being used the most so we can improve them
+
+Users can opt-in to Further Telemetry, sharing the complete telemetry data by setting the `share_crew` attribute to `True` on their Crews. Enabling `share_crew` results in the collection of detailed crew and task execution data, including `goal`, `backstory`, `context`, and `output` of tasks. This enables a deeper insight into usage patterns while respecting the user's choice to share.
+
+## License
+
+CrewAI is released under the [MIT License](https://github.com/crewAIInc/crewAI/blob/main/LICENSE).
+
+## Frequently Asked Questions (FAQ)
+
+### Q: What is CrewAI?
+A: CrewAI is a cutting-edge framework for orchestrating role-playing, autonomous AI agents. It enables agents to work together seamlessly, tackling complex tasks through collaborative intelligence.
+
+### Q: How do I install CrewAI?
+A: You can install CrewAI using pip:
+```shell
+pip install crewai
+```
+For additional tools, use:
+```shell
+pip install 'crewai[tools]'
+```
+
+### Q: Can I use CrewAI with local models?
+A: Yes, CrewAI supports various LLMs, including local models. You can configure your agents to use local models via tools like Ollama & LM Studio. Check the [LLM Connections documentation](https://docs.crewai.com/how-to/LLM-Connections/) for more details.
+
+### Q: What are the key features of CrewAI?
+A: Key features include role-based agent design, autonomous inter-agent delegation, flexible task management, process-driven execution, output saving as files, and compatibility with both open-source and proprietary models.
+
+### Q: How does CrewAI compare to other AI orchestration tools?
+A: CrewAI is designed with production in mind, offering flexibility similar to Autogen's conversational agents and structured processes like ChatDev, but with more adaptability for real-world applications.
+
+### Q: Is CrewAI open-source?
+A: Yes, CrewAI is open-source and welcomes contributions from the community.
+
+### Q: Does CrewAI collect any data?
+A: CrewAI uses anonymous telemetry to collect usage data for improvement purposes. No sensitive data (like prompts, task descriptions, or API calls) is collected. Users can opt-in to share more detailed data by setting `share_crew=True` on their Crews.
+
+### Q: Where can I find examples of CrewAI in action?
+A: You can find various real-life examples in the [CrewAI-examples repository](https://github.com/crewAIInc/crewAI-examples), including trip planners, stock analysis tools, and more.
+
+### Q: What is the difference between Crews and Flows?
+A: Crews and Flows serve different but complementary purposes in CrewAI. Crews are teams of AI agents working together to accomplish specific tasks through role-based collaboration, delivering accurate and predictable results. Flows, on the other hand, are event-driven workflows that can orchestrate both Crews and regular Python code, allowing you to build complex automation pipelines with secure state management and conditional execution paths.
+
+### Q: How can I contribute to CrewAI?
+A: Contributions are welcome! You can fork the repository, create a new branch for your feature, add your improvement, and send a pull request. Check the Contribution section in the README for more details.
+
+=== FILE END:   testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md ===
+2026-11-11 11:08:17.574 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 11:08:21.762 | INFO     | Model API request cost info: input_tokens=6393, output_tokens=457, cost=0.000000
+2026-11-11 11:08:21.769 | SUCCESS  | Successfully extracted environment config
+2026-11-11 11:08:21.770 | INFO     | ******
+2026-11-11 11:08:21.770 | INFO     | [Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md]
+- Runtime Requirements:
+  - Python version: >=3.10 and <3.13
+- Installation:
+  - Basic install: `pip install crewai`
+  - With optional tools/features: `pip install 'crewai[tools]'`
+- Dependency management:
+  - Uses UV (https://docs.astral.sh/uv/) for dependency management and package handling
+  - Common dependency troubleshooting:
+    - For missing 'tiktoken': `pip install 'crewai[embeddings]'` or `pip install 'crewai[tools]'`
+    - If wheel build fails for tiktoken, install Rust compiler, Visual C++ Build Tools on Windows, upgrade pip, or use pre-built wheel: `pip install tiktoken --prefer-binary`
+- Environment Variables required (set in `.env`):
+  - `OPENAI_API_KEY` (OpenAI API key)
+  - `SERPER_API_KEY` (Serper.dev API key)
+  - Optional to disable telemetry: `OTEL_SDK_DISABLED=true`
+- Project setup:
+  - Create crew project: `crewai create crew <project_name>`
+  - Navigate into project directory: `cd my_project`
+  - Optional dependency install/lock: `crewai install`
+- Virtual environment:
+  - Create venv: `uv venv`
+- Dependency lock and sync commands:
+  - `uv lock`
+  - `uv sync`
+- Pre-commit hooks:
+  - `pre-commit install`
+- Running tests:
+  - Run the full test suite: `uv run pytest .`
+- Running static type checks:
+  - `uvx mypy src`
+- Packaging and local install:
+  - Build package: `uv build`
+  - Install locally from dist: `pip install dist/*.tar.gz`
+- Running the crew:
+  - Run crew: `crewai run`
+  - Or run main Python script: `python src/my_project/main.py`
+- Updating crewai package if poetry error occurs:
+  - `crewai update`
+[/Key Information]
+2026-11-11 11:08:21.770 | INFO     | ******
+2026-11-11 11:08:21.770 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md]\n- Runtime Requirements:\n  - Python version: >=3.10 and <3.13\n- Installation:\n  - Basic install: `pip install crewai`\n  - With optional tools/features: `pip install 'crewai[tools]'`\n- Dependency management:\n  - Uses UV (https://docs.astral.sh/uv/) for dependency management and package handling\n  - Common dependency troubleshooting:\n    - For missing 'tiktoken': `pip install 'crewai[embeddings]'` or `pip install 'crewai[tools]'`\n    - If wheel build fails for tiktoken, install Rust compiler, Visual C++ Build Tools on Windows, upgrade pip, or use pre-built wheel: `pip install tiktoken --prefer-binary`\n- Environment Variables required (set in `.env`):\n  - `OPENAI_API_KEY` (OpenAI API key)\n  - `SERPER_API_KEY` (Serper.dev API key)\n  - Optional to disable telemetry: `OTEL_SDK_DISABLED=true`\n- Project setup:\n  - Create crew project: `crewai create crew <project_name>`\n  - Navigate into project directory: `cd my_project`\n  - Optional dependency install/lock: `crewai install`\n- Virtual environment:\n  - Create venv: `uv venv`\n- Dependency lock and sync commands:\n  - `uv lock`\n  - `uv sync`\n- Pre-commit hooks:\n  - `pre-commit install`\n- Running tests:\n  - Run the full test suite: `uv run pytest .`\n- Running static type checks:\n  - `uvx mypy src`\n- Packaging and local install:\n  - Build package: `uv build`\n  - Install locally from dist: `pip install dist/*.tar.gz`\n- Running the crew:\n  - Run crew: `crewai run`\n  - Or run main Python script: `python src/my_project/main.py`\n- Updating crewai package if poetry error occurs:\n  - `crewai update`\n[/Key Information]", 'Get File Info', True)
+2026-11-11 11:08:25.976 | INFO     | Model API request cost info: input_tokens=2509, output_tokens=52, cost=0.000000
+2026-11-11 11:08:25.983 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:08:27.937 | INFO     | Model API request cost info: input_tokens=996, output_tokens=144, cost=0.000000
+2026-11-11 11:08:27.940 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\".github\", \"1\")",
+    "browse_folder(\"tests\", \"1\")",
+    "browse_folder(\".\", \"1\")"
+  ],
+  "collected_information": "Collected initial README.md information includes environment setup, dependencies, Python version, environment variables, virtual environment creation, dependency sync commands, and general test execution commands.\nPending: Exact dependency versions and specific test commands for individual test files not yet found. To find these, browsing top-level directory for requirements.txt, requirements-test.txt, pyproject.toml, and browsing .github and tests folders for CI configurations and test instructions is planned.",
+  "terminate": false
+}
+2026-11-11 11:08:27.940 | DEBUG    | Extracted a valid json
+2026-11-11 11:08:27.943 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/.github. The browsing Depth is 1.\nStructure of this directory:\n\nsecurity.md\n\nworkflows/\n\nISSUE_TEMPLATE/\n\n', 'folder structure collected', True)
+2026-11-11 11:08:27.943 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/tests. The browsing Depth is 1.\nStructure of this directory:\n\nflow_test.py\n\ncrew_test.py\n\ntask_test.py\n\ntest_task_guardrails.py\n\nconftest.py\n\ntest_flow_persistence.py\n\nllm_test.py\n\nproject_test.py\n\n__init__.py\n\ntest_flow_default_override.py\n\nagent_test.py\n\ncli/\n\ncassettes/\n\nagents/\n\ntools/\n\nmemory/\n\nconfig/\n\nknowledge/\n\nflow/\n\npipeline/\n\nutilities/\n\n', 'folder structure collected', True)
+2026-11-11 11:08:27.944 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17. The browsing Depth is 1.\nStructure of this directory:\n\nmkdocs.yml\n\n.pre-commit-config.yaml\n\n.editorconfig\n\nREADME.md\n\n.ruff.toml\n\nuv.lock\n\n.gitignore\n\npyproject.toml\n\nLICENSE\n\ncrewAI.excalidraw\n\ndocs/\n\n.git/\n\nsrc/\n\ntests/\n\n.github/\n\n.cache/\n\n', 'folder structure collected', True)
+2026-11-11 11:08:32.299 | INFO     | Model API request cost info: input_tokens=3451, output_tokens=42, cost=0.000000
+2026-11-11 11:08:32.325 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:08:34.612 | INFO     | Model API request cost info: input_tokens=948, output_tokens=152, cost=0.000000
+2026-11-11 11:08:34.620 | DEBUG    | {
+  "API_calls": [
+    "browse_folder(\".github/workflows\", \"1\")",
+    "browse_file_for_environment_info(\"pyproject.toml\", \"dependency versions and Python environment details\")"
+  ],
+  "collected_information": "General environment info includes Python >=3.10,<3.13, using UV for dependency management with uv.lock and pyproject.toml defining dependencies. Generic test command via `uv run pytest .` found. No requirements.txt found. Tests folder lacks README/CONTRIBUTING.md. .github/workflows folder not yet explored for CI/test details, planned next. Targeted test file specific commands not found, generic command assumed sufficient unless CI reveals otherwise.",
+  "terminate": false
+}
+2026-11-11 11:08:34.621 | DEBUG    | Extracted a valid json
+2026-11-11 11:08:34.632 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/.github/workflows. The browsing Depth is 1.\nStructure of this directory:\n\ntests.yml\n\nmkdocs.yml\n\ntype-checker.yml\n\nstale.yml\n\nsecurity-checker.yml\n\nlinter.yml\n\n', 'folder structure collected', True)
+2026-11-11 11:08:34.634 | INFO     | entering browse
+2026-11-11 11:08:34.635 | INFO     | === FILE START: testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml ===
+[project]
+name = "crewai"
+version = "0.102.0"
+description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+authors = [
+    { name = "Joao Moura", email = "joao@crewai.com" }
+]
+dependencies = [
+    # Core Dependencies
+    "pydantic>=2.4.2",
+    "openai>=1.13.3",
+    "litellm==1.60.2",
+    "instructor>=1.3.3",
+    # Text Processing
+    "pdfplumber>=0.11.4",
+    "regex>=2024.9.11",
+    # Telemetry and Monitoring
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.22.0",
+    # Data Handling
+    "chromadb>=0.5.23",
+    "openpyxl>=3.1.5",
+    "pyvis>=0.3.2",
+    # Authentication and Security
+    "auth0-python>=4.7.1",
+    "python-dotenv>=1.0.0",
+    # Configuration and Utils
+    "click>=8.1.7",
+    "appdirs>=1.4.4",
+    "jsonref>=1.1.0",
+    "json-repair>=0.25.2",
+    "uv>=0.4.25",
+    "tomli-w>=1.1.0",
+    "tomli>=2.0.2",
+    "blinker>=1.9.0",
+    "json5>=0.10.0",
+]
+
+[project.urls]
+Homepage = "https://crewai.com"
+Documentation = "https://docs.crewai.com"
+Repository = "https://github.com/crewAIInc/crewAI"
+
+[project.optional-dependencies]
+tools = ["crewai-tools>=0.36.0"]
+embeddings = [
+    "tiktoken~=0.7.0"
+]
+agentops = ["agentops>=0.3.0"]
+fastembed = ["fastembed>=0.4.1"]
+pdfplumber = [
+    "pdfplumber>=0.11.4",
+]
+pandas = [
+    "pandas>=2.2.3",
+]
+openpyxl = [
+    "openpyxl>=3.1.5",
+]
+mem0 = ["mem0ai>=0.1.29"]
+docling = [
+    "docling>=2.12.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.8.2",
+    "mypy>=1.10.0",
+    "pre-commit>=3.6.0",
+    "mkdocs>=1.4.3",
+    "mkdocstrings>=0.22.0",
+    "mkdocstrings-python>=1.1.2",
+    "mkdocs-material>=9.5.7",
+    "mkdocs-material-extensions>=1.3.1",
+    "pillow>=10.2.0",
+    "cairosvg>=2.7.1",
+    "pytest>=8.0.0",
+    "pytest-vcr>=1.0.2",
+    "python-dotenv>=1.0.0",
+    "pytest-asyncio>=0.23.7",
+    "pytest-subprocess>=1.5.2",
+]
+
+[project.scripts]
+crewai = "crewai.cli.cli:crewai"
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = 'import-untyped'
+exclude = ["cli/templates"]
+
+[tool.bandit]
+exclude_dirs = ["src/crewai/cli/templates"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+=== FILE END:   testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml ===
+2026-11-11 11:08:34.635 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 11:08:41.361 | INFO     | Model API request cost info: input_tokens=1455, output_tokens=695, cost=0.000000
+2026-11-11 11:08:41.362 | SUCCESS  | Successfully extracted environment config
+2026-11-11 11:08:41.362 | INFO     | ******
+2026-11-11 11:08:41.362 | INFO     | [Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml]
+- Python environment:
+  - Requires Python version >=3.10 and <3.13
+- Core dependencies (with version constraints):
+  - pydantic>=2.4.2
+  - openai>=1.13.3
+  - litellm==1.60.2
+  - instructor>=1.3.3
+  - pdfplumber>=0.11.4
+  - regex>=2024.9.11
+  - opentelemetry-api>=1.22.0
+  - opentelemetry-sdk>=1.22.0
+  - opentelemetry-exporter-otlp-proto-http>=1.22.0
+  - chromadb>=0.5.23
+  - openpyxl>=3.1.5
+  - pyvis>=0.3.2
+  - auth0-python>=4.7.1
+  - python-dotenv>=1.0.0
+  - click>=8.1.7
+  - appdirs>=1.4.4
+  - jsonref>=1.1.0
+  - json-repair>=0.25.2
+  - uv>=0.4.25
+  - tomli-w>=1.1.0
+  - tomli>=2.0.2
+  - blinker>=1.9.0
+  - json5>=0.10.0
+- Optional dependencies categories with versions:
+  - tools: crewai-tools>=0.36.0
+  - embeddings: tiktoken~=0.7.0
+  - agentops: agentops>=0.3.0
+  - fastembed: fastembed>=0.4.1
+  - pdfplumber: pdfplumber>=0.11.4
+  - pandas: pandas>=2.2.3
+  - openpyxl: openpyxl>=3.1.5
+  - mem0: mem0ai>=0.1.29
+  - docling: docling>=2.12.0
+- Development dependencies (under [tool.uv] dev-dependencies):
+  - ruff>=0.8.2
+  - mypy>=1.10.0
+  - pre-commit>=3.6.0
+  - mkdocs>=1.4.3
+  - mkdocstrings>=0.22.0
+  - mkdocstrings-python>=1.1.2
+  - mkdocs-material>=9.5.7
+  - mkdocs-material-extensions>=1.3.1
+  - pillow>=10.2.0
+  - cairosvg>=2.7.1
+  - pytest>=8.0.0
+  - pytest-vcr>=1.0.2
+  - python-dotenv>=1.0.0
+  - pytest-asyncio>=0.23.7
+  - pytest-subprocess>=1.5.2
+- Build system:
+  - requires: hatchling
+  - build-backend: hatchling.build
+[/Key Information]
+2026-11-11 11:08:41.362 | INFO     | ******
+2026-11-11 11:08:41.362 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml]\n- Python environment:\n  - Requires Python version >=3.10 and <3.13\n- Core dependencies (with version constraints):\n  - pydantic>=2.4.2\n  - openai>=1.13.3\n  - litellm==1.60.2\n  - instructor>=1.3.3\n  - pdfplumber>=0.11.4\n  - regex>=2024.9.11\n  - opentelemetry-api>=1.22.0\n  - opentelemetry-sdk>=1.22.0\n  - opentelemetry-exporter-otlp-proto-http>=1.22.0\n  - chromadb>=0.5.23\n  - openpyxl>=3.1.5\n  - pyvis>=0.3.2\n  - auth0-python>=4.7.1\n  - python-dotenv>=1.0.0\n  - click>=8.1.7\n  - appdirs>=1.4.4\n  - jsonref>=1.1.0\n  - json-repair>=0.25.2\n  - uv>=0.4.25\n  - tomli-w>=1.1.0\n  - tomli>=2.0.2\n  - blinker>=1.9.0\n  - json5>=0.10.0\n- Optional dependencies categories with versions:\n  - tools: crewai-tools>=0.36.0\n  - embeddings: tiktoken~=0.7.0\n  - agentops: agentops>=0.3.0\n  - fastembed: fastembed>=0.4.1\n  - pdfplumber: pdfplumber>=0.11.4\n  - pandas: pandas>=2.2.3\n  - openpyxl: openpyxl>=3.1.5\n  - mem0: mem0ai>=0.1.29\n  - docling: docling>=2.12.0\n- Development dependencies (under [tool.uv] dev-dependencies):\n  - ruff>=0.8.2\n  - mypy>=1.10.0\n  - pre-commit>=3.6.0\n  - mkdocs>=1.4.3\n  - mkdocstrings>=0.22.0\n  - mkdocstrings-python>=1.1.2\n  - mkdocs-material>=9.5.7\n  - mkdocs-material-extensions>=1.3.1\n  - pillow>=10.2.0\n  - cairosvg>=2.7.1\n  - pytest>=8.0.0\n  - pytest-vcr>=1.0.2\n  - python-dotenv>=1.0.0\n  - pytest-asyncio>=0.23.7\n  - pytest-subprocess>=1.5.2\n- Build system:\n  - requires: hatchling\n  - build-backend: hatchling.build\n[/Key Information]', 'Get File Info', True)
+2026-11-11 11:08:55.519 | INFO     | Model API request cost info: input_tokens=4846, output_tokens=1147, cost=0.000000
+2026-11-11 11:08:55.557 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:08:57.838 | INFO     | Model API request cost info: input_tokens=924, output_tokens=148, cost=0.000000
+2026-11-11 11:08:57.844 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "Python_version": ">=3.10, <3.13",
+    "Core_dependencies": "Detailed with versions from pyproject.toml",
+    "Optional_and_dev_dependencies": "Including pytest, pytest-asyncio, pytest-vcr, etc., with specific versions",
+    "Installation_instructions": "Install the package using UV and general dependency installation as per README.md",
+    "Test_execution_command": "uv run pytest .",
+    "Notes": "No requirements-test.txt file present; .github/workflows/tests.yml not inspected but deemed unnecessary; no specific per-test run commands found or required"
+  },
+  "terminate": true
+}
+2026-11-11 11:08:57.844 | DEBUG    | Extracted a valid json
+2026-11-11 11:08:57.853 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-11-11 11:09:02.744 | INFO     | Model API request cost info: input_tokens=1849, output_tokens=512, cost=0.000000
+2026-11-11 11:09:02.749 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-11-11 11:09:02.782 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 11:09:05.137 | INFO     | Model API request cost info: input_tokens=1923, output_tokens=230, cost=0.000000
+2026-11-11 11:09:05.138 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 11:24:47.765 | DEBUG    | Result of dispatch_intent: ("Step 13/15 : RUN poetry config virtualenvs.create false &&     poetry install --no-interaction --no-ansi --with dev,optional &&     pip install -e .\n ---> Running in 43107a9fdf01\n[tool.poetry] section not found in /testbed/pyproject.toml\n ---> Removed intermediate container 43107a9fdf01\nError: The command '/bin/bash -c poetry config virtualenvs.create false &&     poetry install --no-interaction --no-ansi --with dev,optional &&     pip install -e .' returned a non-zero code: 1", 'Failed to build Docker image.', False)
+2026-11-11 11:24:47.779 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 11:24:52.484 | INFO     | Model API request cost info: input_tokens=2045, output_tokens=415, cost=0.000000
+2026-11-11 11:24:52.485 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails at the step 'RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --with dev,optional && pip install -e .' with the error: '[tool.poetry] section not found in /testbed/pyproject.toml'. This indicates that the pyproject.toml in the cloned repository at commit 34d299345677c7ce26b1368f240c559596526fa7 does not contain a [tool.poetry] section, which is necessary for Poetry to manage dependencies. Without this section, Poetry cannot install dependencies, causing the build to fail. Verify that the correct commit is checked out and that the repository uses Poetry; if it does not use Poetry or uses another dependency manager, adapt the Dockerfile accordingly. Possibly, the project does not use Poetry but pip or another system; consider checking the repository's dependency management method and adjust the Dockerfile to install dependencies using the correct tool. Alternatively, check if a different or additional setup step is required before running poetry install. The error prevents the image from building, so the Dockerfile must be fixed before tests can run.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "The Dockerfile build failure due to missing '[tool.poetry]' section in pyproject.toml suggests unclear or missing dependency management information. Please retrieve and provide the contents of the pyproject.toml file at commit 34d299345677c7ce26b1368f240c559596526fa7, as well as any alternative dependency or environment management files found in the repository root such as requirements.txt, setup.py, Pipfile, or environment.yml. Additionally, review and provide any documentation files like README.md or CONTRIBUTING.md that describe dependency installation or environment setup instructions. This information is critical to correctly configure the Dockerfile for the repository's environment."
+}
+2026-11-11 11:24:52.485 | DEBUG    | Extracted a valid json
+2026-11-11 11:24:54.526 | INFO     | Model API request cost info: input_tokens=1566, output_tokens=72, cost=0.000000
+2026-11-11 11:24:54.533 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:24:56.022 | INFO     | Model API request cost info: input_tokens=685, output_tokens=79, cost=0.000000
+2026-11-11 11:24:56.023 | DEBUG    | {
+  "API_calls": [
+    "browse_file_for_environment_info(\"pyproject.toml\", \"extract environment setup and dependency details\")",
+    "browse_file_for_environment_info(\"README.md\", \"extract environment setup and running test information\")",
+    "browse_folder(\"/\", \"1\")"
+  ],
+  "collected_information": null,
+  "terminate": false
+}
+2026-11-11 11:24:56.024 | DEBUG    | Extracted a valid json
+2026-11-11 11:24:56.029 | INFO     | entering browse
+2026-11-11 11:24:56.032 | INFO     | === FILE START: testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml ===
+[project]
+name = "crewai"
+version = "0.102.0"
+description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+authors = [
+    { name = "Joao Moura", email = "joao@crewai.com" }
+]
+dependencies = [
+    # Core Dependencies
+    "pydantic>=2.4.2",
+    "openai>=1.13.3",
+    "litellm==1.60.2",
+    "instructor>=1.3.3",
+    # Text Processing
+    "pdfplumber>=0.11.4",
+    "regex>=2024.9.11",
+    # Telemetry and Monitoring
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.22.0",
+    # Data Handling
+    "chromadb>=0.5.23",
+    "openpyxl>=3.1.5",
+    "pyvis>=0.3.2",
+    # Authentication and Security
+    "auth0-python>=4.7.1",
+    "python-dotenv>=1.0.0",
+    # Configuration and Utils
+    "click>=8.1.7",
+    "appdirs>=1.4.4",
+    "jsonref>=1.1.0",
+    "json-repair>=0.25.2",
+    "uv>=0.4.25",
+    "tomli-w>=1.1.0",
+    "tomli>=2.0.2",
+    "blinker>=1.9.0",
+    "json5>=0.10.0",
+]
+
+[project.urls]
+Homepage = "https://crewai.com"
+Documentation = "https://docs.crewai.com"
+Repository = "https://github.com/crewAIInc/crewAI"
+
+[project.optional-dependencies]
+tools = ["crewai-tools>=0.36.0"]
+embeddings = [
+    "tiktoken~=0.7.0"
+]
+agentops = ["agentops>=0.3.0"]
+fastembed = ["fastembed>=0.4.1"]
+pdfplumber = [
+    "pdfplumber>=0.11.4",
+]
+pandas = [
+    "pandas>=2.2.3",
+]
+openpyxl = [
+    "openpyxl>=3.1.5",
+]
+mem0 = ["mem0ai>=0.1.29"]
+docling = [
+    "docling>=2.12.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.8.2",
+    "mypy>=1.10.0",
+    "pre-commit>=3.6.0",
+    "mkdocs>=1.4.3",
+    "mkdocstrings>=0.22.0",
+    "mkdocstrings-python>=1.1.2",
+    "mkdocs-material>=9.5.7",
+    "mkdocs-material-extensions>=1.3.1",
+    "pillow>=10.2.0",
+    "cairosvg>=2.7.1",
+    "pytest>=8.0.0",
+    "pytest-vcr>=1.0.2",
+    "python-dotenv>=1.0.0",
+    "pytest-asyncio>=0.23.7",
+    "pytest-subprocess>=1.5.2",
+]
+
+[project.scripts]
+crewai = "crewai.cli.cli:crewai"
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = 'import-untyped'
+exclude = ["cli/templates"]
+
+[tool.bandit]
+exclude_dirs = ["src/crewai/cli/templates"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+=== FILE END:   testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml ===
+2026-11-11 11:24:56.032 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 11:25:03.127 | INFO     | Model API request cost info: input_tokens=1455, output_tokens=743, cost=0.000000
+2026-11-11 11:25:03.134 | SUCCESS  | Successfully extracted environment config
+2026-11-11 11:25:03.134 | INFO     | ******
+2026-11-11 11:25:03.135 | INFO     | [Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml]
+- Python version requirement:
+  - ">=3.10,<3.13"
+- Core dependencies with exact versions or ranges:
+  - pydantic>=2.4.2
+  - openai>=1.13.3
+  - litellm==1.60.2
+  - instructor>=1.3.3
+  - pdfplumber>=0.11.4
+  - regex>=2024.9.11
+  - opentelemetry-api>=1.22.0
+  - opentelemetry-sdk>=1.22.0
+  - opentelemetry-exporter-otlp-proto-http>=1.22.0
+  - chromadb>=0.5.23
+  - openpyxl>=3.1.5
+  - pyvis>=0.3.2
+  - auth0-python>=4.7.1
+  - python-dotenv>=1.0.0
+  - click>=8.1.7
+  - appdirs>=1.4.4
+  - jsonref>=1.1.0
+  - json-repair>=0.25.2
+  - uv>=0.4.25
+  - tomli-w>=1.1.0
+  - tomli>=2.0.2
+  - blinker>=1.9.0
+  - json5>=0.10.0
+- Optional dependencies (select groups):
+  - tools: crewai-tools>=0.36.0
+  - embeddings: tiktoken~=0.7.0
+  - agentops: agentops>=0.3.0
+  - fastembed: fastembed>=0.4.1
+  - pdfplumber: pdfplumber>=0.11.4
+  - pandas: pandas>=2.2.3
+  - openpyxl: openpyxl>=3.1.5
+  - mem0: mem0ai>=0.1.29
+  - docling: docling>=2.12.0
+- Development dependencies (dev-dependencies under tool.uv):
+  - ruff>=0.8.2
+  - mypy>=1.10.0
+  - pre-commit>=3.6.0
+  - mkdocs>=1.4.3
+  - mkdocstrings>=0.22.0
+  - mkdocstrings-python>=1.1.2
+  - mkdocs-material>=9.5.7
+  - mkdocs-material-extensions>=1.3.1
+  - pillow>=10.2.0
+  - cairosvg>=2.7.1
+  - pytest>=8.0.0
+  - pytest-vcr>=1.0.2
+  - python-dotenv>=1.0.0
+  - pytest-asyncio>=0.23.7
+  - pytest-subprocess>=1.5.2
+- Build system and building tool:
+  - build backend: hatchling.build
+  - requires: hatchling
+- Scripts available:
+  - Entry point script named 'crewai' mapped to crewai.cli.cli:crewai
+
+No explicit environment variables or configuration file details mentioned beyond python-dotenv usage.
+
+No direct test run commands found in the file.
+
+[/Key Information]
+2026-11-11 11:25:03.136 | INFO     | ******
+2026-11-11 11:25:03.136 | DEBUG    | Result of dispatch_intent: ('[Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/pyproject.toml]\n- Python version requirement:\n  - ">=3.10,<3.13"\n- Core dependencies with exact versions or ranges:\n  - pydantic>=2.4.2\n  - openai>=1.13.3\n  - litellm==1.60.2\n  - instructor>=1.3.3\n  - pdfplumber>=0.11.4\n  - regex>=2024.9.11\n  - opentelemetry-api>=1.22.0\n  - opentelemetry-sdk>=1.22.0\n  - opentelemetry-exporter-otlp-proto-http>=1.22.0\n  - chromadb>=0.5.23\n  - openpyxl>=3.1.5\n  - pyvis>=0.3.2\n  - auth0-python>=4.7.1\n  - python-dotenv>=1.0.0\n  - click>=8.1.7\n  - appdirs>=1.4.4\n  - jsonref>=1.1.0\n  - json-repair>=0.25.2\n  - uv>=0.4.25\n  - tomli-w>=1.1.0\n  - tomli>=2.0.2\n  - blinker>=1.9.0\n  - json5>=0.10.0\n- Optional dependencies (select groups):\n  - tools: crewai-tools>=0.36.0\n  - embeddings: tiktoken~=0.7.0\n  - agentops: agentops>=0.3.0\n  - fastembed: fastembed>=0.4.1\n  - pdfplumber: pdfplumber>=0.11.4\n  - pandas: pandas>=2.2.3\n  - openpyxl: openpyxl>=3.1.5\n  - mem0: mem0ai>=0.1.29\n  - docling: docling>=2.12.0\n- Development dependencies (dev-dependencies under tool.uv):\n  - ruff>=0.8.2\n  - mypy>=1.10.0\n  - pre-commit>=3.6.0\n  - mkdocs>=1.4.3\n  - mkdocstrings>=0.22.0\n  - mkdocstrings-python>=1.1.2\n  - mkdocs-material>=9.5.7\n  - mkdocs-material-extensions>=1.3.1\n  - pillow>=10.2.0\n  - cairosvg>=2.7.1\n  - pytest>=8.0.0\n  - pytest-vcr>=1.0.2\n  - python-dotenv>=1.0.0\n  - pytest-asyncio>=0.23.7\n  - pytest-subprocess>=1.5.2\n- Build system and building tool:\n  - build backend: hatchling.build\n  - requires: hatchling\n- Scripts available:\n  - Entry point script named \'crewai\' mapped to crewai.cli.cli:crewai\n\nNo explicit environment variables or configuration file details mentioned beyond python-dotenv usage.\n\nNo direct test run commands found in the file.\n\n[/Key Information]', 'Get File Info', True)
+2026-11-11 11:25:03.138 | INFO     | entering browse
+2026-11-11 11:25:03.143 | INFO     | === FILE START: testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md ===
+<div align="center">
+
+![Logo of CrewAI](./docs/crewai_logo.png)
+
+# **CrewAI**
+
+**CrewAI**: Production-grade framework for orchestrating sophisticated AI agent systems. From simple automations to complex real-world applications, CrewAI provides precise control and deep customization. By fostering collaborative intelligence through flexible, production-ready architecture, CrewAI empowers agents to work together seamlessly, tackling complex business challenges with predictable, consistent results.
+
+**CrewAI Enterprise**
+Want to plan, build (+ no code), deploy, monitor and interare your agents: [CrewAI Enterprise](https://www.crewai.com/enterprise). Designed for complex, real-world applications, our enterprise solution offers:
+
+- **Seamless Integrations**
+- **Scalable & Secure Deployment**
+- **Actionable Insights**
+- **24/7 Support**
+
+<h3>
+
+[Homepage](https://www.crewai.com/) | [Documentation](https://docs.crewai.com/) | [Chat with Docs](https://chatg.pt/DWjSBZn) | [Examples](https://github.com/crewAIInc/crewAI-examples) | [Discourse](https://community.crewai.com)
+
+</h3>
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/joaomdmoura/crewAI)](https://github.com/crewAIInc/crewAI)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+</div>
+
+## Table of contents
+
+- [Why CrewAI?](#why-crewai)
+- [Getting Started](#getting-started)
+- [Key Features](#key-features)
+- [Understanding Flows and Crews](#understanding-flows-and-crews)
+- [CrewAI vs LangGraph](#how-crewai-compares)
+- [Examples](#examples)
+  - [Quick Tutorial](#quick-tutorial)
+  - [Write Job Descriptions](#write-job-descriptions)
+  - [Trip Planner](#trip-planner)
+  - [Stock Analysis](#stock-analysis)
+  - [Using Crews and Flows Together](#using-crews-and-flows-together)
+- [Connecting Your Crew to a Model](#connecting-your-crew-to-a-model)
+- [How CrewAI Compares](#how-crewai-compares)
+- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
+- [Contribution](#contribution)
+- [Telemetry](#telemetry)
+- [License](#license)
+
+## Why CrewAI?
+
+The power of AI collaboration has too much to offer.
+CrewAI is a standalone framework, built from the ground up without dependencies on Langchain or other agent frameworks. It's designed to enable AI agents to assume roles, share goals, and operate in a cohesive unit - much like a well-oiled crew. Whether you're building a smart assistant platform, an automated customer service ensemble, or a multi-agent research team, CrewAI provides the backbone for sophisticated multi-agent interactions.
+
+## Getting Started
+
+### Learning Resources
+
+Learn CrewAI through our comprehensive courses:
+- [Multi AI Agent Systems with CrewAI](https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/) - Master the fundamentals of multi-agent systems
+- [Practical Multi AI Agents and Advanced Use Cases](https://www.deeplearning.ai/short-courses/practical-multi-ai-agents-and-advanced-use-cases-with-crewai/) - Deep dive into advanced implementations
+
+### Understanding Flows and Crews
+
+CrewAI offers two powerful, complementary approaches that work seamlessly together to build sophisticated AI applications:
+
+1. **Crews**: Teams of AI agents with true autonomy and agency, working together to accomplish complex tasks through role-based collaboration. Crews enable:
+   - Natural, autonomous decision-making between agents
+   - Dynamic task delegation and collaboration
+   - Specialized roles with defined goals and expertise
+   - Flexible problem-solving approaches
+
+2. **Flows**: Production-ready, event-driven workflows that deliver precise control over complex automations. Flows provide:
+   - Fine-grained control over execution paths for real-world scenarios
+   - Secure, consistent state management between tasks
+   - Clean integration of AI agents with production Python code
+   - Conditional branching for complex business logic
+
+The true power of CrewAI emerges when combining Crews and Flows. This synergy allows you to:
+- Build complex, production-grade applications
+- Balance autonomy with precise control
+- Handle sophisticated real-world scenarios
+- Maintain clean, maintainable code structure
+
+### Getting Started with Installation
+
+To get started with CrewAI, follow these simple steps:
+
+### 1. Installation
+
+Ensure you have Python >=3.10 <3.13 installed on your system. CrewAI uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+
+First, install CrewAI:
+
+```shell
+pip install crewai
+```
+If you want to install the 'crewai' package along with its optional features that include additional tools for agents, you can do so by using the following command:
+
+```shell
+pip install 'crewai[tools]'
+```
+The command above installs the basic package and also adds extra components which require more dependencies to function.
+
+### Troubleshooting Dependencies
+
+If you encounter issues during installation or usage, here are some common solutions:
+
+#### Common Issues
+
+1. **ModuleNotFoundError: No module named 'tiktoken'**
+   - Install tiktoken explicitly: `pip install 'crewai[embeddings]'`
+   - If using embedchain or other tools: `pip install 'crewai[tools]'`
+
+2. **Failed building wheel for tiktoken**
+   - Ensure Rust compiler is installed (see installation steps above)
+   - For Windows: Verify Visual C++ Build Tools are installed
+   - Try upgrading pip: `pip install --upgrade pip`
+   - If issues persist, use a pre-built wheel: `pip install tiktoken --prefer-binary`
+
+### 2. Setting Up Your Crew with the YAML Configuration
+
+To create a new CrewAI project, run the following CLI (Command Line Interface) command:
+
+```shell
+crewai create crew <project_name>
+```
+
+This command creates a new project folder with the following structure:
+
+```
+my_project/
+├── .gitignore
+├── pyproject.toml
+├── README.md
+├── .env
+└── src/
+    └── my_project/
+        ├── __init__.py
+        ├── main.py
+        ├── crew.py
+        ├── tools/
+        │   ├── custom_tool.py
+        │   └── __init__.py
+        └── config/
+            ├── agents.yaml
+            └── tasks.yaml
+```
+
+You can now start developing your crew by editing the files in the `src/my_project` folder. The `main.py` file is the entry point of the project, the `crew.py` file is where you define your crew, the `agents.yaml` file is where you define your agents, and the `tasks.yaml` file is where you define your tasks.
+
+#### To customize your project, you can:
+
+- Modify `src/my_project/config/agents.yaml` to define your agents.
+- Modify `src/my_project/config/tasks.yaml` to define your tasks.
+- Modify `src/my_project/crew.py` to add your own logic, tools, and specific arguments.
+- Modify `src/my_project/main.py` to add custom inputs for your agents and tasks.
+- Add your environment variables into the `.env` file.
+
+#### Example of a simple crew with a sequential process:
+
+Instantiate your crew:
+
+```shell
+crewai create crew latest-ai-development
+```
+
+Modify the files as needed to fit your use case:
+
+**agents.yaml**
+
+```yaml
+# src/my_project/config/agents.yaml
+researcher:
+  role: >
+    {topic} Senior Data Researcher
+  goal: >
+    Uncover cutting-edge developments in {topic}
+  backstory: >
+    You're a seasoned researcher with a knack for uncovering the latest
+    developments in {topic}. Known for your ability to find the most relevant
+    information and present it in a clear and concise manner.
+
+reporting_analyst:
+  role: >
+    {topic} Reporting Analyst
+  goal: >
+    Create detailed reports based on {topic} data analysis and research findings
+  backstory: >
+    You're a meticulous analyst with a keen eye for detail. You're known for
+    your ability to turn complex data into clear and concise reports, making
+    it easy for others to understand and act on the information you provide.
+```
+
+**tasks.yaml**
+
+```yaml
+# src/my_project/config/tasks.yaml
+research_task:
+  description: >
+    Conduct a thorough research about {topic}
+    Make sure you find any interesting and relevant information given
+    the current year is 2025.
+  expected_output: >
+    A list with 10 bullet points of the most relevant information about {topic}
+  agent: researcher
+
+reporting_task:
+  description: >
+    Review the context you got and expand each topic into a full section for a report.
+    Make sure the report is detailed and contains any and all relevant information.
+  expected_output: >
+    A fully fledge reports with the mains topics, each with a full section of information.
+    Formatted as markdown without '```'
+  agent: reporting_analyst
+  output_file: report.md
+```
+
+**crew.py**
+
+```python
+# src/my_project/crew.py
+from crewai import Agent, Crew, Process, Task
+from crewai.project import CrewBase, agent, crew, task
+from crewai_tools import SerperDevTool
+
+@CrewBase
+class LatestAiDevelopmentCrew():
+	"""LatestAiDevelopment crew"""
+
+	@agent
+	def researcher(self) -> Agent:
+		return Agent(
+			config=self.agents_config['researcher'],
+			verbose=True,
+			tools=[SerperDevTool()]
+		)
+
+	@agent
+	def reporting_analyst(self) -> Agent:
+		return Agent(
+			config=self.agents_config['reporting_analyst'],
+			verbose=True
+		)
+
+	@task
+	def research_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['research_task'],
+		)
+
+	@task
+	def reporting_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['reporting_task'],
+			output_file='report.md'
+		)
+
+	@crew
+	def crew(self) -> Crew:
+		"""Creates the LatestAiDevelopment crew"""
+		return Crew(
+			agents=self.agents, # Automatically created by the @agent decorator
+			tasks=self.tasks, # Automatically created by the @task decorator
+			process=Process.sequential,
+			verbose=True,
+		)
+```
+
+**main.py**
+
+```python
+#!/usr/bin/env python
+# src/my_project/main.py
+import sys
+from latest_ai_development.crew import LatestAiDevelopmentCrew
+
+def run():
+    """
+    Run the crew.
+    """
+    inputs = {
+        'topic': 'AI Agents'
+    }
+    LatestAiDevelopmentCrew().crew().kickoff(inputs=inputs)
+```
+
+### 3. Running Your Crew
+
+Before running your crew, make sure you have the following keys set as environment variables in your `.env` file:
+
+- An [OpenAI API key](https://platform.openai.com/account/api-keys) (or other LLM API key): `OPENAI_API_KEY=sk-...`
+- A [Serper.dev](https://serper.dev/) API key: `SERPER_API_KEY=YOUR_KEY_HERE`
+
+Lock the dependencies and install them by using the CLI command but first, navigate to your project directory:
+
+```shell
+cd my_project
+crewai install (Optional)
+```
+
+To run your crew, execute the following command in the root of your project:
+
+```bash
+crewai run
+```
+
+or
+
+```bash
+python src/my_project/main.py
+```
+
+If an error happens due to the usage of poetry, please run the following command to update your crewai package:
+
+```bash
+crewai update
+```
+
+You should see the output in the console and the `report.md` file should be created in the root of your project with the full final report.
+
+In addition to the sequential process, you can use the hierarchical process, which automatically assigns a manager to the defined crew to properly coordinate the planning and execution of tasks through delegation and validation of results. [See more about the processes here](https://docs.crewai.com/core-concepts/Processes/).
+
+## Key Features
+
+**Note**: CrewAI is a standalone framework built from the ground up, without dependencies on Langchain or other agent frameworks.
+
+- **Deep Customization**: Build sophisticated agents with full control over the system - from overriding inner prompts to accessing low-level APIs. Customize roles, goals, tools, and behaviors while maintaining clean abstractions.
+- **Autonomous Inter-Agent Delegation**: Agents can autonomously delegate tasks and inquire amongst themselves, enabling complex problem-solving in real-world scenarios.
+- **Flexible Task Management**: Define and customize tasks with granular control, from simple operations to complex multi-step processes.
+- **Production-Grade Architecture**: Support for both high-level abstractions and low-level customization, with robust error handling and state management.
+- **Predictable Results**: Ensure consistent, accurate outputs through programmatic guardrails, agent training capabilities, and flow-based execution control. See our [documentation on guardrails](https://docs.crewai.com/how-to/guardrails/) for implementation details.
+- **Model Flexibility**: Run your crew using OpenAI or open source models with production-ready integrations. See [Connect CrewAI to LLMs](https://docs.crewai.com/how-to/LLM-Connections/) for detailed configuration options.
+- **Event-Driven Flows**: Build complex, real-world workflows with precise control over execution paths, state management, and conditional logic.
+- **Process Orchestration**: Achieve any workflow pattern through flows - from simple sequential and hierarchical processes to complex, custom orchestration patterns with conditional branching and parallel execution.
+
+![CrewAI Mind Map](./docs/crewAI-mindmap.png "CrewAI Mind Map")
+
+## Examples
+
+You can test different real life examples of AI crews in the [CrewAI-examples repo](https://github.com/crewAIInc/crewAI-examples?tab=readme-ov-file):
+
+- [Landing Page Generator](https://github.com/crewAIInc/crewAI-examples/tree/main/landing_page_generator)
+- [Having Human input on the execution](https://docs.crewai.com/how-to/Human-Input-on-Execution)
+- [Trip Planner](https://github.com/crewAIInc/crewAI-examples/tree/main/trip_planner)
+- [Stock Analysis](https://github.com/crewAIInc/crewAI-examples/tree/main/stock_analysis)
+
+### Quick Tutorial
+
+[![CrewAI Tutorial](https://img.youtube.com/vi/tnejrr-0a94/maxresdefault.jpg)](https://www.youtube.com/watch?v=tnejrr-0a94 "CrewAI Tutorial")
+
+### Write Job Descriptions
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/job-posting) or watch a video below:
+
+[![Jobs postings](https://img.youtube.com/vi/u98wEMz-9to/maxresdefault.jpg)](https://www.youtube.com/watch?v=u98wEMz-9to "Jobs postings")
+
+### Trip Planner
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/trip_planner) or watch a video below:
+
+[![Trip Planner](https://img.youtube.com/vi/xis7rWp-hjs/maxresdefault.jpg)](https://www.youtube.com/watch?v=xis7rWp-hjs "Trip Planner")
+
+### Stock Analysis
+
+[Check out code for this example](https://github.com/crewAIInc/crewAI-examples/tree/main/stock_analysis) or watch a video below:
+
+[![Stock Analysis](https://img.youtube.com/vi/e0Uj4yWdaAg/maxresdefault.jpg)](https://www.youtube.com/watch?v=e0Uj4yWdaAg "Stock Analysis")
+
+### Using Crews and Flows Together
+
+CrewAI's power truly shines when combining Crews with Flows to create sophisticated automation pipelines. Here's how you can orchestrate multiple Crews within a Flow:
+
+```python
+from crewai.flow.flow import Flow, listen, start, router
+from crewai import Crew, Agent, Task
+from pydantic import BaseModel
+
+# Define structured state for precise control
+class MarketState(BaseModel):
+    sentiment: str = "neutral"
+    confidence: float = 0.0
+    recommendations: list = []
+
+class AdvancedAnalysisFlow(Flow[MarketState]):
+    @start()
+    def fetch_market_data(self):
+        # Demonstrate low-level control with structured state
+        self.state.sentiment = "analyzing"
+        return {"sector": "tech", "timeframe": "1W"}  # These parameters match the task description template
+
+    @listen(fetch_market_data)
+    def analyze_with_crew(self, market_data):
+        # Show crew agency through specialized roles
+        analyst = Agent(
+            role="Senior Market Analyst",
+            goal="Conduct deep market analysis with expert insight",
+            backstory="You're a veteran analyst known for identifying subtle market patterns"
+        )
+        researcher = Agent(
+            role="Data Researcher",
+            goal="Gather and validate supporting market data",
+            backstory="You excel at finding and correlating multiple data sources"
+        )
+
+        analysis_task = Task(
+            description="Analyze {sector} sector data for the past {timeframe}",
+            expected_output="Detailed market analysis with confidence score",
+            agent=analyst
+        )
+        research_task = Task(
+            description="Find supporting data to validate the analysis",
+            expected_output="Corroborating evidence and potential contradictions",
+            agent=researcher
+        )
+
+        # Demonstrate crew autonomy
+        analysis_crew = Crew(
+            agents=[analyst, researcher],
+            tasks=[analysis_task, research_task],
+            process=Process.sequential,
+            verbose=True
+        )
+        return analysis_crew.kickoff(inputs=market_data)  # Pass market_data as named inputs
+
+    @router(analyze_with_crew)
+    def determine_next_steps(self):
+        # Show flow control with conditional routing
+        if self.state.confidence > 0.8:
+            return "high_confidence"
+        elif self.state.confidence > 0.5:
+            return "medium_confidence"
+        return "low_confidence"
+
+    @listen("high_confidence")
+    def execute_strategy(self):
+        # Demonstrate complex decision making
+        strategy_crew = Crew(
+            agents=[
+                Agent(role="Strategy Expert",
+                      goal="Develop optimal market strategy")
+            ],
+            tasks=[
+                Task(description="Create detailed strategy based on analysis",
+                     expected_output="Step-by-step action plan")
+            ]
+        )
+        return strategy_crew.kickoff()
+
+    @listen("medium_confidence", "low_confidence")
+    def request_additional_analysis(self):
+        self.state.recommendations.append("Gather more data")
+        return "Additional analysis required"
+```
+
+This example demonstrates how to:
+1. Use Python code for basic data operations
+2. Create and execute Crews as steps in your workflow
+3. Use Flow decorators to manage the sequence of operations
+4. Implement conditional branching based on Crew results
+
+## Connecting Your Crew to a Model
+
+CrewAI supports using various LLMs through a variety of connection options. By default your agents will use the OpenAI API when querying the model. However, there are several other ways to allow your agents to connect to models. For example, you can configure your agents to use a local model via the Ollama tool.
+
+Please refer to the [Connect CrewAI to LLMs](https://docs.crewai.com/how-to/LLM-Connections/) page for details on configuring you agents' connections to models.
+
+## How CrewAI Compares
+
+**CrewAI's Advantage**: CrewAI combines autonomous agent intelligence with precise workflow control through its unique Crews and Flows architecture. The framework excels at both high-level orchestration and low-level customization, enabling complex, production-grade systems with granular control.
+
+- **LangGraph**: While LangGraph provides a foundation for building agent workflows, its approach requires significant boilerplate code and complex state management patterns. The framework's tight coupling with LangChain can limit flexibility when implementing custom agent behaviors or integrating with external systems.
+
+*P.S. CrewAI demonstrates significant performance advantages over LangGraph, executing 5.76x faster in certain cases like this QA task example ([see comparison](https://github.com/crewAIInc/crewAI-examples/tree/main/Notebooks/CrewAI%20Flows%20%26%20Langgraph/QA%20Agent)) while achieving higher evaluation scores with faster completion times in certain coding tasks, like in this example ([detailed analysis](https://github.com/crewAIInc/crewAI-examples/blob/main/Notebooks/CrewAI%20Flows%20%26%20Langgraph/Coding%20Assistant/coding_assistant_eval.ipynb)).*
+
+- **Autogen**: While Autogen excels at creating conversational agents capable of working together, it lacks an inherent concept of process. In Autogen, orchestrating agents' interactions requires additional programming, which can become complex and cumbersome as the scale of tasks grows.
+
+- **ChatDev**: ChatDev introduced the idea of processes into the realm of AI agents, but its implementation is quite rigid. Customizations in ChatDev are limited and not geared towards production environments, which can hinder scalability and flexibility in real-world applications.
+
+## Contribution
+
+CrewAI is open-source and we welcome contributions. If you're looking to contribute, please:
+
+- Fork the repository.
+- Create a new branch for your feature.
+- Add your feature or improvement.
+- Send a pull request.
+- We appreciate your input!
+
+### Installing Dependencies
+
+```bash
+uv lock
+uv sync
+```
+
+### Virtual Env
+
+```bash
+uv venv
+```
+
+### Pre-commit hooks
+
+```bash
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+uv run pytest .
+```
+
+### Running static type checks
+
+```bash
+uvx mypy src
+```
+
+### Packaging
+
+```bash
+uv build
+```
+
+### Installing Locally
+
+```bash
+pip install dist/*.tar.gz
+```
+
+## Telemetry
+
+CrewAI uses anonymous telemetry to collect usage data with the main purpose of helping us improve the library by focusing our efforts on the most used features, integrations and tools.
+
+It's pivotal to understand that **NO data is collected** concerning prompts, task descriptions, agents' backstories or goals, usage of tools, API calls, responses, any data processed by the agents, or secrets and environment variables, with the exception of the conditions mentioned. When the `share_crew` feature is enabled, detailed data including task descriptions, agents' backstories or goals, and other specific attributes are collected to provide deeper insights while respecting user privacy. Users can disable telemetry by setting the environment variable OTEL_SDK_DISABLED to true.
+
+Data collected includes:
+
+- Version of CrewAI
+  - So we can understand how many users are using the latest version
+- Version of Python
+  - So we can decide on what versions to better support
+- General OS (e.g. number of CPUs, macOS/Windows/Linux)
+  - So we know what OS we should focus on and if we could build specific OS related features
+- Number of agents and tasks in a crew
+  - So we make sure we are testing internally with similar use cases and educate people on the best practices
+- Crew Process being used
+  - Understand where we should focus our efforts
+- If Agents are using memory or allowing delegation
+  - Understand if we improved the features or maybe even drop them
+- If Tasks are being executed in parallel or sequentially
+  - Understand if we should focus more on parallel execution
+- Language model being used
+  - Improved support on most used languages
+- Roles of agents in a crew
+  - Understand high level use cases so we can build better tools, integrations and examples about it
+- Tools names available
+  - Understand out of the publicly available tools, which ones are being used the most so we can improve them
+
+Users can opt-in to Further Telemetry, sharing the complete telemetry data by setting the `share_crew` attribute to `True` on their Crews. Enabling `share_crew` results in the collection of detailed crew and task execution data, including `goal`, `backstory`, `context`, and `output` of tasks. This enables a deeper insight into usage patterns while respecting the user's choice to share.
+
+## License
+
+CrewAI is released under the [MIT License](https://github.com/crewAIInc/crewAI/blob/main/LICENSE).
+
+## Frequently Asked Questions (FAQ)
+
+### Q: What is CrewAI?
+A: CrewAI is a cutting-edge framework for orchestrating role-playing, autonomous AI agents. It enables agents to work together seamlessly, tackling complex tasks through collaborative intelligence.
+
+### Q: How do I install CrewAI?
+A: You can install CrewAI using pip:
+```shell
+pip install crewai
+```
+For additional tools, use:
+```shell
+pip install 'crewai[tools]'
+```
+
+### Q: Can I use CrewAI with local models?
+A: Yes, CrewAI supports various LLMs, including local models. You can configure your agents to use local models via tools like Ollama & LM Studio. Check the [LLM Connections documentation](https://docs.crewai.com/how-to/LLM-Connections/) for more details.
+
+### Q: What are the key features of CrewAI?
+A: Key features include role-based agent design, autonomous inter-agent delegation, flexible task management, process-driven execution, output saving as files, and compatibility with both open-source and proprietary models.
+
+### Q: How does CrewAI compare to other AI orchestration tools?
+A: CrewAI is designed with production in mind, offering flexibility similar to Autogen's conversational agents and structured processes like ChatDev, but with more adaptability for real-world applications.
+
+### Q: Is CrewAI open-source?
+A: Yes, CrewAI is open-source and welcomes contributions from the community.
+
+### Q: Does CrewAI collect any data?
+A: CrewAI uses anonymous telemetry to collect usage data for improvement purposes. No sensitive data (like prompts, task descriptions, or API calls) is collected. Users can opt-in to share more detailed data by setting `share_crew=True` on their Crews.
+
+### Q: Where can I find examples of CrewAI in action?
+A: You can find various real-life examples in the [CrewAI-examples repository](https://github.com/crewAIInc/crewAI-examples), including trip planners, stock analysis tools, and more.
+
+### Q: What is the difference between Crews and Flows?
+A: Crews and Flows serve different but complementary purposes in CrewAI. Crews are teams of AI agents working together to accomplish specific tasks through role-based collaboration, delivering accurate and predictable results. Flows, on the other hand, are event-driven workflows that can orchestrate both Crews and regular Python code, allowing you to build complex automation pipelines with secure state management and conditional execution paths.
+
+### Q: How can I contribute to CrewAI?
+A: Contributions are welcome! You can fork the repository, create a new branch for your feature, add your improvement, and send a pull request. Check the Contribution section in the README for more details.
+
+=== FILE END:   testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md ===
+2026-11-11 11:25:03.144 | DEBUG    | Analyzing file content. Try 1 of 3
+2026-11-11 11:25:08.097 | INFO     | Model API request cost info: input_tokens=6388, output_tokens=490, cost=0.000000
+2026-11-11 11:25:08.100 | SUCCESS  | Successfully extracted environment config
+2026-11-11 11:25:08.100 | INFO     | ******
+2026-11-11 11:25:08.100 | INFO     | [Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md]
+- Environment setup:
+  - Requires Python >=3.10 and <3.13
+  - Install CrewAI package with:
+    - Basic install: `pip install crewai`
+    - With optional tools: `pip install 'crewai[tools]'`
+  - Troubleshooting dependencies:
+    - For missing 'tiktoken' module: `pip install 'crewai[embeddings]'` or `pip install 'crewai[tools]'`
+    - If build wheel fails for tiktoken, ensure Rust compiler and Visual C++ Build Tools (Windows) are installed
+    - Upgrade pip: `pip install --upgrade pip`
+    - Use pre-built wheel if issues persist: `pip install tiktoken --prefer-binary`
+  - Dependency locking and sync using UV CLI tool:
+    - `uv lock`
+    - `uv sync`
+  - Virtual environment creation:
+    - `uv venv`
+  - Pre-commit hooks installation:
+    - `pre-commit install`
+  - Local install after packaging:
+    - `pip install dist/*.tar.gz`
+  - Environment variables required in `.env` file before running:
+    - `OPENAI_API_KEY=sk-...` (OpenAI API key or alternative LLM API keys)
+    - `SERPER_API_KEY=YOUR_KEY_HERE` (Serper.dev API key)
+
+- Running tests:
+  - Run tests via UV CLI tool:
+    - `uv run pytest .`
+  - Static type checks:
+    - `uvx mypy src`
+
+- Running your CrewAI project:
+  - Navigate to project directory (e.g., `cd my_project`)
+  - Optionally install dependencies with `crewai install`
+  - Run the crew with either:
+    - `crewai run` (CLI command in project root)
+    - Or directly via Python: `python src/my_project/main.py`
+
+- Updating CrewAI package if errors occur (especially with poetry):
+  - `crewai update`
+
+- Note on test commands:
+  - No explicit command for running individual or specific test files is mentioned.
+  - The test command `uv run pytest .` indicates tests run in all files under current directory.
+
+[/Key Information]
+2026-11-11 11:25:08.100 | INFO     | ******
+2026-11-11 11:25:08.100 | DEBUG    | Result of dispatch_intent: ("[Key Information from testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17/README.md]\n- Environment setup:\n  - Requires Python >=3.10 and <3.13\n  - Install CrewAI package with:\n    - Basic install: `pip install crewai`\n    - With optional tools: `pip install 'crewai[tools]'`\n  - Troubleshooting dependencies:\n    - For missing 'tiktoken' module: `pip install 'crewai[embeddings]'` or `pip install 'crewai[tools]'`\n    - If build wheel fails for tiktoken, ensure Rust compiler and Visual C++ Build Tools (Windows) are installed\n    - Upgrade pip: `pip install --upgrade pip`\n    - Use pre-built wheel if issues persist: `pip install tiktoken --prefer-binary`\n  - Dependency locking and sync using UV CLI tool:\n    - `uv lock`\n    - `uv sync`\n  - Virtual environment creation:\n    - `uv venv`\n  - Pre-commit hooks installation:\n    - `pre-commit install`\n  - Local install after packaging:\n    - `pip install dist/*.tar.gz`\n  - Environment variables required in `.env` file before running:\n    - `OPENAI_API_KEY=sk-...` (OpenAI API key or alternative LLM API keys)\n    - `SERPER_API_KEY=YOUR_KEY_HERE` (Serper.dev API key)\n\n- Running tests:\n  - Run tests via UV CLI tool:\n    - `uv run pytest .`\n  - Static type checks:\n    - `uvx mypy src`\n\n- Running your CrewAI project:\n  - Navigate to project directory (e.g., `cd my_project`)\n  - Optionally install dependencies with `crewai install`\n  - Run the crew with either:\n    - `crewai run` (CLI command in project root)\n    - Or directly via Python: `python src/my_project/main.py`\n\n- Updating CrewAI package if errors occur (especially with poetry):\n  - `crewai update`\n\n- Note on test commands:\n  - No explicit command for running individual or specific test files is mentioned.\n  - The test command `uv run pytest .` indicates tests run in all files under current directory.\n\n[/Key Information]", 'Get File Info', True)
+2026-11-11 11:25:08.102 | DEBUG    | Result of dispatch_intent: ('You are browsing the path: /root/swe-factory/testbed/crewAIInc__crewAI-2232_2026-11-11_11-05-17. The browsing Depth is 1.\nStructure of this directory:\n\nmkdocs.yml\n\n.pre-commit-config.yaml\n\n.editorconfig\n\nREADME.md\n\n.ruff.toml\n\nuv.lock\n\n.gitignore\n\npyproject.toml\n\nLICENSE\n\ncrewAI.excalidraw\n\ndocs/\n\n.git/\n\nsrc/\n\ntests/\n\n.github/\n\n.cache/\n\n', 'folder structure collected', True)
+2026-11-11 11:25:16.150 | INFO     | Model API request cost info: input_tokens=3205, output_tokens=1166, cost=0.000000
+2026-11-11 11:25:16.169 | DEBUG    | Trying to select search APIs in json. Try 1 of 5.
+2026-11-11 11:25:22.552 | INFO     | Model API request cost info: input_tokens=1764, output_tokens=756, cost=0.000000
+2026-11-11 11:25:22.554 | DEBUG    | {
+  "API_calls": [],
+  "collected_information": {
+    "pyproject.toml": {
+      "python_version": ">=3.10,<3.13",
+      "core_dependencies": [
+        "pydantic≥2.4.2", "openai≥1.13.3", "litellm==1.60.2", "instructor≥1.3.3",
+        "pdfplumber≥0.11.4", "regex≥2024.9.11", "opentelemetry-api≥1.22.0",
+        "opentelemetry-sdk≥1.22.0", "opentelemetry-exporter-otlp-proto-http≥1.22.0",
+        "chromadb≥0.5.23", "openpyxl≥3.1.5", "pyvis≥0.3.2", "auth0-python≥4.7.1",
+        "python-dotenv≥1.0.0", "click≥8.1.7", "appdirs≥1.4.4", "jsonref≥1.1.0",
+        "json-repair≥0.25.2", "uv≥0.4.25", "tomli-w≥1.1.0", "tomli≥2.0.2",
+        "blinker≥1.9.0", "json5≥0.10.0"
+      ],
+      "optional_dependencies": {
+        "tools": [], "embeddings": [], "agentops": [], "fastembed": [],
+        "pdfplumber": [], "pandas": [], "openpyxl": [], "mem0": [], "docling": []
+      },
+      "development_dependencies": [
+        "ruff", "mypy", "pre-commit", "mkdocs", "mkdocstrings", "mkdocs-material",
+        "pillow", "cairosvg", "pytest", "pytest-vcr", "python-dotenv",
+        "pytest-asyncio", "pytest-subprocess"
+      ],
+      "build_system": "hatchling.build (requires hatchling)",
+      "entry_point_script": "crewai (crewai.cli.cli:crewai)"
+    },
+    "README.md": {
+      "python_version": ">=3.10 and <3.13",
+      "install_instructions": [
+        "pip install crewai",
+        "pip install 'crewai[tools]'"
+      ],
+      "troubleshooting": [
+        "pip install 'crewai[embeddings]' or 'crewai[tools]' for missing tiktoken module",
+        "Rust compiler and Visual C++ Build Tools required if build wheel fails",
+        "Upgrade pip: pip install --upgrade pip",
+        "Use pre-built wheel: pip install tiktoken --prefer-binary"
+      ],
+      "uv_cli_commands": [
+        "uv lock",
+        "uv sync",
+        "uv venv"
+      ],
+      "pre_commit_hooks": "pre-commit install",
+      "local_install": "pip install dist/*.tar.gz",
+      "environment_variables": {
+        "OPENAI_API_KEY": "sk-...",
+        "SERPER_API_KEY": "YOUR_KEY_HERE"
+      },
+      "run_tests": "uv run pytest .",
+      "static_type_checking": "uvx mypy src",
+      "running_crewai_project": [
+        "crewai install",
+        "crewai run",
+        "python src/my_project/main.py"
+      ],
+      "update_crewai": "crewai update"
+    }
+  },
+  "terminate": true
+}
+2026-11-11 11:25:22.556 | DEBUG    | Extracted a valid json
+2026-11-11 11:25:22.569 | INFO     | Trying to extract a dockerfile. Try 1 of 3.
+2026-11-11 11:25:30.695 | INFO     | Model API request cost info: input_tokens=4064, output_tokens=795, cost=0.000000
+2026-11-11 11:25:30.697 | INFO     | Raw dockerfile and produced in try 1. Writing dockerfile into file.
+2026-11-11 11:53:52.152 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 6e9a567731eb5a75918bb9d90f4726d2f35db7ff354eedb67d92536465eff2cb started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image crewaiinc__crewai-2232-dockerfile2:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 11:53:52.163 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 11:53:55.593 | INFO     | Model API request cost info: input_tokens=5775, output_tokens=186, cost=0.000000
+2026-11-11 11:53:55.595 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The tests failed due to an authentication error indicating that the OpenAI API key was not set. The error message is: \"The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable\". The current eval script does not set or export any environment variables including OPENAI_API_KEY before running the tests. To fix this, modify the eval script to set the necessary environment variable OPENAI_API_KEY with a valid OpenAI API key value before invoking pytest. This must be done so that the test can authenticate properly with the OpenAI API and run successfully. Also, ensure the environment variable is available within the uv run pytest testing subprocess.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-11-11 11:53:55.597 | DEBUG    | Extracted a valid json
+2026-11-11 11:53:55.604 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 11:53:58.337 | INFO     | Model API request cost info: input_tokens=3941, output_tokens=220, cost=0.000000
+2026-11-11 11:53:58.338 | INFO     | Raw script and produced in try 1. Writing script into file.
+2026-11-11 12:20:27.881 | DEBUG    | Result of dispatch_intent: ('Image built successfully!\nContainer 60763a37bc2a561dc5fd9c5fd5aebc8c87777e523014a713792a0a3117d8eb9e started.\nPatch applied successfully.\nFind test_output.txt! Waiting for analysis. ', 'Docker image crewaiinc__crewai-2232-dockerfile3:latest built successfully.\nContainer started.\nPatch applied.\nObtain test results successfully.', True)
+2026-11-11 12:20:27.903 | DEBUG    | Trying to analyze the test log. Try 1 of 3.
+2026-11-11 12:20:31.526 | INFO     | Model API request cost info: input_tokens=6450, output_tokens=210, cost=0.000000
+2026-11-11 12:20:31.529 | DEBUG    | {
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "",
+  "guidance_for_write_eval_script_agent": "The test execution fails due to an authentication error with the OpenAI API key: \"Incorrect API key provided: sk-xxxxx***********************xxxx.\" This indicates the environment variable OPENAI_API_KEY is set, but the key is invalid or placeholder. Please revise the eval script to ensure a valid OpenAI API key is injected and used during test runs. Without a valid API key, tests that require OpenAI calls will fail. Additionally, note the last git checkout command fails with: \"error: pathspec 'tests/test_knowledge_upsert.py' did not match any file(s) known to git\"; this suggests that after patch application, the test file is not present or was removed. The eval script should verify the presence of the test file before cleanup or handle patch application and cleanup carefully to avoid losing test files.",
+  "guidance_for_context_retrieval_agent": ""
+}
+2026-11-11 12:20:31.529 | DEBUG    | Extracted a valid json
+2026-11-11 12:20:31.537 | INFO     | Trying to extract a eval script. Try 1 of 3.
+2026-11-11 12:20:35.633 | INFO     | Model API request cost info: input_tokens=5304, output_tokens=337, cost=0.000000
+2026-11-11 12:20:35.636 | INFO     | Raw script and produced in try 1. Writing script into file.

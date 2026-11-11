@@ -1,0 +1,69 @@
+# Use ubuntu 22.04 as a base image for stability and bash compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies and tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version
+RUN python3.11 -m pip install --upgrade pip
+
+# Create workdir and clone the target repo
+WORKDIR /testbed
+RUN git clone https://github.com/crewAIInc/crewAI.git /testbed
+
+# Checkout the specific commit SHA via build argument
+ARG COMMIT_SHA=99133104dd1a3f77a8558aa882243d702893a1ca
+RUN cd /testbed && git reset --hard ${COMMIT_SHA}
+
+# Setup Python virtual environment named "testbed" using python3.11 venv
+RUN python3.11 -m venv /testbed/testbed
+
+# Install dependencies inside the virtual environment using uv commands and pip
+# Use uv tool as per context to install dependencies and lock files
+# uv tool commands: uv lock, uv sync, uv venv
+# install crewai packages with necessary extras
+
+RUN /testbed/testbed/bin/pip install --upgrade pip setuptools wheel
+
+# Install uv tool in venv to execute commands
+RUN /testbed/testbed/bin/pip install astral-uv
+
+# Run uv commands in the virtual environment
+RUN source /testbed/testbed/bin/activate && \
+    uv lock && \
+    uv sync && \
+    uv venv
+
+# Install crewai base and extras required
+RUN /testbed/testbed/bin/pip install crewai
+RUN /testbed/testbed/bin/pip install 'crewai[tools]'
+
+# For tiktoken, pip install with pre-built wheel and rust already installed
+RUN /testbed/testbed/bin/pip install --prefer-binary tiktoken
+
+# Install the local repo in development mode (editable) so local changes are used
+RUN source /testbed/testbed/bin/activate && \
+    pip install -e .
+
+# Setup environment variables can be provided via .env file at runtime, so no ENV set here
+
+# Append activation of venv to bashrc for convenience
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# Set workdir explicitly to /testbed
+WORKDIR /testbed
+
+# No ENTRYPOINT or CMD as instructed; tests will be run separately

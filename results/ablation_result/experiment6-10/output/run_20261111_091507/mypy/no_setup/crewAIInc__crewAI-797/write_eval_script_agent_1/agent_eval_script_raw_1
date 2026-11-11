@@ -1,0 +1,20 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 377f919d42724744908fa0bcca5cf76826685e07
+
+# Apply the provided test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file using poetry run pytest, outputting concise results
+poetry run pytest --tb=short -q --disable-warnings lib/crewai/tests/crew/test_manager_agent_verbose.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file(s) back to original state
+git checkout 377f919d42724744908fa0bcca5cf76826685e07 lib/crewai/tests/crew/test_manager_agent_verbose.py
+</script>

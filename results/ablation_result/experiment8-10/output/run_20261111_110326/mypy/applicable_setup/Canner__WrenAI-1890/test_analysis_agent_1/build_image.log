@@ -1,0 +1,114 @@
+2026-11-11 11:07:31,698 - INFO - Building image canner__wrenai-1890
+Using dockerfile:
+# Use ubuntu 22.04 as base to have bash and stable environment
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies: git, curl, build essentials, python3.12 and tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    ca-certificates \
+    locales \
+    tzdata \
+    software-properties-common \
+    gcc \
+    g++ \
+    pkg-config \
+    libffi-dev \
+    libssl-dev \
+    python3.12 \
+    python3.12-distutils \
+    python3.12-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 to python3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+
+# Install pip for python3.12
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 -
+
+# Install Poetry (pin to 1.8.3 as per context)
+RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.8.3 python3 -
+
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+# ARG to pass commit sha at build time
+ARG COMMIT_SHA
+RUN git clone https://github.com/Canner/WrenAI.git /testbed && \
+    git reset --hard $COMMIT_SHA
+
+# Install project dependencies via Poetry in a virtual environment
+# Poetry config to create virtualenv in the project folder for clarity
+RUN poetry config virtualenvs.in-project true
+
+# Install dependencies without the eval group (per ci commands)
+RUN poetry install --without eval
+
+# Install the project itself in editable/development mode
+RUN /bin/bash -c "source /testbed/.venv/bin/activate && cd /testbed && poetry run pip install -e ."
+
+# Set environment variable to activate poetry virtualenv by default in bash
+RUN echo "source /testbed/.venv/bin/activate" >> /root/.bashrc
+
+# Set working directory
+WORKDIR /testbed/
+
+2026-11-11 11:07:31,822 - INFO - Step 1/17 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 11:07:31,942 - INFO -  ---> 076e7bf82319
+2026-11-11 11:07:31,943 - INFO - Step 2/17 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 11:07:32,549 - INFO -  ---> Running in d45519eb1a15
+2026-11-11 11:07:36,948 - INFO -  ---> Removed intermediate container d45519eb1a15
+2026-11-11 11:07:36,949 - INFO -  ---> 66e0bb4f1638
+2026-11-11 11:07:36,949 - INFO - Step 3/17 : ENV TZ=Etc/UTC
+2026-11-11 11:07:37,232 - INFO -  ---> Running in f2f8ceeccc44
+2026-11-11 11:07:39,354 - INFO -  ---> Removed intermediate container f2f8ceeccc44
+2026-11-11 11:07:39,354 - INFO -  ---> b20bbeaacc1f
+2026-11-11 11:07:39,372 - INFO - Step 4/17 : SHELL ["/bin/bash", "-c"]
+2026-11-11 11:07:39,652 - INFO -  ---> Running in 9baa82a0dad1
+2026-11-11 11:07:42,674 - INFO -  ---> Removed intermediate container 9baa82a0dad1
+2026-11-11 11:07:42,674 - INFO -  ---> 551832f5f070
+2026-11-11 11:07:42,674 - INFO - Step 5/17 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     ca-certificates     locales     tzdata     software-properties-common     gcc     g++     pkg-config     libffi-dev     libssl-dev     python3.12     python3.12-distutils     python3.12-venv     && rm -rf /var/lib/apt/lists/*
+2026-11-11 11:07:42,994 - INFO -  ---> Running in 96de67dd8942
+2026-11-11 11:07:44,510 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 11:07:44,549 - INFO - Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 11:07:45,871 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 11:07:45,967 - INFO - Get:4 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 11:07:46,205 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 11:07:46,684 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 11:07:47,305 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 11:07:47,487 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 11:07:48,046 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 11:07:48,295 - INFO - Get:10 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 11:07:48,295 - INFO - Get:11 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 11:07:49,491 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 11:07:49,521 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 11:07:49,853 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 11:07:49,988 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 11:07:50,620 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 11:07:50,646 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 11:07:50,646 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 11:08:00,001 - INFO - Fetched 49.4 MB in 16s (3093 kB/s)
+2026-11-11 11:08:04,568 - INFO - Reading package lists...
+2026-11-11 11:08:08,344 - INFO - Reading package lists...
+2026-11-11 11:08:09,069 - INFO - Building dependency tree...
+2026-11-11 11:08:09,071 - INFO - Reading state information...
+2026-11-11 11:08:09,568 - INFO - E: Unable to locate package python3.12
+2026-11-11 11:08:09,575 - INFO - E: Couldn't find any package by glob 'python3.12'
+2026-11-11 11:08:09,575 - INFO - E: Couldn't find any package by regex 'python3.12'
+2026-11-11 11:08:09,576 - INFO - E: Unable to locate package python3.12-distutils
+2026-11-11 11:08:09,576 - INFO - E: Couldn't find any package by glob 'python3.12-distutils'
+2026-11-11 11:08:09,576 - INFO - E: Couldn't find any package by regex 'python3.12-distutils'
+2026-11-11 11:08:09,576 - INFO - E: Unable to locate package python3.12-venv
+2026-11-11 11:08:09,576 - INFO - E: Couldn't find any package by glob 'python3.12-venv'
+2026-11-11 11:08:09,576 - INFO - E: Couldn't find any package by regex 'python3.12-venv'
+2026-11-11 11:08:10,993 - INFO -  ---> Removed intermediate container 96de67dd8942
+2026-11-11 11:08:10,994 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     ca-certificates     locales     tzdata     software-properties-common     gcc     g++     pkg-config     libffi-dev     libssl-dev     python3.12     python3.12-distutils     python3.12-venv     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 11:08:11,005 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     ca-certificates     locales     tzdata     software-properties-common     gcc     g++     pkg-config     libffi-dev     libssl-dev     python3.12     python3.12-distutils     python3.12-venv     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

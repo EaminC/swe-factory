@@ -1,0 +1,60 @@
+diff --git a/src/crewai/knowledge/storage/knowledge_storage.py b/src/crewai/knowledge/storage/knowledge_storage.py
+index e0e36f4a75..acbbe75a11 100644
+--- a/src/crewai/knowledge/storage/knowledge_storage.py
++++ b/src/crewai/knowledge/storage/knowledge_storage.py
+@@ -3,6 +3,7 @@
+ import io
+ import logging
+ import os
++import shutil
+ from typing import Any, Dict, List, Optional, Union, cast
+ 
+ import chromadb
+@@ -15,6 +16,7 @@
+ from crewai.utilities import EmbeddingConfigurator
+ from crewai.utilities.logger import Logger
+ from crewai.utilities.paths import db_storage_path
++from crewai.utilities.constants import KNOWLEDGE_DIRECTORY
+ 
+ 
+ @contextlib.contextmanager
+@@ -105,15 +107,17 @@ def initialize_knowledge_storage(self):
+             raise Exception("Failed to create or get collection")
+ 
+     def reset(self):
+-        if self.app:
+-            self.app.reset()
+-        else:
+-            base_path = os.path.join(db_storage_path(), "knowledge")
++        base_path = os.path.join(db_storage_path(), KNOWLEDGE_DIRECTORY)
++        if not self.app:
+             self.app = chromadb.PersistentClient(
+                 path=base_path,
+                 settings=Settings(allow_reset=True),
+             )
+-            self.app.reset()
++
++        self.app.reset()
++        shutil.rmtree(base_path)
++        self.app = None
++        self.collection = None
+ 
+     def save(
+         self,
+diff --git a/src/crewai/memory/storage/rag_storage.py b/src/crewai/memory/storage/rag_storage.py
+index bf40aee960..fd4c77838c 100644
+--- a/src/crewai/memory/storage/rag_storage.py
++++ b/src/crewai/memory/storage/rag_storage.py
+@@ -150,9 +150,11 @@ def _generate_embedding(self, text: str, metadata: Dict[str, Any]) -> None:  # t
+ 
+     def reset(self) -> None:
+         try:
+-            shutil.rmtree(f"{db_storage_path()}/{self.type}")
+             if self.app:
+                 self.app.reset()
++                shutil.rmtree(f"{db_storage_path()}/{self.type}")
++                self.app = None
++                self.collection = None
+         except Exception as e:
+             if "attempt to write a readonly database" in str(e):
+                 # Ignore this specific error

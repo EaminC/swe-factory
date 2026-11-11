@@ -1,0 +1,54 @@
+<dockerfile>
+# Use official Python 3.10 slim image to avoid system Python conflicts and reduce image size
+FROM --platform=linux/x86_64 python:3.10-slim
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies needed for building and running the project and its dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    cargo \
+    pkg-config \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /testbed
+
+# Clone the target repository and checkout the specific commit SHA
+RUN git clone https://github.com/crewAIInc/crewAI /testbed && \
+    git -C /testbed reset --hard 2912c93d77053c1f5e46bfcc67d09fbecf3221c6
+
+# Create Python virtual environment named 'venv' outside the project directory to avoid packaging issues
+RUN python -m venv /opt/venv
+
+# Activate virtual environment and install dependencies and the repo itself in editable mode:
+# - install uv toolchain packages but skip 'uv venv' to avoid creation of .venv directory in project folder
+# - run uv lock, uv sync, and uv build with explicit exclusion of virtual environment directories if possible
+# - install tiktoken with prefer-binary (requires Rust)
+# - install the built distribution and finally the local package in editable mode to ensure proper linkage
+RUN /bin/bash -c "\
+    source /opt/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install uv tiktoken --prefer-binary && \
+    UV_VENV_CLEAR=1 uv lock && uv sync && uv build && \
+    pip install dist/*.tar.gz && \
+    pip install -e ."
+
+# Set environment variables (empty by default, users should provide on container runtime)
+ENV OPENAI_API_KEY=""
+ENV SERPER_API_KEY=""
+ENV OTEL_SDK_DISABLED=true
+
+# Add virtual environment activation to bashrc for ease of use in container shell
+RUN echo 'source /opt/venv/bin/activate' >> /root/.bashrc
+
+# Ensure working directory is set
+WORKDIR /testbed
+</dockerfile>

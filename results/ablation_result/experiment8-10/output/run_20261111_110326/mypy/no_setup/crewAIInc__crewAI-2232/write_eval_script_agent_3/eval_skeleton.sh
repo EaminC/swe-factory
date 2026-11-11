@@ -1,0 +1,35 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+
+# Checkout the target commit to ensure clean state
+git checkout 34d299345677c7ce26b1368f240c559596526fa7
+
+# Apply the test patch given via heredoc placeholder
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Validate that the target test file exists after patch application
+if [[ ! -f "tests/test_knowledge_upsert.py" ]]; then
+  echo "ERROR: Target test file tests/test_knowledge_upsert.py not found after patch application."
+  echo "OMNIGRIL_EXIT_CODE=1"
+  exit 1
+fi
+
+# Ensure OPENAI_API_KEY is set with a valid key for authentication
+if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+  echo "ERROR: OPENAI_API_KEY environment variable is not set. Please provide a valid API key."
+  echo "OMNIGRIL_EXIT_CODE=1"
+  exit 1
+fi
+
+# Run only the specified test file using uv run pytest with concise and structured output
+uv run pytest -rA --tb=short --disable-warnings -- tests/test_knowledge_upsert.py
+
+rc=$?  # Capture pytest exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset repository state back to clean and discard patch and any modifications
+git checkout 34d299345677c7ce26b1368f240c559596526fa7

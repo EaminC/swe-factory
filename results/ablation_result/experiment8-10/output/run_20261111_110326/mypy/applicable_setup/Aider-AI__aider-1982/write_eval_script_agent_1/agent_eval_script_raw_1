@@ -1,0 +1,21 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+cd /testbed
+git checkout 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate the virtual environment and run only the specified test file with pytest
+source /testbed/venv/bin/activate
+
+pytest --no-header -rA --tb=no tests/basic/test_io.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+git checkout 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4 tests/basic/test_io.py
+</script>

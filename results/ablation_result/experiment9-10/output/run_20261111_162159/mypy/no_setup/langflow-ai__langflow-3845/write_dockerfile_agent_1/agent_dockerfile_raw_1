@@ -1,0 +1,80 @@
+<dockerfile>
+# Use Ubuntu 22.04 as base image with bash support and mainstream compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV SHELL=/bin/bash
+
+# Install essential system dependencies: git, curl, build tools, Python 3.10-3.12 compatible, Node.js, and related tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    python3.11-dev \
+    locales \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup locales to avoid locale warnings
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Install Poetry >=1.4 via official install script
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3.11 - && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+ENV PATH="/opt/poetry/bin:$PATH"
+
+# Install Node.js (required, per context; install Node.js 18.x LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm@latest && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the langflow-ai/langflow repository and checkout the specific commit
+ARG REPO_URL=https://github.com/langflow-ai/langflow.git
+ARG REPO_COMMIT=bad009c0fab91dfdde20872995f65da9b551d994
+
+RUN git clone ${REPO_URL} /testbed && \
+    cd /testbed && \
+    git reset --hard ${REPO_COMMIT} && \
+    chmod -R a+rwx /testbed
+
+# Create a Python 3.11 venv named 'testbed' (recommended)
+RUN python3.11 -m venv /testbed/testbed
+
+# Install all dependencies using Poetry inside the virtual environment,
+# including dev dependencies for pytest and related plugins,
+# installing the project itself in editable/development mode.
+
+# The installation combines poetry configuration so that the virtual environment is used inside the container,
+# and installs dependencies with poetry install (default installs dev dependencies).
+
+RUN /bin/bash -c "\
+    source /testbed/testbed/bin/activate && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi && \
+    python -m pip install -e . \
+"
+
+# Ensure bash uses the virtual environment by default for convenience
+RUN echo "source /testbed/testbed/bin/activate" >> /root/.bashrc
+
+# Set default shell explicitly to bash
+SHELL ["/bin/bash", "-c"]
+
+# Final working directory
+WORKDIR /testbed/
+</dockerfile>

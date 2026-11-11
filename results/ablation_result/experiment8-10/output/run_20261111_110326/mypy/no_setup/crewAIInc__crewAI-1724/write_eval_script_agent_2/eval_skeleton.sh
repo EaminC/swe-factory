@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euxo pipefail
+
+source /opt/testbed/bin/activate
+
+cd /testbed
+
+git checkout c4f7eaf2599c5709260d660d48e810aae7a8c124
+
+# Check if the target test file exists
+if [[ ! -f "tests/memory/test_rag_storage_reset.py" ]]; then
+  echo "ERROR: Target test file 'tests/memory/test_rag_storage_reset.py' not found."
+  echo "Please review the test files list or the applied patch."
+  echo "OMNIGRIL_EXIT_CODE=1"
+  exit 1
+fi
+
+# Apply the test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified target test file using uv run pytest with concise output
+uv run pytest -v --tb=short tests/memory/test_rag_storage_reset.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the repo to discard changes from patch (entire repo reset instead of file by file, due to missing file issue)
+git reset --hard c4f7eaf2599c5709260d660d48e810aae7a8c124
+
+exit $rc

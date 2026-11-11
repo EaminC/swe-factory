@@ -1,0 +1,252 @@
+2026-11-11 12:22:12,580 - INFO - Building image canner__wrenai-1890
+Using dockerfile:
+# Use official Python 3.12 slim image to avoid PPA issues and provide required Python version
+FROM --platform=linux/x86_64 python:3.12-slim-bullseye
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies and tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    build-essential \
+    locales \
+    tzdata \
+    gcc \
+    g++ \
+    pkg-config \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locale and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Upgrade pip to latest version
+RUN pip install --upgrade pip
+
+# Install Poetry pinned to version 1.8.3
+RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.8.3 python3 -
+
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specified commit
+ARG COMMIT_SHA
+RUN git clone https://github.com/Canner/WrenAI.git /testbed && \
+    git -C /testbed reset --hard $COMMIT_SHA && \
+    ls -la /testbed
+
+# Switch to python project directory where pyproject.toml exists
+WORKDIR /testbed/wren-ai-service
+
+# Configure Poetry to create virtualenvs inside project folder
+RUN poetry config virtualenvs.in-project true
+
+# Install dependencies without eval group and install the package in editable mode
+RUN poetry install --without eval && \
+    /bin/bash -c "source .venv/bin/activate && pip install -e ."
+
+# Enable auto activation of poetry virtualenv on bash login
+RUN echo "source /testbed/wren-ai-service/.venv/bin/activate" >> /root/.bashrc
+
+WORKDIR /testbed/
+
+2026-11-11 12:22:12,624 - INFO - Do not find previous image, images list is clean.
+2026-11-11 12:22:12,649 - INFO - Step 1/20 : FROM --platform=linux/x86_64 python:3.12-slim-bullseye
+2026-11-11 12:22:32,310 - INFO -  ---> 411fa4dcfdce
+2026-11-11 12:22:32,311 - INFO - Step 2/20 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 12:22:32,418 - INFO -  ---> Running in d136de3ce87a
+2026-11-11 12:22:37,549 - INFO -  ---> Removed intermediate container d136de3ce87a
+2026-11-11 12:22:37,549 - INFO -  ---> c74c28fa45a6
+2026-11-11 12:22:37,549 - INFO - Step 3/20 : ENV TZ=Etc/UTC
+2026-11-11 12:22:37,787 - INFO -  ---> Running in 8b8d2930cf9c
+2026-11-11 12:22:42,447 - INFO -  ---> Removed intermediate container 8b8d2930cf9c
+2026-11-11 12:22:42,449 - INFO -  ---> 144e83dd5516
+2026-11-11 12:22:42,449 - INFO - Step 4/20 : SHELL ["/bin/bash", "-c"]
+2026-11-11 12:22:42,691 - INFO -  ---> Running in 28575b308bfc
+2026-11-11 12:22:49,764 - INFO -  ---> Removed intermediate container 28575b308bfc
+2026-11-11 12:22:49,766 - INFO -  ---> d910fa52c585
+2026-11-11 12:22:49,766 - INFO - Step 5/20 : RUN apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     build-essential     locales     tzdata     gcc     g++     pkg-config     libffi-dev     libssl-dev     && rm -rf /var/lib/apt/lists/*
+2026-11-11 12:22:50,141 - INFO -  ---> Running in 8cbb61eca623
+2026-11-11 12:22:50,969 - INFO - Get:1 http://deb.debian.org/debian bullseye InRelease [75.1 kB]
+2026-11-11 12:22:51,164 - INFO - Get:2 http://deb.debian.org/debian-security bullseye-security InRelease [27.1 kB]
+2026-11-11 12:22:51,182 - INFO - Get:3 http://deb.debian.org/debian bullseye-updates InRelease [44.0 kB]
+2026-11-11 12:22:51,372 - INFO - Get:4 http://deb.debian.org/debian bullseye/main amd64 Packages [8066 kB]
+2026-11-11 12:22:52,099 - INFO - Get:5 http://deb.debian.org/debian-security bullseye-security/main amd64 Packages [475 kB]
+2026-11-11 12:22:52,811 - INFO - Get:6 http://deb.debian.org/debian bullseye-updates/main amd64 Packages [18.8 kB]
+2026-11-11 12:22:54,991 - INFO - Fetched 8706 kB in 4s (2155 kB/s)
+2026-11-11 12:22:56,936 - INFO - Reading package lists...
+2026-11-11 12:22:58,762 - INFO - Reading package lists...
+2026-11-11 12:22:59,503 - INFO - Building dependency tree...
+2026-11-11 12:22:59,503 - INFO - Reading state information...
+2026-11-11 12:23:00,481 - INFO - The following additional packages will be installed:
+2026-11-11 12:23:00,482 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu bzip2 cpp cpp-10 dpkg-dev
+2026-11-11 12:23:00,484 - INFO -   g++-10 gcc-10 git-man libasan6 libatomic1 libbinutils libbrotli1
+2026-11-11 12:23:00,485 - INFO -   libc-dev-bin libc-l10n libc6 libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0
+2026-11-11 12:23:00,485 - INFO -   libctf0 libcurl3-gnutls libcurl4 libdpkg-perl liberror-perl libexpat1
+2026-11-11 12:23:00,485 - INFO -   libgcc-10-dev libgdbm-compat4 libglib2.0-0 libgomp1 libisl23 libitm1
+2026-11-11 12:23:00,485 - INFO -   libldap-2.4-2 liblsan0 libmpc3 libmpfr6 libnghttp2-14 libnsl-dev libperl5.32
+2026-11-11 12:23:00,485 - INFO -   libpsl5 libquadmath0 librtmp1 libsasl2-2 libsasl2-modules-db libssh2-1
+2026-11-11 12:23:00,485 - INFO -   libssl1.1 libstdc++-10-dev libtirpc-dev libtsan0 libubsan1 linux-libc-dev
+2026-11-11 12:23:00,486 - INFO -   make patch perl perl-base perl-modules-5.32 xz-utils
+2026-11-11 12:23:00,488 - INFO - Suggested packages:
+2026-11-11 12:23:00,489 - INFO -   binutils-doc bzip2-doc cpp-doc gcc-10-locales debian-keyring g++-multilib
+2026-11-11 12:23:00,490 - INFO -   g++-10-multilib gcc-10-doc gcc-multilib manpages-dev autoconf automake
+2026-11-11 12:23:00,490 - INFO -   libtool flex bison gdb gcc-doc gcc-10-multilib gettext-base git-daemon-run
+2026-11-11 12:23:00,490 - INFO -   | git-daemon-sysvinit git-doc git-el git-email git-gui gitk gitweb git-cvs
+2026-11-11 12:23:00,490 - INFO -   git-mediawiki git-svn glibc-doc gnupg sensible-utils bzr libssl-doc
+2026-11-11 12:23:00,490 - INFO -   libstdc++-10-doc make-doc ed diffutils-doc perl-doc
+2026-11-11 12:23:00,490 - INFO -   libterm-readline-gnu-perl | libterm-readline-perl-perl
+2026-11-11 12:23:00,490 - INFO -   libtap-harness-archive-perl
+2026-11-11 12:23:00,490 - INFO - Recommended packages:
+2026-11-11 12:23:00,490 - INFO -   fakeroot gnupg libalgorithm-merge-perl less ssh-client manpages manpages-dev
+2026-11-11 12:23:00,490 - INFO -   libc-devtools libnss-nis libnss-nisplus libfile-fcntllock-perl
+2026-11-11 12:23:00,490 - INFO -   liblocale-gettext-perl libglib2.0-data shared-mime-info xdg-user-dirs
+2026-11-11 12:23:00,490 - INFO -   libldap-common publicsuffix libsasl2-modules
+2026-11-11 12:23:01,231 - INFO - The following NEW packages will be installed:
+2026-11-11 12:23:01,231 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu build-essential bzip2 cpp
+2026-11-11 12:23:01,231 - INFO -   cpp-10 curl dpkg-dev g++ g++-10 gcc gcc-10 git git-man libasan6 libatomic1
+2026-11-11 12:23:01,231 - INFO -   libbinutils libbrotli1 libc-dev-bin libc-l10n libc6-dev libcc1-0
+2026-11-11 12:23:01,231 - INFO -   libcrypt-dev libctf-nobfd0 libctf0 libcurl3-gnutls libcurl4 libdpkg-perl
+2026-11-11 12:23:01,234 - INFO -   liberror-perl libexpat1 libffi-dev libgcc-10-dev libgdbm-compat4
+2026-11-11 12:23:01,234 - INFO -   libglib2.0-0 libgomp1 libisl23 libitm1 libldap-2.4-2 liblsan0 libmpc3
+2026-11-11 12:23:01,234 - INFO -   libmpfr6 libnghttp2-14 libnsl-dev libperl5.32 libpsl5 libquadmath0 librtmp1
+2026-11-11 12:23:01,234 - INFO -   libsasl2-2 libsasl2-modules-db libssh2-1 libssl-dev libstdc++-10-dev
+2026-11-11 12:23:01,234 - INFO -   libtirpc-dev libtsan0 libubsan1 linux-libc-dev locales make patch perl
+2026-11-11 12:23:01,242 - INFO -   perl-modules-5.32 pkg-config wget xz-utils
+2026-11-11 12:23:01,242 - INFO - The following packages will be upgraded:
+2026-11-11 12:23:01,242 - INFO -   libc6 libssl1.1 perl-base tzdata
+2026-11-11 12:23:01,493 - INFO - 4 upgraded, 65 newly installed, 0 to remove and 17 not upgraded.
+2026-11-11 12:23:01,493 - INFO - Need to get 94.5 MB of archives.
+2026-11-11 12:23:01,494 - INFO - After this operation, 356 MB of additional disk space will be used.
+2026-11-11 12:23:01,494 - INFO - Err:1 http://deb.debian.org/debian-security bullseye-security/main amd64 perl-base amd64 5.32.1-4+deb11u5
+2026-11-11 12:23:01,494 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:01,837 - INFO - Err:2 http://deb.debian.org/debian-security bullseye-security/main amd64 perl-modules-5.32 all 5.32.1-4+deb11u5
+2026-11-11 12:23:01,837 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,026 - INFO - Err:3 http://deb.debian.org/debian-security bullseye-security/main amd64 libc6 amd64 2.31-13+deb11u14
+2026-11-11 12:23:02,027 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,031 - INFO - Get:4 http://deb.debian.org/debian bullseye/main amd64 libgdbm-compat4 amd64 1.19-2 [44.7 kB]
+2026-11-11 12:23:02,223 - INFO - Err:5 http://deb.debian.org/debian-security bullseye-security/main amd64 libperl5.32 amd64 5.32.1-4+deb11u5
+2026-11-11 12:23:02,223 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,406 - INFO - Err:6 http://deb.debian.org/debian-security bullseye-security/main amd64 perl amd64 5.32.1-4+deb11u5
+2026-11-11 12:23:02,407 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,600 - INFO - Err:7 http://deb.debian.org/debian-security bullseye-security/main amd64 libssl1.1 amd64 1.1.1w-0+deb11u8
+2026-11-11 12:23:02,600 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,772 - INFO - Err:8 http://deb.debian.org/debian-security bullseye-security/main amd64 tzdata all 2026b-0+deb11u1
+2026-11-11 12:23:02,772 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:02,774 - INFO - Get:9 http://deb.debian.org/debian bullseye/main amd64 bzip2 amd64 1.0.8-4 [49.3 kB]
+2026-11-11 12:23:02,950 - INFO - Err:10 http://deb.debian.org/debian-security bullseye-security/main amd64 libc-l10n all 2.31-13+deb11u14
+2026-11-11 12:23:02,950 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:03,179 - INFO - Err:11 http://deb.debian.org/debian-security bullseye-security/main amd64 locales all 2.31-13+deb11u14
+2026-11-11 12:23:03,179 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:03,191 - INFO - Get:12 http://deb.debian.org/debian bullseye/main amd64 libpsl5 amd64 0.21.0-1.2 [57.3 kB]
+2026-11-11 12:23:03,404 - INFO - Err:13 http://deb.debian.org/debian-security bullseye-security/main amd64 wget amd64 1.21-1+deb11u2
+2026-11-11 12:23:03,404 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:03,588 - INFO - Err:14 http://deb.debian.org/debian-security bullseye-security/main amd64 xz-utils amd64 5.2.5-2.1~deb11u2
+2026-11-11 12:23:03,588 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:03,597 - INFO - Get:15 http://deb.debian.org/debian bullseye/main amd64 binutils-common amd64 2.35.2-2 [2220 kB]
+2026-11-11 12:23:03,652 - INFO - Get:16 http://deb.debian.org/debian bullseye/main amd64 libbinutils amd64 2.35.2-2 [570 kB]
+2026-11-11 12:23:03,671 - INFO - Get:17 http://deb.debian.org/debian bullseye/main amd64 libctf-nobfd0 amd64 2.35.2-2 [110 kB]
+2026-11-11 12:23:03,674 - INFO - Get:18 http://deb.debian.org/debian bullseye/main amd64 libctf0 amd64 2.35.2-2 [53.2 kB]
+2026-11-11 12:23:03,679 - INFO - Get:19 http://deb.debian.org/debian bullseye/main amd64 binutils-x86-64-linux-gnu amd64 2.35.2-2 [1809 kB]
+2026-11-11 12:23:03,718 - INFO - Get:20 http://deb.debian.org/debian bullseye/main amd64 binutils amd64 2.35.2-2 [61.2 kB]
+2026-11-11 12:23:03,859 - INFO - Err:21 http://deb.debian.org/debian-security bullseye-security/main amd64 libc-dev-bin amd64 2.31-13+deb11u14
+2026-11-11 12:23:03,859 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:04,071 - INFO - Err:22 http://deb.debian.org/debian-security bullseye-security/main amd64 linux-libc-dev amd64 5.10.262-1
+2026-11-11 12:23:04,071 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:04,083 - INFO - Get:23 http://deb.debian.org/debian bullseye/main amd64 libcrypt-dev amd64 1:4.4.18-4 [104 kB]
+2026-11-11 12:23:04,092 - INFO - Get:24 http://deb.debian.org/debian bullseye/main amd64 libtirpc-dev amd64 1.3.1-1+deb11u1 [191 kB]
+2026-11-11 12:23:04,096 - INFO - Get:25 http://deb.debian.org/debian bullseye/main amd64 libnsl-dev amd64 1.3.0-2 [66.4 kB]
+2026-11-11 12:23:04,279 - INFO - Err:26 http://deb.debian.org/debian-security bullseye-security/main amd64 libc6-dev amd64 2.31-13+deb11u14
+2026-11-11 12:23:04,279 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:04,294 - INFO - Get:27 http://deb.debian.org/debian bullseye/main amd64 libisl23 amd64 0.23-1 [676 kB]
+2026-11-11 12:23:04,311 - INFO - Get:28 http://deb.debian.org/debian bullseye/main amd64 libmpfr6 amd64 4.1.0-3 [2012 kB]
+2026-11-11 12:23:04,371 - INFO - Get:29 http://deb.debian.org/debian bullseye/main amd64 libmpc3 amd64 1.2.0-1 [45.0 kB]
+2026-11-11 12:23:04,383 - INFO - Get:30 http://deb.debian.org/debian bullseye/main amd64 cpp-10 amd64 10.2.1-6 [8528 kB]
+2026-11-11 12:23:04,605 - INFO - Get:31 http://deb.debian.org/debian bullseye/main amd64 cpp amd64 4:10.2.1-1 [19.7 kB]
+2026-11-11 12:23:04,605 - INFO - Get:32 http://deb.debian.org/debian bullseye/main amd64 libcc1-0 amd64 10.2.1-6 [47.0 kB]
+2026-11-11 12:23:04,609 - INFO - Get:33 http://deb.debian.org/debian bullseye/main amd64 libgomp1 amd64 10.2.1-6 [99.9 kB]
+2026-11-11 12:23:04,610 - INFO - Get:34 http://deb.debian.org/debian bullseye/main amd64 libitm1 amd64 10.2.1-6 [25.8 kB]
+2026-11-11 12:23:04,618 - INFO - Get:35 http://deb.debian.org/debian bullseye/main amd64 libatomic1 amd64 10.2.1-6 [9008 B]
+2026-11-11 12:23:04,620 - INFO - Get:36 http://deb.debian.org/debian bullseye/main amd64 libasan6 amd64 10.2.1-6 [2065 kB]
+2026-11-11 12:23:04,671 - INFO - Get:37 http://deb.debian.org/debian bullseye/main amd64 liblsan0 amd64 10.2.1-6 [828 kB]
+2026-11-11 12:23:04,703 - INFO - Get:38 http://deb.debian.org/debian bullseye/main amd64 libtsan0 amd64 10.2.1-6 [2000 kB]
+2026-11-11 12:23:04,748 - INFO - Get:39 http://deb.debian.org/debian bullseye/main amd64 libubsan1 amd64 10.2.1-6 [777 kB]
+2026-11-11 12:23:04,781 - INFO - Get:40 http://deb.debian.org/debian bullseye/main amd64 libquadmath0 amd64 10.2.1-6 [145 kB]
+2026-11-11 12:23:04,794 - INFO - Get:41 http://deb.debian.org/debian bullseye/main amd64 libgcc-10-dev amd64 10.2.1-6 [2328 kB]
+2026-11-11 12:23:04,868 - INFO - Get:42 http://deb.debian.org/debian bullseye/main amd64 gcc-10 amd64 10.2.1-6 [17.0 MB]
+2026-11-11 12:23:05,300 - INFO - Get:43 http://deb.debian.org/debian bullseye/main amd64 gcc amd64 4:10.2.1-1 [5192 B]
+2026-11-11 12:23:05,380 - INFO - Get:44 http://deb.debian.org/debian bullseye/main amd64 libstdc++-10-dev amd64 10.2.1-6 [1741 kB]
+2026-11-11 12:23:05,459 - INFO - Get:45 http://deb.debian.org/debian bullseye/main amd64 g++-10 amd64 10.2.1-6 [9380 kB]
+2026-11-11 12:23:05,675 - INFO - Get:46 http://deb.debian.org/debian bullseye/main amd64 g++ amd64 4:10.2.1-1 [1644 B]
+2026-11-11 12:23:05,676 - INFO - Get:47 http://deb.debian.org/debian bullseye/main amd64 make amd64 4.3-4.1 [396 kB]
+2026-11-11 12:23:05,761 - INFO - Err:48 http://deb.debian.org/debian-security bullseye-security/main amd64 libdpkg-perl all 1.20.14
+2026-11-11 12:23:05,762 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:05,771 - INFO - Get:49 http://deb.debian.org/debian bullseye/main amd64 patch amd64 2.7.6-7 [128 kB]
+2026-11-11 12:23:05,971 - INFO - Err:50 http://deb.debian.org/debian-security bullseye-security/main amd64 dpkg-dev all 1.20.14
+2026-11-11 12:23:05,971 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:05,971 - INFO - Get:51 http://deb.debian.org/debian bullseye/main amd64 build-essential amd64 12.9 [7704 B]
+2026-11-11 12:23:05,981 - INFO - Get:52 http://deb.debian.org/debian bullseye/main amd64 libbrotli1 amd64 1.0.9-2+b2 [279 kB]
+2026-11-11 12:23:05,983 - INFO - Get:53 http://deb.debian.org/debian bullseye/main amd64 libsasl2-modules-db amd64 2.1.27+dfsg-2.1+deb11u1 [69.1 kB]
+2026-11-11 12:23:05,987 - INFO - Get:54 http://deb.debian.org/debian bullseye/main amd64 libsasl2-2 amd64 2.1.27+dfsg-2.1+deb11u1 [106 kB]
+2026-11-11 12:23:05,996 - INFO - Get:55 http://deb.debian.org/debian bullseye/main amd64 libldap-2.4-2 amd64 2.4.57+dfsg-3+deb11u1 [232 kB]
+2026-11-11 12:23:06,185 - INFO - Err:56 http://deb.debian.org/debian-security bullseye-security/main amd64 libnghttp2-14 amd64 1.43.0-1+deb11u3
+2026-11-11 12:23:06,185 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:06,185 - INFO - Get:57 http://deb.debian.org/debian bullseye/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+2026-11-11 12:23:06,185 - INFO - Get:58 http://deb.debian.org/debian bullseye/main amd64 libssh2-1 amd64 1.9.0-2+deb11u1 [156 kB]
+2026-11-11 12:23:06,360 - INFO - Err:59 http://deb.debian.org/debian-security bullseye-security/main amd64 libcurl4 amd64 7.74.0-1.3+deb11u16
+2026-11-11 12:23:06,360 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:06,546 - INFO - Err:60 http://deb.debian.org/debian-security bullseye-security/main amd64 curl amd64 7.74.0-1.3+deb11u16
+2026-11-11 12:23:06,550 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:06,738 - INFO - Err:61 http://deb.debian.org/debian-security bullseye-security/main amd64 libcurl3-gnutls amd64 7.74.0-1.3+deb11u16
+2026-11-11 12:23:06,738 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:06,934 - INFO - Err:62 http://deb.debian.org/debian-security bullseye-security/main amd64 libexpat1 amd64 2.2.10-2+deb11u7
+2026-11-11 12:23:06,934 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:06,935 - INFO - Get:63 http://deb.debian.org/debian bullseye/main amd64 liberror-perl all 0.17029-1 [31.0 kB]
+2026-11-11 12:23:07,103 - INFO - Err:64 http://deb.debian.org/debian-security bullseye-security/main amd64 git-man all 1:2.30.2-1+deb11u5
+2026-11-11 12:23:07,103 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,293 - INFO - Err:65 http://deb.debian.org/debian-security bullseye-security/main amd64 git amd64 1:2.30.2-1+deb11u5
+2026-11-11 12:23:07,293 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,293 - INFO - Get:66 http://deb.debian.org/debian bullseye/main amd64 libffi-dev amd64 3.3-6 [56.5 kB]
+2026-11-11 12:23:07,460 - INFO - Err:67 http://deb.debian.org/debian-security bullseye-security/main amd64 libglib2.0-0 amd64 2.66.8-1+deb11u8
+2026-11-11 12:23:07,460 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,836 - INFO - Err:68 http://deb.debian.org/debian-security bullseye-security/main amd64 libssl-dev amd64 1.1.1w-0+deb11u8
+2026-11-11 12:23:07,836 - INFO -   404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,860 - INFO - Get:69 http://deb.debian.org/debian bullseye/main amd64 pkg-config amd64 0.29.2-1 [65.1 kB]
+2026-11-11 12:23:07,915 - INFO - Fetched 54.6 MB in 7s (8257 kB/s)
+2026-11-11 12:23:07,916 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/p/perl/perl-base_5.32.1-4%2bdeb11u5_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,917 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/p/perl/perl-modules-5.32_5.32.1-4%2bdeb11u5_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,917 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/libc6_2.31-13%2bdeb11u14_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,918 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/p/perl/libperl5.32_5.32.1-4%2bdeb11u5_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,931 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/p/perl/perl_5.32.1-4%2bdeb11u5_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,931 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.1w-0%2bdeb11u8_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,931 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/t/tzdata/tzdata_2026b-0%2bdeb11u1_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,931 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/libc-l10n_2.31-13%2bdeb11u14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,931 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/locales_2.31-13%2bdeb11u14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/w/wget/wget_1.21-1%2bdeb11u2_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/x/xz-utils/xz-utils_5.2.5-2.1%7edeb11u2_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/libc-dev-bin_2.31-13%2bdeb11u14_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/l/linux/linux-libc-dev_5.10.262-1_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glibc/libc6-dev_2.31-13%2bdeb11u14_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/d/dpkg/libdpkg-perl_1.20.14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/d/dpkg/dpkg-dev_1.20.14_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/n/nghttp2/libnghttp2-14_1.43.0-1%2bdeb11u3_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/libcurl4_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,932 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/curl_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/c/curl/libcurl3-gnutls_7.74.0-1.3%2bdeb11u16_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/e/expat/libexpat1_2.2.10-2%2bdeb11u7_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/git/git-man_2.30.2-1%2bdeb11u5_all.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/git/git_2.30.2-1%2bdeb11u5_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/g/glib2.0/libglib2.0-0_2.66.8-1%2bdeb11u8_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Failed to fetch http://deb.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.1w-0%2bdeb11u8_amd64.deb  404  Not Found [IP: 146.75.26.132 80]
+2026-11-11 12:23:07,933 - INFO - E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+2026-11-11 12:23:09,386 - INFO -  ---> Removed intermediate container 8cbb61eca623
+2026-11-11 12:23:09,396 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     build-essential     locales     tzdata     gcc     g++     pkg-config     libffi-dev     libssl-dev     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 12:23:09,396 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y --no-install-recommends     git     curl     wget     build-essential     locales     tzdata     gcc     g++     pkg-config     libffi-dev     libssl-dev     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

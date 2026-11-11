@@ -1,0 +1,7 @@
+{
+  "is_finish": false,
+  "guidance_for_write_dockerfile_agent": "The Dockerfile build fails at the step where the repository is installed and built. The error is:\n\n\"error: Failed to build `/testbed`\n  cause: Invalid tar file\n  cause: at byte 85129216: unsafe symbolic-link target \\\"/usr/local/bin/python\\\": is absolute\nhint: The source distribution includes a virtual environment. Virtual environments must be excluded from source distributions.\"\n\nThis error indicates that the build process is including a virtual environment inside the source distribution, which is problematic because the virtual env contains absolute symlinks causing invalid tar files. This is likely caused by the `uv build` step creating or including a `.venv` or similar directory with absolute symlinks.\n\nTo fix this:\n1. Ensure that the build process excludes any virtual environment directories from the source distribution. This might be done by adjusting `.gitignore`, `MANIFEST.in`, or configuration of `uv` build to explicitly ignore `.venv` or other venv folders.\n2. Double-check that the virtual environment created is outside the project directory or excluded from packaging.\n3. Avoid using `pip install dist/*.tar.gz` if the tarball contains the virtual environment, or fix the packaging so the venv is excluded.\n\nThis is a Dockerfile/environment setup issue and must be fixed there before tests can be executed.",
+  "guidance_for_write_eval_script_agent": "",
+  "guidance_for_context_retrieval_agent": "",
+  "build_image_status": false
+}

@@ -1,0 +1,20 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 9dbddfcbdd69cc064992266aa2a295c110948e33
+
+# Apply test patch
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate virtual environment and run targeted test file using pytest
+source /testbed/venv/bin/activate
+
+pytest --no-header -rA --tb=short tests/test_collect_learnings.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Cleanup: reset the repository to discard patch changes
+git checkout 9dbddfcbdd69cc064992266aa2a295c110948e33

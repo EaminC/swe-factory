@@ -1,0 +1,82 @@
+[FEATURE] Support for custom path in RAGStorage
+### Feature Area
+
+Core functionality
+
+### Is your feature request related to a an existing bug? Please link it here.
+
+No
+
+### Describe the solution you'd like
+
+Currently, `RAGStorage` class has a hardcoded path for `chromadb.PersistentClient` as can be seen in this code:
+```python
+chroma_client = chromadb.PersistentClient(
+  path=f"{db_storage_path()}/{self.type}/{self.agents}",
+  settings=Settings(allow_reset=self.allow_reset),
+)
+```
+
+I would like the path to be configurable from the `RAGStorage` constructor.
+
+
+
+### Describe alternatives you've considered
+
+Currently, I was forced to extend the RAGStorage class and copy-paste the `_initialize_app` method and add the path on my own, as can be seen in the following code:
+
+```python
+from typing import Optional
+
+from crewai.memory.storage.rag_storage import RAGStorage
+
+
+class ExtendedRAGStorage(RAGStorage):
+    def __init__(
+        self,
+        type,
+        allow_reset=True,
+        embedder_config=None,
+        crew=None,
+        path: Optional[str] = None,
+    ):
+        self.path = path
+        super().__init__(type, allow_reset, embedder_config, crew)
+
+    def _initialize_app(self):
+        """
+        Initialize the RAG app.
+        TODO: this is copied from crewai/memory/storage/rag_storage.py, if the code changes in the future, this should be updated.
+        """
+        if self.path is None:
+            super()._initialize_app()
+
+        import chromadb
+        from chromadb.config import Settings
+
+        self._set_embedder_config()
+        chroma_client = chromadb.PersistentClient(
+            # TODO: This is the only change from the original code
+            path=self.path,
+            settings=Settings(allow_reset=self.allow_reset),
+        )
+
+        self.app = chroma_client
+
+        try:
+            self.collection = self.app.get_collection(
+                name=self.type, embedding_function=self.embedder_config
+            )
+        except Exception:
+            self.collection = self.app.create_collection(
+                name=self.type, embedding_function=self.embedder_config
+            )
+```
+
+### Additional context
+
+_No response_
+
+### Willingness to Contribute
+
+Yes, I'd be happy to submit a pull request

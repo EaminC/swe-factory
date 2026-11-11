@@ -1,0 +1,67 @@
+diff --git a/src/crewai/knowledge/knowledge.py b/src/crewai/knowledge/knowledge.py
+index f9f55a5173..571542994a 100644
+--- a/src/crewai/knowledge/knowledge.py
++++ b/src/crewai/knowledge/knowledge.py
+@@ -14,13 +14,13 @@ class Knowledge(BaseModel):
+     Knowledge is a collection of sources and setup for the vector store to save and query relevant context.
+     Args:
+         sources: List[BaseKnowledgeSource] = Field(default_factory=list)
+-        storage: KnowledgeStorage = Field(default_factory=KnowledgeStorage)
++        storage: Optional[KnowledgeStorage] = Field(default=None)
+         embedder_config: Optional[Dict[str, Any]] = None
+     """
+ 
+     sources: List[BaseKnowledgeSource] = Field(default_factory=list)
+     model_config = ConfigDict(arbitrary_types_allowed=True)
+-    storage: KnowledgeStorage = Field(default_factory=KnowledgeStorage)
++    storage: Optional[KnowledgeStorage] = Field(default=None)
+     embedder_config: Optional[Dict[str, Any]] = None
+     collection_name: Optional[str] = None
+ 
+diff --git a/src/crewai/knowledge/source/base_file_knowledge_source.py b/src/crewai/knowledge/source/base_file_knowledge_source.py
+index 8cee77e168..5743b1704f 100644
+--- a/src/crewai/knowledge/source/base_file_knowledge_source.py
++++ b/src/crewai/knowledge/source/base_file_knowledge_source.py
+@@ -22,7 +22,7 @@ class BaseFileKnowledgeSource(BaseKnowledgeSource, ABC):
+         default_factory=list, description="The path to the file"
+     )
+     content: Dict[Path, str] = Field(init=False, default_factory=dict)
+-    storage: KnowledgeStorage = Field(default_factory=KnowledgeStorage)
++    storage: Optional[KnowledgeStorage] = Field(default=None)
+     safe_file_paths: List[Path] = Field(default_factory=list)
+ 
+     @field_validator("file_path", "file_paths", mode="before")
+@@ -62,7 +62,10 @@ def validate_content(self):
+ 
+     def _save_documents(self):
+         """Save the documents to the storage."""
+-        self.storage.save(self.chunks)
++        if self.storage:
++            self.storage.save(self.chunks)
++        else:
++            raise ValueError("No storage found to save documents.")
+ 
+     def convert_to_path(self, path: Union[Path, str]) -> Path:
+         """Convert a path to a Path object."""
+diff --git a/src/crewai/knowledge/source/base_knowledge_source.py b/src/crewai/knowledge/source/base_knowledge_source.py
+index 88c3ab360c..b558a4b9ae 100644
+--- a/src/crewai/knowledge/source/base_knowledge_source.py
++++ b/src/crewai/knowledge/source/base_knowledge_source.py
+@@ -16,7 +16,7 @@ class BaseKnowledgeSource(BaseModel, ABC):
+     chunk_embeddings: List[np.ndarray] = Field(default_factory=list)
+ 
+     model_config = ConfigDict(arbitrary_types_allowed=True)
+-    storage: KnowledgeStorage = Field(default_factory=KnowledgeStorage)
++    storage: Optional[KnowledgeStorage] = Field(default=None)
+     metadata: Dict[str, Any] = Field(default_factory=dict)  # Currently unused
+     collection_name: Optional[str] = Field(default=None)
+ 
+@@ -46,4 +46,7 @@ def _save_documents(self):
+         Save the documents to the storage.
+         This method should be called after the chunks and embeddings are generated.
+         """
+-        self.storage.save(self.chunks)
++        if self.storage:
++            self.storage.save(self.chunks)
++        else:
++            raise ValueError("No storage found to save documents.")

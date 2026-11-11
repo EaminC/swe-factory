@@ -1,0 +1,158 @@
+[BUG] Watsonx as embedder is not working - script errors and stops
+### Description
+
+I'm following https://docs.crewai.com/concepts/knowledge#embedder-configuration and it states:
+>Embedder Configuration
+>You can also configure the embedder for the knowledge store. This is useful if you want to use a different embedder for the knowledge store than the one used for the agents.
+> ```
+>...
+>string_source = StringKnowledgeSource(
+>    content="Users name is John. He is 30 years old and lives in San Francisco.",
+>)
+>crew = Crew(
+>    ...
+>    knowledge_sources=[string_source],
+>    embedder={
+>        "provider": "openai",
+>        "config": {"model": "text-embedding-3-small"},
+>    },
+>)
+>```
+
+I try running my crew with this configuration (as I want to use Watsonx for embedder):
+```
+	@crew
+	def crew(self) -> Crew:
+		"""Creates the ResearchReport crew"""
+		return Crew(
+			agents=self.agents,
+			tasks=[self.determine_requirement_set()],
+			knowledge_sources=[
+				StringKnowledgeSource(
+					content="User's name is John. He is 30 years old and lives in San Francisco."
+				)
+			],
+			embedder={
+				"provider": "watson",
+				"config": {
+					"model": "ibm/slate-125m-english-rtrvr",
+					"api_url": WATSONX_URL,
+					"api_key": WATSONX_APIKEY,
+					"project_id": WATSONX_PROJECT_ID,
+				}
+			},
+			process=Process.sequential,
+			verbose=True,
+		)
+```
+
+Which is inline with the guidance given here: https://docs.crewai.com/concepts/memory#using-watson-embeddings.
+
+However it always errors and asks me for the OpenAI API key:
+```
+  File "/crewai/.venv/lib/python3.10/site-packages/crewai/project/annotations.py", line 112, in wrapper
+    crew = func(self, *args, **kwargs)
+  File "/crewai/src/research_report/crew.py", line 246, in crew
+    StringKnowledgeSource(
+  File "/crewai/.venv/lib/python3.10/site-packages/pydantic/main.py", line 214, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+  File "/crewai/.venv/lib/python3.10/site-packages/crewai/knowledge/storage/knowledge_storage.py", line 40, in __init__
+    self._initialize_app(embedder_config or {})
+  File "/crewai/.venv/lib/python3.10/site-packages/crewai/knowledge/storage/knowledge_storage.py", line 74, in _initialize_app
+    self._set_embedder_config(embedder_config)
+  File "/crewai/.venv/lib/python3.10/site-packages/crewai/knowledge/storage/knowledge_storage.py", line 131, in _set_embedder_config
+    else self._create_default_embedding_function()
+  File "/crewai/.venv/lib/python3.10/site-packages/crewai/knowledge/storage/knowledge_storage.py", line 115, in _create_default_embedding_function
+    return OpenAIEmbeddingFunction(
+  File "/crewai/.venv/lib/python3.10/site-packages/chromadb/utils/embedding_functions/openai_embedding_function.py", line 56, in __init__
+    raise ValueError(
+ValueError: Please provide an OpenAI API key. You can get one at https://platform.openai.com/account/api-keys
+```
+
+### Steps to Reproduce
+
+See previous detail
+
+### Expected behavior
+
+I expect Watsonx embedding to be used, and not be asked for openAI API key.
+
+### Screenshots/Code snippets
+
+Given in description
+
+### Operating System
+
+Ubuntu 22.04
+
+### Python Version
+
+3.10
+
+### crewAI Version
+
+0.83.0
+
+### crewAI Tools Version
+
+0.14.0
+
+### Virtual Environment
+
+Venv
+
+### Evidence
+
+Given in description
+
+### Possible Solution
+
+Correctly use the watsonx embedding.
+
+https://github.com/crewAIInc/crewAI/blob/v0.83.0/src/crewai/knowledge/storage/knowledge_storage.py#L131
+https://github.com/crewAIInc/crewAI/blob/v0.83.0/src/crewai/utilities/embedding_configurator.py#L21
+
+### Additional context
+Might be linked to #1770 
+
+If looks like the code tagged as 0.83.0 (https://github.com/crewAIInc/crewAI/blob/v0.83.0/src/crewai/crew.py#L283) is configured for crew to have the `knowledge` parameter, but not the `knowledge_sources` parameter
+```
+    @model_validator(mode="after")
+    def create_crew_knowledge(self) -> "Crew":
+        if self.knowledge:
+            try:
+                self.knowledge = Knowledge(**self.knowledge) if isinstance(self.knowledge, dict) else self.knowledge
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"Invalid knowledge configuration: {str(e)}")
+        return self
+```
+
+however, on the `main` branch (https://github.com/crewAIInc/crewAI/blob/main/src/crewai/crew.py#L201 and https://github.com/crewAIInc/crewAI/blob/main/src/crewai/crew.py#L282) I can see:
+```
+...
+    knowledge_sources: Optional[List[BaseKnowledgeSource]] = Field(
+        default=None,
+        description="Knowledge sources for the crew. Add knowledge sources to the knowledge object.",
+    )
+...
+...
+    @model_validator(mode="after")
+    def create_crew_knowledge(self) -> "Crew":
+        """Create the knowledge for the crew."""
+        if self.knowledge_sources:
+            try:
+                if isinstance(self.knowledge_sources, list) and all(
+                    isinstance(k, BaseKnowledgeSource) for k in self.knowledge_sources
+                ):
+                    self._knowledge = Knowledge(
+                        sources=self.knowledge_sources,
+                        embedder_config=self.embedder,
+                        collection_name="crew",
+                    )
+
+            except Exception as e:
+                self._logger.log(
+                    "warning", f"Failed to init knowledge: {e}", color="yellow"
+                )
+        return self
+```

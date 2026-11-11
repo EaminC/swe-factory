@@ -1,0 +1,104 @@
+2026-11-11 16:32:46,303 - INFO - Building image langflow-ai__langflow-3030
+Using dockerfile:
+# Use ubuntu 20.04 as a more stable base image with bash included
+FROM --platform=linux/x86_64 ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies including git, curl, python3.10, build essentials, and critical libc6 libraries explicitly
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libc6 \
+    libc6-dev \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    ca-certificates \
+    locales \
+    locales-all \
+    zip \
+    unzip \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 and pip3 alternatives to python3.10 and pip3 for consistency
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+ && python3 -m pip install --upgrade pip setuptools wheel
+
+# Install Poetry 1.8.2 via official install script
+ENV POETRY_VERSION=1.8.2
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3 - --version $POETRY_VERSION
+ENV PATH="/opt/poetry/bin:$PATH"
+
+# Create workdir and clone repository with specified commit
+WORKDIR /testbed
+RUN git clone https://github.com/langflow-ai/langflow.git /testbed \
+ && git reset --hard c7575b18df4d9c7d728589d7a2d8ecef14a89b6d
+
+# Configure Poetry to use python 3.10 environment and install dependencies
+RUN poetry env use python3.10 \
+ && poetry install --no-root --no-interaction --no-ansi \
+ # Install the repository itself in development mode
+ && poetry install --no-interaction --no-ansi
+
+# Expose environment variable placeholder for OPENAI_API_KEY
+ENV OPENAI_API_KEY=""
+
+# Default shell is bash
+CMD ["/bin/bash"]
+
+2026-11-11 16:32:46,322 - INFO - Do not find previous image, images list is clean.
+2026-11-11 16:32:46,340 - INFO - Step 1/14 : FROM --platform=linux/x86_64 ubuntu:20.04
+2026-11-11 16:32:56,751 - INFO -  ---> 8feb4d8ca535
+2026-11-11 16:32:56,752 - INFO - Step 2/14 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 16:32:57,284 - INFO -  ---> Running in db573cfed591
+2026-11-11 16:33:03,748 - INFO -  ---> Removed intermediate container db573cfed591
+2026-11-11 16:33:03,749 - INFO -  ---> 4cbec7d1cabd
+2026-11-11 16:33:03,749 - INFO - Step 3/14 : ENV TZ=Etc/UTC
+2026-11-11 16:33:04,035 - INFO -  ---> Running in 95dcafafae28
+2026-11-11 16:33:05,687 - INFO -  ---> Removed intermediate container 95dcafafae28
+2026-11-11 16:33:05,687 - INFO -  ---> b1f5fd2a9808
+2026-11-11 16:33:05,687 - INFO - Step 4/14 : SHELL ["/bin/bash", "-c"]
+2026-11-11 16:33:05,814 - INFO -  ---> Running in 5dbdd2d00913
+2026-11-11 16:33:06,790 - INFO -  ---> Removed intermediate container 5dbdd2d00913
+2026-11-11 16:33:06,791 - INFO -  ---> 30cf05b46fff
+2026-11-11 16:33:06,791 - INFO - Step 5/14 : RUN apt-get update && apt-get install -y     git     curl     wget     build-essential     libc6     libc6-dev     python3.10     python3.10-venv     python3.10-distutils     python3-pip     ca-certificates     locales     locales-all     zip     unzip     jq     && rm -rf /var/lib/apt/lists/*
+2026-11-11 16:33:06,872 - INFO -  ---> Running in 83755b72bb78
+2026-11-11 16:33:09,257 - INFO - Get:1 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+2026-11-11 16:33:09,353 - INFO - Get:2 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]
+2026-11-11 16:33:10,254 - INFO - Get:3 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [32.5 kB]
+2026-11-11 16:33:10,503 - INFO - Get:4 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [4710 kB]
+2026-11-11 16:33:10,683 - INFO - Get:5 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+2026-11-11 16:33:11,007 - INFO - Get:6 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+2026-11-11 16:33:11,339 - INFO - Get:7 http://archive.ubuntu.com/ubuntu focal/multiverse amd64 Packages [177 kB]
+2026-11-11 16:33:11,462 - INFO - Get:8 http://archive.ubuntu.com/ubuntu focal/restricted amd64 Packages [33.4 kB]
+2026-11-11 16:33:11,486 - INFO - Get:9 http://archive.ubuntu.com/ubuntu focal/main amd64 Packages [1275 kB]
+2026-11-11 16:33:11,536 - INFO - Get:10 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [1300 kB]
+2026-11-11 16:33:11,623 - INFO - Get:11 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [4368 kB]
+2026-11-11 16:33:12,017 - INFO - Get:12 http://archive.ubuntu.com/ubuntu focal/universe amd64 Packages [11.3 MB]
+2026-11-11 16:33:12,935 - INFO - Get:13 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages [4850 kB]
+2026-11-11 16:33:13,237 - INFO - Get:14 http://archive.ubuntu.com/ubuntu focal-updates/multiverse amd64 Packages [36.2 kB]
+2026-11-11 16:33:13,242 - INFO - Get:15 http://archive.ubuntu.com/ubuntu focal-updates/universe amd64 Packages [1588 kB]
+2026-11-11 16:33:13,340 - INFO - Get:16 http://archive.ubuntu.com/ubuntu focal-updates/restricted amd64 Packages [4904 kB]
+2026-11-11 16:33:13,679 - INFO - Get:17 http://archive.ubuntu.com/ubuntu focal-backports/universe amd64 Packages [28.4 kB]
+2026-11-11 16:33:13,685 - INFO - Get:18 http://archive.ubuntu.com/ubuntu focal-backports/main amd64 Packages [54.7 kB]
+2026-11-11 16:33:16,143 - INFO - Fetched 35.3 MB in 9s (3931 kB/s)
+2026-11-11 16:33:19,643 - INFO - Reading package lists...
+2026-11-11 16:33:24,759 - INFO - Reading package lists...
+2026-11-11 16:33:26,773 - INFO - Building dependency tree...
+2026-11-11 16:33:26,773 - INFO - Reading state information...
+2026-11-11 16:33:28,008 - INFO - E: Unable to locate package python3.10-venv
+2026-11-11 16:33:28,008 - INFO - E: Couldn't find any package by glob 'python3.10-venv'
+2026-11-11 16:33:28,008 - INFO - E: Couldn't find any package by regex 'python3.10-venv'
+2026-11-11 16:33:28,008 - INFO - E: Unable to locate package python3.10-distutils
+2026-11-11 16:33:28,008 - INFO - E: Couldn't find any package by glob 'python3.10-distutils'
+2026-11-11 16:33:28,009 - INFO - E: Couldn't find any package by regex 'python3.10-distutils'
+2026-11-11 16:33:29,487 - INFO -  ---> Removed intermediate container 83755b72bb78
+2026-11-11 16:33:29,508 - ERROR - Error: The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libc6     libc6-dev     python3.10     python3.10-venv     python3.10-distutils     python3-pip     ca-certificates     locales     locales-all     zip     unzip     jq     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100
+2026-11-11 16:33:29,509 - ERROR - The command '/bin/bash -c apt-get update && apt-get install -y     git     curl     wget     build-essential     libc6     libc6-dev     python3.10     python3.10-venv     python3.10-distutils     python3-pip     ca-certificates     locales     locales-all     zip     unzip     jq     && rm -rf /var/lib/apt/lists/*' returned a non-zero code: 100

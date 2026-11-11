@@ -1,0 +1,71 @@
+# Use Ubuntu 22.04 base image with bash shell
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install build tools, git, curl, locales, tzdata, and dependencies for Python installs via deadsnakes PPA
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    build-essential \
+    curl \
+    git \
+    locales \
+    tzdata \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Manually fetch and add the correct deadsnakes PPA key with properly quoted URL (correct key ID BA6932366A755776)
+RUN curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xBA6932366A755776" -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
+
+# Add deadsnakes PPA source list
+RUN echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpad.net/deadsnakes/ppa/ubuntu jammy main" | tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+
+# Update package index and install Python 3.11 and related packages
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-venv \
+    python3.11-distutils \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set locales and timezone
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
+# Upgrade pip and install build system tools as required by pyproject.toml
+RUN python3.11 -m pip install --upgrade pip setuptools>=68 setuptools_scm[toml]>=8 wheel
+
+# Set working directory
+WORKDIR /testbed/
+
+# Clone the repository and checkout the specific commit
+RUN git clone https://github.com/Aider-AI/aider.git /testbed && \
+    git reset --hard 0fe5247d4c8aa9ceff28f65c6e7fc04b4ce53ec4
+
+# Setup Python virtual environment using Python 3.11
+RUN python3.11 -m venv /testbed/venv
+
+# Install repository dependencies inside virtual environment:
+# - Install all dependencies except litellm from requirements.txt and dev requirements
+# - Attempt to install litellm with 'litellm>=0.1.0' fallback (warn if fail)
+# - Install repository in editable mode (-e .)
+RUN /bin/bash -c " \
+    source /testbed/venv/bin/activate && \
+    pip install --upgrade pip && \
+    grep -v '^litellm==' requirements.txt > /tmp/requirements_no_litellm.txt && \
+    pip install -r /tmp/requirements_no_litellm.txt && \
+    pip install -r requirements/requirements-dev.txt && \
+    (pip install 'litellm>=0.1.0' || echo 'Warning: litellm install failed') && \
+    pip install -e . \
+"
+
+# Add virtual environment activation in bashrc for convenience
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+
+# Set default shell to bash
+ENV SHELL=/bin/bash

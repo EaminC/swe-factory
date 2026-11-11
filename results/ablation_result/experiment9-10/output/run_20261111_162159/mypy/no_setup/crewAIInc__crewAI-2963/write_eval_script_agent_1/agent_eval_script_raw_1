@@ -1,0 +1,24 @@
+<script>
+#!/bin/bash
+set -uxo pipefail
+
+# Activate the virtual environment created in the Dockerfile
+source /opt/testbed/bin/activate
+
+cd /testbed
+git checkout b0d89698fdd3eb5aced8e659f2241f0648b8a40b
+
+# Apply test patch if any
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified test file using pytest with concise output showing test file names and results
+pytest --tb=short -rA --disable-warnings tests/test_openai_version.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the test file to discard any modifications done by patch or tests
+git checkout b0d89698fdd3eb5aced8e659f2241f0648b8a40b tests/test_openai_version.py
+</script>

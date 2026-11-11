@@ -1,0 +1,19 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout 9e9b945a4662e6cea9f6ca621cac3224a3119622 
+
+# Apply the test patch (content replaced programmatically)
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Run only the specified target test file(s) with verbosity as per collected command, limiting to given file(s)
+# Using 'uv run pytest' as gathered from context
+uv run pytest -vv tests/memory/storage/test_rag_storage_path.py
+rc=$?            #Required, save exit code
+
+echo "OMNIGRIL_EXIT_CODE=$rc" #Required, output the test result code
+
+# Revert the changes caused by the patch to keep clean state after test run
+git checkout 9e9b945a4662e6cea9f6ca621cac3224a3119622 tests/memory/storage/test_rag_storage_path.py

@@ -1,0 +1,23 @@
+#!/bin/bash
+set -uxo pipefail
+cd /testbed
+git checkout ed41e877e1c493a7aec13312a8284b209b67495b
+
+git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+
+# Activate poetry virtual environment from platform directory
+source /testbed/platform/.venv/bin/activate
+
+# Change directory to platform where pyproject.toml is located
+cd /testbed/platform
+
+# Run pytest on the specified test file only with concise output
+poetry run pytest --tb=short -r a --disable-warnings platform/reworkd_platform/tests/agent/test_open_ai_agent_service.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset the patched test file to original state
+git checkout ed41e877e1c493a7aec13312a8284b209b platform/reworkd_platform/tests/agent/test_open_ai_agent_service.py

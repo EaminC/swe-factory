@@ -1,0 +1,54 @@
+<dockerfile>
+# Use ubuntu 20.04 as a more stable base image with bash included
+FROM --platform=linux/x86_64 ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install essential system dependencies including git, curl, python3.10, build essentials, and critical libc6 libraries explicitly
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    libc6 \
+    libc6-dev \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
+    python3-pip \
+    ca-certificates \
+    locales \
+    locales-all \
+    zip \
+    unzip \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set python3 and pip3 alternatives to python3.10 and pip3 for consistency
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+ && python3 -m pip install --upgrade pip setuptools wheel
+
+# Install Poetry 1.8.2 via official install script
+ENV POETRY_VERSION=1.8.2
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3 - --version $POETRY_VERSION
+ENV PATH="/opt/poetry/bin:$PATH"
+
+# Create workdir and clone repository with specified commit
+WORKDIR /testbed
+RUN git clone https://github.com/langflow-ai/langflow.git /testbed \
+ && git reset --hard c7575b18df4d9c7d728589d7a2d8ecef14a89b6d
+
+# Configure Poetry to use python 3.10 environment and install dependencies
+RUN poetry env use python3.10 \
+ && poetry install --no-root --no-interaction --no-ansi \
+ # Install the repository itself in development mode
+ && poetry install --no-interaction --no-ansi
+
+# Expose environment variable placeholder for OPENAI_API_KEY
+ENV OPENAI_API_KEY=""
+
+# Default shell is bash
+CMD ["/bin/bash"]
+</dockerfile>

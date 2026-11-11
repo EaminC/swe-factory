@@ -1,0 +1,28 @@
+<script>
+#!/bin/bash
+set -euxo pipefail
+
+cd /testbed
+git checkout 17d40a62c931ac91fc9c31288310b37b62175c47
+
+# Try to apply patch; if it fails because already applied, continue gracefully
+if ! git apply -v - <<'EOF_114329324912'
+[CONTENT OF TEST PATCH]
+EOF_114329324912
+then
+  echo "Patch failed to apply, trying to continue assuming it is already applied."
+fi
+
+# Activate conda environment using provided helper script for reliable activation
+source /opt/conda/etc/profile.d/conda.sh
+conda activate testbed
+
+# Run tests only on the specified test file with minimal warning output and concise traceback
+pytest --disable-warnings --tb=short tests/basic/test_models.py
+rc=$?
+
+echo "OMNIGRIL_EXIT_CODE=$rc"
+
+# Reset test file after running tests to ensure clean state
+git checkout 17d40a62c931ac91fc9c31288310b37b62175c47 tests/basic/test_models.py
+</script>

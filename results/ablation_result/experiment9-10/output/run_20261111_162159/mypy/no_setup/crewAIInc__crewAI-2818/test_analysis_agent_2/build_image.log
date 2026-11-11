@@ -1,0 +1,1812 @@
+2026-11-11 16:33:12,426 - INFO - Building image crewaiinc__crewai-2818
+Using dockerfile:
+# Use a robust Ubuntu base with Bash and wide compatibility
+FROM --platform=linux/x86_64 ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+SHELL ["/bin/bash", "-c"]
+
+# Install system dependencies, git, python3.11, build tools, curl, and locales without Rust packages initially
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       git \
+       wget \
+       curl \
+       build-essential \
+       python3.11 \
+       python3.11-venv \
+       python3.11-distutils \
+       python3-pip \
+       ca-certificates \
+       locales \
+       tzdata \
+       gcc \
+       g++ \
+       unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Install Rust toolchain using rustup (separate step to avoid overlayfs issues)
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Set workdir
+WORKDIR /testbed/
+
+# Clone repo and check out the specified commit (4e496d7a202802917ad4f47eb9efdd6a41f06e18)
+RUN git clone --depth 1 https://github.com/crewAIInc/crewAI /testbed && \
+    git fetch --depth=1 origin 4e496d7a202802917ad4f47eb9efdd6a41f06e18 && \
+    git reset --hard 4e496d7a202802917ad4f47eb9efdd6a41f06e18 && \
+    git remote remove origin
+
+# Create and activate Python virtual environment named "testbed"
+RUN python3 -m venv /testbed/venv
+
+# Install core dependencies and develop mode repo with required extras [tools] inside the virtual environment
+RUN source /testbed/venv/bin/activate && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir "crewai[tools]" && \
+    pip install --no-cache-dir -e .
+
+# Ensure bashrc activates virtual environment by default
+RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+
+ENV PATH="/testbed/venv/bin:$PATH"
+ENV PYTHONPATH="/testbed/:$PYTHONPATH"
+
+2026-11-11 16:33:12,439 - INFO - Do not find previous image, images list is clean.
+2026-11-11 16:33:12,450 - INFO - Step 1/15 : FROM --platform=linux/x86_64 ubuntu:22.04
+2026-11-11 16:33:12,505 - INFO -  ---> 076e7bf82319
+2026-11-11 16:33:12,505 - INFO - Step 2/15 : ARG DEBIAN_FRONTEND=noninteractive
+2026-11-11 16:33:12,643 - INFO -  ---> Running in bf13f31fff9b
+2026-11-11 16:33:14,996 - INFO -  ---> Removed intermediate container bf13f31fff9b
+2026-11-11 16:33:14,996 - INFO -  ---> 182c32a626cb
+2026-11-11 16:33:14,996 - INFO - Step 3/15 : ENV TZ=Etc/UTC
+2026-11-11 16:33:15,089 - INFO -  ---> Running in 16d53bda00ec
+2026-11-11 16:33:16,867 - INFO -  ---> Removed intermediate container 16d53bda00ec
+2026-11-11 16:33:16,867 - INFO -  ---> f8deb44709a8
+2026-11-11 16:33:16,867 - INFO - Step 4/15 : SHELL ["/bin/bash", "-c"]
+2026-11-11 16:33:16,943 - INFO -  ---> Running in 10ec1443e1da
+2026-11-11 16:33:20,150 - INFO -  ---> Removed intermediate container 10ec1443e1da
+2026-11-11 16:33:20,151 - INFO -  ---> c60e3f8718a4
+2026-11-11 16:33:20,152 - INFO - Step 5/15 : RUN apt-get update     && apt-get install -y --no-install-recommends        git        wget        curl        build-essential        python3.11        python3.11-venv        python3.11-distutils        python3-pip        ca-certificates        locales        tzdata        gcc        g++        unzip     && rm -rf /var/lib/apt/lists/*
+2026-11-11 16:33:20,914 - INFO -  ---> Running in c47565580956
+2026-11-11 16:33:21,921 - INFO - Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-11 16:33:22,015 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-11 16:33:23,358 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-11 16:33:23,662 - INFO - Get:4 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8044 kB]
+2026-11-11 16:33:23,674 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-11 16:33:24,874 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-11 16:33:25,354 - INFO - Get:7 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-11 16:33:25,365 - INFO - Get:8 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4499 kB]
+2026-11-11 16:33:25,675 - INFO - Get:9 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1328 kB]
+2026-11-11 16:33:27,065 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-11 16:33:27,092 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-11 16:33:27,112 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]
+2026-11-11 16:33:27,236 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8368 kB]
+2026-11-11 16:33:27,825 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1631 kB]
+2026-11-11 16:33:27,915 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-11 16:33:27,916 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4844 kB]
+2026-11-11 16:33:28,234 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-11 16:33:28,234 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-11 16:33:32,641 - INFO - Fetched 49.4 MB in 11s (4452 kB/s)
+2026-11-11 16:33:36,411 - INFO - Reading package lists...
+2026-11-11 16:33:41,015 - INFO - Reading package lists...
+2026-11-11 16:33:41,755 - INFO - Building dependency tree...
+2026-11-11 16:33:41,755 - INFO - Reading state information...
+2026-11-11 16:33:42,640 - INFO - The following additional packages will be installed:
+2026-11-11 16:33:42,640 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu bzip2 cpp cpp-11 dpkg-dev
+2026-11-11 16:33:42,641 - INFO -   g++-11 gcc-11 gcc-11-base git-man libasan6 libatomic1 libbinutils libbrotli1
+2026-11-11 16:33:42,641 - INFO -   libc-dev-bin libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0 libctf0
+2026-11-11 16:33:42,641 - INFO -   libcurl3-gnutls libcurl4 libdpkg-perl liberror-perl libexpat1 libgcc-11-dev
+2026-11-11 16:33:42,641 - INFO -   libgdbm-compat4 libgdbm6 libgomp1 libisl23 libitm1 libldap-2.5-0 liblsan0
+2026-11-11 16:33:42,641 - INFO -   libmpc3 libmpdec3 libmpfr6 libnghttp2-14 libnsl-dev libperl5.34 libpsl5
+2026-11-11 16:33:42,641 - INFO -   libpython3-stdlib libpython3.10-minimal libpython3.10-stdlib
+2026-11-11 16:33:42,641 - INFO -   libpython3.11-minimal libpython3.11-stdlib libquadmath0 libreadline8
+2026-11-11 16:33:42,642 - INFO -   librtmp1 libsasl2-2 libsasl2-modules-db libsqlite3-0 libssh-4
+2026-11-11 16:33:42,642 - INFO -   libstdc++-11-dev libtirpc-dev libtsan0 libubsan1 linux-libc-dev
+2026-11-11 16:33:42,642 - INFO -   lto-disabled-list make media-types openssl patch perl perl-base
+2026-11-11 16:33:42,646 - INFO -   perl-modules-5.34 python3 python3-lib2to3 python3-minimal python3-pip-whl
+2026-11-11 16:33:42,646 - INFO -   python3-pkg-resources python3-setuptools python3-setuptools-whl
+2026-11-11 16:33:42,646 - INFO -   python3-wheel python3.10 python3.10-minimal python3.11-minimal
+2026-11-11 16:33:42,646 - INFO -   readline-common rpcsvc-proto xz-utils
+2026-11-11 16:33:42,650 - INFO - Suggested packages:
+2026-11-11 16:33:42,650 - INFO -   binutils-doc bzip2-doc cpp-doc gcc-11-locales debian-keyring g++-multilib
+2026-11-11 16:33:42,650 - INFO -   g++-11-multilib gcc-11-doc gcc-multilib manpages-dev autoconf automake
+2026-11-11 16:33:42,650 - INFO -   libtool flex bison gdb gcc-doc gcc-11-multilib gettext-base git-daemon-run
+2026-11-11 16:33:42,650 - INFO -   | git-daemon-sysvinit git-doc git-email git-gui gitk gitweb git-cvs
+2026-11-11 16:33:42,650 - INFO -   git-mediawiki git-svn glibc-doc gnupg bzr gdbm-l10n libstdc++-11-doc
+2026-11-11 16:33:42,650 - INFO -   make-doc ed diffutils-doc perl-doc libterm-readline-gnu-perl
+2026-11-11 16:33:42,650 - INFO -   | libterm-readline-perl-perl libtap-harness-archive-perl python3-doc
+2026-11-11 16:33:42,650 - INFO -   python3-tk python3-venv python-setuptools-doc python3.10-venv python3.10-doc
+2026-11-11 16:33:42,650 - INFO -   binfmt-support python3.11-doc readline-doc zip
+2026-11-11 16:33:42,650 - INFO - Recommended packages:
+2026-11-11 16:33:42,650 - INFO -   fakeroot gnupg libalgorithm-merge-perl less ssh-client manpages manpages-dev
+2026-11-11 16:33:42,650 - INFO -   libc-devtools libfile-fcntllock-perl liblocale-gettext-perl libldap-common
+2026-11-11 16:33:42,650 - INFO -   publicsuffix libsasl2-modules netbase python3-dev
+2026-11-11 16:33:43,527 - INFO - The following NEW packages will be installed:
+2026-11-11 16:33:43,527 - INFO -   binutils binutils-common binutils-x86-64-linux-gnu build-essential bzip2
+2026-11-11 16:33:43,527 - INFO -   ca-certificates cpp cpp-11 curl dpkg-dev g++ g++-11 gcc gcc-11 gcc-11-base
+2026-11-11 16:33:43,527 - INFO -   git git-man libasan6 libatomic1 libbinutils libbrotli1 libc-dev-bin
+2026-11-11 16:33:43,527 - INFO -   libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0 libctf0 libcurl3-gnutls
+2026-11-11 16:33:43,527 - INFO -   libcurl4 libdpkg-perl liberror-perl libexpat1 libgcc-11-dev libgdbm-compat4
+2026-11-11 16:33:43,527 - INFO -   libgdbm6 libgomp1 libisl23 libitm1 libldap-2.5-0 liblsan0 libmpc3 libmpdec3
+2026-11-11 16:33:43,527 - INFO -   libmpfr6 libnghttp2-14 libnsl-dev libperl5.34 libpsl5 libpython3-stdlib
+2026-11-11 16:33:43,527 - INFO -   libpython3.10-minimal libpython3.10-stdlib libpython3.11-minimal
+2026-11-11 16:33:43,527 - INFO -   libpython3.11-stdlib libquadmath0 libreadline8 librtmp1 libsasl2-2
+2026-11-11 16:33:43,527 - INFO -   libsasl2-modules-db libsqlite3-0 libssh-4 libstdc++-11-dev libtirpc-dev
+2026-11-11 16:33:43,527 - INFO -   libtsan0 libubsan1 linux-libc-dev locales lto-disabled-list make media-types
+2026-11-11 16:33:43,527 - INFO -   openssl patch perl perl-modules-5.34 python3 python3-distutils
+2026-11-11 16:33:43,527 - INFO -   python3-lib2to3 python3-minimal python3-pip python3-pip-whl
+2026-11-11 16:33:43,527 - INFO -   python3-pkg-resources python3-setuptools python3-setuptools-whl
+2026-11-11 16:33:43,527 - INFO -   python3-wheel python3.10 python3.10-minimal python3.11 python3.11-minimal
+2026-11-11 16:33:43,527 - INFO -   python3.11-venv readline-common rpcsvc-proto tzdata unzip wget xz-utils
+2026-11-11 16:33:43,528 - INFO - The following packages will be upgraded:
+2026-11-11 16:33:43,528 - INFO -   perl-base
+2026-11-11 16:33:44,055 - INFO - 1 upgraded, 93 newly installed, 0 to remove and 3 not upgraded.
+2026-11-11 16:33:44,055 - INFO - Need to get 103 MB of archives.
+2026-11-11 16:33:44,055 - INFO - After this operation, 374 MB of additional disk space will be used.
+2026-11-11 16:33:44,055 - INFO - Get:1 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl-base amd64 5.34.0-3ubuntu1.10 [1763 kB]
+2026-11-11 16:33:46,067 - INFO - Get:2 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libpython3.10-minimal amd64 3.10.12-1~22.04.18 [817 kB]
+2026-11-11 16:33:46,142 - INFO - Get:3 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libexpat1 amd64 2.4.7-1ubuntu0.9 [96.9 kB]
+2026-11-11 16:33:46,149 - INFO - Get:4 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3.10-minimal amd64 3.10.12-1~22.04.18 [2277 kB]
+2026-11-11 16:33:46,437 - INFO - Get:5 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-minimal amd64 3.10.6-1~22.04.1 [24.3 kB]
+2026-11-11 16:33:46,442 - INFO - Get:6 http://archive.ubuntu.com/ubuntu jammy/main amd64 media-types all 7.0.0 [25.5 kB]
+2026-11-11 16:33:46,443 - INFO - Get:7 http://archive.ubuntu.com/ubuntu jammy/main amd64 libmpdec3 amd64 2.5.1-2build2 [86.8 kB]
+2026-11-11 16:33:46,449 - INFO - Get:8 http://archive.ubuntu.com/ubuntu jammy/main amd64 readline-common all 8.1.2-1 [53.5 kB]
+2026-11-11 16:33:46,452 - INFO - Get:9 http://archive.ubuntu.com/ubuntu jammy/main amd64 libreadline8 amd64 8.1.2-1 [153 kB]
+2026-11-11 16:33:46,466 - INFO - Get:10 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsqlite3-0 amd64 3.37.2-2ubuntu0.8 [642 kB]
+2026-11-11 16:33:46,518 - INFO - Get:11 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libpython3.10-stdlib amd64 3.10.12-1~22.04.18 [1850 kB]
+2026-11-11 16:33:46,618 - INFO - Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3.10 amd64 3.10.12-1~22.04.18 [508 kB]
+2026-11-11 16:33:46,649 - INFO - Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libpython3-stdlib amd64 3.10.6-1~22.04.1 [6812 B]
+2026-11-11 16:33:46,790 - INFO - Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3 amd64 3.10.6-1~22.04.1 [22.8 kB]
+2026-11-11 16:33:46,790 - INFO - Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl-modules-5.34 all 5.34.0-3ubuntu1.10 [2977 kB]
+2026-11-11 16:33:46,873 - INFO - Get:16 http://archive.ubuntu.com/ubuntu jammy/main amd64 libgdbm6 amd64 1.23-1 [33.9 kB]
+2026-11-11 16:33:46,873 - INFO - Get:17 http://archive.ubuntu.com/ubuntu jammy/main amd64 libgdbm-compat4 amd64 1.23-1 [6606 B]
+2026-11-11 16:33:46,873 - INFO - Get:18 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libperl5.34 amd64 5.34.0-3ubuntu1.10 [4796 kB]
+2026-11-11 16:33:47,137 - INFO - Get:19 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 perl amd64 5.34.0-3ubuntu1.10 [232 kB]
+2026-11-11 16:33:47,137 - INFO - Get:20 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 libpython3.11-minimal amd64 3.11.0~rc1-1~22.04.1 [837 kB]
+2026-11-11 16:33:47,288 - INFO - Get:21 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3.11-minimal amd64 3.11.0~rc1-1~22.04.1 [2389 kB]
+2026-11-11 16:33:47,365 - INFO - Get:22 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 openssl amd64 3.0.2-0ubuntu1.30 [1186 kB]
+2026-11-11 16:33:47,390 - INFO - Get:23 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 ca-certificates all 20260816ubuntu0.22.04.2 [140 kB]
+2026-11-11 16:33:47,514 - INFO - Get:24 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 locales all 2.35-0ubuntu3.15 [4245 kB]
+2026-11-11 16:33:47,758 - INFO - Get:25 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-pkg-resources all 59.6.0-1.2ubuntu0.22.04.3 [133 kB]
+2026-11-11 16:33:47,763 - INFO - Get:26 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 tzdata all 2026e-0ubuntu0.22.04.1 [346 kB]
+2026-11-11 16:33:47,779 - INFO - Get:27 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libnghttp2-14 amd64 1.43.0-1ubuntu0.4 [76.9 kB]
+2026-11-11 16:33:47,781 - INFO - Get:28 http://archive.ubuntu.com/ubuntu jammy/main amd64 libpsl5 amd64 0.21.0-1.2build2 [58.4 kB]
+2026-11-11 16:33:47,781 - INFO - Get:29 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 wget amd64 1.21.2-2ubuntu1.5 [339 kB]
+2026-11-11 16:33:47,796 - INFO - Get:30 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 xz-utils amd64 5.2.5-2ubuntu1.2 [84.8 kB]
+2026-11-11 16:33:47,808 - INFO - Get:31 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 binutils-common amd64 2.38-4ubuntu2.12 [223 kB]
+2026-11-11 16:33:47,808 - INFO - Get:32 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libbinutils amd64 2.38-4ubuntu2.12 [663 kB]
+2026-11-11 16:33:48,000 - INFO - Get:33 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libctf-nobfd0 amd64 2.38-4ubuntu2.12 [108 kB]
+2026-11-11 16:33:48,227 - INFO - Get:34 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libctf0 amd64 2.38-4ubuntu2.12 [103 kB]
+2026-11-11 16:33:48,235 - INFO - Get:35 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 binutils-x86-64-linux-gnu amd64 2.38-4ubuntu2.12 [2324 kB]
+2026-11-11 16:33:48,370 - INFO - Get:36 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 binutils amd64 2.38-4ubuntu2.12 [3184 B]
+2026-11-11 16:33:48,371 - INFO - Get:37 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc-dev-bin amd64 2.35-0ubuntu3.15 [20.3 kB]
+2026-11-11 16:33:48,377 - INFO - Get:38 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 linux-libc-dev amd64 5.15.0-203.213 [1408 kB]
+2026-11-11 16:33:48,454 - INFO - Get:39 http://archive.ubuntu.com/ubuntu jammy/main amd64 libcrypt-dev amd64 1:4.4.27-1 [112 kB]
+2026-11-11 16:33:48,457 - INFO - Get:40 http://archive.ubuntu.com/ubuntu jammy/main amd64 rpcsvc-proto amd64 1.4.2-0ubuntu6 [68.5 kB]
+2026-11-11 16:33:48,459 - INFO - Get:41 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libtirpc-dev amd64 1.3.2-2ubuntu0.1 [192 kB]
+2026-11-11 16:33:48,476 - INFO - Get:42 http://archive.ubuntu.com/ubuntu jammy/main amd64 libnsl-dev amd64 1.3.0-2build2 [71.3 kB]
+2026-11-11 16:33:48,481 - INFO - Get:43 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev amd64 2.35-0ubuntu3.15 [2100 kB]
+2026-11-11 16:33:48,715 - INFO - Get:44 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-base amd64 11.4.0-1ubuntu1~22.04.3 [216 kB]
+2026-11-11 16:33:48,723 - INFO - Get:45 http://archive.ubuntu.com/ubuntu jammy/main amd64 libisl23 amd64 0.24-2build1 [727 kB]
+2026-11-11 16:33:48,769 - INFO - Get:46 http://archive.ubuntu.com/ubuntu jammy/main amd64 libmpfr6 amd64 4.1.0-3build3 [1425 kB]
+2026-11-11 16:33:48,847 - INFO - Get:47 http://archive.ubuntu.com/ubuntu jammy/main amd64 libmpc3 amd64 1.2.1-2build1 [46.9 kB]
+2026-11-11 16:33:48,850 - INFO - Get:48 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 cpp-11 amd64 11.4.0-1ubuntu1~22.04.3 [10.0 MB]
+2026-11-11 16:33:49,431 - INFO - Get:49 http://archive.ubuntu.com/ubuntu jammy/main amd64 cpp amd64 4:11.2.0-1ubuntu1 [27.7 kB]
+2026-11-11 16:33:49,431 - INFO - Get:50 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcc1-0 amd64 12.3.0-1ubuntu1~22.04.3 [48.3 kB]
+2026-11-11 16:33:49,440 - INFO - Get:51 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libgomp1 amd64 12.3.0-1ubuntu1~22.04.3 [127 kB]
+2026-11-11 16:33:49,440 - INFO - Get:52 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libitm1 amd64 12.3.0-1ubuntu1~22.04.3 [30.2 kB]
+2026-11-11 16:33:49,445 - INFO - Get:53 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libatomic1 amd64 12.3.0-1ubuntu1~22.04.3 [10.5 kB]
+2026-11-11 16:33:49,448 - INFO - Get:54 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libasan6 amd64 11.4.0-1ubuntu1~22.04.3 [2283 kB]
+2026-11-11 16:33:49,577 - INFO - Get:55 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 liblsan0 amd64 12.3.0-1ubuntu1~22.04.3 [1069 kB]
+2026-11-11 16:33:49,649 - INFO - Get:56 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libtsan0 amd64 11.4.0-1ubuntu1~22.04.3 [2260 kB]
+2026-11-11 16:33:49,763 - INFO - Get:57 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libubsan1 amd64 12.3.0-1ubuntu1~22.04.3 [976 kB]
+2026-11-11 16:33:49,823 - INFO - Get:58 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libquadmath0 amd64 12.3.0-1ubuntu1~22.04.3 [154 kB]
+2026-11-11 16:33:49,831 - INFO - Get:59 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libgcc-11-dev amd64 11.4.0-1ubuntu1~22.04.3 [2517 kB]
+2026-11-11 16:33:49,987 - INFO - Get:60 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11 amd64 11.4.0-1ubuntu1~22.04.3 [20.1 MB]
+2026-11-11 16:33:51,167 - INFO - Get:61 http://archive.ubuntu.com/ubuntu jammy/main amd64 gcc amd64 4:11.2.0-1ubuntu1 [5112 B]
+2026-11-11 16:33:51,168 - INFO - Get:62 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libstdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.3 [2101 kB]
+2026-11-11 16:33:51,267 - INFO - Get:63 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11 amd64 11.4.0-1ubuntu1~22.04.3 [11.4 MB]
+2026-11-11 16:33:51,964 - INFO - Get:64 http://archive.ubuntu.com/ubuntu jammy/main amd64 g++ amd64 4:11.2.0-1ubuntu1 [1412 B]
+2026-11-11 16:33:51,964 - INFO - Get:65 http://archive.ubuntu.com/ubuntu jammy/main amd64 make amd64 4.3-4.1build1 [180 kB]
+2026-11-11 16:33:51,975 - INFO - Get:66 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libdpkg-perl all 1.21.1ubuntu2.6 [237 kB]
+2026-11-11 16:33:51,978 - INFO - Get:67 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 bzip2 amd64 1.0.8-5ubuntu0.1 [34.8 kB]
+2026-11-11 16:33:51,987 - INFO - Get:68 http://archive.ubuntu.com/ubuntu jammy/main amd64 patch amd64 2.7.6-7build2 [109 kB]
+2026-11-11 16:33:51,992 - INFO - Get:69 http://archive.ubuntu.com/ubuntu jammy/main amd64 lto-disabled-list all 24 [12.5 kB]
+2026-11-11 16:33:51,998 - INFO - Get:70 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 dpkg-dev all 1.21.1ubuntu2.6 [922 kB]
+2026-11-11 16:33:52,027 - INFO - Get:71 http://archive.ubuntu.com/ubuntu jammy/main amd64 build-essential amd64 12.9ubuntu3 [4744 B]
+2026-11-11 16:33:52,027 - INFO - Get:72 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libbrotli1 amd64 1.0.9-2ubuntu0.1 [315 kB]
+2026-11-11 16:33:52,213 - INFO - Get:73 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsasl2-modules-db amd64 2.1.27+dfsg2-3ubuntu1.2 [20.5 kB]
+2026-11-11 16:33:52,215 - INFO - Get:74 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libsasl2-2 amd64 2.1.27+dfsg2-3ubuntu1.2 [53.8 kB]
+2026-11-11 16:33:52,450 - INFO - Get:75 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libldap-2.5-0 amd64 2.5.20+dfsg-0ubuntu0.22.04.1 [184 kB]
+2026-11-11 16:33:52,481 - INFO - Get:76 http://archive.ubuntu.com/ubuntu jammy/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2build4 [58.2 kB]
+2026-11-11 16:33:52,481 - INFO - Get:77 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libssh-4 amd64 0.9.6-2ubuntu0.22.04.8 [189 kB]
+2026-11-11 16:33:52,484 - INFO - Get:78 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcurl4 amd64 7.81.0-1ubuntu1.30 [293 kB]
+2026-11-11 16:33:52,498 - INFO - Get:79 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 curl amd64 7.81.0-1ubuntu1.30 [194 kB]
+2026-11-11 16:33:52,506 - INFO - Get:80 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcurl3-gnutls amd64 7.81.0-1ubuntu1.30 [287 kB]
+2026-11-11 16:33:52,516 - INFO - Get:81 http://archive.ubuntu.com/ubuntu jammy/main amd64 liberror-perl all 0.17029-1 [26.5 kB]
+2026-11-11 16:33:52,524 - INFO - Get:82 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 git-man all 1:2.34.1-1ubuntu1.18 [954 kB]
+2026-11-11 16:33:52,689 - INFO - Get:83 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 git amd64 1:2.34.1-1ubuntu1.18 [3174 kB]
+2026-11-11 16:33:52,857 - INFO - Get:84 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 libpython3.11-stdlib amd64 3.11.0~rc1-1~22.04.1 [1860 kB]
+2026-11-11 16:33:52,975 - INFO - Get:85 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-lib2to3 all 3.10.8-1~22.04 [77.6 kB]
+2026-11-11 16:33:52,979 - INFO - Get:86 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-distutils all 3.10.8-1~22.04 [139 kB]
+2026-11-11 16:33:52,984 - INFO - Get:87 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-setuptools all 59.6.0-1.2ubuntu0.22.04.3 [340 kB]
+2026-11-11 16:33:53,000 - INFO - Get:88 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3-wheel all 0.37.1-2ubuntu0.22.04.1 [32.0 kB]
+2026-11-11 16:33:53,006 - INFO - Get:89 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3-pip all 22.0.2+dfsg-1ubuntu0.7 [1306 kB]
+2026-11-11 16:33:53,066 - INFO - Get:90 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3-pip-whl all 22.0.2+dfsg-1ubuntu0.7 [1683 kB]
+2026-11-11 16:33:53,194 - INFO - Get:91 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3-setuptools-whl all 59.6.0-1.2ubuntu0.22.04.3 [789 kB]
+2026-11-11 16:33:53,233 - INFO - Get:92 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3.11 amd64 3.11.0~rc1-1~22.04.1 [550 kB]
+2026-11-11 16:33:53,255 - INFO - Get:93 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 python3.11-venv amd64 3.11.0~rc1-1~22.04.1 [5734 B]
+2026-11-11 16:33:53,411 - INFO - Get:94 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 unzip amd64 6.0-26ubuntu3.2 [175 kB]
+2026-11-11 16:33:53,971 - INFO - debconf: delaying package configuration, since apt-utils is not installed
+2026-11-11 16:33:54,102 - INFO - Fetched 103 MB in 10s (10.5 MB/s)
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 5%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 10%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 15%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 20%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 25%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 30%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 35%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 40%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 45%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 50%
+2026-11-11 16:33:54,257 - INFO - (Reading database ... 55%
+2026-11-11 16:33:54,262 - INFO - (Reading database ... 60%
+2026-11-11 16:33:54,262 - INFO - (Reading database ... 65%
+2026-11-11 16:33:54,262 - INFO - (Reading database ... 70%
+2026-11-11 16:33:54,265 - INFO - (Reading database ... 75%
+2026-11-11 16:33:54,273 - INFO - (Reading database ... 80%
+2026-11-11 16:33:54,294 - INFO - (Reading database ... 85%
+2026-11-11 16:33:54,308 - INFO - (Reading database ... 90%
+2026-11-11 16:33:54,311 - INFO - (Reading database ... 95%
+2026-11-11 16:33:54,319 - INFO - (Reading database ... 100%
+2026-11-11 16:33:54,319 - INFO - (Reading database ... 4393 files and directories currently installed.)
+2026-11-11 16:33:54,321 - INFO - Preparing to unpack .../perl-base_5.34.0-3ubuntu1.10_amd64.deb ...
+2026-11-11 16:33:54,392 - INFO - Unpacking perl-base (5.34.0-3ubuntu1.10) over (5.34.0-3ubuntu1.9) ...
+2026-11-11 16:33:57,509 - INFO - Setting up perl-base (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:33:57,636 - INFO - Selecting previously unselected package libpython3.10-minimal:amd64.
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 5%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 10%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 15%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 20%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 25%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 30%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 35%
+2026-11-11 16:33:57,637 - INFO - (Reading database ... 40%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 45%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 50%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 55%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 60%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 65%
+2026-11-11 16:33:57,638 - INFO - (Reading database ... 70%
+2026-11-11 16:33:57,640 - INFO - (Reading database ... 75%
+2026-11-11 16:33:57,640 - INFO - (Reading database ... 80%
+2026-11-11 16:33:57,653 - INFO - (Reading database ... 85%
+2026-11-11 16:33:57,657 - INFO - (Reading database ... 90%
+2026-11-11 16:33:57,657 - INFO - (Reading database ... 95%
+2026-11-11 16:33:57,665 - INFO - (Reading database ... 100%
+2026-11-11 16:33:57,666 - INFO - (Reading database ... 4393 files and directories currently installed.)
+2026-11-11 16:33:57,671 - INFO - Preparing to unpack .../libpython3.10-minimal_3.10.12-1~22.04.18_amd64.deb ...
+2026-11-11 16:33:57,682 - INFO - Unpacking libpython3.10-minimal:amd64 (3.10.12-1~22.04.18) ...
+2026-11-11 16:33:58,138 - INFO - Selecting previously unselected package libexpat1:amd64.
+2026-11-11 16:33:58,146 - INFO - Preparing to unpack .../libexpat1_2.4.7-1ubuntu0.9_amd64.deb ...
+2026-11-11 16:33:58,189 - INFO - Unpacking libexpat1:amd64 (2.4.7-1ubuntu0.9) ...
+2026-11-11 16:33:58,383 - INFO - Selecting previously unselected package python3.10-minimal.
+2026-11-11 16:33:58,390 - INFO - Preparing to unpack .../python3.10-minimal_3.10.12-1~22.04.18_amd64.deb ...
+2026-11-11 16:33:58,417 - INFO - Unpacking python3.10-minimal (3.10.12-1~22.04.18) ...
+2026-11-11 16:33:58,894 - INFO - Setting up libpython3.10-minimal:amd64 (3.10.12-1~22.04.18) ...
+2026-11-11 16:33:58,943 - INFO - Setting up libexpat1:amd64 (2.4.7-1ubuntu0.9) ...
+2026-11-11 16:33:58,967 - INFO - Setting up python3.10-minimal (3.10.12-1~22.04.18) ...
+2026-11-11 16:34:03,086 - INFO - Selecting previously unselected package python3-minimal.
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 5%
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 10%
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 15%
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 20%
+2026-11-11 16:34:03,090 - INFO - (Reading database ... 25%
+2026-11-11 16:34:03,091 - INFO - (Reading database ... 30%
+2026-11-11 16:34:03,091 - INFO - (Reading database ... 35%
+2026-11-11 16:34:03,091 - INFO - (Reading database ... 40%
+2026-11-11 16:34:03,092 - INFO - (Reading database ... 45%
+2026-11-11 16:34:03,092 - INFO - (Reading database ... 50%
+2026-11-11 16:34:03,092 - INFO - (Reading database ... 55%
+2026-11-11 16:34:03,092 - INFO - (Reading database ... 60%
+2026-11-11 16:34:03,093 - INFO - (Reading database ... 65%
+2026-11-11 16:34:03,100 - INFO - (Reading database ... 70%
+2026-11-11 16:34:03,101 - INFO - (Reading database ... 75%
+2026-11-11 16:34:03,106 - INFO - (Reading database ... 80%
+2026-11-11 16:34:03,112 - INFO - (Reading database ... 85%
+2026-11-11 16:34:03,128 - INFO - (Reading database ... 90%
+2026-11-11 16:34:03,132 - INFO - (Reading database ... 95%
+2026-11-11 16:34:03,132 - INFO - (Reading database ... 100%
+2026-11-11 16:34:03,132 - INFO - (Reading database ... 4697 files and directories currently installed.)
+2026-11-11 16:34:03,137 - INFO - Preparing to unpack .../0-python3-minimal_3.10.6-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:03,148 - INFO - Unpacking python3-minimal (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:03,277 - INFO - Selecting previously unselected package media-types.
+2026-11-11 16:34:03,278 - INFO - Preparing to unpack .../1-media-types_7.0.0_all.deb ...
+2026-11-11 16:34:03,285 - INFO - Unpacking media-types (7.0.0) ...
+2026-11-11 16:34:03,389 - INFO - Selecting previously unselected package libmpdec3:amd64.
+2026-11-11 16:34:03,392 - INFO - Preparing to unpack .../2-libmpdec3_2.5.1-2build2_amd64.deb ...
+2026-11-11 16:34:03,399 - INFO - Unpacking libmpdec3:amd64 (2.5.1-2build2) ...
+2026-11-11 16:34:03,540 - INFO - Selecting previously unselected package readline-common.
+2026-11-11 16:34:03,548 - INFO - Preparing to unpack .../3-readline-common_8.1.2-1_all.deb ...
+2026-11-11 16:34:03,563 - INFO - Unpacking readline-common (8.1.2-1) ...
+2026-11-11 16:34:03,680 - INFO - Selecting previously unselected package libreadline8:amd64.
+2026-11-11 16:34:03,690 - INFO - Preparing to unpack .../4-libreadline8_8.1.2-1_amd64.deb ...
+2026-11-11 16:34:03,696 - INFO - Unpacking libreadline8:amd64 (8.1.2-1) ...
+2026-11-11 16:34:03,814 - INFO - Selecting previously unselected package libsqlite3-0:amd64.
+2026-11-11 16:34:03,818 - INFO - Preparing to unpack .../5-libsqlite3-0_3.37.2-2ubuntu0.8_amd64.deb ...
+2026-11-11 16:34:03,830 - INFO - Unpacking libsqlite3-0:amd64 (3.37.2-2ubuntu0.8) ...
+2026-11-11 16:34:03,971 - INFO - Selecting previously unselected package libpython3.10-stdlib:amd64.
+2026-11-11 16:34:03,979 - INFO - Preparing to unpack .../6-libpython3.10-stdlib_3.10.12-1~22.04.18_amd64.deb ...
+2026-11-11 16:34:03,989 - INFO - Unpacking libpython3.10-stdlib:amd64 (3.10.12-1~22.04.18) ...
+2026-11-11 16:34:05,064 - INFO - Selecting previously unselected package python3.10.
+2026-11-11 16:34:05,064 - INFO - Preparing to unpack .../7-python3.10_3.10.12-1~22.04.18_amd64.deb ...
+2026-11-11 16:34:05,080 - INFO - Unpacking python3.10 (3.10.12-1~22.04.18) ...
+2026-11-11 16:34:05,262 - INFO - Selecting previously unselected package libpython3-stdlib:amd64.
+2026-11-11 16:34:05,266 - INFO - Preparing to unpack .../8-libpython3-stdlib_3.10.6-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:05,275 - INFO - Unpacking libpython3-stdlib:amd64 (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:05,393 - INFO - Setting up python3-minimal (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:06,195 - INFO - Selecting previously unselected package python3.
+2026-11-11 16:34:06,195 - INFO - (Reading database ... 
+2026-11-11 16:34:06,205 - INFO - (Reading database ... 5%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 10%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 15%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 20%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 25%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 30%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 35%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 40%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 45%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 50%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 55%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 60%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 65%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 70%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 75%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 80%
+2026-11-11 16:34:06,206 - INFO - (Reading database ... 85%
+2026-11-11 16:34:06,209 - INFO - (Reading database ... 90%
+2026-11-11 16:34:06,210 - INFO - (Reading database ... 95%
+2026-11-11 16:34:06,213 - INFO - (Reading database ... 100%
+2026-11-11 16:34:06,213 - INFO - (Reading database ... 5127 files and directories currently installed.)
+2026-11-11 16:34:06,214 - INFO - Preparing to unpack .../00-python3_3.10.6-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:06,235 - INFO - Unpacking python3 (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:06,330 - INFO - Selecting previously unselected package perl-modules-5.34.
+2026-11-11 16:34:06,331 - INFO - Preparing to unpack .../01-perl-modules-5.34_5.34.0-3ubuntu1.10_all.deb ...
+2026-11-11 16:34:06,345 - INFO - Unpacking perl-modules-5.34 (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:08,650 - INFO - Selecting previously unselected package libgdbm6:amd64.
+2026-11-11 16:34:08,652 - INFO - Preparing to unpack .../02-libgdbm6_1.23-1_amd64.deb ...
+2026-11-11 16:34:08,663 - INFO - Unpacking libgdbm6:amd64 (1.23-1) ...
+2026-11-11 16:34:08,824 - INFO - Selecting previously unselected package libgdbm-compat4:amd64.
+2026-11-11 16:34:08,824 - INFO - Preparing to unpack .../03-libgdbm-compat4_1.23-1_amd64.deb ...
+2026-11-11 16:34:08,840 - INFO - Unpacking libgdbm-compat4:amd64 (1.23-1) ...
+2026-11-11 16:34:08,964 - INFO - Selecting previously unselected package libperl5.34:amd64.
+2026-11-11 16:34:08,965 - INFO - Preparing to unpack .../04-libperl5.34_5.34.0-3ubuntu1.10_amd64.deb ...
+2026-11-11 16:34:08,986 - INFO - Unpacking libperl5.34:amd64 (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:10,800 - INFO - Selecting previously unselected package perl.
+2026-11-11 16:34:10,809 - INFO - Preparing to unpack .../05-perl_5.34.0-3ubuntu1.10_amd64.deb ...
+2026-11-11 16:34:10,852 - INFO - Unpacking perl (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:11,050 - INFO - Selecting previously unselected package libpython3.11-minimal:amd64.
+2026-11-11 16:34:11,054 - INFO - Preparing to unpack .../06-libpython3.11-minimal_3.11.0~rc1-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:11,061 - INFO - Unpacking libpython3.11-minimal:amd64 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:11,614 - INFO - Selecting previously unselected package python3.11-minimal.
+2026-11-11 16:34:11,628 - INFO - Preparing to unpack .../07-python3.11-minimal_3.11.0~rc1-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:11,646 - INFO - Unpacking python3.11-minimal (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:11,855 - INFO - Selecting previously unselected package openssl.
+2026-11-11 16:34:11,856 - INFO - Preparing to unpack .../08-openssl_3.0.2-0ubuntu1.30_amd64.deb ...
+2026-11-11 16:34:11,863 - INFO - Unpacking openssl (3.0.2-0ubuntu1.30) ...
+2026-11-11 16:34:12,063 - INFO - Selecting previously unselected package ca-certificates.
+2026-11-11 16:34:12,068 - INFO - Preparing to unpack .../09-ca-certificates_20260816ubuntu0.22.04.2_all.deb ...
+2026-11-11 16:34:12,074 - INFO - Unpacking ca-certificates (20260816ubuntu0.22.04.2) ...
+2026-11-11 16:34:12,297 - INFO - Selecting previously unselected package locales.
+2026-11-11 16:34:12,301 - INFO - Preparing to unpack .../10-locales_2.35-0ubuntu3.15_all.deb ...
+2026-11-11 16:34:12,311 - INFO - Unpacking locales (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:13,040 - INFO - Selecting previously unselected package python3-pkg-resources.
+2026-11-11 16:34:13,048 - INFO - Preparing to unpack .../11-python3-pkg-resources_59.6.0-1.2ubuntu0.22.04.3_all.deb ...
+2026-11-11 16:34:13,055 - INFO - Unpacking python3-pkg-resources (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:13,137 - INFO - Selecting previously unselected package tzdata.
+2026-11-11 16:34:13,142 - INFO - Preparing to unpack .../12-tzdata_2026e-0ubuntu0.22.04.1_all.deb ...
+2026-11-11 16:34:13,148 - INFO - Unpacking tzdata (2026e-0ubuntu0.22.04.1) ...
+2026-11-11 16:34:15,038 - INFO - Selecting previously unselected package libnghttp2-14:amd64.
+2026-11-11 16:34:15,042 - INFO - Preparing to unpack .../13-libnghttp2-14_1.43.0-1ubuntu0.4_amd64.deb ...
+2026-11-11 16:34:15,059 - INFO - Unpacking libnghttp2-14:amd64 (1.43.0-1ubuntu0.4) ...
+2026-11-11 16:34:15,174 - INFO - Selecting previously unselected package libpsl5:amd64.
+2026-11-11 16:34:15,193 - INFO - Preparing to unpack .../14-libpsl5_0.21.0-1.2build2_amd64.deb ...
+2026-11-11 16:34:15,201 - INFO - Unpacking libpsl5:amd64 (0.21.0-1.2build2) ...
+2026-11-11 16:34:15,300 - INFO - Selecting previously unselected package wget.
+2026-11-11 16:34:15,315 - INFO - Preparing to unpack .../15-wget_1.21.2-2ubuntu1.5_amd64.deb ...
+2026-11-11 16:34:15,344 - INFO - Unpacking wget (1.21.2-2ubuntu1.5) ...
+2026-11-11 16:34:15,609 - INFO - Selecting previously unselected package xz-utils.
+2026-11-11 16:34:15,615 - INFO - Preparing to unpack .../16-xz-utils_5.2.5-2ubuntu1.2_amd64.deb ...
+2026-11-11 16:34:15,621 - INFO - Unpacking xz-utils (5.2.5-2ubuntu1.2) ...
+2026-11-11 16:34:15,730 - INFO - Selecting previously unselected package binutils-common:amd64.
+2026-11-11 16:34:15,737 - INFO - Preparing to unpack .../17-binutils-common_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:15,754 - INFO - Unpacking binutils-common:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:15,839 - INFO - Selecting previously unselected package libbinutils:amd64.
+2026-11-11 16:34:15,842 - INFO - Preparing to unpack .../18-libbinutils_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:15,854 - INFO - Unpacking libbinutils:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:16,043 - INFO - Selecting previously unselected package libctf-nobfd0:amd64.
+2026-11-11 16:34:16,048 - INFO - Preparing to unpack .../19-libctf-nobfd0_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:16,063 - INFO - Unpacking libctf-nobfd0:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:16,147 - INFO - Selecting previously unselected package libctf0:amd64.
+2026-11-11 16:34:16,156 - INFO - Preparing to unpack .../20-libctf0_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:16,159 - INFO - Unpacking libctf0:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:16,290 - INFO - Selecting previously unselected package binutils-x86-64-linux-gnu.
+2026-11-11 16:34:16,297 - INFO - Preparing to unpack .../21-binutils-x86-64-linux-gnu_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:16,308 - INFO - Unpacking binutils-x86-64-linux-gnu (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:17,041 - INFO - Selecting previously unselected package binutils.
+2026-11-11 16:34:17,043 - INFO - Preparing to unpack .../22-binutils_2.38-4ubuntu2.12_amd64.deb ...
+2026-11-11 16:34:17,052 - INFO - Unpacking binutils (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:17,213 - INFO - Selecting previously unselected package libc-dev-bin.
+2026-11-11 16:34:17,213 - INFO - Preparing to unpack .../23-libc-dev-bin_2.35-0ubuntu3.15_amd64.deb ...
+2026-11-11 16:34:17,218 - INFO - Unpacking libc-dev-bin (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:17,309 - INFO - Selecting previously unselected package linux-libc-dev:amd64.
+2026-11-11 16:34:17,309 - INFO - Preparing to unpack .../24-linux-libc-dev_5.15.0-203.213_amd64.deb ...
+2026-11-11 16:34:17,317 - INFO - Unpacking linux-libc-dev:amd64 (5.15.0-203.213) ...
+2026-11-11 16:34:18,627 - INFO - Selecting previously unselected package libcrypt-dev:amd64.
+2026-11-11 16:34:18,633 - INFO - Preparing to unpack .../25-libcrypt-dev_1%3a4.4.27-1_amd64.deb ...
+2026-11-11 16:34:18,643 - INFO - Unpacking libcrypt-dev:amd64 (1:4.4.27-1) ...
+2026-11-11 16:34:18,750 - INFO - Selecting previously unselected package rpcsvc-proto.
+2026-11-11 16:34:18,752 - INFO - Preparing to unpack .../26-rpcsvc-proto_1.4.2-0ubuntu6_amd64.deb ...
+2026-11-11 16:34:18,759 - INFO - Unpacking rpcsvc-proto (1.4.2-0ubuntu6) ...
+2026-11-11 16:34:18,836 - INFO - Selecting previously unselected package libtirpc-dev:amd64.
+2026-11-11 16:34:18,840 - INFO - Preparing to unpack .../27-libtirpc-dev_1.3.2-2ubuntu0.1_amd64.deb ...
+2026-11-11 16:34:18,856 - INFO - Unpacking libtirpc-dev:amd64 (1.3.2-2ubuntu0.1) ...
+2026-11-11 16:34:19,002 - INFO - Selecting previously unselected package libnsl-dev:amd64.
+2026-11-11 16:34:19,009 - INFO - Preparing to unpack .../28-libnsl-dev_1.3.0-2build2_amd64.deb ...
+2026-11-11 16:34:19,020 - INFO - Unpacking libnsl-dev:amd64 (1.3.0-2build2) ...
+2026-11-11 16:34:19,114 - INFO - Selecting previously unselected package libc6-dev:amd64.
+2026-11-11 16:34:19,123 - INFO - Preparing to unpack .../29-libc6-dev_2.35-0ubuntu3.15_amd64.deb ...
+2026-11-11 16:34:19,126 - INFO - Unpacking libc6-dev:amd64 (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:19,977 - INFO - Selecting previously unselected package gcc-11-base:amd64.
+2026-11-11 16:34:19,987 - INFO - Preparing to unpack .../30-gcc-11-base_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:19,994 - INFO - Unpacking gcc-11-base:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:20,070 - INFO - Selecting previously unselected package libisl23:amd64.
+2026-11-11 16:34:20,076 - INFO - Preparing to unpack .../31-libisl23_0.24-2build1_amd64.deb ...
+2026-11-11 16:34:20,077 - INFO - Unpacking libisl23:amd64 (0.24-2build1) ...
+2026-11-11 16:34:20,239 - INFO - Selecting previously unselected package libmpfr6:amd64.
+2026-11-11 16:34:20,247 - INFO - Preparing to unpack .../32-libmpfr6_4.1.0-3build3_amd64.deb ...
+2026-11-11 16:34:20,255 - INFO - Unpacking libmpfr6:amd64 (4.1.0-3build3) ...
+2026-11-11 16:34:20,468 - INFO - Selecting previously unselected package libmpc3:amd64.
+2026-11-11 16:34:20,468 - INFO - Preparing to unpack .../33-libmpc3_1.2.1-2build1_amd64.deb ...
+2026-11-11 16:34:20,482 - INFO - Unpacking libmpc3:amd64 (1.2.1-2build1) ...
+2026-11-11 16:34:20,582 - INFO - Selecting previously unselected package cpp-11.
+2026-11-11 16:34:20,585 - INFO - Preparing to unpack .../34-cpp-11_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:20,595 - INFO - Unpacking cpp-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:21,358 - INFO - Selecting previously unselected package cpp.
+2026-11-11 16:34:21,365 - INFO - Preparing to unpack .../35-cpp_4%3a11.2.0-1ubuntu1_amd64.deb ...
+2026-11-11 16:34:21,370 - INFO - Unpacking cpp (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:34:21,492 - INFO - Selecting previously unselected package libcc1-0:amd64.
+2026-11-11 16:34:21,494 - INFO - Preparing to unpack .../36-libcc1-0_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:21,505 - INFO - Unpacking libcc1-0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:21,571 - INFO - Selecting previously unselected package libgomp1:amd64.
+2026-11-11 16:34:21,574 - INFO - Preparing to unpack .../37-libgomp1_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:21,581 - INFO - Unpacking libgomp1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:21,689 - INFO - Selecting previously unselected package libitm1:amd64.
+2026-11-11 16:34:21,706 - INFO - Preparing to unpack .../38-libitm1_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:21,716 - INFO - Unpacking libitm1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:21,792 - INFO - Selecting previously unselected package libatomic1:amd64.
+2026-11-11 16:34:21,803 - INFO - Preparing to unpack .../39-libatomic1_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:21,803 - INFO - Unpacking libatomic1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:21,874 - INFO - Selecting previously unselected package libasan6:amd64.
+2026-11-11 16:34:21,875 - INFO - Preparing to unpack .../40-libasan6_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:21,883 - INFO - Unpacking libasan6:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:22,138 - INFO - Selecting previously unselected package liblsan0:amd64.
+2026-11-11 16:34:22,158 - INFO - Preparing to unpack .../41-liblsan0_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:22,166 - INFO - Unpacking liblsan0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:22,326 - INFO - Selecting previously unselected package libtsan0:amd64.
+2026-11-11 16:34:22,332 - INFO - Preparing to unpack .../42-libtsan0_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:22,345 - INFO - Unpacking libtsan0:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:22,697 - INFO - Selecting previously unselected package libubsan1:amd64.
+2026-11-11 16:34:22,705 - INFO - Preparing to unpack .../43-libubsan1_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:22,709 - INFO - Unpacking libubsan1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:22,875 - INFO - Selecting previously unselected package libquadmath0:amd64.
+2026-11-11 16:34:22,885 - INFO - Preparing to unpack .../44-libquadmath0_12.3.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:22,892 - INFO - Unpacking libquadmath0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:22,988 - INFO - Selecting previously unselected package libgcc-11-dev:amd64.
+2026-11-11 16:34:22,991 - INFO - Preparing to unpack .../45-libgcc-11-dev_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:23,000 - INFO - Unpacking libgcc-11-dev:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:23,733 - INFO - Selecting previously unselected package gcc-11.
+2026-11-11 16:34:23,738 - INFO - Preparing to unpack .../46-gcc-11_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:23,743 - INFO - Unpacking gcc-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:25,805 - INFO - Selecting previously unselected package gcc.
+2026-11-11 16:34:25,818 - INFO - Preparing to unpack .../47-gcc_4%3a11.2.0-1ubuntu1_amd64.deb ...
+2026-11-11 16:34:25,825 - INFO - Unpacking gcc (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:34:25,928 - INFO - Selecting previously unselected package libstdc++-11-dev:amd64.
+2026-11-11 16:34:25,937 - INFO - Preparing to unpack .../48-libstdc++-11-dev_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:25,943 - INFO - Unpacking libstdc++-11-dev:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:27,078 - INFO - Selecting previously unselected package g++-11.
+2026-11-11 16:34:27,085 - INFO - Preparing to unpack .../49-g++-11_11.4.0-1ubuntu1~22.04.3_amd64.deb ...
+2026-11-11 16:34:27,089 - INFO - Unpacking g++-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:28,274 - INFO - Selecting previously unselected package g++.
+2026-11-11 16:34:28,289 - INFO - Preparing to unpack .../50-g++_4%3a11.2.0-1ubuntu1_amd64.deb ...
+2026-11-11 16:34:28,297 - INFO - Unpacking g++ (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:34:28,354 - INFO - Selecting previously unselected package make.
+2026-11-11 16:34:28,361 - INFO - Preparing to unpack .../51-make_4.3-4.1build1_amd64.deb ...
+2026-11-11 16:34:28,365 - INFO - Unpacking make (4.3-4.1build1) ...
+2026-11-11 16:34:28,476 - INFO - Selecting previously unselected package libdpkg-perl.
+2026-11-11 16:34:28,485 - INFO - Preparing to unpack .../52-libdpkg-perl_1.21.1ubuntu2.6_all.deb ...
+2026-11-11 16:34:28,492 - INFO - Unpacking libdpkg-perl (1.21.1ubuntu2.6) ...
+2026-11-11 16:34:28,770 - INFO - Selecting previously unselected package bzip2.
+2026-11-11 16:34:28,786 - INFO - Preparing to unpack .../53-bzip2_1.0.8-5ubuntu0.1_amd64.deb ...
+2026-11-11 16:34:28,794 - INFO - Unpacking bzip2 (1.0.8-5ubuntu0.1) ...
+2026-11-11 16:34:28,926 - INFO - Selecting previously unselected package patch.
+2026-11-11 16:34:28,929 - INFO - Preparing to unpack .../54-patch_2.7.6-7build2_amd64.deb ...
+2026-11-11 16:34:28,940 - INFO - Unpacking patch (2.7.6-7build2) ...
+2026-11-11 16:34:29,017 - INFO - Selecting previously unselected package lto-disabled-list.
+2026-11-11 16:34:29,030 - INFO - Preparing to unpack .../55-lto-disabled-list_24_all.deb ...
+2026-11-11 16:34:29,037 - INFO - Unpacking lto-disabled-list (24) ...
+2026-11-11 16:34:29,147 - INFO - Selecting previously unselected package dpkg-dev.
+2026-11-11 16:34:29,149 - INFO - Preparing to unpack .../56-dpkg-dev_1.21.1ubuntu2.6_all.deb ...
+2026-11-11 16:34:29,156 - INFO - Unpacking dpkg-dev (1.21.1ubuntu2.6) ...
+2026-11-11 16:34:29,393 - INFO - Selecting previously unselected package build-essential.
+2026-11-11 16:34:29,407 - INFO - Preparing to unpack .../57-build-essential_12.9ubuntu3_amd64.deb ...
+2026-11-11 16:34:29,427 - INFO - Unpacking build-essential (12.9ubuntu3) ...
+2026-11-11 16:34:29,545 - INFO - Selecting previously unselected package libbrotli1:amd64.
+2026-11-11 16:34:29,545 - INFO - Preparing to unpack .../58-libbrotli1_1.0.9-2ubuntu0.1_amd64.deb ...
+2026-11-11 16:34:29,547 - INFO - Unpacking libbrotli1:amd64 (1.0.9-2ubuntu0.1) ...
+2026-11-11 16:34:29,650 - INFO - Selecting previously unselected package libsasl2-modules-db:amd64.
+2026-11-11 16:34:29,653 - INFO - Preparing to unpack .../59-libsasl2-modules-db_2.1.27+dfsg2-3ubuntu1.2_amd64.deb ...
+2026-11-11 16:34:29,662 - INFO - Unpacking libsasl2-modules-db:amd64 (2.1.27+dfsg2-3ubuntu1.2) ...
+2026-11-11 16:34:29,786 - INFO - Selecting previously unselected package libsasl2-2:amd64.
+2026-11-11 16:34:29,790 - INFO - Preparing to unpack .../60-libsasl2-2_2.1.27+dfsg2-3ubuntu1.2_amd64.deb ...
+2026-11-11 16:34:29,805 - INFO - Unpacking libsasl2-2:amd64 (2.1.27+dfsg2-3ubuntu1.2) ...
+2026-11-11 16:34:29,869 - INFO - Selecting previously unselected package libldap-2.5-0:amd64.
+2026-11-11 16:34:29,874 - INFO - Preparing to unpack .../61-libldap-2.5-0_2.5.20+dfsg-0ubuntu0.22.04.1_amd64.deb ...
+2026-11-11 16:34:29,879 - INFO - Unpacking libldap-2.5-0:amd64 (2.5.20+dfsg-0ubuntu0.22.04.1) ...
+2026-11-11 16:34:30,058 - INFO - Selecting previously unselected package librtmp1:amd64.
+2026-11-11 16:34:30,065 - INFO - Preparing to unpack .../62-librtmp1_2.4+20151223.gitfa8646d.1-2build4_amd64.deb ...
+2026-11-11 16:34:30,074 - INFO - Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build4) ...
+2026-11-11 16:34:30,147 - INFO - Selecting previously unselected package libssh-4:amd64.
+2026-11-11 16:34:30,156 - INFO - Preparing to unpack .../63-libssh-4_0.9.6-2ubuntu0.22.04.8_amd64.deb ...
+2026-11-11 16:34:30,158 - INFO - Unpacking libssh-4:amd64 (0.9.6-2ubuntu0.22.04.8) ...
+2026-11-11 16:34:30,249 - INFO - Selecting previously unselected package libcurl4:amd64.
+2026-11-11 16:34:30,269 - INFO - Preparing to unpack .../64-libcurl4_7.81.0-1ubuntu1.30_amd64.deb ...
+2026-11-11 16:34:30,279 - INFO - Unpacking libcurl4:amd64 (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:30,445 - INFO - Selecting previously unselected package curl.
+2026-11-11 16:34:30,450 - INFO - Preparing to unpack .../65-curl_7.81.0-1ubuntu1.30_amd64.deb ...
+2026-11-11 16:34:30,455 - INFO - Unpacking curl (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:30,562 - INFO - Selecting previously unselected package libcurl3-gnutls:amd64.
+2026-11-11 16:34:30,567 - INFO - Preparing to unpack .../66-libcurl3-gnutls_7.81.0-1ubuntu1.30_amd64.deb ...
+2026-11-11 16:34:30,575 - INFO - Unpacking libcurl3-gnutls:amd64 (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:30,786 - INFO - Selecting previously unselected package liberror-perl.
+2026-11-11 16:34:30,799 - INFO - Preparing to unpack .../67-liberror-perl_0.17029-1_all.deb ...
+2026-11-11 16:34:30,832 - INFO - Unpacking liberror-perl (0.17029-1) ...
+2026-11-11 16:34:30,949 - INFO - Selecting previously unselected package git-man.
+2026-11-11 16:34:30,949 - INFO - Preparing to unpack .../68-git-man_1%3a2.34.1-1ubuntu1.18_all.deb ...
+2026-11-11 16:34:30,955 - INFO - Unpacking git-man (1:2.34.1-1ubuntu1.18) ...
+2026-11-11 16:34:31,153 - INFO - Selecting previously unselected package git.
+2026-11-11 16:34:31,166 - INFO - Preparing to unpack .../69-git_1%3a2.34.1-1ubuntu1.18_amd64.deb ...
+2026-11-11 16:34:31,202 - INFO - Unpacking git (1:2.34.1-1ubuntu1.18) ...
+2026-11-11 16:34:31,956 - INFO - Selecting previously unselected package libpython3.11-stdlib:amd64.
+2026-11-11 16:34:31,966 - INFO - Preparing to unpack .../70-libpython3.11-stdlib_3.11.0~rc1-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:31,970 - INFO - Unpacking libpython3.11-stdlib:amd64 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:32,617 - INFO - Selecting previously unselected package python3-lib2to3.
+2026-11-11 16:34:32,632 - INFO - Preparing to unpack .../71-python3-lib2to3_3.10.8-1~22.04_all.deb ...
+2026-11-11 16:34:32,639 - INFO - Unpacking python3-lib2to3 (3.10.8-1~22.04) ...
+2026-11-11 16:34:32,818 - INFO - Selecting previously unselected package python3-distutils.
+2026-11-11 16:34:32,833 - INFO - Preparing to unpack .../72-python3-distutils_3.10.8-1~22.04_all.deb ...
+2026-11-11 16:34:32,838 - INFO - Unpacking python3-distutils (3.10.8-1~22.04) ...
+2026-11-11 16:34:32,967 - INFO - Selecting previously unselected package python3-setuptools.
+2026-11-11 16:34:32,992 - INFO - Preparing to unpack .../73-python3-setuptools_59.6.0-1.2ubuntu0.22.04.3_all.deb ...
+2026-11-11 16:34:33,005 - INFO - Unpacking python3-setuptools (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:33,318 - INFO - Selecting previously unselected package python3-wheel.
+2026-11-11 16:34:33,327 - INFO - Preparing to unpack .../74-python3-wheel_0.37.1-2ubuntu0.22.04.1_all.deb ...
+2026-11-11 16:34:33,332 - INFO - Unpacking python3-wheel (0.37.1-2ubuntu0.22.04.1) ...
+2026-11-11 16:34:33,418 - INFO - Selecting previously unselected package python3-pip.
+2026-11-11 16:34:33,431 - INFO - Preparing to unpack .../75-python3-pip_22.0.2+dfsg-1ubuntu0.7_all.deb ...
+2026-11-11 16:34:33,448 - INFO - Unpacking python3-pip (22.0.2+dfsg-1ubuntu0.7) ...
+2026-11-11 16:34:34,487 - INFO - Selecting previously unselected package python3-pip-whl.
+2026-11-11 16:34:34,505 - INFO - Preparing to unpack .../76-python3-pip-whl_22.0.2+dfsg-1ubuntu0.7_all.deb ...
+2026-11-11 16:34:34,515 - INFO - Unpacking python3-pip-whl (22.0.2+dfsg-1ubuntu0.7) ...
+2026-11-11 16:34:34,706 - INFO - Selecting previously unselected package python3-setuptools-whl.
+2026-11-11 16:34:34,707 - INFO - Preparing to unpack .../77-python3-setuptools-whl_59.6.0-1.2ubuntu0.22.04.3_all.deb ...
+2026-11-11 16:34:34,717 - INFO - Unpacking python3-setuptools-whl (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:34,840 - INFO - Selecting previously unselected package python3.11.
+2026-11-11 16:34:34,855 - INFO - Preparing to unpack .../78-python3.11_3.11.0~rc1-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:34,859 - INFO - Unpacking python3.11 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:34,959 - INFO - Selecting previously unselected package python3.11-venv.
+2026-11-11 16:34:34,965 - INFO - Preparing to unpack .../79-python3.11-venv_3.11.0~rc1-1~22.04.1_amd64.deb ...
+2026-11-11 16:34:34,971 - INFO - Unpacking python3.11-venv (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:35,071 - INFO - Selecting previously unselected package unzip.
+2026-11-11 16:34:35,074 - INFO - Preparing to unpack .../80-unzip_6.0-26ubuntu3.2_amd64.deb ...
+2026-11-11 16:34:35,077 - INFO - Unpacking unzip (6.0-26ubuntu3.2) ...
+2026-11-11 16:34:35,251 - INFO - Setting up media-types (7.0.0) ...
+2026-11-11 16:34:35,270 - INFO - Setting up gcc-11-base:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:35,284 - INFO - Setting up python3-setuptools-whl (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:35,316 - INFO - Setting up lto-disabled-list (24) ...
+2026-11-11 16:34:35,332 - INFO - Setting up libpsl5:amd64 (0.21.0-1.2build2) ...
+2026-11-11 16:34:35,346 - INFO - Setting up wget (1.21.2-2ubuntu1.5) ...
+2026-11-11 16:34:35,368 - INFO - Setting up unzip (6.0-26ubuntu3.2) ...
+2026-11-11 16:34:35,397 - INFO - Setting up libbrotli1:amd64 (1.0.9-2ubuntu0.1) ...
+2026-11-11 16:34:35,406 - INFO - Setting up libsqlite3-0:amd64 (3.37.2-2ubuntu0.8) ...
+2026-11-11 16:34:35,417 - INFO - Setting up binutils-common:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:35,432 - INFO - Setting up libnghttp2-14:amd64 (1.43.0-1ubuntu0.4) ...
+2026-11-11 16:34:35,452 - INFO - Setting up linux-libc-dev:amd64 (5.15.0-203.213) ...
+2026-11-11 16:34:35,468 - INFO - Setting up libctf-nobfd0:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:35,480 - INFO - Setting up libgomp1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:35,495 - INFO - Setting up perl-modules-5.34 (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:35,507 - INFO - Setting up bzip2 (1.0.8-5ubuntu0.1) ...
+2026-11-11 16:34:35,529 - INFO - Setting up locales (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:38,478 - INFO - Generating locales (this might take a while)...
+2026-11-11 16:34:38,543 - INFO - Generation complete.
+2026-11-11 16:34:38,738 - INFO - Setting up libasan6:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:38,766 - INFO - Setting up libsasl2-modules-db:amd64 (2.1.27+dfsg2-3ubuntu1.2) ...
+2026-11-11 16:34:38,784 - INFO - Setting up tzdata (2026e-0ubuntu0.22.04.1) ...
+2026-11-11 16:34:39,120 - INFO - Current default time zone: 'Etc/UTC'
+2026-11-11 16:34:39,136 - INFO - Local time is now:      Wed Nov 11 16:34:39 UTC 2026.
+2026-11-11 16:34:39,140 - INFO - Universal Time is now:  Wed Nov 11 16:34:39 UTC 2026.
+2026-11-11 16:34:39,140 - INFO - Run 'dpkg-reconfigure tzdata' if you wish to change it.
+2026-11-11 16:34:39,223 - INFO - Setting up libtirpc-dev:amd64 (1.3.2-2ubuntu0.1) ...
+2026-11-11 16:34:39,252 - INFO - Setting up rpcsvc-proto (1.4.2-0ubuntu6) ...
+2026-11-11 16:34:39,283 - INFO - Setting up make (4.3-4.1build1) ...
+2026-11-11 16:34:39,308 - INFO - Setting up libmpfr6:amd64 (4.1.0-3build3) ...
+2026-11-11 16:34:39,358 - INFO - Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build4) ...
+2026-11-11 16:34:39,385 - INFO - Setting up xz-utils (5.2.5-2ubuntu1.2) ...
+2026-11-11 16:34:39,415 - INFO - update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+2026-11-11 16:34:39,415 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,415 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,423 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,424 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,436 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,436 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,436 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,436 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,446 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,459 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+2026-11-11 16:34:39,502 - INFO - Setting up libquadmath0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:39,549 - INFO - Setting up libmpc3:amd64 (1.2.1-2build1) ...
+2026-11-11 16:34:39,574 - INFO - Setting up libatomic1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:39,600 - INFO - Setting up patch (2.7.6-7build2) ...
+2026-11-11 16:34:39,622 - INFO - Setting up libsasl2-2:amd64 (2.1.27+dfsg2-3ubuntu1.2) ...
+2026-11-11 16:34:39,645 - INFO - Setting up libssh-4:amd64 (0.9.6-2ubuntu0.22.04.8) ...
+2026-11-11 16:34:39,666 - INFO - Setting up libubsan1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:39,686 - INFO - Setting up libnsl-dev:amd64 (1.3.0-2build2) ...
+2026-11-11 16:34:39,704 - INFO - Setting up libcrypt-dev:amd64 (1:4.4.27-1) ...
+2026-11-11 16:34:39,722 - INFO - Setting up libmpdec3:amd64 (2.5.1-2build2) ...
+2026-11-11 16:34:39,737 - INFO - Setting up git-man (1:2.34.1-1ubuntu1.18) ...
+2026-11-11 16:34:39,768 - INFO - Setting up libpython3.11-minimal:amd64 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:39,810 - INFO - Setting up libbinutils:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:39,844 - INFO - Setting up libisl23:amd64 (0.24-2build1) ...
+2026-11-11 16:34:39,879 - INFO - Setting up libc-dev-bin (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:39,895 - INFO - Setting up openssl (3.0.2-0ubuntu1.30) ...
+2026-11-11 16:34:39,938 - INFO - Setting up readline-common (8.1.2-1) ...
+2026-11-11 16:34:39,977 - INFO - Setting up libcc1-0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:39,992 - INFO - Setting up liblsan0:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:40,023 - INFO - Setting up libitm1:amd64 (12.3.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:40,054 - INFO - Setting up libgdbm6:amd64 (1.23-1) ...
+2026-11-11 16:34:40,069 - INFO - Setting up libtsan0:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:40,079 - INFO - Setting up libctf0:amd64 (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:40,098 - INFO - Setting up python3.11-minimal (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:43,303 - INFO - Setting up cpp-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:43,313 - INFO - Setting up libreadline8:amd64 (8.1.2-1) ...
+2026-11-11 16:34:43,336 - INFO - Setting up libldap-2.5-0:amd64 (2.5.20+dfsg-0ubuntu0.22.04.1) ...
+2026-11-11 16:34:43,353 - INFO - Setting up libpython3.10-stdlib:amd64 (3.10.12-1~22.04.18) ...
+2026-11-11 16:34:43,367 - INFO - Setting up ca-certificates (20260816ubuntu0.22.04.2) ...
+2026-11-11 16:34:45,778 - INFO - Clearing symlinks in /etc/ssl/certs...
+2026-11-11 16:34:45,798 - INFO - done.
+2026-11-11 16:34:45,798 - INFO - Updating certificates in /etc/ssl/certs...
+2026-11-11 16:34:49,332 - INFO - 120 added, 0 removed; done.
+2026-11-11 16:34:49,439 - INFO - Setting up libgdbm-compat4:amd64 (1.23-1) ...
+2026-11-11 16:34:49,457 - INFO - Setting up libgcc-11-dev:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:49,470 - INFO - Setting up cpp (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:34:49,508 - INFO - Setting up libcurl4:amd64 (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:49,522 - INFO - Setting up libc6-dev:amd64 (2.35-0ubuntu3.15) ...
+2026-11-11 16:34:49,553 - INFO - Setting up curl (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:49,564 - INFO - Setting up libpython3-stdlib:amd64 (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:49,586 - INFO - Setting up binutils-x86-64-linux-gnu (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:49,608 - INFO - Setting up libperl5.34:amd64 (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:49,634 - INFO - Setting up python3.10 (3.10.12-1~22.04.18) ...
+2026-11-11 16:34:51,579 - INFO - Setting up python3-pip-whl (22.0.2+dfsg-1ubuntu0.7) ...
+2026-11-11 16:34:51,588 - INFO - Setting up libpython3.11-stdlib:amd64 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:51,604 - INFO - Setting up libcurl3-gnutls:amd64 (7.81.0-1ubuntu1.30) ...
+2026-11-11 16:34:51,624 - INFO - Setting up python3 (3.10.6-1~22.04.1) ...
+2026-11-11 16:34:51,985 - INFO - Setting up binutils (2.38-4ubuntu2.12) ...
+2026-11-11 16:34:52,004 - INFO - Setting up perl (5.34.0-3ubuntu1.10) ...
+2026-11-11 16:34:52,053 - INFO - Setting up libdpkg-perl (1.21.1ubuntu2.6) ...
+2026-11-11 16:34:52,059 - INFO - Setting up libstdc++-11-dev:amd64 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:52,071 - INFO - Setting up gcc-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:52,089 - INFO - Setting up python3-lib2to3 (3.10.8-1~22.04) ...
+2026-11-11 16:34:52,790 - INFO - Setting up python3-pkg-resources (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:53,336 - INFO - Setting up python3-distutils (3.10.8-1~22.04) ...
+2026-11-11 16:34:54,270 - INFO - Setting up python3.11 (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:57,246 - INFO - Setting up python3-setuptools (59.6.0-1.2ubuntu0.22.04.3) ...
+2026-11-11 16:34:58,557 - INFO - Setting up g++-11 (11.4.0-1ubuntu1~22.04.3) ...
+2026-11-11 16:34:58,574 - INFO - Setting up python3-wheel (0.37.1-2ubuntu0.22.04.1) ...
+2026-11-11 16:34:58,979 - INFO - Setting up gcc (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:34:59,095 - INFO - Setting up dpkg-dev (1.21.1ubuntu2.6) ...
+2026-11-11 16:34:59,116 - INFO - Setting up liberror-perl (0.17029-1) ...
+2026-11-11 16:34:59,130 - INFO - Setting up python3.11-venv (3.11.0~rc1-1~22.04.1) ...
+2026-11-11 16:34:59,270 - INFO - Setting up git (1:2.34.1-1ubuntu1.18) ...
+2026-11-11 16:34:59,301 - INFO - Setting up python3-pip (22.0.2+dfsg-1ubuntu0.7) ...
+2026-11-11 16:35:04,230 - INFO - Setting up g++ (4:11.2.0-1ubuntu1) ...
+2026-11-11 16:35:04,309 - INFO - update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+2026-11-11 16:35:04,313 - INFO - update-alternatives: warning: skip creation of /usr/share/man/man1/c++.1.gz because associated file /usr/share/man/man1/g++.1.gz (of link group c++) doesn't exist
+2026-11-11 16:35:04,337 - INFO - Setting up build-essential (12.9ubuntu3) ...
+2026-11-11 16:35:04,370 - INFO - Processing triggers for libc-bin (2.35-0ubuntu3.15) ...
+2026-11-11 16:35:04,542 - INFO - Processing triggers for ca-certificates (20260816ubuntu0.22.04.2) ...
+2026-11-11 16:35:04,573 - INFO - Updating certificates in /etc/ssl/certs...
+2026-11-11 16:35:07,357 - INFO - 0 added, 0 removed; done.
+2026-11-11 16:35:07,357 - INFO - Running hooks in /etc/ca-certificates/update.d...
+2026-11-11 16:35:07,366 - INFO - done.
+2026-11-11 16:37:10,992 - INFO -  ---> Removed intermediate container c47565580956
+2026-11-11 16:37:10,994 - INFO -  ---> b1824431c129
+2026-11-11 16:37:10,994 - INFO - Step 6/15 : RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+2026-11-11 16:37:11,491 - INFO -  ---> Running in 71716a53eaea
+2026-11-11 16:37:11,999 - INFO - update-alternatives: using /usr/bin/python3.11 to provide /usr/bin/python3 (python3) in auto mode
+2026-11-11 16:37:36,756 - INFO -  ---> Removed intermediate container 71716a53eaea
+2026-11-11 16:37:36,758 - INFO -  ---> a6d4e9313b52
+2026-11-11 16:37:36,758 - INFO - Step 7/15 : RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+2026-11-11 16:37:37,239 - INFO -  ---> Running in 1ec8cff6e044
+2026-11-11 16:37:38,314 - INFO - info: downloading installer
+2026-11-11 16:37:39,152 - INFO - info: profile set to default
+2026-11-11 16:37:39,152 - INFO - info: default host tuple is x86_64-unknown-linux-gnu
+2026-11-11 16:37:39,152 - INFO - info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-11-11 16:37:39,402 - INFO - info: latest update on 2026-10-15 for version 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-11 16:37:39,402 - INFO - info: downloading 6 components
+2026-11-11 16:38:14,468 - INFO - info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-11-11 16:38:14,549 - INFO -   stable-x86_64-unknown-linux-gnu installed - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-11 16:38:14,552 - INFO - Rust is installed now. Great!
+2026-11-11 16:38:14,552 - INFO - To get started you may need to restart your current shell.
+2026-11-11 16:38:14,552 - INFO - This would reload your PATH environment variable to include
+2026-11-11 16:38:14,552 - INFO - Cargo's bin directory ($HOME/.cargo/bin).
+2026-11-11 16:38:14,552 - INFO - To configure your current shell, you need to source the
+2026-11-11 16:38:14,552 - INFO - corresponding env file under $HOME/.cargo.
+2026-11-11 16:38:14,552 - INFO - Consider running the right command for your shell (note the leading DOT):
+2026-11-11 16:38:14,552 - INFO - . "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+2026-11-11 16:38:14,552 - INFO - cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+2026-11-11 16:38:14,552 - INFO - CC_x86_64-unknown-linux-gnu = None
+2026-11-11 16:38:14,553 - INFO - cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+2026-11-11 16:38:14,553 - INFO - CC_x86_64_unknown_linux_gnu = None
+2026-11-11 16:38:14,553 - INFO - cargo:rerun-if-env-changed=HOST_CC
+2026-11-11 16:38:14,553 - INFO - HOST_CC = None
+2026-11-11 16:38:14,553 - INFO - cargo:rerun-if-env-changed=CC
+2026-11-11 16:38:14,553 - INFO - CC = None
+2026-11-11 16:38:14,555 - INFO - cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+2026-11-11 16:38:14,652 - INFO - cargo:rerun-if-env-changed=CPATH
+2026-11-11 16:38:14,652 - INFO - cargo:rerun-if-env-changed=C_INCLUDE_PATH
+2026-11-11 16:38:14,653 - INFO - cargo:rerun-if-env-changed=CPLUS_INCLUDE_PATH
+2026-11-11 16:38:14,653 - INFO - cargo:rerun-if-env-changed=OBJC_INCLUDE_PATH
+2026-11-11 16:38:14,653 - INFO - cargo:rerun-if-env-changed=OBJCPLUS_INCLUDE_PATH
+2026-11-11 16:38:14,653 - INFO - cargo:rerun-if-env-changed=COMPILER_PATH
+2026-11-11 16:38:14,654 - INFO - cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+2026-11-11 16:38:14,654 - INFO - cargo:rerun-if-env-changed=GCC_EXEC_PREFIX
+2026-11-11 16:38:14,654 - INFO - cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+2026-11-11 16:38:14,655 - INFO - CRATE_CC_NO_DEFAULTS = None
+2026-11-11 16:38:14,655 - INFO - cargo:rerun-if-env-changed=CFLAGS
+2026-11-11 16:38:14,655 - INFO - CFLAGS = None
+2026-11-11 16:38:14,655 - INFO - cargo:rerun-if-env-changed=HOST_CFLAGS
+2026-11-11 16:38:14,655 - INFO - HOST_CFLAGS = None
+2026-11-11 16:38:14,655 - INFO - cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+2026-11-11 16:38:14,655 - INFO - CFLAGS_x86_64_unknown_linux_gnu = None
+2026-11-11 16:38:14,655 - INFO - cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+2026-11-11 16:38:14,655 - INFO - CFLAGS_x86_64-unknown-linux-gnu = None
+2026-11-11 16:45:49,745 - INFO -  ---> Removed intermediate container 1ec8cff6e044
+2026-11-11 16:45:49,748 - INFO -  ---> c03e5725c683
+2026-11-11 16:45:49,750 - INFO - Step 8/15 : ENV PATH="/root/.cargo/bin:$PATH"
+2026-11-11 16:45:54,120 - INFO -  ---> Running in f7be3619c622
+2026-11-11 16:48:43,808 - INFO -  ---> Removed intermediate container f7be3619c622
+2026-11-11 16:48:43,813 - INFO -  ---> 7f983395ac7c
+2026-11-11 16:48:43,813 - INFO - Step 9/15 : WORKDIR /testbed/
+2026-11-11 16:48:43,941 - INFO -  ---> Running in ba9d5b0ea4c0
+2026-11-11 16:51:34,107 - INFO -  ---> Removed intermediate container ba9d5b0ea4c0
+2026-11-11 16:51:34,109 - INFO -  ---> 15cdff324905
+2026-11-11 16:51:34,110 - INFO - Step 10/15 : RUN git clone --depth 1 https://github.com/crewAIInc/crewAI /testbed &&     git fetch --depth=1 origin 4e496d7a202802917ad4f47eb9efdd6a41f06e18 &&     git reset --hard 4e496d7a202802917ad4f47eb9efdd6a41f06e18 &&     git remote remove origin
+2026-11-11 16:51:34,251 - INFO -  ---> Running in 3ac7d7ae2d96
+2026-11-11 16:51:34,703 - INFO - Cloning into '/testbed'...
+2026-11-11 16:51:44,555 - INFO - Updating files:   2% (903/44372)
+2026-11-11 16:51:44,628 - INFO - Updating files:   3% (1332/44372)
+2026-11-11 16:51:44,716 - INFO - Updating files:   4% (1775/44372)
+2026-11-11 16:51:44,785 - INFO - Updating files:   5% (2219/44372)
+2026-11-11 16:51:44,860 - INFO - Updating files:   6% (2663/44372)
+2026-11-11 16:51:44,948 - INFO - Updating files:   7% (3107/44372)
+2026-11-11 16:51:45,026 - INFO - Updating files:   8% (3550/44372)
+2026-11-11 16:51:45,090 - INFO - Updating files:   9% (3994/44372)
+2026-11-11 16:51:45,174 - INFO - Updating files:  10% (4438/44372)
+2026-11-11 16:51:45,238 - INFO - Updating files:  11% (4881/44372)
+2026-11-11 16:51:45,318 - INFO - Updating files:  12% (5325/44372)
+2026-11-11 16:51:45,393 - INFO - Updating files:  13% (5769/44372)
+2026-11-11 16:51:45,408 - INFO - Updating files:  13% (5849/44372)
+2026-11-11 16:51:45,483 - INFO - Updating files:  14% (6213/44372)
+2026-11-11 16:51:45,537 - INFO - Updating files:  15% (6656/44372)
+2026-11-11 16:51:45,628 - INFO - Updating files:  16% (7100/44372)
+2026-11-11 16:51:45,698 - INFO - Updating files:  17% (7544/44372)
+2026-11-11 16:51:45,775 - INFO - Updating files:  18% (7987/44372)
+2026-11-11 16:51:45,848 - INFO - Updating files:  19% (8431/44372)
+2026-11-11 16:51:46,004 - INFO - Updating files:  20% (8875/44372)
+2026-11-11 16:51:46,061 - INFO - Updating files:  21% (9319/44372)
+2026-11-11 16:51:46,143 - INFO - Updating files:  22% (9762/44372)
+2026-11-11 16:51:46,219 - INFO - Updating files:  23% (10206/44372)
+2026-11-11 16:51:46,296 - INFO - Updating files:  24% (10650/44372)
+2026-11-11 16:51:46,346 - INFO - Updating files:  25% (11093/44372)
+2026-11-11 16:51:46,413 - INFO - Updating files:  25% (11481/44372)
+2026-11-11 16:51:46,424 - INFO - Updating files:  26% (11537/44372)
+2026-11-11 16:51:46,486 - INFO - Updating files:  27% (11981/44372)
+2026-11-11 16:51:46,559 - INFO - Updating files:  28% (12425/44372)
+2026-11-11 16:51:46,617 - INFO - Updating files:  29% (12868/44372)
+2026-11-11 16:51:46,758 - INFO - Updating files:  30% (13312/44372)
+2026-11-11 16:51:46,812 - INFO - Updating files:  31% (13756/44372)
+2026-11-11 16:51:46,860 - INFO - Updating files:  32% (14200/44372)
+2026-11-11 16:51:46,929 - INFO - Updating files:  33% (14643/44372)
+2026-11-11 16:51:47,097 - INFO - Updating files:  34% (15087/44372)
+2026-11-11 16:51:47,137 - INFO - Updating files:  35% (15531/44372)
+2026-11-11 16:51:47,177 - INFO - Updating files:  36% (15974/44372)
+2026-11-11 16:51:47,247 - INFO - Updating files:  37% (16418/44372)
+2026-11-11 16:51:47,341 - INFO - Updating files:  38% (16862/44372)
+2026-11-11 16:51:47,409 - INFO - Updating files:  38% (17230/44372)
+2026-11-11 16:51:47,423 - INFO - Updating files:  39% (17306/44372)
+2026-11-11 16:51:47,519 - INFO - Updating files:  40% (17749/44372)
+2026-11-11 16:51:47,640 - INFO - Updating files:  41% (18193/44372)
+2026-11-11 16:51:47,751 - INFO - Updating files:  42% (18637/44372)
+2026-11-11 16:51:47,852 - INFO - Updating files:  43% (19080/44372)
+2026-11-11 16:51:48,036 - INFO - Updating files:  44% (19524/44372)
+2026-11-11 16:51:48,210 - INFO - Updating files:  45% (19968/44372)
+2026-11-11 16:51:48,403 - INFO - Updating files:  46% (20412/44372)
+2026-11-11 16:51:48,407 - INFO - Updating files:  46% (20417/44372)
+2026-11-11 16:51:48,466 - INFO - Updating files:  47% (20855/44372)
+2026-11-11 16:51:48,525 - INFO - Updating files:  48% (21299/44372)
+2026-11-11 16:51:48,595 - INFO - Updating files:  49% (21743/44372)
+2026-11-11 16:51:48,717 - INFO - Updating files:  50% (22186/44372)
+2026-11-11 16:51:48,849 - INFO - Updating files:  51% (22630/44372)
+2026-11-11 16:51:48,970 - INFO - Updating files:  52% (23074/44372)
+2026-11-11 16:51:49,129 - INFO - Updating files:  53% (23518/44372)
+2026-11-11 16:51:49,189 - INFO - Updating files:  54% (23961/44372)
+2026-11-11 16:51:49,289 - INFO - Updating files:  55% (24405/44372)
+2026-11-11 16:51:49,392 - INFO - Updating files:  56% (24849/44372)
+2026-11-11 16:51:49,413 - INFO - Updating files:  56% (24906/44372)
+2026-11-11 16:51:49,508 - INFO - Updating files:  57% (25293/44372)
+2026-11-11 16:51:49,628 - INFO - Updating files:  58% (25736/44372)
+2026-11-11 16:51:49,742 - INFO - Updating files:  59% (26180/44372)
+2026-11-11 16:51:49,878 - INFO - Updating files:  60% (26624/44372)
+2026-11-11 16:51:50,022 - INFO - Updating files:  61% (27067/44372)
+2026-11-11 16:51:50,153 - INFO - Updating files:  62% (27511/44372)
+2026-11-11 16:51:50,307 - INFO - Updating files:  63% (27955/44372)
+2026-11-11 16:51:50,350 - INFO - Updating files:  64% (28399/44372)
+2026-11-11 16:51:50,391 - INFO - Updating files:  65% (28842/44372)
+2026-11-11 16:51:50,408 - INFO - Updating files:  65% (29006/44372)
+2026-11-11 16:51:50,465 - INFO - Updating files:  66% (29286/44372)
+2026-11-11 16:51:50,717 - INFO - Updating files:  67% (29730/44372)
+2026-11-11 16:51:50,806 - INFO - Updating files:  68% (30173/44372)
+2026-11-11 16:51:50,876 - INFO - Updating files:  69% (30617/44372)
+2026-11-11 16:51:50,980 - INFO - Updating files:  70% (31061/44372)
+2026-11-11 16:51:51,095 - INFO - Updating files:  71% (31505/44372)
+2026-11-11 16:51:51,292 - INFO - Updating files:  72% (31948/44372)
+2026-11-11 16:51:51,408 - INFO - Updating files:  72% (32360/44372)
+2026-11-11 16:51:51,418 - INFO - Updating files:  73% (32392/44372)
+2026-11-11 16:51:51,576 - INFO - Updating files:  74% (32836/44372)
+2026-11-11 16:51:51,712 - INFO - Updating files:  75% (33279/44372)
+2026-11-11 16:51:51,823 - INFO - Updating files:  76% (33723/44372)
+2026-11-11 16:51:52,036 - INFO - Updating files:  77% (34167/44372)
+2026-11-11 16:51:52,331 - INFO - Updating files:  78% (34611/44372)
+2026-11-11 16:51:52,408 - INFO - Updating files:  78% (34870/44372)
+2026-11-11 16:51:52,461 - INFO - Updating files:  79% (35054/44372)
+2026-11-11 16:51:52,604 - INFO - Updating files:  80% (35498/44372)
+2026-11-11 16:51:52,760 - INFO - Updating files:  81% (35942/44372)
+2026-11-11 16:51:52,903 - INFO - Updating files:  82% (36386/44372)
+2026-11-11 16:51:53,009 - INFO - Updating files:  83% (36829/44372)
+2026-11-11 16:51:53,077 - INFO - Updating files:  84% (37273/44372)
+2026-11-11 16:51:53,170 - INFO - Updating files:  85% (37717/44372)
+2026-11-11 16:51:53,262 - INFO - Updating files:  86% (38160/44372)
+2026-11-11 16:51:53,358 - INFO - Updating files:  87% (38604/44372)
+2026-11-11 16:51:53,412 - INFO - Updating files:  87% (38769/44372)
+2026-11-11 16:51:53,496 - INFO - Updating files:  88% (39048/44372)
+2026-11-11 16:51:53,636 - INFO - Updating files:  89% (39492/44372)
+2026-11-11 16:51:53,898 - INFO - Updating files:  90% (39935/44372)
+2026-11-11 16:51:54,089 - INFO - Updating files:  91% (40379/44372)
+2026-11-11 16:51:54,251 - INFO - Updating files:  92% (40823/44372)
+2026-11-11 16:51:54,385 - INFO - Updating files:  93% (41266/44372)
+2026-11-11 16:51:54,410 - INFO - Updating files:  93% (41354/44372)
+2026-11-11 16:51:54,511 - INFO - Updating files:  94% (41710/44372)
+2026-11-11 16:51:54,668 - INFO - Updating files:  95% (42154/44372)
+2026-11-11 16:51:54,974 - INFO - Updating files:  96% (42598/44372)
+2026-11-11 16:51:55,172 - INFO - Updating files:  97% (43041/44372)
+2026-11-11 16:51:55,312 - INFO - Updating files:  98% (43485/44372)
+2026-11-11 16:51:55,408 - INFO - Updating files:  98% (43579/44372)
+2026-11-11 16:51:55,601 - INFO - Updating files:  99% (43929/44372)
+2026-11-11 16:51:55,843 - INFO - Updating files: 100% (44372/44372)
+2026-11-11 16:51:55,843 - INFO - Updating files: 100% (44372/44372), done.
+2026-11-11 16:52:00,276 - INFO - From https://github.com/crewAIInc/crewAI
+2026-11-11 16:52:00,276 - INFO -  * branch            4e496d7a202802917ad4f47eb9efdd6a41f06e18 -> FETCH_HEAD
+2026-11-11 16:52:01,512 - INFO - Updating files:   9% (4301/45119)
+2026-11-11 16:52:01,619 - INFO - Updating files:  10% (4512/45119)
+2026-11-11 16:52:01,769 - INFO - Updating files:  11% (4964/45119)
+2026-11-11 16:52:01,916 - INFO - Updating files:  12% (5415/45119)
+2026-11-11 16:52:02,064 - INFO - Updating files:  13% (5866/45119)
+2026-11-11 16:52:02,211 - INFO - Updating files:  14% (6317/45119)
+2026-11-11 16:52:02,294 - INFO - Updating files:  15% (6768/45119)
+2026-11-11 16:52:02,392 - INFO - Updating files:  16% (7220/45119)
+2026-11-11 16:52:02,512 - INFO - Updating files:  16% (7497/45119)
+2026-11-11 16:52:02,633 - INFO - Updating files:  17% (7671/45119)
+2026-11-11 16:52:02,789 - INFO - Updating files:  18% (8122/45119)
+2026-11-11 16:52:02,886 - INFO - Updating files:  19% (8573/45119)
+2026-11-11 16:52:02,925 - INFO - Updating files:  20% (9024/45119)
+2026-11-11 16:52:02,967 - INFO - Updating files:  21% (9475/45119)
+2026-11-11 16:52:03,015 - INFO - Updating files:  22% (9927/45119)
+2026-11-11 16:52:03,053 - INFO - Updating files:  23% (10378/45119)
+2026-11-11 16:52:03,093 - INFO - Updating files:  24% (10829/45119)
+2026-11-11 16:52:03,131 - INFO - Updating files:  25% (11280/45119)
+2026-11-11 16:52:03,175 - INFO - Updating files:  26% (11731/45119)
+2026-11-11 16:52:03,235 - INFO - Updating files:  27% (12183/45119)
+2026-11-11 16:52:03,293 - INFO - Updating files:  28% (12634/45119)
+2026-11-11 16:52:03,361 - INFO - Updating files:  29% (13085/45119)
+2026-11-11 16:52:03,441 - INFO - Updating files:  30% (13536/45119)
+2026-11-11 16:52:03,503 - INFO - Updating files:  31% (13987/45119)
+2026-11-11 16:52:03,508 - INFO - Updating files:  31% (14049/45119)
+2026-11-11 16:52:03,563 - INFO - Updating files:  32% (14439/45119)
+2026-11-11 16:52:03,637 - INFO - Updating files:  33% (14890/45119)
+2026-11-11 16:52:03,689 - INFO - Updating files:  34% (15341/45119)
+2026-11-11 16:52:03,755 - INFO - Updating files:  35% (15792/45119)
+2026-11-11 16:52:03,815 - INFO - Updating files:  36% (16243/45119)
+2026-11-11 16:52:03,874 - INFO - Updating files:  37% (16695/45119)
+2026-11-11 16:52:03,931 - INFO - Updating files:  38% (17146/45119)
+2026-11-11 16:52:03,992 - INFO - Updating files:  39% (17597/45119)
+2026-11-11 16:52:04,053 - INFO - Updating files:  40% (18048/45119)
+2026-11-11 16:52:04,120 - INFO - Updating files:  41% (18499/45119)
+2026-11-11 16:52:04,187 - INFO - Updating files:  42% (18950/45119)
+2026-11-11 16:52:04,244 - INFO - Updating files:  43% (19402/45119)
+2026-11-11 16:52:04,311 - INFO - Updating files:  44% (19853/45119)
+2026-11-11 16:52:04,380 - INFO - Updating files:  45% (20304/45119)
+2026-11-11 16:52:04,436 - INFO - Updating files:  46% (20755/45119)
+2026-11-11 16:52:04,491 - INFO - Updating files:  47% (21206/45119)
+2026-11-11 16:52:04,510 - INFO - Updating files:  47% (21338/45119)
+2026-11-11 16:52:04,551 - INFO - Updating files:  48% (21658/45119)
+2026-11-11 16:52:04,610 - INFO - Updating files:  49% (22109/45119)
+2026-11-11 16:52:04,675 - INFO - Updating files:  50% (22560/45119)
+2026-11-11 16:52:04,736 - INFO - Updating files:  51% (23011/45119)
+2026-11-11 16:52:04,800 - INFO - Updating files:  52% (23462/45119)
+2026-11-11 16:52:04,878 - INFO - Updating files:  53% (23914/45119)
+2026-11-11 16:52:04,939 - INFO - Updating files:  54% (24365/45119)
+2026-11-11 16:52:05,001 - INFO - Updating files:  55% (24816/45119)
+2026-11-11 16:52:05,065 - INFO - Updating files:  56% (25267/45119)
+2026-11-11 16:52:05,131 - INFO - Updating files:  57% (25718/45119)
+2026-11-11 16:52:05,192 - INFO - Updating files:  58% (26170/45119)
+2026-11-11 16:52:05,251 - INFO - Updating files:  59% (26621/45119)
+2026-11-11 16:52:05,312 - INFO - Updating files:  60% (27072/45119)
+2026-11-11 16:52:05,367 - INFO - Updating files:  61% (27523/45119)
+2026-11-11 16:52:05,424 - INFO - Updating files:  62% (27974/45119)
+2026-11-11 16:52:05,510 - INFO - Updating files:  62% (28394/45119)
+2026-11-11 16:52:05,514 - INFO - Updating files:  63% (28425/45119)
+2026-11-11 16:52:05,621 - INFO - Updating files:  64% (28877/45119)
+2026-11-11 16:52:05,721 - INFO - Updating files:  65% (29328/45119)
+2026-11-11 16:52:05,812 - INFO - Updating files:  66% (29779/45119)
+2026-11-11 16:52:05,918 - INFO - Updating files:  67% (30230/45119)
+2026-11-11 16:52:06,010 - INFO - Updating files:  68% (30681/45119)
+2026-11-11 16:52:06,115 - INFO - Updating files:  69% (31133/45119)
+2026-11-11 16:52:06,222 - INFO - Updating files:  70% (31584/45119)
+2026-11-11 16:52:06,312 - INFO - Updating files:  71% (32035/45119)
+2026-11-11 16:52:06,367 - INFO - Updating files:  72% (32486/45119)
+2026-11-11 16:52:06,427 - INFO - Updating files:  73% (32937/45119)
+2026-11-11 16:52:06,485 - INFO - Updating files:  74% (33389/45119)
+2026-11-11 16:52:06,507 - INFO - Updating files:  74% (33555/45119)
+2026-11-11 16:52:06,542 - INFO - Updating files:  75% (33840/45119)
+2026-11-11 16:52:06,599 - INFO - Updating files:  76% (34291/45119)
+2026-11-11 16:52:06,654 - INFO - Updating files:  77% (34742/45119)
+2026-11-11 16:52:06,721 - INFO - Updating files:  78% (35193/45119)
+2026-11-11 16:52:06,777 - INFO - Updating files:  79% (35645/45119)
+2026-11-11 16:52:06,833 - INFO - Updating files:  80% (36096/45119)
+2026-11-11 16:52:06,885 - INFO - Updating files:  81% (36547/45119)
+2026-11-11 16:52:06,939 - INFO - Updating files:  82% (36998/45119)
+2026-11-11 16:52:06,997 - INFO - Updating files:  83% (37449/45119)
+2026-11-11 16:52:07,047 - INFO - Updating files:  84% (37900/45119)
+2026-11-11 16:52:07,096 - INFO - Updating files:  85% (38352/45119)
+2026-11-11 16:52:07,151 - INFO - Updating files:  86% (38803/45119)
+2026-11-11 16:52:07,200 - INFO - Updating files:  87% (39254/45119)
+2026-11-11 16:52:07,253 - INFO - Updating files:  88% (39705/45119)
+2026-11-11 16:52:07,302 - INFO - Updating files:  89% (40156/45119)
+2026-11-11 16:52:07,359 - INFO - Updating files:  90% (40608/45119)
+2026-11-11 16:52:07,406 - INFO - Updating files:  91% (41059/45119)
+2026-11-11 16:52:07,457 - INFO - Updating files:  92% (41510/45119)
+2026-11-11 16:52:07,501 - INFO - Updating files:  93% (41961/45119)
+2026-11-11 16:52:07,507 - INFO - Updating files:  93% (42023/45119)
+2026-11-11 16:52:07,556 - INFO - Updating files:  94% (42412/45119)
+2026-11-11 16:52:07,620 - INFO - Updating files:  95% (42864/45119)
+2026-11-11 16:52:07,675 - INFO - Updating files:  96% (43315/45119)
+2026-11-11 16:52:07,760 - INFO - Updating files:  97% (43766/45119)
+2026-11-11 16:52:07,817 - INFO - Updating files:  98% (44217/45119)
+2026-11-11 16:52:08,328 - INFO - Updating files:  99% (44668/45119)
+2026-11-11 16:52:08,517 - INFO - Updating files:  99% (45083/45119)
+2026-11-11 16:52:08,556 - INFO - Updating files: 100% (45119/45119)
+2026-11-11 16:52:08,558 - INFO - Updating files: 100% (45119/45119), done.
+2026-11-11 16:52:08,573 - INFO - HEAD is now at 4e496d7 Added link to github issue (#2810)
+2026-11-11 16:54:41,566 - INFO -  ---> Removed intermediate container 3ac7d7ae2d96
+2026-11-11 16:54:41,568 - INFO -  ---> a16b9b8a24b4
+2026-11-11 16:54:41,568 - INFO - Step 11/15 : RUN python3 -m venv /testbed/venv
+2026-11-11 16:54:41,712 - INFO -  ---> Running in 3a9dd3581f30
+2026-11-11 16:58:15,782 - INFO -  ---> Removed intermediate container 3a9dd3581f30
+2026-11-11 16:58:15,783 - INFO -  ---> 19861254966c
+2026-11-11 16:58:15,783 - INFO - Step 12/15 : RUN source /testbed/venv/bin/activate &&     pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir "crewai[tools]" &&     pip install --no-cache-dir -e .
+2026-11-11 16:58:16,074 - INFO -  ---> Running in 41fb0227a41f
+2026-11-11 16:58:18,193 - INFO - Requirement already satisfied: pip in ./venv/lib/python3.11/site-packages (22.0.2)
+2026-11-11 16:58:18,698 - INFO - Collecting pip
+2026-11-11 16:58:19,028 - INFO -   Downloading pip-26.3-py3-none-any.whl (2.0 MB)
+2026-11-11 16:58:19,471 - INFO -      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 4.5 MB/s eta 0:00:00
+2026-11-11 16:58:19,559 - INFO - Installing collected packages: pip
+2026-11-11 16:58:19,560 - INFO -   Attempting uninstall: pip
+2026-11-11 16:58:19,560 - INFO -     Found existing installation: pip 22.0.2
+2026-11-11 16:58:20,165 - INFO -     Uninstalling pip-22.0.2:
+2026-11-11 16:58:21,064 - INFO -       Successfully uninstalled pip-22.0.2
+2026-11-11 16:58:23,327 - INFO - Successfully installed pip-26.3
+2026-11-11 16:58:25,392 - INFO - Collecting crewai[tools]
+2026-11-11 16:58:25,695 - INFO -   Downloading crewai-1.15.39-py3-none-any.whl.metadata (36 kB)
+2026-11-11 16:58:25,847 - INFO - Collecting aiofiles~=24.1.0 (from crewai[tools])
+2026-11-11 16:58:25,927 - INFO -   Downloading aiofiles-24.1.0-py3-none-any.whl.metadata (10 kB)
+2026-11-11 16:58:26,028 - INFO - Collecting aiosqlite~=0.21.0 (from crewai[tools])
+2026-11-11 16:58:26,111 - INFO -   Downloading aiosqlite-0.21.0-py3-none-any.whl.metadata (4.3 kB)
+2026-11-11 16:58:26,213 - INFO - Collecting appdirs~=1.4.4 (from crewai[tools])
+2026-11-11 16:58:26,288 - INFO -   Downloading appdirs-1.4.4-py2.py3-none-any.whl.metadata (9.0 kB)
+2026-11-11 16:58:26,388 - INFO - Collecting cel-python<0.6,>=0.5.0 (from crewai[tools])
+2026-11-11 16:58:26,467 - INFO -   Downloading cel_python-0.5.0-py3-none-any.whl.metadata (8.0 kB)
+2026-11-11 16:58:26,619 - INFO - Collecting chromadb~=1.5.9 (from crewai[tools])
+2026-11-11 16:58:26,696 - INFO -   Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.0 kB)
+2026-11-11 16:58:26,819 - INFO - Collecting click<9,>=8.1.7 (from crewai[tools])
+2026-11-11 16:58:26,913 - INFO -   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-11 16:58:27,110 - INFO - Collecting crewai-cli==1.15.39 (from crewai[tools])
+2026-11-11 16:58:27,193 - INFO -   Downloading crewai_cli-1.15.39-py3-none-any.whl.metadata (1.7 kB)
+2026-11-11 16:58:27,366 - INFO - Collecting crewai-core==1.15.39 (from crewai[tools])
+2026-11-11 16:58:27,440 - INFO -   Downloading crewai_core-1.15.39-py3-none-any.whl.metadata (1.2 kB)
+2026-11-11 16:58:27,547 - INFO - Collecting httpx~=0.28.1 (from crewai[tools])
+2026-11-11 16:58:27,626 - INFO -   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-11 16:58:27,750 - INFO - Collecting instructor<1.16,>=1.3.3 (from crewai[tools])
+2026-11-11 16:58:27,830 - INFO -   Downloading instructor-1.15.4-py3-none-any.whl.metadata (12 kB)
+2026-11-11 16:58:27,973 - INFO - Collecting json-repair~=0.60.1 (from crewai[tools])
+2026-11-11 16:58:28,054 - INFO -   Downloading json_repair-0.60.1-py3-none-any.whl.metadata (19 kB)
+2026-11-11 16:58:28,162 - INFO - Collecting json5~=0.10.0 (from crewai[tools])
+2026-11-11 16:58:28,240 - INFO -   Downloading json5-0.10.0-py3-none-any.whl.metadata (34 kB)
+2026-11-11 16:58:28,352 - INFO - Collecting jsonref~=1.1.0 (from crewai[tools])
+2026-11-11 16:58:28,433 - INFO -   Downloading jsonref-1.1.0-py3-none-any.whl.metadata (2.7 kB)
+2026-11-11 16:58:28,555 - INFO - Collecting lancedb<1.0.0,>=0.33.0 (from crewai[tools])
+2026-11-11 16:58:28,652 - INFO -   Downloading lancedb-0.41.0-cp310-abi3-manylinux_2_28_x86_64.whl.metadata (10 kB)
+2026-11-11 16:58:28,781 - INFO - Collecting mcp<2,>=1.30.0 (from crewai[tools])
+2026-11-11 16:58:28,858 - INFO -   Downloading mcp-1.30.0-py3-none-any.whl.metadata (9.3 kB)
+2026-11-11 16:58:28,971 - INFO - Collecting oauthlib<5,>=4.0.0 (from crewai[tools])
+2026-11-11 16:58:29,048 - INFO -   Downloading oauthlib-4.0.1-py3-none-any.whl.metadata (8.6 kB)
+2026-11-11 16:58:29,261 - INFO - Collecting openai<3,>=2.30.0 (from crewai[tools])
+2026-11-11 16:58:29,337 - INFO -   Downloading openai-2.54.0-py3-none-any.whl.metadata (40 kB)
+2026-11-11 16:58:29,468 - INFO - Collecting openpyxl~=3.1.5 (from crewai[tools])
+2026-11-11 16:58:29,546 - INFO -   Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-11-11 16:58:29,654 - INFO - Collecting opentelemetry-api<2,>=1.45.1 (from crewai[tools])
+2026-11-11 16:58:29,733 - INFO -   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-11 16:58:29,833 - INFO - Collecting opentelemetry-exporter-otlp-proto-http<2,>=1.45.1 (from crewai[tools])
+2026-11-11 16:58:29,915 - INFO -   Downloading opentelemetry_exporter_otlp_proto_http-1.45.2-py3-none-any.whl.metadata (3.0 kB)
+2026-11-11 16:58:30,017 - INFO - Collecting opentelemetry-sdk<2,>=1.45.1 (from crewai[tools])
+2026-11-11 16:58:30,101 - INFO -   Downloading opentelemetry_sdk-1.45.2-py3-none-any.whl.metadata (1.6 kB)
+2026-11-11 16:58:30,238 - INFO - Collecting pdfplumber~=0.11.4 (from crewai[tools])
+2026-11-11 16:58:30,313 - INFO -   Downloading pdfplumber-0.11.10-py3-none-any.whl.metadata (43 kB)
+2026-11-11 16:58:30,451 - INFO - Collecting portalocker~=2.7.0 (from crewai[tools])
+2026-11-11 16:58:30,524 - INFO -   Downloading portalocker-2.7.0-py2.py3-none-any.whl.metadata (6.8 kB)
+2026-11-11 16:58:30,633 - INFO - Collecting pydantic-settings<3,>=2.14.2 (from crewai[tools])
+2026-11-11 16:58:30,705 - INFO -   Downloading pydantic_settings-2.16.2-py3-none-any.whl.metadata (4.0 kB)
+2026-11-11 16:58:31,100 - INFO - Collecting pydantic<2.13,>=2.11.9 (from crewai[tools])
+2026-11-11 16:58:31,175 - INFO -   Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+2026-11-11 16:58:31,305 - INFO - Collecting pyjwt<3,>=2.15.0 (from crewai[tools])
+2026-11-11 16:58:31,380 - INFO -   Downloading pyjwt-2.15.1-py3-none-any.whl.metadata (3.5 kB)
+2026-11-11 16:58:31,485 - INFO - Collecting python-dotenv<2,>=1.2.2 (from crewai[tools])
+2026-11-11 16:58:31,558 - INFO -   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-11 16:58:31,690 - INFO - Collecting pyyaml~=6.0 (from crewai[tools])
+2026-11-11 16:58:31,766 - INFO -   Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-11 16:58:32,428 - INFO - Collecting regex~=2026.1.15 (from crewai[tools])
+2026-11-11 16:58:32,502 - INFO -   Downloading regex-2026.1.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-11-11 16:58:32,746 - INFO - Collecting tokenizers<1,>=0.21 (from crewai[tools])
+2026-11-11 16:58:32,822 - INFO -   Downloading tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.8 kB)
+2026-11-11 16:58:32,921 - INFO - Collecting tomli-w~=1.1.0 (from crewai[tools])
+2026-11-11 16:58:32,998 - INFO -   Downloading tomli_w-1.1.0-py3-none-any.whl.metadata (5.7 kB)
+2026-11-11 16:58:33,103 - INFO - Collecting tomli~=2.0.2 (from crewai[tools])
+2026-11-11 16:58:33,180 - INFO -   Downloading tomli-2.0.2-py3-none-any.whl.metadata (10.0 kB)
+2026-11-11 16:58:33,315 - INFO - Collecting crewai-tools==1.15.39 (from crewai[tools])
+2026-11-11 16:58:33,392 - INFO -   Downloading crewai_tools-1.15.39-py3-none-any.whl.metadata (12 kB)
+2026-11-11 16:58:33,520 - INFO - Collecting certifi>=2026.10.18 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:33,594 - INFO -   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-11 16:58:34,039 - INFO - Collecting cryptography>=42.0 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:34,114 - INFO -   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-11-11 16:58:34,212 - INFO - Collecting packaging>=23.0 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:34,287 - INFO -   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+2026-11-11 16:58:34,421 - INFO - Collecting rich>=13.7.1 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:34,494 - INFO -   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+2026-11-11 16:58:34,622 - INFO - Collecting textual>=7.5.0 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:34,698 - INFO -   Downloading textual-8.2.8-py3-none-any.whl.metadata (9.1 kB)
+2026-11-11 16:58:35,108 - INFO - Collecting uv<1,>=0.13.4 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:35,183 - INFO -   Downloading uv-0.13.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+2026-11-11 16:58:35,285 - INFO - Collecting beautifulsoup4<5,>=4.13.4 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:35,360 - INFO -   Downloading beautifulsoup4-4.15.0-py3-none-any.whl.metadata (3.8 kB)
+2026-11-11 16:58:35,779 - INFO - Collecting pymupdf~=1.26.6 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:35,855 - INFO -   Downloading pymupdf-1.26.7-cp310-abi3-manylinux_2_28_x86_64.whl.metadata (3.4 kB)
+2026-11-11 16:58:35,949 - INFO - Collecting python-docx~=1.2.0 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:36,027 - INFO -   Downloading python_docx-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+2026-11-11 16:58:36,128 - INFO - Collecting pytube~=15.0.0 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:36,209 - INFO -   Downloading pytube-15.0.0-py3-none-any.whl.metadata (5.0 kB)
+2026-11-11 16:58:36,320 - INFO - Collecting requests<3,>=2.33.0 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:36,396 - INFO -   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+2026-11-11 16:58:36,534 - INFO - Collecting tiktoken<0.13,>=0.8.0 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:36,611 - INFO -   Downloading tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.7 kB)
+2026-11-11 16:58:36,707 - INFO - Collecting youtube-transcript-api~=1.2.2 (from crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:36,784 - INFO -   Downloading youtube_transcript_api-1.2.5-py3-none-any.whl.metadata (25 kB)
+2026-11-11 16:58:36,892 - INFO - Collecting typing_extensions>=4.0 (from aiosqlite~=0.21.0->crewai[tools])
+2026-11-11 16:58:36,970 - INFO -   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-11 16:58:37,084 - INFO - Collecting soupsieve>=1.6.1 (from beautifulsoup4<5,>=4.13.4->crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:37,163 - INFO -   Downloading soupsieve-2.10-py3-none-any.whl.metadata (4.4 kB)
+2026-11-11 16:58:37,313 - INFO - Collecting google-re2>=1.1.20240702 (from cel-python<0.6,>=0.5.0->crewai[tools])
+2026-11-11 16:58:37,389 - INFO -   Downloading google_re2-1.1.20251105-1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-11 16:58:37,483 - INFO - Collecting jmespath>=1.0.1 (from cel-python<0.6,>=0.5.0->crewai[tools])
+2026-11-11 16:58:37,561 - INFO -   Downloading jmespath-1.1.0-py3-none-any.whl.metadata (7.6 kB)
+2026-11-11 16:58:37,671 - INFO - Collecting lark>=1.2.2 (from cel-python<0.6,>=0.5.0->crewai[tools])
+2026-11-11 16:58:37,743 - INFO -   Downloading lark-1.3.1-py3-none-any.whl.metadata (1.8 kB)
+2026-11-11 16:58:37,902 - INFO - Collecting pendulum>=3.1.0 (from cel-python<0.6,>=0.5.0->crewai[tools])
+2026-11-11 16:58:37,979 - INFO -   Downloading pendulum-3.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+2026-11-11 16:58:38,088 - INFO - Collecting build>=1.0.3 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:38,164 - INFO -   Downloading build-1.6.1-py3-none-any.whl.metadata (5.6 kB)
+2026-11-11 16:58:38,455 - INFO - Collecting pybase64>=1.4.1 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:38,535 - INFO -   Downloading pybase64-1.5.2-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl.metadata (11 kB)
+2026-11-11 16:58:38,660 - INFO - Collecting uvicorn>=0.18.3 (from uvicorn[standard]>=0.18.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:38,734 - INFO -   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-11 16:58:39,307 - INFO - Collecting numpy>=1.22.5 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:39,386 - INFO -   Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-11-11 16:58:39,576 - INFO - Collecting onnxruntime>=1.14.1 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:39,665 - INFO -   Downloading onnxruntime-1.31.1-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.8 kB)
+2026-11-11 16:58:39,777 - INFO - Collecting opentelemetry-exporter-otlp-proto-grpc>=1.2.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:39,850 - INFO -   Downloading opentelemetry_exporter_otlp_proto_grpc-1.45.2-py3-none-any.whl.metadata (2.6 kB)
+2026-11-11 16:58:39,967 - INFO - Collecting pypika>=0.48.9 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:40,046 - INFO -   Downloading pypika-0.51.1-py2.py3-none-any.whl.metadata (51 kB)
+2026-11-11 16:58:40,201 - INFO - Collecting tqdm>=4.65.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:40,277 - INFO -   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-11-11 16:58:40,412 - INFO - Collecting overrides>=7.3.1 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:40,498 - INFO -   Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)
+2026-11-11 16:58:40,605 - INFO - Collecting importlib-resources (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:40,684 - INFO -   Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+2026-11-11 16:58:41,803 - INFO - Collecting grpcio>=1.58.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:41,880 - INFO -   Downloading grpcio-1.85.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
+2026-11-11 16:58:42,037 - INFO - Collecting bcrypt>=4.0.1 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:42,116 - INFO -   Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+2026-11-11 16:58:42,243 - INFO - Collecting typer>=0.9.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:42,314 - INFO -   Downloading typer-0.29.1-py3-none-any.whl.metadata (16 kB)
+2026-11-11 16:58:42,427 - INFO - Collecting kubernetes>=28.1.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:42,509 - INFO -   Downloading kubernetes-37.0.2-py2.py3-none-any.whl.metadata (1.9 kB)
+2026-11-11 16:58:42,630 - INFO - Collecting tenacity>=8.2.3 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:42,716 - INFO -   Downloading tenacity-9.2.1-py3-none-any.whl.metadata (1.4 kB)
+2026-11-11 16:58:43,103 - INFO - Collecting mmh3>=4.0.1 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:43,180 - INFO -   Downloading mmh3-5.3.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (13 kB)
+2026-11-11 16:58:43,605 - INFO - Collecting orjson>=3.9.12 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:43,703 - INFO -   Downloading orjson-3.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (42 kB)
+2026-11-11 16:58:43,830 - INFO - Collecting jsonschema>=4.19.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:43,907 - INFO -   Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+2026-11-11 16:58:44,039 - INFO - Collecting anyio (from httpx~=0.28.1->crewai[tools])
+2026-11-11 16:58:44,117 - INFO -   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-11 16:58:44,217 - INFO - Collecting httpcore==1.* (from httpx~=0.28.1->crewai[tools])
+2026-11-11 16:58:44,295 - INFO -   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-11 16:58:44,400 - INFO - Collecting idna (from httpx~=0.28.1->crewai[tools])
+2026-11-11 16:58:44,483 - INFO -   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-11 16:58:44,575 - INFO - Collecting h11>=0.16 (from httpcore==1.*->httpx~=0.28.1->crewai[tools])
+2026-11-11 16:58:44,654 - INFO -   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-11 16:58:45,652 - INFO - Collecting aiohttp<4.0.0,>=3.9.1 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:45,738 - INFO -   Downloading aiohttp-3.14.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+2026-11-11 16:58:45,842 - INFO - Collecting docstring-parser<1.0,>=0.16 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:45,920 - INFO -   Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+2026-11-11 16:58:46,013 - INFO - Collecting jinja2<4.0.0,>=3.1.4 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:46,095 - INFO -   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+2026-11-11 16:58:46,321 - INFO - Collecting jiter<0.15,>=0.6.1 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:46,398 - INFO -   Downloading jiter-0.14.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-11-11 16:58:47,408 - INFO - Collecting pydantic-core<3.0.0,>=2.18.0 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:47,488 - INFO -   Downloading pydantic_core-2.50.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-11 16:58:47,497 - INFO - Collecting rich>=13.7.1 (from crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:47,575 - INFO -   Downloading rich-14.3.4-py3-none-any.whl.metadata (18 kB)
+2026-11-11 16:58:47,684 - INFO - Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:47,760 - INFO -   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+2026-11-11 16:58:47,854 - INFO - Collecting aiosignal>=1.4.0 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:47,930 - INFO -   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-11-11 16:58:48,030 - INFO - Collecting attrs>=17.3.0 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:48,106 - INFO -   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-11-11 16:58:48,411 - INFO - Collecting frozenlist>=1.1.1 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:48,485 - INFO -   Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-11-11 16:58:48,853 - INFO - Collecting multidict<8.0,>=4.5 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:48,928 - INFO -   Downloading multidict-7.2.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+2026-11-11 16:58:49,091 - INFO - Collecting propcache>=0.2.0 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:49,171 - INFO -   Downloading propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+2026-11-11 16:58:49,585 - INFO - Collecting yarl<2.0,>=1.25.1 (from aiohttp<4.0.0,>=3.9.1->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:49,670 - INFO -   Downloading yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+2026-11-11 16:58:50,083 - INFO - Collecting MarkupSafe>=2.0 (from jinja2<4.0.0,>=3.1.4->instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:50,166 - INFO -   Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-11-11 16:58:50,256 - INFO - Collecting deprecation>=2.1.0 (from lancedb<1.0.0,>=0.33.0->crewai[tools])
+2026-11-11 16:58:50,340 - INFO -   Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+2026-11-11 16:58:50,541 - INFO - Collecting pyarrow>=16 (from lancedb<1.0.0,>=0.33.0->crewai[tools])
+2026-11-11 16:58:50,625 - INFO -   Downloading pyarrow-26.0.1-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+2026-11-11 16:58:50,740 - INFO - Collecting lance-namespace>=0.13.0 (from lancedb<1.0.0,>=0.33.0->crewai[tools])
+2026-11-11 16:58:50,827 - INFO -   Downloading lance_namespace-0.13.0-py3-none-any.whl.metadata (1.6 kB)
+2026-11-11 16:58:50,952 - INFO - Collecting httpx-sse>=0.4 (from mcp<2,>=1.30.0->crewai[tools])
+2026-11-11 16:58:51,023 - INFO -   Downloading httpx_sse-0.4.3-py3-none-any.whl.metadata (9.7 kB)
+2026-11-11 16:58:51,160 - INFO - Collecting python-multipart>=0.0.9 (from mcp<2,>=1.30.0->crewai[tools])
+2026-11-11 16:58:51,241 - INFO -   Downloading python_multipart-0.0.33-py3-none-any.whl.metadata (6.3 kB)
+2026-11-11 16:58:51,380 - INFO - Collecting sse-starlette>=1.6.1 (from mcp<2,>=1.30.0->crewai[tools])
+2026-11-11 16:58:51,471 - INFO -   Downloading sse_starlette-3.7.0-py3-none-any.whl.metadata (15 kB)
+2026-11-11 16:58:51,677 - INFO - Collecting starlette>=0.27 (from mcp<2,>=1.30.0->crewai[tools])
+2026-11-11 16:58:51,757 - INFO -   Downloading starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-11 16:58:51,868 - INFO - Collecting typing-inspection>=0.4.1 (from mcp<2,>=1.30.0->crewai[tools])
+2026-11-11 16:58:51,946 - INFO -   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-11 16:58:52,083 - INFO - Collecting distro<2,>=1.7.0 (from openai<3,>=2.30.0->crewai[tools])
+2026-11-11 16:58:52,165 - INFO -   Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+2026-11-11 16:58:52,286 - INFO - Collecting sniffio (from openai<3,>=2.30.0->crewai[tools])
+2026-11-11 16:58:52,366 - INFO -   Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-11-11 16:58:52,517 - INFO - Collecting et-xmlfile (from openpyxl~=3.1.5->crewai[tools])
+2026-11-11 16:58:52,603 - INFO -   Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2026-11-11 16:58:52,728 - INFO - Collecting googleapis-common-protos~=1.52 (from opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:52,805 - INFO -   Downloading googleapis_common_protos-1.76.0-py3-none-any.whl.metadata (8.5 kB)
+2026-11-11 16:58:52,920 - INFO - Collecting opentelemetry-exporter-http-transport==0.66b2 (from opentelemetry-exporter-http-transport[requests]==0.66b2->opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:52,997 - INFO -   Downloading opentelemetry_exporter_http_transport-0.66b2-py3-none-any.whl.metadata (2.3 kB)
+2026-11-11 16:58:53,104 - INFO - Collecting opentelemetry-exporter-otlp-common==0.66b2 (from opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:53,180 - INFO -   Downloading opentelemetry_exporter_otlp_common-0.66b2-py3-none-any.whl.metadata (1.9 kB)
+2026-11-11 16:58:53,286 - INFO - Collecting opentelemetry-exporter-otlp-proto-common==1.45.2 (from opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:53,367 - INFO -   Downloading opentelemetry_exporter_otlp_proto_common-1.45.2-py3-none-any.whl.metadata (1.8 kB)
+2026-11-11 16:58:53,502 - INFO - Collecting opentelemetry-proto==1.45.2 (from opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:53,579 - INFO -   Downloading opentelemetry_proto-1.45.2-py3-none-any.whl.metadata (2.3 kB)
+2026-11-11 16:58:54,138 - INFO - Collecting protobuf<8.0,>=5.0 (from opentelemetry-proto==1.45.2->opentelemetry-exporter-otlp-proto-http<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:54,223 - INFO -   Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+2026-11-11 16:58:54,364 - INFO - Collecting opentelemetry-semantic-conventions==0.66b2 (from opentelemetry-sdk<2,>=1.45.1->crewai[tools])
+2026-11-11 16:58:54,440 - INFO -   Downloading opentelemetry_semantic_conventions-0.66b2-py3-none-any.whl.metadata (2.4 kB)
+2026-11-11 16:58:54,554 - INFO - Collecting pdfminer.six==20260107 (from pdfplumber~=0.11.4->crewai[tools])
+2026-11-11 16:58:54,636 - INFO -   Downloading pdfminer_six-20260107-py3-none-any.whl.metadata (4.3 kB)
+2026-11-11 16:58:55,302 - INFO - Collecting Pillow>=12.2.0 (from pdfplumber~=0.11.4->crewai[tools])
+2026-11-11 16:58:55,384 - INFO -   Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-11 16:58:55,608 - INFO - Collecting pypdfium2>=5.9.0 (from pdfplumber~=0.11.4->crewai[tools])
+2026-11-11 16:58:55,685 - INFO -   Downloading pypdfium2-5.15.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (64 kB)
+2026-11-11 16:58:56,185 - INFO - Collecting charset-normalizer>=2.0.0 (from pdfminer.six==20260107->pdfplumber~=0.11.4->crewai[tools])
+2026-11-11 16:58:56,260 - INFO -   Downloading charset_normalizer-3.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+2026-11-11 16:58:56,382 - INFO - Collecting annotated-types>=0.6.0 (from pydantic<2.13,>=2.11.9->crewai[tools])
+2026-11-11 16:58:56,461 - INFO -   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-11 16:58:56,466 - INFO - Collecting pydantic-core<3.0.0,>=2.18.0 (from instructor<1.16,>=1.3.3->crewai[tools])
+2026-11-11 16:58:56,544 - INFO -   Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-11-11 16:58:56,977 - INFO - Collecting lxml>=3.1.0 (from python-docx~=1.2.0->crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:57,057 - INFO -   Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+2026-11-11 16:58:57,188 - INFO - Collecting urllib3<3,>=1.26 (from requests<3,>=2.33.0->crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:57,262 - INFO -   Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+2026-11-11 16:58:57,373 - INFO - Collecting markdown-it-py>=2.2.0 (from rich>=13.7.1->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:57,455 - INFO -   Downloading markdown_it_py-4.3.0-py3-none-any.whl.metadata (7.9 kB)
+2026-11-11 16:58:57,563 - INFO - Collecting pygments<3.0.0,>=2.13.0 (from rich>=13.7.1->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:58:57,640 - INFO -   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+2026-11-11 16:58:57,833 - INFO - Collecting huggingface-hub<3.0,>=0.16.4 (from tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:57,913 - INFO -   Downloading huggingface_hub-2.4.0-py3-none-any.whl.metadata (16 kB)
+2026-11-11 16:58:58,071 - INFO - Collecting filelock>=3.10.0 (from huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:58,156 - INFO -   Downloading filelock-4.2.10-py3-none-any.whl.metadata (2.3 kB)
+2026-11-11 16:58:58,268 - INFO - Collecting fsspec>=2023.5.0 (from huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:58,347 - INFO -   Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+2026-11-11 16:58:58,565 - INFO - Collecting hf-xet<2.0.0,>=1.6.0 (from huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:58,643 - INFO -   Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-11-11 16:58:58,741 - INFO - Collecting httpx2<3,>=2.0.0 (from huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:58,817 - INFO -   Downloading httpx2-2.16.0-py3-none-any.whl.metadata (10 kB)
+2026-11-11 16:58:58,934 - INFO - Collecting httpcore2==2.16.0 (from httpx2<3,>=2.0.0->huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:59,012 - INFO -   Downloading httpcore2-2.16.0-py3-none-any.whl.metadata (27 kB)
+2026-11-11 16:58:59,141 - INFO - Collecting truststore>=0.10 (from httpx2<3,>=2.0.0->huggingface-hub<3.0,>=0.16.4->tokenizers<1,>=0.21->crewai[tools])
+2026-11-11 16:58:59,216 - INFO -   Downloading truststore-0.10.5-py3-none-any.whl.metadata (4.5 kB)
+2026-11-11 16:58:59,348 - INFO - Collecting shellingham>=1.3.0 (from typer>=0.9.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:59,425 - INFO -   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+2026-11-11 16:58:59,523 - INFO - Collecting annotated-doc>=0.0.2 (from typer>=0.9.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:59,604 - INFO -   Downloading annotated_doc-0.0.6-py3-none-any.whl.metadata (6.5 kB)
+2026-11-11 16:58:59,716 - INFO - Collecting defusedxml<0.8.0,>=0.7.1 (from youtube-transcript-api~=1.2.2->crewai-tools==1.15.39->crewai[tools])
+2026-11-11 16:58:59,788 - INFO -   Downloading defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+2026-11-11 16:58:59,905 - INFO - Collecting pyproject_hooks (from build>=1.0.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:58:59,977 - INFO -   Downloading pyproject_hooks-1.3.3-py3-none-any.whl.metadata (1.3 kB)
+2026-11-11 16:59:00,185 - INFO - Collecting cffi>=2.0.0 (from cryptography>=42.0->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:00,262 - INFO -   Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-11 16:59:00,378 - INFO - Collecting pycparser (from cffi>=2.0.0->cryptography>=42.0->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:00,458 - INFO -   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-11 16:59:00,574 - INFO - Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=4.19.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:00,652 - INFO -   Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+2026-11-11 16:59:00,765 - INFO - Collecting referencing>=0.28.4 (from jsonschema>=4.19.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:00,840 - INFO -   Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+2026-11-11 16:59:01,482 - INFO - Collecting rpds-py>=0.25.0 (from jsonschema>=4.19.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:01,557 - INFO -   Downloading rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+2026-11-11 16:59:01,658 - INFO - Collecting python-dateutil>=3.0.0 (from kubernetes>=28.1.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:01,734 - INFO -   Downloading python_dateutil-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+2026-11-11 16:59:01,742 - INFO - Collecting kubernetes>=28.1.0 (from chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:01,818 - INFO -   Downloading kubernetes-37.0.1-py2.py3-none-any.whl.metadata (1.9 kB)
+2026-11-11 16:59:01,829 - INFO - INFO: pip is looking at multiple versions of kubernetes to determine which version is compatible with other requirements. This could take a while.
+2026-11-11 16:59:01,923 - INFO -   Downloading kubernetes-37.0.0-py2.py3-none-any.whl.metadata (1.9 kB)
+2026-11-11 16:59:02,003 - INFO -   Downloading kubernetes-36.0.3-py2.py3-none-any.whl.metadata (1.8 kB)
+2026-11-11 16:59:02,113 - INFO - Collecting six>=1.9.0 (from kubernetes>=28.1.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:02,191 - INFO -   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-11-11 16:59:02,306 - INFO - Collecting websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 (from kubernetes>=28.1.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:02,387 - INFO -   Downloading websocket_client-1.9.2-py3-none-any.whl.metadata (8.3 kB)
+2026-11-11 16:59:02,487 - INFO - Collecting requests-oauthlib (from kubernetes>=28.1.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:02,572 - INFO -   Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+2026-11-11 16:59:02,681 - INFO - Collecting durationpy>=0.7 (from kubernetes>=28.1.0->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:02,759 - INFO -   Downloading durationpy-0.11-py3-none-any.whl.metadata (474 bytes)
+2026-11-11 16:59:02,878 - INFO - Collecting lance-namespace-urllib3-client==0.13.0 (from lance-namespace>=0.13.0->lancedb<1.0.0,>=0.33.0->crewai[tools])
+2026-11-11 16:59:02,956 - INFO -   Downloading lance_namespace_urllib3_client-0.13.0-py3-none-any.whl.metadata (31 kB)
+2026-11-11 16:59:03,079 - INFO - Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.7.1->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:03,156 - INFO -   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+2026-11-11 16:59:03,282 - INFO - Collecting flatbuffers (from onnxruntime>=1.14.1->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:03,359 - INFO -   Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+2026-11-11 16:59:03,472 - INFO - Collecting tzdata>=2020.1 (from pendulum>=3.1.0->cel-python<0.6,>=0.5.0->crewai[tools])
+2026-11-11 16:59:03,548 - INFO -   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-11 16:59:03,692 - INFO - Collecting mdit-py-plugins (from textual>=7.5.0->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:03,768 - INFO -   Downloading mdit_py_plugins-0.7.0-py3-none-any.whl.metadata (2.9 kB)
+2026-11-11 16:59:03,879 - INFO - Collecting platformdirs<5,>=3.6.0 (from textual>=7.5.0->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:03,957 - INFO -   Downloading platformdirs-4.14.5-py3-none-any.whl.metadata (5.7 kB)
+2026-11-11 16:59:04,059 - INFO - Collecting linkify-it-py<3,>=1 (from markdown-it-py[linkify]>=2.1.0->textual>=7.5.0->crewai-cli==1.15.39->crewai[tools])
+2026-11-11 16:59:04,133 - INFO -   Downloading linkify_it_py-2.2.0-py3-none-any.whl.metadata (8.6 kB)
+2026-11-11 16:59:04,297 - INFO - Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.18.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:04,375 - INFO -   Downloading httptools-0.9.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-11 16:59:04,516 - INFO - Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.18.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:04,591 - INFO -   Downloading uvloop-0.23.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-11 16:59:04,773 - INFO - Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.18.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:04,850 - INFO -   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-11 16:59:05,079 - INFO - Collecting websockets>=13.0 (from uvicorn[standard]>=0.18.3->chromadb~=1.5.9->crewai[tools])
+2026-11-11 16:59:05,155 - INFO -   Downloading websockets-17.4-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-11 16:59:05,265 - INFO - Downloading crewai-1.15.39-py3-none-any.whl (1.5 MB)
+2026-11-11 16:59:05,461 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 11.1 MB/s  0:00:00
+2026-11-11 16:59:05,537 - INFO - Downloading crewai_cli-1.15.39-py3-none-any.whl (292 kB)
+2026-11-11 16:59:05,619 - INFO - Downloading crewai_core-1.15.39-py3-none-any.whl (1.3 MB)
+2026-11-11 16:59:05,648 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 47.4 MB/s  0:00:00
+2026-11-11 16:59:05,726 - INFO - Downloading crewai_tools-1.15.39-py3-none-any.whl (869 kB)
+2026-11-11 16:59:05,735 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 869.6/869.6 kB 101.3 MB/s  0:00:00
+2026-11-11 16:59:05,812 - INFO - Downloading aiofiles-24.1.0-py3-none-any.whl (15 kB)
+2026-11-11 16:59:05,892 - INFO - Downloading aiosqlite-0.21.0-py3-none-any.whl (15 kB)
+2026-11-11 16:59:05,972 - INFO - Downloading appdirs-1.4.4-py2.py3-none-any.whl (9.6 kB)
+2026-11-11 16:59:06,046 - INFO - Downloading beautifulsoup4-4.15.0-py3-none-any.whl (109 kB)
+2026-11-11 16:59:06,128 - INFO - Downloading cel_python-0.5.0-py3-none-any.whl (84 kB)
+2026-11-11 16:59:06,214 - INFO - Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23.3 MB)
+2026-11-11 16:59:06,647 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.3/23.3 MB 54.7 MB/s  0:00:00
+2026-11-11 16:59:06,720 - INFO - Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-11 16:59:06,800 - INFO - Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-11 16:59:06,874 - INFO - Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-11 16:59:06,956 - INFO - Downloading instructor-1.15.4-py3-none-any.whl (252 kB)
+2026-11-11 16:59:07,034 - INFO - Downloading aiohttp-3.14.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
+2026-11-11 16:59:07,059 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 136.9 MB/s  0:00:00
+2026-11-11 16:59:07,132 - INFO - Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+2026-11-11 16:59:07,208 - INFO - Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+2026-11-11 16:59:07,286 - INFO - Downloading jiter-0.14.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (358 kB)
+2026-11-11 16:59:07,366 - INFO - Downloading json_repair-0.60.1-py3-none-any.whl (48 kB)
+2026-11-11 16:59:07,443 - INFO - Downloading json5-0.10.0-py3-none-any.whl (34 kB)
+2026-11-11 16:59:07,518 - INFO - Downloading jsonref-1.1.0-py3-none-any.whl (9.4 kB)
+2026-11-11 16:59:07,598 - INFO - Downloading lancedb-0.41.0-cp310-abi3-manylinux_2_28_x86_64.whl (76.9 MB)
+2026-11-11 16:59:09,107 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.9/76.9 MB 51.0 MB/s  0:00:01
+2026-11-11 16:59:09,185 - INFO - Downloading mcp-1.30.0-py3-none-any.whl (234 kB)
+2026-11-11 16:59:09,270 - INFO - Downloading multidict-7.2.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (510 kB)
+2026-11-11 16:59:09,351 - INFO - Downloading oauthlib-4.0.1-py3-none-any.whl (161 kB)
+2026-11-11 16:59:09,442 - INFO - Downloading openai-2.54.0-py3-none-any.whl (1.7 MB)
+2026-11-11 16:59:09,458 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 107.6 MB/s  0:00:00
+2026-11-11 16:59:09,534 - INFO - Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-11 16:59:09,614 - INFO - Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+2026-11-11 16:59:09,690 - INFO - Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2026-11-11 16:59:09,769 - INFO - Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-11 16:59:09,845 - INFO - Downloading opentelemetry_exporter_otlp_proto_http-1.45.2-py3-none-any.whl (22 kB)
+2026-11-11 16:59:09,927 - INFO - Downloading opentelemetry_exporter_http_transport-0.66b2-py3-none-any.whl (12 kB)
+2026-11-11 16:59:10,000 - INFO - Downloading opentelemetry_exporter_otlp_common-0.66b2-py3-none-any.whl (12 kB)
+2026-11-11 16:59:10,085 - INFO - Downloading opentelemetry_exporter_otlp_proto_common-1.45.2-py3-none-any.whl (15 kB)
+2026-11-11 16:59:10,163 - INFO - Downloading opentelemetry_proto-1.45.2-py3-none-any.whl (72 kB)
+2026-11-11 16:59:10,243 - INFO - Downloading googleapis_common_protos-1.76.0-py3-none-any.whl (307 kB)
+2026-11-11 16:59:10,322 - INFO - Downloading opentelemetry_sdk-1.45.2-py3-none-any.whl (141 kB)
+2026-11-11 16:59:10,402 - INFO - Downloading opentelemetry_semantic_conventions-0.66b2-py3-none-any.whl (206 kB)
+2026-11-11 16:59:10,482 - INFO - Downloading pdfplumber-0.11.10-py3-none-any.whl (60 kB)
+2026-11-11 16:59:10,574 - INFO - Downloading pdfminer_six-20260107-py3-none-any.whl (6.6 MB)
+2026-11-11 16:59:10,707 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 52.4 MB/s  0:00:00
+2026-11-11 16:59:10,782 - INFO - Downloading portalocker-2.7.0-py2.py3-none-any.whl (15 kB)
+2026-11-11 16:59:10,862 - INFO - Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+2026-11-11 16:59:10,942 - INFO - Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+2026-11-11 16:59:11,022 - INFO - Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-11-11 16:59:11,047 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 119.7 MB/s  0:00:00
+2026-11-11 16:59:11,123 - INFO - Downloading pydantic_settings-2.16.2-py3-none-any.whl (81 kB)
+2026-11-11 16:59:11,201 - INFO - Downloading pyjwt-2.15.1-py3-none-any.whl (33 kB)
+2026-11-11 16:59:11,282 - INFO - Downloading pymupdf-1.26.7-cp310-abi3-manylinux_2_28_x86_64.whl (24.1 MB)
+2026-11-11 16:59:11,698 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.1/24.1 MB 58.1 MB/s  0:00:00
+2026-11-11 16:59:11,776 - INFO - Downloading python_docx-1.2.0-py3-none-any.whl (252 kB)
+2026-11-11 16:59:11,852 - INFO - Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-11 16:59:11,929 - INFO - Downloading pytube-15.0.0-py3-none-any.whl (57 kB)
+2026-11-11 16:59:12,006 - INFO - Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+2026-11-11 16:59:12,018 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 182.0 MB/s  0:00:00
+2026-11-11 16:59:12,098 - INFO - Downloading regex-2026.1.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (800 kB)
+2026-11-11 16:59:12,108 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 800.5/800.5 kB 109.4 MB/s  0:00:00
+2026-11-11 16:59:12,181 - INFO - Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+2026-11-11 16:59:12,259 - INFO - Downloading charset_normalizer-3.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (269 kB)
+2026-11-11 16:59:12,336 - INFO - Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-11 16:59:12,417 - INFO - Downloading rich-14.3.4-py3-none-any.whl (310 kB)
+2026-11-11 16:59:12,497 - INFO - Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+2026-11-11 16:59:12,517 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 113.3 MB/s  0:00:00
+2026-11-11 16:59:12,590 - INFO - Downloading tenacity-9.2.1-py3-none-any.whl (32 kB)
+2026-11-11 16:59:12,674 - INFO - Downloading tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.2 MB)
+2026-11-11 16:59:12,684 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 252.3 MB/s  0:00:00
+2026-11-11 16:59:12,760 - INFO - Downloading tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)
+2026-11-11 16:59:12,796 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 120.4 MB/s  0:00:00
+2026-11-11 16:59:12,869 - INFO - Downloading huggingface_hub-2.4.0-py3-none-any.whl (857 kB)
+2026-11-11 16:59:12,879 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 857.0/857.0 kB 191.4 MB/s  0:00:00
+2026-11-11 16:59:12,958 - INFO - Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+2026-11-11 16:59:13,044 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 53.9 MB/s  0:00:00
+2026-11-11 16:59:13,119 - INFO - Downloading httpx2-2.16.0-py3-none-any.whl (97 kB)
+2026-11-11 16:59:13,195 - INFO - Downloading httpcore2-2.16.0-py3-none-any.whl (85 kB)
+2026-11-11 16:59:13,272 - INFO - Downloading tomli-2.0.2-py3-none-any.whl (13 kB)
+2026-11-11 16:59:13,349 - INFO - Downloading tomli_w-1.1.0-py3-none-any.whl (6.4 kB)
+2026-11-11 16:59:13,426 - INFO - Downloading typer-0.29.1-py3-none-any.whl (121 kB)
+2026-11-11 16:59:13,502 - INFO - Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-11 16:59:13,578 - INFO - Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+2026-11-11 16:59:13,655 - INFO - Downloading uv-0.13.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (17.2 MB)
+2026-11-11 16:59:13,975 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 17.2/17.2 MB 55.6 MB/s  0:00:00
+2026-11-11 16:59:14,047 - INFO - Downloading yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
+2026-11-11 16:59:14,127 - INFO - Downloading youtube_transcript_api-1.2.5-py3-none-any.whl (485 kB)
+2026-11-11 16:59:14,207 - INFO - Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+2026-11-11 16:59:14,282 - INFO - Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+2026-11-11 16:59:14,359 - INFO - Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-11-11 16:59:14,442 - INFO - Downloading annotated_doc-0.0.6-py3-none-any.whl (5.3 kB)
+2026-11-11 16:59:14,521 - INFO - Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-11 16:59:14,597 - INFO - Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-11-11 16:59:14,675 - INFO - Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+2026-11-11 16:59:14,763 - INFO - Downloading build-1.6.1-py3-none-any.whl (31 kB)
+2026-11-11 16:59:14,845 - INFO - Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-11 16:59:14,924 - INFO - Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-11 16:59:15,009 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 58.4 MB/s  0:00:00
+2026-11-11 16:59:15,089 - INFO - Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
+2026-11-11 16:59:15,170 - INFO - Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+2026-11-11 16:59:15,246 - INFO - Downloading filelock-4.2.10-py3-none-any.whl (218 kB)
+2026-11-11 16:59:15,326 - INFO - Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+2026-11-11 16:59:15,403 - INFO - Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+2026-11-11 16:59:15,481 - INFO - Downloading google_re2-1.1.20251105-1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (590 kB)
+2026-11-11 16:59:15,488 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 590.7/590.7 kB 173.3 MB/s  0:00:00
+2026-11-11 16:59:15,590 - INFO - Downloading grpcio-1.85.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.4 MB)
+2026-11-11 16:59:15,707 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.4/7.4 MB 64.4 MB/s  0:00:00
+2026-11-11 16:59:15,782 - INFO - Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-11 16:59:15,860 - INFO - Downloading httpx_sse-0.4.3-py3-none-any.whl (9.0 kB)
+2026-11-11 16:59:15,935 - INFO - Downloading jmespath-1.1.0-py3-none-any.whl (20 kB)
+2026-11-11 16:59:16,010 - INFO - Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+2026-11-11 16:59:16,085 - INFO - Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+2026-11-11 16:59:16,164 - INFO - Downloading kubernetes-36.0.3-py2.py3-none-any.whl (4.6 MB)
+2026-11-11 16:59:16,244 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 58.5 MB/s  0:00:00
+2026-11-11 16:59:16,319 - INFO - Downloading durationpy-0.11-py3-none-any.whl (4.1 kB)
+2026-11-11 16:59:16,395 - INFO - Downloading lance_namespace-0.13.0-py3-none-any.whl (13 kB)
+2026-11-11 16:59:16,471 - INFO - Downloading lance_namespace_urllib3_client-0.13.0-py3-none-any.whl (406 kB)
+2026-11-11 16:59:16,549 - INFO - Downloading lark-1.3.1-py3-none-any.whl (113 kB)
+2026-11-11 16:59:16,627 - INFO - Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+2026-11-11 16:59:16,719 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 60.4 MB/s  0:00:00
+2026-11-11 16:59:16,791 - INFO - Downloading markdown_it_py-4.3.0-py3-none-any.whl (96 kB)
+2026-11-11 16:59:16,867 - INFO - Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+2026-11-11 16:59:16,944 - INFO - Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-11-11 16:59:17,018 - INFO - Downloading mmh3-5.3.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (102 kB)
+2026-11-11 16:59:17,096 - INFO - Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+2026-11-11 16:59:17,396 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 56.9 MB/s  0:00:00
+2026-11-11 16:59:17,478 - INFO - Downloading onnxruntime-1.31.1-cp311-cp311-manylinux_2_28_x86_64.whl (23.8 MB)
+2026-11-11 16:59:17,918 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.8/23.8 MB 54.4 MB/s  0:00:00
+2026-11-11 16:59:17,995 - INFO - Downloading opentelemetry_exporter_otlp_proto_grpc-1.45.2-py3-none-any.whl (19 kB)
+2026-11-11 16:59:18,072 - INFO - Downloading orjson-3.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (130 kB)
+2026-11-11 16:59:18,150 - INFO - Downloading overrides-7.7.0-py3-none-any.whl (17 kB)
+2026-11-11 16:59:18,227 - INFO - Downloading packaging-26.3-py3-none-any.whl (129 kB)
+2026-11-11 16:59:18,303 - INFO - Downloading pendulum-3.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (342 kB)
+2026-11-11 16:59:18,388 - INFO - Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-11-11 16:59:18,495 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 67.7 MB/s  0:00:00
+2026-11-11 16:59:18,573 - INFO - Downloading propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (235 kB)
+2026-11-11 16:59:18,653 - INFO - Downloading pyarrow-26.0.1-cp311-cp311-manylinux_2_28_x86_64.whl (55.0 MB)
+2026-11-11 16:59:19,620 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.0/55.0 MB 57.3 MB/s  0:00:00
+2026-11-11 16:59:19,695 - INFO - Downloading pybase64-1.5.2-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (94 kB)
+2026-11-11 16:59:19,774 - INFO - Downloading pypdfium2-5.15.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.0 MB)
+2026-11-11 16:59:19,821 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.0/4.0 MB 94.1 MB/s  0:00:00
+2026-11-11 16:59:19,898 - INFO - Downloading pypika-0.51.1-py2.py3-none-any.whl (60 kB)
+2026-11-11 16:59:19,974 - INFO - Downloading python_dateutil-4.0.0-py3-none-any.whl (92 kB)
+2026-11-11 16:59:20,051 - INFO - Downloading python_multipart-0.0.33-py3-none-any.whl (32 kB)
+2026-11-11 16:59:20,126 - INFO - Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+2026-11-11 16:59:20,204 - INFO - Downloading rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (375 kB)
+2026-11-11 16:59:20,281 - INFO - Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+2026-11-11 16:59:20,358 - INFO - Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-11-11 16:59:20,434 - INFO - Downloading soupsieve-2.10-py3-none-any.whl (38 kB)
+2026-11-11 16:59:20,511 - INFO - Downloading sse_starlette-3.7.0-py3-none-any.whl (18 kB)
+2026-11-11 16:59:20,587 - INFO - Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-11 16:59:20,667 - INFO - Downloading textual-8.2.8-py3-none-any.whl (731 kB)
+2026-11-11 16:59:20,673 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 731.4/731.4 kB 273.9 MB/s  0:00:00
+2026-11-11 16:59:20,749 - INFO - Downloading platformdirs-4.14.5-py3-none-any.whl (35 kB)
+2026-11-11 16:59:20,828 - INFO - Downloading linkify_it_py-2.2.0-py3-none-any.whl (21 kB)
+2026-11-11 16:59:20,905 - INFO - Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-11-11 16:59:20,981 - INFO - Downloading truststore-0.10.5-py3-none-any.whl (19 kB)
+2026-11-11 16:59:21,057 - INFO - Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-11 16:59:21,135 - INFO - Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-11 16:59:21,213 - INFO - Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-11 16:59:21,293 - INFO - Downloading httptools-0.9.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (499 kB)
+2026-11-11 16:59:21,373 - INFO - Downloading uvloop-0.23.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.0 MB)
+2026-11-11 16:59:21,411 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.0/4.0 MB 124.0 MB/s  0:00:00
+2026-11-11 16:59:21,491 - INFO - Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-11 16:59:21,568 - INFO - Downloading websocket_client-1.9.2-py3-none-any.whl (95 kB)
+2026-11-11 16:59:21,646 - INFO - Downloading websockets-17.4-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-11 16:59:21,723 - INFO - Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2026-11-11 16:59:21,798 - INFO - Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+2026-11-11 16:59:21,874 - INFO - Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+2026-11-11 16:59:21,951 - INFO - Downloading mdit_py_plugins-0.7.0-py3-none-any.whl (72 kB)
+2026-11-11 16:59:22,028 - INFO - Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-11 16:59:22,104 - INFO - Downloading pyproject_hooks-1.3.3-py3-none-any.whl (10 kB)
+2026-11-11 16:59:22,182 - INFO - Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+2026-11-11 16:59:22,257 - INFO - Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2026-11-11 16:59:23,312 - INFO - Installing collected packages: pypika, flatbuffers, durationpy, appdirs, websockets, websocket-client, uvloop, uv, urllib3, tzdata, typing_extensions, truststore, tqdm, tomli-w, tomli, tenacity, soupsieve, sniffio, six, shellingham, rpds-py, regex, pyyaml, pytube, python-multipart, python-dotenv, pyproject_hooks, pypdfium2, pymupdf, pyjwt, pygments, pycparser, pybase64, pyarrow, protobuf, propcache, portalocker, platformdirs, Pillow, packaging, overrides, orjson, oauthlib, numpy, multidict, mmh3, mdurl, MarkupSafe, lxml, linkify-it-py, lark, jsonref, json5, json-repair, jmespath, jiter, importlib-resources, idna, httpx-sse, httptools, hf-xet, h11, google-re2, fsspec, frozenlist, filelock, et-xmlfile, docstring-parser, distro, defusedxml, click, charset-normalizer, certifi, bcrypt, attrs, annotated-types, annotated-doc, aiohappyeyeballs, aiofiles, yarl, uvicorn, typing-inspection, requests, referencing, python-docx, python-dateutil, pydantic-core, opentelemetry-proto, opentelemetry-api, openpyxl, onnxruntime, markdown-it-py, jinja2, httpcore2, httpcore, grpcio, googleapis-common-protos, deprecation, cffi, build, beautifulsoup4, anyio, aiosqlite, aiosignal, youtube-transcript-api, watchfiles, tiktoken, starlette, rich, requests-oauthlib, pydantic, pendulum, opentelemetry-semantic-conventions, opentelemetry-exporter-otlp-proto-common, opentelemetry-exporter-http-transport, mdit-py-plugins, jsonschema-specifications, httpx2, httpx, cryptography, aiohttp, typer, textual, sse-starlette, pydantic-settings, pdfminer.six, opentelemetry-sdk, openai, lance-namespace-urllib3-client, kubernetes, jsonschema, huggingface-hub, cel-python, tokenizers, pdfplumber, opentelemetry-exporter-otlp-common, mcp, lance-namespace, instructor, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, lancedb, crewai-core, chromadb, crewai-cli, crewai, crewai-tools
+2026-11-11 16:59:54,957 - INFO - Successfully installed MarkupSafe-3.0.4 Pillow-13.0.0 aiofiles-24.1.0 aiohappyeyeballs-2.7.1 aiohttp-3.14.5 aiosignal-1.4.0 aiosqlite-0.21.0 annotated-doc-0.0.6 annotated-types-0.8.0 anyio-4.16.0 appdirs-1.4.4 attrs-26.1.0 bcrypt-5.0.0 beautifulsoup4-4.15.0 build-1.6.1 cel-python-0.5.0 certifi-2026.10.23 cffi-2.1.1 charset-normalizer-3.5.2 chromadb-1.5.9 click-8.5.1 crewai-1.15.39 crewai-cli-1.15.39 crewai-core-1.15.39 crewai-tools-1.15.39 cryptography-50.0.2 defusedxml-0.7.1 deprecation-2.1.0 distro-1.9.0 docstring-parser-0.18.0 durationpy-0.11 et-xmlfile-2.0.0 filelock-4.2.10 flatbuffers-25.12.19 frozenlist-1.8.0 fsspec-2026.9.0 google-re2-1.1.20251105 googleapis-common-protos-1.76.0 grpcio-1.85.1 h11-0.16.0 hf-xet-1.8.0 httpcore-1.0.9 httpcore2-2.16.0 httptools-0.9.0 httpx-0.28.1 httpx-sse-0.4.3 httpx2-2.16.0 huggingface-hub-2.4.0 idna-3.20 importlib-resources-7.1.0 instructor-1.15.4 jinja2-3.1.6 jiter-0.14.0 jmespath-1.1.0 json-repair-0.60.1 json5-0.10.0 jsonref-1.1.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 kubernetes-36.0.3 lance-namespace-0.13.0 lance-namespace-urllib3-client-0.13.0 lancedb-0.41.0 lark-1.3.1 linkify-it-py-2.2.0 lxml-6.1.3 markdown-it-py-4.3.0 mcp-1.30.0 mdit-py-plugins-0.7.0 mdurl-0.1.2 mmh3-5.3.1 multidict-7.2.1 numpy-2.4.6 oauthlib-4.0.1 onnxruntime-1.31.1 openai-2.54.0 openpyxl-3.1.5 opentelemetry-api-1.45.2 opentelemetry-exporter-http-transport-0.66b2 opentelemetry-exporter-otlp-common-0.66b2 opentelemetry-exporter-otlp-proto-common-1.45.2 opentelemetry-exporter-otlp-proto-grpc-1.45.2 opentelemetry-exporter-otlp-proto-http-1.45.2 opentelemetry-proto-1.45.2 opentelemetry-sdk-1.45.2 opentelemetry-semantic-conventions-0.66b2 orjson-3.13.0 overrides-7.7.0 packaging-26.3 pdfminer.six-20260107 pdfplumber-0.11.10 pendulum-3.3.0 platformdirs-4.14.5 portalocker-2.7.0 propcache-0.5.4 protobuf-7.36.2 pyarrow-26.0.1 pybase64-1.5.2 pycparser-3.12 pydantic-2.12.5 pydantic-core-2.41.5 pydantic-settings-2.16.2 pygments-2.21.0 pyjwt-2.15.1 pymupdf-1.26.7 pypdfium2-5.15.2 pypika-0.51.1 pyproject_hooks-1.3.3 python-dateutil-4.0.0 python-docx-1.2.0 python-dotenv-1.2.4 python-multipart-0.0.33 pytube-15.0.0 pyyaml-6.0.3 referencing-0.37.0 regex-2026.1.15 requests-2.34.2 requests-oauthlib-2.0.0 rich-14.3.4 rpds-py-2026.9.1 shellingham-1.5.4 six-1.17.0 sniffio-1.3.1 soupsieve-2.10 sse-starlette-3.7.0 starlette-1.10.0 tenacity-9.2.1 textual-8.2.8 tiktoken-0.12.0 tokenizers-0.23.3 tomli-2.0.2 tomli-w-1.1.0 tqdm-4.70.1 truststore-0.10.5 typer-0.29.1 typing-inspection-0.4.5 typing_extensions-4.16.0 tzdata-2026.6 urllib3-2.8.0 uv-0.13.7 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websocket-client-1.9.2 websockets-17.4 yarl-1.25.1 youtube-transcript-api-1.2.5
+2026-11-11 16:59:57,485 - INFO - Obtaining file:///testbed
+2026-11-11 16:59:57,491 - INFO -   Installing build dependencies: started
+2026-11-11 16:59:59,979 - INFO -   Installing build dependencies: finished with status 'done'
+2026-11-11 16:59:59,982 - INFO -   Checking if build backend supports build_editable: started
+2026-11-11 17:00:00,087 - INFO -   Checking if build backend supports build_editable: finished with status 'done'
+2026-11-11 17:00:00,090 - INFO -   Getting requirements to build editable: started
+2026-11-11 17:00:00,396 - INFO -   Getting requirements to build editable: finished with status 'done'
+2026-11-11 17:00:00,399 - INFO -   Installing backend dependencies: started
+2026-11-11 17:00:01,959 - INFO -   Installing backend dependencies: finished with status 'done'
+2026-11-11 17:00:01,961 - INFO -   Preparing editable metadata (pyproject.toml): started
+2026-11-11 17:00:02,782 - INFO -   Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-11-11 17:00:02,801 - INFO - Requirement already satisfied: appdirs>=1.4.4 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.4.4)
+2026-11-11 17:00:02,937 - INFO - Collecting auth0-python>=4.7.1 (from crewai==0.119.0)
+2026-11-11 17:00:03,234 - INFO -   Downloading auth0_python-6.9.0-py3-none-any.whl.metadata (13 kB)
+2026-11-11 17:00:03,277 - INFO - Collecting blinker>=1.9.0 (from crewai==0.119.0)
+2026-11-11 17:00:03,365 - INFO -   Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+2026-11-11 17:00:03,367 - INFO - Requirement already satisfied: chromadb>=0.5.23 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.5.9)
+2026-11-11 17:00:03,370 - INFO - Requirement already satisfied: click>=8.1.7 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (8.5.1)
+2026-11-11 17:00:03,370 - INFO - Requirement already satisfied: instructor>=1.3.3 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.15.4)
+2026-11-11 17:00:03,371 - INFO - Requirement already satisfied: json-repair>=0.25.2 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (0.60.1)
+2026-11-11 17:00:03,372 - INFO - Requirement already satisfied: json5>=0.10.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (0.10.0)
+2026-11-11 17:00:03,372 - INFO - Requirement already satisfied: jsonref>=1.1.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.1.0)
+2026-11-11 17:00:03,621 - INFO - Collecting litellm==1.68.0 (from crewai==0.119.0)
+2026-11-11 17:00:03,708 - INFO -   Downloading litellm-1.68.0-py3-none-any.whl.metadata (36 kB)
+2026-11-11 17:00:03,765 - INFO - Requirement already satisfied: openai>=1.13.3 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (2.54.0)
+2026-11-11 17:00:03,766 - INFO - Requirement already satisfied: openpyxl>=3.1.5 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (3.1.5)
+2026-11-11 17:00:03,768 - INFO - Requirement already satisfied: opentelemetry-api>=1.30.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:03,770 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-http>=1.30.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:03,771 - INFO - Requirement already satisfied: opentelemetry-sdk>=1.30.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:03,772 - INFO - Requirement already satisfied: pdfplumber>=0.11.4 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (0.11.10)
+2026-11-11 17:00:03,773 - INFO - Requirement already satisfied: pydantic>=2.4.2 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (2.12.5)
+2026-11-11 17:00:03,774 - INFO - Requirement already satisfied: python-dotenv>=1.0.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.2.4)
+2026-11-11 17:00:03,793 - INFO - Collecting pyvis>=0.3.2 (from crewai==0.119.0)
+2026-11-11 17:00:03,870 - INFO -   Downloading pyvis-0.3.2-py3-none-any.whl.metadata (1.7 kB)
+2026-11-11 17:00:03,874 - INFO - Requirement already satisfied: regex>=2024.9.11 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (2026.1.15)
+2026-11-11 17:00:03,875 - INFO - Requirement already satisfied: tomli-w>=1.1.0 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (1.1.0)
+2026-11-11 17:00:03,876 - INFO - Requirement already satisfied: tomli>=2.0.2 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (2.0.2)
+2026-11-11 17:00:03,878 - INFO - Requirement already satisfied: uv>=0.4.25 in ./venv/lib/python3.11/site-packages (from crewai==0.119.0) (0.13.7)
+2026-11-11 17:00:03,879 - INFO - Requirement already satisfied: aiohttp in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (3.14.5)
+2026-11-11 17:00:03,880 - INFO - Requirement already satisfied: httpx>=0.23.0 in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (0.28.1)
+2026-11-11 17:00:03,918 - INFO - Collecting importlib-metadata>=6.8.0 (from litellm==1.68.0->crewai==0.119.0)
+2026-11-11 17:00:03,993 - INFO -   Downloading importlib_metadata-10.2.0-py3-none-any.whl.metadata (4.6 kB)
+2026-11-11 17:00:04,002 - INFO - Requirement already satisfied: jinja2<4.0.0,>=3.1.2 in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (3.1.6)
+2026-11-11 17:00:04,007 - INFO - Requirement already satisfied: jsonschema<5.0.0,>=4.22.0 in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (4.26.0)
+2026-11-11 17:00:04,094 - INFO - Collecting openai>=1.13.3 (from crewai==0.119.0)
+2026-11-11 17:00:04,190 - INFO -   Downloading openai-1.75.0-py3-none-any.whl.metadata (25 kB)
+2026-11-11 17:00:04,205 - INFO - Requirement already satisfied: tiktoken>=0.7.0 in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (0.12.0)
+2026-11-11 17:00:04,206 - INFO - Requirement already satisfied: tokenizers in ./venv/lib/python3.11/site-packages (from litellm==1.68.0->crewai==0.119.0) (0.23.3)
+2026-11-11 17:00:04,206 - INFO - Requirement already satisfied: MarkupSafe>=2.0 in ./venv/lib/python3.11/site-packages (from jinja2<4.0.0,>=3.1.2->litellm==1.68.0->crewai==0.119.0) (3.0.4)
+2026-11-11 17:00:04,211 - INFO - Requirement already satisfied: attrs>=22.2.0 in ./venv/lib/python3.11/site-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.68.0->crewai==0.119.0) (26.1.0)
+2026-11-11 17:00:04,211 - INFO - Requirement already satisfied: jsonschema-specifications>=2023.03.6 in ./venv/lib/python3.11/site-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.68.0->crewai==0.119.0) (2025.9.1)
+2026-11-11 17:00:04,211 - INFO - Requirement already satisfied: referencing>=0.28.4 in ./venv/lib/python3.11/site-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.68.0->crewai==0.119.0) (0.37.0)
+2026-11-11 17:00:04,211 - INFO - Requirement already satisfied: rpds-py>=0.25.0 in ./venv/lib/python3.11/site-packages (from jsonschema<5.0.0,>=4.22.0->litellm==1.68.0->crewai==0.119.0) (2026.9.1)
+2026-11-11 17:00:04,214 - INFO - Requirement already satisfied: anyio<5,>=3.5.0 in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (4.16.0)
+2026-11-11 17:00:04,214 - INFO - Requirement already satisfied: distro<2,>=1.7.0 in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (1.9.0)
+2026-11-11 17:00:04,215 - INFO - Requirement already satisfied: jiter<1,>=0.4.0 in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (0.14.0)
+2026-11-11 17:00:04,215 - INFO - Requirement already satisfied: sniffio in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (1.3.1)
+2026-11-11 17:00:04,216 - INFO - Requirement already satisfied: tqdm>4 in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (4.70.1)
+2026-11-11 17:00:04,217 - INFO - Requirement already satisfied: typing-extensions<5,>=4.11 in ./venv/lib/python3.11/site-packages (from openai>=1.13.3->crewai==0.119.0) (4.16.0)
+2026-11-11 17:00:04,221 - INFO - Requirement already satisfied: idna>=2.8 in ./venv/lib/python3.11/site-packages (from anyio<5,>=3.5.0->openai>=1.13.3->crewai==0.119.0) (3.20)
+2026-11-11 17:00:04,227 - INFO - Requirement already satisfied: certifi in ./venv/lib/python3.11/site-packages (from httpx>=0.23.0->litellm==1.68.0->crewai==0.119.0) (2026.10.23)
+2026-11-11 17:00:04,227 - INFO - Requirement already satisfied: httpcore==1.* in ./venv/lib/python3.11/site-packages (from httpx>=0.23.0->litellm==1.68.0->crewai==0.119.0) (1.0.9)
+2026-11-11 17:00:04,231 - INFO - Requirement already satisfied: h11>=0.16 in ./venv/lib/python3.11/site-packages (from httpcore==1.*->httpx>=0.23.0->litellm==1.68.0->crewai==0.119.0) (0.16.0)
+2026-11-11 17:00:04,244 - INFO - Requirement already satisfied: annotated-types>=0.6.0 in ./venv/lib/python3.11/site-packages (from pydantic>=2.4.2->crewai==0.119.0) (0.8.0)
+2026-11-11 17:00:04,244 - INFO - Requirement already satisfied: pydantic-core==2.41.5 in ./venv/lib/python3.11/site-packages (from pydantic>=2.4.2->crewai==0.119.0) (2.41.5)
+2026-11-11 17:00:04,244 - INFO - Requirement already satisfied: typing-inspection>=0.4.2 in ./venv/lib/python3.11/site-packages (from pydantic>=2.4.2->crewai==0.119.0) (0.4.5)
+2026-11-11 17:00:04,249 - INFO - Requirement already satisfied: cryptography>=44.0.0 in ./venv/lib/python3.11/site-packages (from auth0-python>=4.7.1->crewai==0.119.0) (50.0.2)
+2026-11-11 17:00:04,250 - INFO - Requirement already satisfied: pyjwt>=2.8.0 in ./venv/lib/python3.11/site-packages (from auth0-python>=4.7.1->crewai==0.119.0) (2.15.1)
+2026-11-11 17:00:04,250 - INFO - Requirement already satisfied: requests>=2.32.3 in ./venv/lib/python3.11/site-packages (from auth0-python>=4.7.1->crewai==0.119.0) (2.34.2)
+2026-11-11 17:00:04,250 - INFO - Requirement already satisfied: urllib3>=2.3.0 in ./venv/lib/python3.11/site-packages (from auth0-python>=4.7.1->crewai==0.119.0) (2.8.0)
+2026-11-11 17:00:04,254 - INFO - Requirement already satisfied: aiohappyeyeballs>=2.5.0 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (2.7.1)
+2026-11-11 17:00:04,255 - INFO - Requirement already satisfied: aiosignal>=1.4.0 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (1.4.0)
+2026-11-11 17:00:04,256 - INFO - Requirement already satisfied: frozenlist>=1.1.1 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (1.8.0)
+2026-11-11 17:00:04,257 - INFO - Requirement already satisfied: multidict<8.0,>=4.5 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (7.2.1)
+2026-11-11 17:00:04,259 - INFO - Requirement already satisfied: propcache>=0.2.0 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (0.5.4)
+2026-11-11 17:00:04,259 - INFO - Requirement already satisfied: yarl<2.0,>=1.25.1 in ./venv/lib/python3.11/site-packages (from aiohttp->litellm==1.68.0->crewai==0.119.0) (1.25.1)
+2026-11-11 17:00:04,277 - INFO - Requirement already satisfied: build>=1.0.3 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (1.6.1)
+2026-11-11 17:00:04,282 - INFO - Requirement already satisfied: pydantic-settings>=2.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (2.16.2)
+2026-11-11 17:00:04,284 - INFO - Requirement already satisfied: pybase64>=1.4.1 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (1.5.2)
+2026-11-11 17:00:04,284 - INFO - Requirement already satisfied: uvicorn>=0.18.3 in ./venv/lib/python3.11/site-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.119.0) (0.54.0)
+2026-11-11 17:00:04,284 - INFO - Requirement already satisfied: numpy>=1.22.5 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (2.4.6)
+2026-11-11 17:00:04,284 - INFO - Requirement already satisfied: onnxruntime>=1.14.1 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (1.31.1)
+2026-11-11 17:00:04,286 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-grpc>=1.2.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:04,287 - INFO - Requirement already satisfied: pypika>=0.48.9 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (0.51.1)
+2026-11-11 17:00:04,290 - INFO - Requirement already satisfied: overrides>=7.3.1 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (7.7.0)
+2026-11-11 17:00:04,290 - INFO - Requirement already satisfied: importlib-resources in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (7.1.0)
+2026-11-11 17:00:04,290 - INFO - Requirement already satisfied: grpcio>=1.58.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (1.85.1)
+2026-11-11 17:00:04,291 - INFO - Requirement already satisfied: bcrypt>=4.0.1 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (5.0.0)
+2026-11-11 17:00:04,292 - INFO - Requirement already satisfied: typer>=0.9.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (0.29.1)
+2026-11-11 17:00:04,292 - INFO - Requirement already satisfied: kubernetes>=28.1.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (36.0.3)
+2026-11-11 17:00:04,293 - INFO - Requirement already satisfied: tenacity>=8.2.3 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (9.2.1)
+2026-11-11 17:00:04,293 - INFO - Requirement already satisfied: pyyaml>=6.0.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (6.0.3)
+2026-11-11 17:00:04,294 - INFO - Requirement already satisfied: mmh3>=4.0.1 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (5.3.1)
+2026-11-11 17:00:04,295 - INFO - Requirement already satisfied: orjson>=3.9.12 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (3.13.0)
+2026-11-11 17:00:04,295 - INFO - Requirement already satisfied: rich>=10.11.0 in ./venv/lib/python3.11/site-packages (from chromadb>=0.5.23->crewai==0.119.0) (14.3.4)
+2026-11-11 17:00:04,304 - INFO - Requirement already satisfied: packaging>=24.0 in ./venv/lib/python3.11/site-packages (from build>=1.0.3->chromadb>=0.5.23->crewai==0.119.0) (26.3)
+2026-11-11 17:00:04,304 - INFO - Requirement already satisfied: pyproject_hooks in ./venv/lib/python3.11/site-packages (from build>=1.0.3->chromadb>=0.5.23->crewai==0.119.0) (1.3.3)
+2026-11-11 17:00:04,310 - INFO - Requirement already satisfied: cffi>=2.0.0 in ./venv/lib/python3.11/site-packages (from cryptography>=44.0.0->auth0-python>=4.7.1->crewai==0.119.0) (2.1.1)
+2026-11-11 17:00:04,316 - INFO - Requirement already satisfied: pycparser in ./venv/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography>=44.0.0->auth0-python>=4.7.1->crewai==0.119.0) (3.12)
+2026-11-11 17:00:04,377 - INFO - Collecting zipp>=3.20 (from importlib-metadata>=6.8.0->litellm==1.68.0->crewai==0.119.0)
+2026-11-11 17:00:04,462 - INFO -   Downloading zipp-4.1.2-py3-none-any.whl.metadata (3.6 kB)
+2026-11-11 17:00:04,491 - INFO - Collecting lazy-importer>=0.1 (from importlib-metadata>=6.8.0->litellm==1.68.0->crewai==0.119.0)
+2026-11-11 17:00:04,581 - INFO -   Downloading lazy_importer-0.1.0-py3-none-any.whl.metadata (7.3 kB)
+2026-11-11 17:00:04,649 - INFO - Requirement already satisfied: docstring-parser<1.0,>=0.16 in ./venv/lib/python3.11/site-packages (from instructor>=1.3.3->crewai==0.119.0) (0.18.0)
+2026-11-11 17:00:04,735 - INFO - Collecting instructor>=1.3.3 (from crewai==0.119.0)
+2026-11-11 17:00:04,804 - INFO -   Downloading instructor-1.17.0-py3-none-any.whl.metadata (13 kB)
+2026-11-11 17:00:04,876 - INFO - INFO: pip is looking at multiple versions of instructor to determine which version is compatible with other requirements. This could take a while.
+2026-11-11 17:00:04,954 - INFO -   Downloading instructor-1.16.0-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:05,055 - INFO -   Downloading instructor-1.15.3-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:05,150 - INFO -   Downloading instructor-1.15.1-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:05,384 - INFO - Collecting jiter<1,>=0.4.0 (from openai>=1.13.3->crewai==0.119.0)
+2026-11-11 17:00:05,461 - INFO -   Downloading jiter-0.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-11-11 17:00:05,464 - INFO - Collecting instructor>=1.3.3 (from crewai==0.119.0)
+2026-11-11 17:00:05,548 - INFO -   Downloading instructor-1.15.0-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:05,588 - INFO - Collecting jiter<1,>=0.4.0 (from openai>=1.13.3->crewai==0.119.0)
+2026-11-11 17:00:05,667 - INFO -   Downloading jiter-0.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-11-11 17:00:05,670 - INFO - Collecting instructor>=1.3.3 (from crewai==0.119.0)
+2026-11-11 17:00:05,753 - INFO -   Downloading instructor-1.14.5-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:05,819 - INFO - Collecting diskcache>=5.6.3 (from instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:05,913 - INFO -   Downloading diskcache-5.6.3-py3-none-any.whl.metadata (20 kB)
+2026-11-11 17:00:05,923 - INFO - Collecting jiter<1,>=0.4.0 (from openai>=1.13.3->crewai==0.119.0)
+2026-11-11 17:00:06,014 - INFO -   Downloading jiter-0.11.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-11-11 17:00:06,017 - INFO - Collecting instructor>=1.3.3 (from crewai==0.119.0)
+2026-11-11 17:00:06,094 - INFO -   Downloading instructor-1.14.4-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:06,134 - INFO - INFO: pip is still looking at multiple versions of instructor to determine which version is compatible with other requirements. This could take a while.
+2026-11-11 17:00:06,226 - INFO -   Downloading instructor-1.14.3-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:06,338 - INFO -   Downloading instructor-1.14.2-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:06,463 - INFO -   Downloading instructor-1.14.1-py3-none-any.whl.metadata (12 kB)
+2026-11-11 17:00:06,583 - INFO -   Downloading instructor-1.13.0-py3-none-any.whl.metadata (11 kB)
+2026-11-11 17:00:06,683 - INFO -   Downloading instructor-1.12.0-py3-none-any.whl.metadata (11 kB)
+2026-11-11 17:00:06,711 - INFO - Collecting jiter<1,>=0.4.0 (from openai>=1.13.3->crewai==0.119.0)
+2026-11-11 17:00:06,790 - INFO -   Downloading jiter-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-11-11 17:00:06,843 - INFO - Collecting pre-commit>=4.3.0 (from instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:06,943 - INFO -   Downloading pre_commit-4.7.0-py2.py3-none-any.whl.metadata (1.2 kB)
+2026-11-11 17:00:06,951 - INFO - Requirement already satisfied: charset_normalizer<4,>=2 in ./venv/lib/python3.11/site-packages (from requests>=2.32.3->auth0-python>=4.7.1->crewai==0.119.0) (3.5.2)
+2026-11-11 17:00:06,960 - INFO - Requirement already satisfied: markdown-it-py>=2.2.0 in ./venv/lib/python3.11/site-packages (from rich>=10.11.0->chromadb>=0.5.23->crewai==0.119.0) (4.3.0)
+2026-11-11 17:00:06,960 - INFO - Requirement already satisfied: pygments<3.0.0,>=2.13.0 in ./venv/lib/python3.11/site-packages (from rich>=10.11.0->chromadb>=0.5.23->crewai==0.119.0) (2.21.0)
+2026-11-11 17:00:06,970 - INFO - Requirement already satisfied: shellingham>=1.3.0 in ./venv/lib/python3.11/site-packages (from typer>=0.9.0->chromadb>=0.5.23->crewai==0.119.0) (1.5.4)
+2026-11-11 17:00:06,970 - INFO - Requirement already satisfied: annotated-doc>=0.0.2 in ./venv/lib/python3.11/site-packages (from typer>=0.9.0->chromadb>=0.5.23->crewai==0.119.0) (0.0.6)
+2026-11-11 17:00:06,989 - INFO - Requirement already satisfied: six>=1.9.0 in ./venv/lib/python3.11/site-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (1.17.0)
+2026-11-11 17:00:06,990 - INFO - Requirement already satisfied: python-dateutil>=2.5.3 in ./venv/lib/python3.11/site-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (4.0.0)
+2026-11-11 17:00:06,998 - INFO - Requirement already satisfied: websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 in ./venv/lib/python3.11/site-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (1.9.2)
+2026-11-11 17:00:07,000 - INFO - Requirement already satisfied: requests-oauthlib in ./venv/lib/python3.11/site-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (2.0.0)
+2026-11-11 17:00:07,004 - INFO - Requirement already satisfied: durationpy>=0.7 in ./venv/lib/python3.11/site-packages (from kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (0.11)
+2026-11-11 17:00:07,024 - INFO - Requirement already satisfied: mdurl~=0.1 in ./venv/lib/python3.11/site-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->chromadb>=0.5.23->crewai==0.119.0) (0.1.2)
+2026-11-11 17:00:07,046 - INFO - Requirement already satisfied: flatbuffers in ./venv/lib/python3.11/site-packages (from onnxruntime>=1.14.1->chromadb>=0.5.23->crewai==0.119.0) (25.12.19)
+2026-11-11 17:00:07,046 - INFO - Requirement already satisfied: protobuf>=4.25.8 in ./venv/lib/python3.11/site-packages (from onnxruntime>=1.14.1->chromadb>=0.5.23->crewai==0.119.0) (7.36.2)
+2026-11-11 17:00:07,099 - INFO - Requirement already satisfied: et-xmlfile in ./venv/lib/python3.11/site-packages (from openpyxl>=3.1.5->crewai==0.119.0) (2.0.0)
+2026-11-11 17:00:07,110 - INFO - Requirement already satisfied: googleapis-common-protos~=1.57 in ./venv/lib/python3.11/site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.119.0) (1.76.0)
+2026-11-11 17:00:07,110 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-common==0.66b2 in ./venv/lib/python3.11/site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.119.0) (0.66b2)
+2026-11-11 17:00:07,110 - INFO - Requirement already satisfied: opentelemetry-exporter-otlp-proto-common==1.45.2 in ./venv/lib/python3.11/site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:07,110 - INFO - Requirement already satisfied: opentelemetry-proto==1.45.2 in ./venv/lib/python3.11/site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb>=0.5.23->crewai==0.119.0) (1.45.2)
+2026-11-11 17:00:07,118 - INFO - Requirement already satisfied: opentelemetry-semantic-conventions==0.66b2 in ./venv/lib/python3.11/site-packages (from opentelemetry-sdk>=1.30.0->crewai==0.119.0) (0.66b2)
+2026-11-11 17:00:07,140 - INFO - Requirement already satisfied: opentelemetry-exporter-http-transport==0.66b2 in ./venv/lib/python3.11/site-packages (from opentelemetry-exporter-http-transport[requests]==0.66b2->opentelemetry-exporter-otlp-proto-http>=1.30.0->crewai==0.119.0) (0.66b2)
+2026-11-11 17:00:07,169 - INFO - Requirement already satisfied: pdfminer.six==20260107 in ./venv/lib/python3.11/site-packages (from pdfplumber>=0.11.4->crewai==0.119.0) (20260107)
+2026-11-11 17:00:07,169 - INFO - Requirement already satisfied: Pillow>=12.2.0 in ./venv/lib/python3.11/site-packages (from pdfplumber>=0.11.4->crewai==0.119.0) (13.0.0)
+2026-11-11 17:00:07,169 - INFO - Requirement already satisfied: pypdfium2>=5.9.0 in ./venv/lib/python3.11/site-packages (from pdfplumber>=0.11.4->crewai==0.119.0) (5.15.2)
+2026-11-11 17:00:07,197 - INFO - Collecting cfgv>=2.0.0 (from pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:07,278 - INFO -   Downloading cfgv-3.5.0-py2.py3-none-any.whl.metadata (8.9 kB)
+2026-11-11 17:00:07,328 - INFO - Collecting identify>=1.0.0 (from pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:07,410 - INFO -   Downloading identify-2.6.20-py2.py3-none-any.whl.metadata (4.4 kB)
+2026-11-11 17:00:07,431 - INFO - Collecting nodeenv>=0.11.1 (from pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:07,509 - INFO -   Downloading nodeenv-1.12.0-py3-none-any.whl.metadata (49 kB)
+2026-11-11 17:00:07,627 - INFO - Collecting virtualenv>=20.10.0 (from pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:07,717 - INFO -   Downloading virtualenv-21.15.6-py3-none-any.whl.metadata (4.1 kB)
+2026-11-11 17:00:07,784 - INFO - Requirement already satisfied: tzdata in ./venv/lib/python3.11/site-packages (from python-dateutil>=2.5.3->kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (2026.6)
+2026-11-11 17:00:07,833 - INFO - Collecting ipython>=5.3.0 (from pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:07,910 - INFO -   Downloading ipython-9.18.1-py3-none-any.whl.metadata (4.6 kB)
+2026-11-11 17:00:07,940 - INFO - Collecting jsonpickle>=1.4.1 (from pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,016 - INFO -   Downloading jsonpickle-4.1.4-py3-none-any.whl.metadata (8.1 kB)
+2026-11-11 17:00:08,100 - INFO - Collecting networkx>=1.11 (from pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,176 - INFO -   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+2026-11-11 17:00:08,204 - INFO - Collecting ipython-pygments-lexers>=1.0.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,291 - INFO -   Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl.metadata (1.1 kB)
+2026-11-11 17:00:08,352 - INFO - Collecting jedi>=0.18.2 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,431 - INFO -   Downloading jedi-0.20.1-py2.py3-none-any.whl.metadata (23 kB)
+2026-11-11 17:00:08,470 - INFO - Collecting matplotlib-inline>=0.1.6 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,549 - INFO -   Downloading matplotlib_inline-0.2.2-py3-none-any.whl.metadata (2.4 kB)
+2026-11-11 17:00:08,570 - INFO - Collecting pexpect>4.6 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,645 - INFO -   Downloading pexpect-4.9.0-py2.py3-none-any.whl.metadata (2.5 kB)
+2026-11-11 17:00:08,684 - INFO - Collecting prompt_toolkit<3.1.0,>=3.0.41 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:08,762 - INFO -   Downloading prompt_toolkit-3.0.53-py3-none-any.whl.metadata (6.4 kB)
+2026-11-11 17:00:08,961 - INFO - Collecting psutil>=7 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,039 - INFO -   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-11-11 17:00:09,072 - INFO - Collecting stack_data>=0.6.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,149 - INFO -   Downloading stack_data-0.6.3-py3-none-any.whl.metadata (18 kB)
+2026-11-11 17:00:09,191 - INFO - Collecting traitlets>=5.13.0 (from ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,273 - INFO -   Downloading traitlets-5.16.1-py3-none-any.whl.metadata (10 kB)
+2026-11-11 17:00:09,312 - INFO - Collecting wcwidth>=0.1.4 (from prompt_toolkit<3.1.0,>=3.0.41->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,391 - INFO -   Downloading wcwidth-0.9.4-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (23 kB)
+2026-11-11 17:00:09,424 - INFO - Collecting parso<0.9.0,>=0.8.7 (from jedi>=0.18.2->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,502 - INFO -   Downloading parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+2026-11-11 17:00:09,534 - INFO - Collecting ptyprocess>=0.5 (from pexpect>4.6->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,613 - INFO -   Downloading ptyprocess-0.7.0-py2.py3-none-any.whl.metadata (1.3 kB)
+2026-11-11 17:00:09,678 - INFO - Collecting executing>=1.2.0 (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,758 - INFO -   Downloading executing-2.3.0-py3-none-any.whl.metadata (9.1 kB)
+2026-11-11 17:00:09,786 - INFO - Collecting asttokens>=2.1.0 (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,865 - INFO -   Downloading asttokens-3.0.2-py3-none-any.whl.metadata (5.7 kB)
+2026-11-11 17:00:09,890 - INFO - Collecting pure-eval (from stack_data>=0.6.0->ipython>=5.3.0->pyvis>=0.3.2->crewai==0.119.0)
+2026-11-11 17:00:09,973 - INFO -   Downloading pure_eval-0.2.4-py3-none-any.whl.metadata (6.4 kB)
+2026-11-11 17:00:09,987 - INFO - Requirement already satisfied: huggingface-hub<3.0,>=0.16.4 in ./venv/lib/python3.11/site-packages (from tokenizers->litellm==1.68.0->crewai==0.119.0) (2.4.0)
+2026-11-11 17:00:10,002 - INFO - Requirement already satisfied: filelock>=3.10.0 in ./venv/lib/python3.11/site-packages (from huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (4.2.10)
+2026-11-11 17:00:10,002 - INFO - Requirement already satisfied: fsspec>=2023.5.0 in ./venv/lib/python3.11/site-packages (from huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (2026.9.0)
+2026-11-11 17:00:10,003 - INFO - Requirement already satisfied: hf-xet<2.0.0,>=1.6.0 in ./venv/lib/python3.11/site-packages (from huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (1.8.0)
+2026-11-11 17:00:10,004 - INFO - Requirement already satisfied: httpx2<3,>=2.0.0 in ./venv/lib/python3.11/site-packages (from huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (2.16.0)
+2026-11-11 17:00:10,014 - INFO - Requirement already satisfied: httpcore2==2.16.0 in ./venv/lib/python3.11/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (2.16.0)
+2026-11-11 17:00:10,015 - INFO - Requirement already satisfied: truststore>=0.10 in ./venv/lib/python3.11/site-packages (from httpx2<3,>=2.0.0->huggingface-hub<3.0,>=0.16.4->tokenizers->litellm==1.68.0->crewai==0.119.0) (0.10.5)
+2026-11-11 17:00:10,080 - INFO - Requirement already satisfied: httptools>=0.8.0 in ./venv/lib/python3.11/site-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.119.0) (0.9.0)
+2026-11-11 17:00:10,081 - INFO - Requirement already satisfied: uvloop>=0.15.1 in ./venv/lib/python3.11/site-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.119.0) (0.23.0)
+2026-11-11 17:00:10,082 - INFO - Requirement already satisfied: watchfiles>=0.20 in ./venv/lib/python3.11/site-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.119.0) (1.3.0)
+2026-11-11 17:00:10,082 - INFO - Requirement already satisfied: websockets>=13.0 in ./venv/lib/python3.11/site-packages (from uvicorn[standard]>=0.18.3->chromadb>=0.5.23->crewai==0.119.0) (17.4)
+2026-11-11 17:00:10,103 - INFO - Collecting distlib<1,>=0.4.3 (from virtualenv>=20.10.0->pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:10,182 - INFO -   Downloading distlib-0.4.4-py2.py3-none-any.whl.metadata (5.3 kB)
+2026-11-11 17:00:10,185 - INFO - Requirement already satisfied: platformdirs<5,>=4.4 in ./venv/lib/python3.11/site-packages (from virtualenv>=20.10.0->pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0) (4.14.5)
+2026-11-11 17:00:10,206 - INFO - Collecting python-discovery>=1.6.1 (from virtualenv>=20.10.0->pre-commit>=4.3.0->instructor>=1.3.3->crewai==0.119.0)
+2026-11-11 17:00:10,290 - INFO -   Downloading python_discovery-1.9.5-py3-none-any.whl.metadata (4.2 kB)
+2026-11-11 17:00:10,334 - INFO - Requirement already satisfied: oauthlib>=3.0.0 in ./venv/lib/python3.11/site-packages (from requests-oauthlib->kubernetes>=28.1.0->chromadb>=0.5.23->crewai==0.119.0) (4.0.1)
+2026-11-11 17:00:10,421 - INFO - Downloading litellm-1.68.0-py3-none-any.whl (7.7 MB)
+2026-11-11 17:00:10,889 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.7/7.7 MB 21.8 MB/s  0:00:00
+2026-11-11 17:00:10,970 - INFO - Downloading openai-1.75.0-py3-none-any.whl (646 kB)
+2026-11-11 17:00:10,987 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 647.0/647.0 kB 88.8 MB/s  0:00:00
+2026-11-11 17:00:11,069 - INFO - Downloading auth0_python-6.9.0-py3-none-any.whl (3.6 MB)
+2026-11-11 17:00:11,244 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 19.9 MB/s  0:00:00
+2026-11-11 17:00:11,321 - INFO - Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+2026-11-11 17:00:11,399 - INFO - Downloading importlib_metadata-10.2.0-py3-none-any.whl (34 kB)
+2026-11-11 17:00:11,477 - INFO - Downloading instructor-1.12.0-py3-none-any.whl (157 kB)
+2026-11-11 17:00:11,557 - INFO - Downloading jiter-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (352 kB)
+2026-11-11 17:00:11,637 - INFO - Downloading diskcache-5.6.3-py3-none-any.whl (45 kB)
+2026-11-11 17:00:11,714 - INFO - Downloading lazy_importer-0.1.0-py3-none-any.whl (12 kB)
+2026-11-11 17:00:11,790 - INFO - Downloading pre_commit-4.7.0-py2.py3-none-any.whl (226 kB)
+2026-11-11 17:00:11,867 - INFO - Downloading cfgv-3.5.0-py2.py3-none-any.whl (7.4 kB)
+2026-11-11 17:00:11,946 - INFO - Downloading identify-2.6.20-py2.py3-none-any.whl (99 kB)
+2026-11-11 17:00:12,025 - INFO - Downloading nodeenv-1.12.0-py3-none-any.whl (39 kB)
+2026-11-11 17:00:12,108 - INFO - Downloading pyvis-0.3.2-py3-none-any.whl (756 kB)
+2026-11-11 17:00:12,115 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 756.0/756.0 kB 252.5 MB/s  0:00:00
+2026-11-11 17:00:12,191 - INFO - Downloading ipython-9.18.1-py3-none-any.whl (649 kB)
+2026-11-11 17:00:12,198 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 649.8/649.8 kB 134.2 MB/s  0:00:00
+2026-11-11 17:00:12,277 - INFO - Downloading prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+2026-11-11 17:00:12,355 - INFO - Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
+2026-11-11 17:00:12,435 - INFO - Downloading jedi-0.20.1-py2.py3-none-any.whl (4.9 MB)
+2026-11-11 17:00:12,520 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 59.0 MB/s  0:00:00
+2026-11-11 17:00:12,597 - INFO - Downloading parso-0.8.7-py2.py3-none-any.whl (107 kB)
+2026-11-11 17:00:12,674 - INFO - Downloading jsonpickle-4.1.4-py3-none-any.whl (47 kB)
+2026-11-11 17:00:12,752 - INFO - Downloading matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+2026-11-11 17:00:12,828 - INFO - Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+2026-11-11 17:00:12,849 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 123.3 MB/s  0:00:00
+2026-11-11 17:00:12,926 - INFO - Downloading pexpect-4.9.0-py2.py3-none-any.whl (63 kB)
+2026-11-11 17:00:13,003 - INFO - Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-11 17:00:13,081 - INFO - Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
+2026-11-11 17:00:13,157 - INFO - Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
+2026-11-11 17:00:13,238 - INFO - Downloading asttokens-3.0.2-py3-none-any.whl (28 kB)
+2026-11-11 17:00:13,309 - INFO - Downloading executing-2.3.0-py3-none-any.whl (29 kB)
+2026-11-11 17:00:13,387 - INFO - Downloading traitlets-5.16.1-py3-none-any.whl (86 kB)
+2026-11-11 17:00:13,473 - INFO - Downloading virtualenv-21.15.6-py3-none-any.whl (5.7 MB)
+2026-11-11 17:00:13,565 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.7/5.7 MB 62.4 MB/s  0:00:00
+2026-11-11 17:00:13,649 - INFO - Downloading distlib-0.4.4-py2.py3-none-any.whl (472 kB)
+2026-11-11 17:00:13,732 - INFO - Downloading python_discovery-1.9.5-py3-none-any.whl (44 kB)
+2026-11-11 17:00:13,810 - INFO - Downloading wcwidth-0.9.4-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (785 kB)
+2026-11-11 17:00:13,821 - INFO -    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 785.9/785.9 kB 252.3 MB/s  0:00:00
+2026-11-11 17:00:13,896 - INFO - Downloading zipp-4.1.2-py3-none-any.whl (10 kB)
+2026-11-11 17:00:13,975 - INFO - Downloading pure_eval-0.2.4-py3-none-any.whl (11 kB)
+2026-11-11 17:00:14,280 - INFO - Building wheels for collected packages: crewai
+2026-11-11 17:00:14,286 - INFO -   Building editable for crewai (pyproject.toml): started
+2026-11-11 17:00:14,336 - INFO -   Building editable for crewai (pyproject.toml): finished with status 'done'
+2026-11-11 17:00:14,337 - INFO -   Created wheel for crewai: filename=crewai-0.119.0-py3-none-any.whl size=13708 sha256=6de8d87919f4fae9649e3fe168880e111b89633439c07191ef795ad34266545d
+2026-11-11 17:00:14,337 - INFO -   Stored in directory: /tmp/pip-ephem-wheel-cache-eaymba89/wheels/49/5f/4f/01b7d31ea6ddac9643da788242d33e5fd3467d95d17b032c6b
+2026-11-11 17:00:14,341 - INFO - Successfully built crewai
+2026-11-11 17:00:14,583 - INFO - Installing collected packages: pure-eval, ptyprocess, distlib, zipp, wcwidth, traitlets, python-discovery, psutil, pexpect, parso, nodeenv, networkx, lazy-importer, jsonpickle, jiter, ipython-pygments-lexers, identify, executing, diskcache, cfgv, blinker, asttokens, virtualenv, stack_data, prompt_toolkit, matplotlib-inline, jedi, importlib-metadata, pre-commit, openai, ipython, auth0-python, pyvis, instructor, litellm, crewai
+2026-11-11 17:00:17,061 - INFO -   Attempting uninstall: jiter
+2026-11-11 17:00:17,062 - INFO -     Found existing installation: jiter 0.14.0
+2026-11-11 17:00:17,065 - INFO -     Uninstalling jiter-0.14.0:
+2026-11-11 17:00:17,069 - INFO -       Successfully uninstalled jiter-0.14.0
+2026-11-11 17:00:19,152 - INFO -   Attempting uninstall: openai
+2026-11-11 17:00:19,153 - INFO -     Found existing installation: openai 2.54.0
+2026-11-11 17:00:19,331 - INFO -     Uninstalling openai-2.54.0:
+2026-11-11 17:00:19,351 - INFO -       Successfully uninstalled openai-2.54.0
+2026-11-11 17:00:24,497 - INFO -   Attempting uninstall: instructor
+2026-11-11 17:00:24,497 - INFO -     Found existing installation: instructor 1.15.4
+2026-11-11 17:00:24,527 - INFO -     Uninstalling instructor-1.15.4:
+2026-11-11 17:00:24,535 - INFO -       Successfully uninstalled instructor-1.15.4
+2026-11-11 17:00:26,134 - INFO -   Attempting uninstall: crewai
+2026-11-11 17:00:26,134 - INFO -     Found existing installation: crewai 1.15.39
+2026-11-11 17:00:26,239 - INFO -     Uninstalling crewai-1.15.39:
+2026-11-11 17:00:26,260 - INFO -       Successfully uninstalled crewai-1.15.39
+2026-11-11 17:00:26,393 - INFO - ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+2026-11-11 17:00:26,393 - INFO - crewai-tools 1.15.39 requires crewai==1.15.39, but you have crewai 0.119.0 which is incompatible.
+2026-11-11 17:00:26,397 - INFO - Successfully installed asttokens-3.0.2 auth0-python-6.9.0 blinker-1.9.0 cfgv-3.5.0 crewai-0.119.0 diskcache-5.6.3 distlib-0.4.4 executing-2.3.0 identify-2.6.20 importlib-metadata-10.2.0 instructor-1.12.0 ipython-9.18.1 ipython-pygments-lexers-1.1.1 jedi-0.20.1 jiter-0.10.0 jsonpickle-4.1.4 lazy-importer-0.1.0 litellm-1.68.0 matplotlib-inline-0.2.2 networkx-3.6.1 nodeenv-1.12.0 openai-1.75.0 parso-0.8.7 pexpect-4.9.0 pre-commit-4.7.0 prompt_toolkit-3.0.53 psutil-7.2.2 ptyprocess-0.7.0 pure-eval-0.2.4 python-discovery-1.9.5 pyvis-0.3.2 stack_data-0.6.3 traitlets-5.16.1 virtualenv-21.15.6 wcwidth-0.9.4 zipp-4.1.2
+2026-11-11 17:09:23,668 - INFO -  ---> Removed intermediate container 41fb0227a41f
+2026-11-11 17:09:23,670 - INFO -  ---> 8b30e8b1b0fb
+2026-11-11 17:09:23,670 - INFO - Step 13/15 : RUN echo "source /testbed/venv/bin/activate" >> /root/.bashrc
+2026-11-11 17:09:26,165 - INFO -  ---> Running in f32d9b44af0d
+2026-11-11 17:13:45,407 - INFO -  ---> Removed intermediate container f32d9b44af0d
+2026-11-11 17:13:45,412 - ERROR - Error: failed to export layer: CreateDiff: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount570986590: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount198767883: failed to commit: rename /var/lib/containerd/io.containerd.content.v1.content/ingest/0093ae2c3532b685ebaaedd35627fd611a65512ebb77ce03d7fb72d33c29cb98/data /var/lib/containerd/io.containerd.content.v1.content/blobs/sha256/87ff1ce8b98bdfeee3c87203a36c7e229adefd9b5581af83cb254b89fe052cbd: no such file or directory
+2026-11-11 17:13:45,413 - ERROR - failed to export layer: CreateDiff: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount570986590: mount callback failed on /var/lib/containerd/tmpmounts/containerd-mount198767883: failed to commit: rename /var/lib/containerd/io.containerd.content.v1.content/ingest/0093ae2c3532b685ebaaedd35627fd611a65512ebb77ce03d7fb72d33c29cb98/data /var/lib/containerd/io.containerd.content.v1.content/blobs/sha256/87ff1ce8b98bdfeee3c87203a36c7e229adefd9b5581af83cb254b89fe052cbd: no such file or directory
